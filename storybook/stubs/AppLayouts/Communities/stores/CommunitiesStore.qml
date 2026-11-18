@@ -3,6 +3,8 @@ import QtQuick
 QtObject {
     property real discordImportProgress: 0
     property bool discordImportInProgress: false
+    property bool curatedCommunitiesLoading: false
+    property int curatedCommunitiesRefreshError: 0
 
     // roster holds per community id, for pages and tests
     property var rosterHolds: ({})

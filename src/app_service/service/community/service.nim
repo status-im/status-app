@@ -7,6 +7,7 @@ import ./dto/sign_params as sign_params_dto
 import ./dto/roster as roster_dto
 import ./roster_sync
 import ./roster_order
+import ./curated_directory
 import ./permission_chains
 import ../community_tokens/dto/community_token as community_token_dto
 
@@ -18,6 +19,7 @@ import ../chat/service as chat_service
 import ../../common/activity_center
 
 import ../../../app/global/global_singleton
+import ../../../app/global/app_signals
 import ../../../app/core/signals/types
 import ../../../app/core/eventemitter
 import ../../../app/core/[main]
@@ -46,6 +48,12 @@ type
 
   CommunitiesArgs* = ref object of Args
     communities*: seq[CommunityDto]
+
+  CuratedCommunitiesLoadingArgs* = ref object of Args
+    loading*: bool
+
+  CuratedCommunitiesRefreshErrorArgs* = ref object of Args
+    error*: int
 
   CommunityChatArgs* = ref object of Args
     chat*: ChatDto
@@ -225,7 +233,6 @@ const SIGNAL_NEW_REQUEST_TO_JOIN_COMMUNITY_ACCEPTED* = "requestToJoinCommunityAc
 const SIGNAL_REQUEST_TO_JOIN_COMMUNITY_CANCELED* = "requestToJoinCommunityCanceled"
 const SIGNAL_WAITING_ON_NEW_COMMUNITY_OWNER_TO_CONFIRM_REQUEST_TO_REJOIN* = "waitingOnNewCommunityOwnerToConfirmRequestToRejoin"
 const SIGNAL_CURATED_COMMUNITY_FOUND* = "curatedCommunityFound"
-const SIGNAL_CURATED_COMMUNITIES_UPDATED* = "curatedCommunitiesUpdated"
 const SIGNAL_COMMUNITY_MUTED* = "communityMuted"
 const SIGNAL_CATEGORY_MUTED* = "categoryMuted"
 const SIGNAL_CATEGORY_UNMUTED* = "categoryUnmuted"
@@ -253,7 +260,7 @@ const SIGNAL_COMMUNITY_TOKEN_METADATA_ADDED* = "communityTokenMetadataAdded"
 
 const SIGNAL_CURATED_COMMUNITIES_LOADING* = "curatedCommunitiesLoading"
 const SIGNAL_CURATED_COMMUNITIES_LOADED* = "curatedCommunitiesLoaded"
-const SIGNAL_CURATED_COMMUNITIES_LOADING_FAILED* = "curatedCommunitiesLoadingFailed"
+const SIGNAL_CURATED_COMMUNITIES_REFRESH_ERROR* = "curatedCommunitiesRefreshError"
 
 const SIGNAL_ACCEPT_REQUEST_TO_JOIN_LOADING* = "acceptRequestToJoinLoading"
 const SIGNAL_ACCEPT_REQUEST_TO_JOIN_FAILED* = "acceptRequestToJoinFailed"
@@ -297,9 +304,13 @@ QtObject:
       rosterLoadGeneration: int
       # what each roster load worker sorts by, read when the load starts
       rosterOrderInputs: Table[string, proc(): RosterOrderInputs]
+      curatedDirectory: CuratedDirectory
 
   # Forward declaration
-  proc asyncLoadCuratedCommunities*(self: Service)
+  proc readCuratedCommunities(self: Service)
+  proc requestCuratedCommunitiesRefresh(self: Service): CuratedRefreshReply
+  proc requestCuratedCommunitiesRefreshStop(self: Service)
+  proc loadedCuratedCommunitiesCount(self: Service): int
   proc asyncAcceptRequestToJoinCommunity*(self: Service, communityId: string, requestId: string)
   proc asyncDeclineRequestToJoinCommunity*(self: Service, communityId: string, requestId: string)
   proc handleCommunityUpdates(self: Service, communities: seq[CommunityDto], updatedChats: seq[ChatDto], removedChats: seq[string])
@@ -336,6 +347,17 @@ QtObject:
     result.historyArchiveDownloadTaskCommunityIds = initHashSet[string]()
     result.communityMetrics = initTable[string, CommunityMetricsDto]()
     result.communityInfoRequests = initTable[string, Time]()
+    let service = result
+    result.curatedDirectory = newCuratedDirectory(CuratedDirectoryBackend(
+      read: proc() = service.readCuratedCommunities(),
+      refresh: proc(): CuratedRefreshReply = service.requestCuratedCommunitiesRefresh(),
+      stop: proc() = service.requestCuratedCommunitiesRefreshStop(),
+      busyChanged: proc(busy: bool) =
+        service.events.emit(SIGNAL_CURATED_COMMUNITIES_LOADING, CuratedCommunitiesLoadingArgs(loading: busy)),
+      loaded: proc(): int = service.loadedCuratedCommunitiesCount(),
+      errorChanged: proc(error: CuratedRefreshError) =
+        service.events.emit(SIGNAL_CURATED_COMMUNITIES_REFRESH_ERROR,
+          CuratedCommunitiesRefreshErrorArgs(error: ord(error)))))
 
   # Iterates joined/spectated communities by borrow. Cheap, but the borrow is
   # tied to the underlying Table — any mutation of `self.communities` during
@@ -375,14 +397,23 @@ QtObject:
     if wasCuratedPlaceholder:
       self.events.emit(SIGNAL_CURATED_COMMUNITY_FOUND, CommunityArgs(community: found))
 
-  proc doConnect(self: Service) =
+  proc doConnect*(self: Service) =
     self.events.on(SignalType.CommunityFound.event) do(e: Args):
       self.onCommunityFound(CommunitySignal(e).community)
 
-    self.events.on(SignalType.CuratedCommunitiesUpdated.event) do(e: Args):
-      var receivedData = CuratedCommunitiesSignal(e)
-      self.events.emit(SIGNAL_CURATED_COMMUNITIES_UPDATED,
-        CommunitiesArgs(communities: receivedData.communities))
+    self.events.on(SignalType.CuratedCommunitiesRefreshStarted.event) do(e: Args):
+      let started = CuratedCommunitiesRefreshStartedSignal(e)
+      self.curatedDirectory.refreshStarted(started.changed, started.directoryFailed, started.runId.get(CuratedRunUnknown))
+
+    self.events.on(SignalType.CuratedCommunitiesRefreshFinished.event) do(e: Args):
+      let finished = CuratedCommunitiesRefreshFinishedSignal(e)
+      self.curatedDirectory.refreshFinished(finished.failed, finished.cancelled, finished.runId.get(CuratedRunUnknown))
+
+    self.events.on(SIGNAL_APP_BACKGROUNDED) do(e: Args):
+      self.curatedDirectory.suspend()
+
+    self.events.on(SIGNAL_APP_FOREGROUNDED) do(e: Args):
+      self.curatedDirectory.resume()
 
     self.events.on(SignalType.Message.event) do(e: Args):
       var receivedData = MessageSignal(e)
@@ -1920,8 +1951,11 @@ QtObject:
       self.events.emit(SIGNAL_ACCEPT_REQUEST_TO_JOIN_FAILED,
         CommunityMemberArgs(communityId: communityId, pubKey: userKey, requestId: requestId))
 
-  proc asyncLoadCuratedCommunities*(self: Service) =
-    self.events.emit(SIGNAL_CURATED_COMMUNITIES_LOADING, Args())
+  proc readCuratedCommunities(self: Service) =
+    if self.threadpool.isNil:
+      error "Error loading curated communities", msg = "no thread pool"
+      self.curatedDirectory.readDone()
+      return
     try:
       let arg = AsyncLoadCuratedCommunitiesTaskArg(
         tptr: asyncLoadCuratedCommunitiesTask,
@@ -1931,17 +1965,20 @@ QtObject:
       self.threadpool.start(arg)
     except Exception as e:
       error "Error loading curated communities", msg = e.msg
+      self.curatedDirectory.readDone()
 
   proc onAsyncLoadCuratedCommunitiesDone*(self: Service, response: string) {.slot.} =
+    var entries = 0
+    defer: self.curatedDirectory.readDone(entries)
     try:
       let reply = response.parseJson
       let replyError = reply{"error"}
       if not replyError.isNil and replyError.kind != JNull:
         let msg = if replyError.kind == JString: replyError.getStr else: replyError{"message"}.getStr
         error "Error loading curated communities", msg
-        self.events.emit(SIGNAL_CURATED_COMMUNITIES_LOADING_FAILED, Args())
         return
       var curatedCommunities = parseCuratedCommunities(reply["result"])
+      var listed = initHashSet[string]()
       for curatedCommunity in curatedCommunities.mitems:
         if not curatedCommunity.isAvailable:
           self.communities.withValue(curatedCommunity.id, known):
@@ -1951,11 +1988,42 @@ QtObject:
               curatedCommunity.listedInDirectory = true
               curatedCommunity.featuredInDirectory = featured
         self.communities[curatedCommunity.id] = curatedCommunity
+        listed.incl(curatedCommunity.id)
+      for id, community in self.communities.mpairs:
+        if community.listedInDirectory and id notin listed:
+          community.listedInDirectory = false
+          community.featuredInDirectory = false
+      entries = curatedCommunities.len
       self.events.emit(SIGNAL_CURATED_COMMUNITIES_LOADED, CommunitiesArgs(communities: curatedCommunities))
     except Exception as e:
       let errMsg = e.msg
       error "error loading curated communities: ", errMsg
-      self.events.emit(SIGNAL_CURATED_COMMUNITIES_LOADING_FAILED, Args())
+
+  proc refreshCuratedCommunities*(self: Service) =
+    self.curatedDirectory.enter()
+
+  proc stopCuratedCommunitiesRefresh*(self: Service) =
+    self.curatedDirectory.leave()
+
+  proc retryCuratedCommunitiesRefresh*(self: Service) =
+    self.curatedDirectory.retry()
+
+  proc loadedCuratedCommunitiesCount(self: Service): int =
+    for community in self.communities.values:
+      if community.listedInDirectory and community.isAvailable:
+        inc result
+
+  proc requestCuratedCommunitiesRefresh(self: Service): CuratedRefreshReply =
+    try:
+      return toCuratedRefreshReply(status_go.refreshCuratedCommunities().result)
+    except Exception as e:
+      error "error refreshing curated communities", msg = e.msg
+
+  proc requestCuratedCommunitiesRefreshStop(self: Service) =
+    try:
+      discard status_go.stopCuratedCommunitiesRefresh()
+    except Exception as e:
+      error "error stopping curated communities refresh", msg = e.msg
 
   proc getCommunityMetrics*(self: Service, communityId: string, metricsType: CommunityMetricsType): CommunityMetricsDto =
     # NOTE: use metricsType when other metrics types added

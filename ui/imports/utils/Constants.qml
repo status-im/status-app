@@ -21,6 +21,12 @@ QtObject {
         Failed
     }
 
+    enum CuratedCommunitiesRefreshError {
+        None,
+        Partial,
+        Full
+    }
+
     readonly property QtObject chains: QtObject {
         readonly property int mainnetChainId: 1
         readonly property int sepoliaChainId: 11155111

@@ -83,11 +83,6 @@ proc init*(self: Controller) =
       self.delegate.communityEdited(community)
       self.delegate.curatedCommunityEdited(community)
 
-  self.events.on(SIGNAL_CURATED_COMMUNITIES_UPDATED) do(e:Args):
-    let args = CommunitiesArgs(e)
-    for community in args.communities:
-      self.delegate.curatedCommunityEdited(community)
-
   self.events.on(SIGNAL_COMMUNITY_MUTED) do(e:Args):
     let args = CommunityMutedArgs(e)
     self.delegate.communityMuted(args.communityId, args.muted)
@@ -137,10 +132,10 @@ proc init*(self: Controller) =
     self.delegate.communityHistoryArchivesDownloadFinished(args.communityId)
 
   self.events.on(SIGNAL_CURATED_COMMUNITIES_LOADING) do(e:Args):
-    self.delegate.curatedCommunitiesLoading()
+    self.delegate.curatedCommunitiesLoading(CuratedCommunitiesLoadingArgs(e).loading)
 
-  self.events.on(SIGNAL_CURATED_COMMUNITIES_LOADING_FAILED) do(e:Args):
-    self.delegate.curatedCommunitiesLoadingFailed()
+  self.events.on(SIGNAL_CURATED_COMMUNITIES_REFRESH_ERROR) do(e:Args):
+    self.delegate.curatedCommunitiesRefreshError(CuratedCommunitiesRefreshErrorArgs(e).error)
 
   self.events.on(SIGNAL_CURATED_COMMUNITIES_LOADED) do(e:Args):
     let args = CommunitiesArgs(e)
@@ -320,8 +315,14 @@ proc isUserMemberOfCommunity*(self: Controller, communityId: string): bool =
 proc isMyCommunityRequestPending*(self: Controller, communityId: string): bool =
   return self.communityService.isMyCommunityRequestPending(communityId)
 
-proc asyncLoadCuratedCommunities*(self: Controller) =
-  self.communityService.asyncLoadCuratedCommunities()
+proc refreshCuratedCommunities*(self: Controller) =
+  self.communityService.refreshCuratedCommunities()
+
+proc stopCuratedCommunitiesRefresh*(self: Controller) =
+  self.communityService.stopCuratedCommunitiesRefresh()
+
+proc retryCuratedCommunitiesRefresh*(self: Controller) =
+  self.communityService.retryCuratedCommunitiesRefresh()
 
 proc requestExtractDiscordChannelsAndCategories*(self: Controller, filesToImport: seq[string]) =
   self.communityService.requestExtractDiscordChannelsAndCategories(filesToImport)

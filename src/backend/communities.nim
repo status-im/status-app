@@ -24,6 +24,12 @@ proc unmuteCategory*(communityId: string, categoryId: string): RpcResponse[JsonN
 proc getCuratedCommunities*(): string =
   result = callPrivateRPCNoDecode("curatedCommunities".prefix)
 
+proc refreshCuratedCommunities*(): RpcResponse[JsonNode] =
+  result = callPrivateRPC("refreshCuratedCommunities".prefix)
+
+proc stopCuratedCommunitiesRefresh*(): RpcResponse[JsonNode] =
+  result = callPrivateRPC("stopCuratedCommunitiesRefresh".prefix)
+
 proc getAllCommunities*(): RpcResponse[JsonNode] =
   result = callPrivateRPC("communities".prefix)
 

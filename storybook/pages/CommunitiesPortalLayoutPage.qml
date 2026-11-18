@@ -38,11 +38,21 @@ SplitView {
             SplitView.fillHeight: true
 
             createCommunityEnabled: ctrlCommunityCreationEnabled.checked
+            pullToRefreshEnabled: ctrlPullToRefreshEnabled.checked
+
+            onCuratedRefreshRequested: {
+                logs.logEvent("CommunitiesPortalLayout::curatedRefreshRequested")
+                if (ctrlRefreshOnRequest.checked)
+                    ctrlCuratedCommunitiesLoading.checked = true
+            }
 
             assetsModel: AssetsModel {}
             collectiblesModel: CollectiblesModel {}
             communitiesStore: CommunitiesStore {
                 readonly property string communityTags: ModelsData.communityTags
+
+                curatedCommunitiesLoading: ctrlCuratedCommunitiesLoading.checked
+                curatedCommunitiesRefreshError: ctrlCuratedRefreshError.checkedButton.value
 
                 readonly property var curatedCommunitiesModel: SortFilterProxyModel {
                     sourceModel: CommunitiesPortalDummyModel { id: mockedModel }
@@ -81,6 +91,7 @@ SplitView {
 
                     Slider {
                         id: slider
+                        objectName: "ctrlCommunitiesCount"
                         value: 9
                         from: 0
                         to: 9
@@ -90,6 +101,61 @@ SplitView {
                 Switch {
                     id: ctrlCommunityCreationEnabled
                     text: "Community creation enabled"
+                    checked: true
+                }
+
+                Switch {
+                    id: ctrlCuratedCommunitiesLoading
+                    objectName: "ctrlCuratedCommunitiesLoading"
+                    text: "Curated communities loading"
+                }
+
+                Row {
+                    Label {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "refresh error:"
+                    }
+
+                    ButtonGroup {
+                        id: ctrlCuratedRefreshError
+                    }
+
+                    RadioButton {
+                        readonly property int value: Constants.CuratedCommunitiesRefreshError.None
+
+                        objectName: "ctrlCuratedRefreshErrorNone"
+                        text: "None"
+                        checked: true
+                        ButtonGroup.group: ctrlCuratedRefreshError
+                    }
+
+                    RadioButton {
+                        readonly property int value: Constants.CuratedCommunitiesRefreshError.Partial
+
+                        objectName: "ctrlCuratedRefreshErrorPartial"
+                        text: "Partial"
+                        ButtonGroup.group: ctrlCuratedRefreshError
+                    }
+
+                    RadioButton {
+                        readonly property int value: Constants.CuratedCommunitiesRefreshError.Full
+
+                        objectName: "ctrlCuratedRefreshErrorFull"
+                        text: "Full"
+                        ButtonGroup.group: ctrlCuratedRefreshError
+                    }
+                }
+
+                Switch {
+                    id: ctrlPullToRefreshEnabled
+                    objectName: "ctrlPullToRefreshEnabled"
+                    text: "Pull to refresh enabled (touch platforms)"
+                }
+
+                Switch {
+                    id: ctrlRefreshOnRequest
+                    objectName: "ctrlRefreshOnRequest"
+                    text: "A requested refresh starts loading"
                     checked: true
                 }
             }
