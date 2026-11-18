@@ -30,7 +30,13 @@ void nativeSilentModeChanged(JNIEnv *, jclass, jboolean silent)
 
 AudioUtils::AudioUtils(QObject *parent)
     : QObject(parent)
+    , m_soundEffect(this)
 {
+    m_soundEffect.setLoopCount(1);
+    connect(&m_soundEffect, &QSoundEffect::statusChanged, this, &AudioUtils::onSoundStatusChanged);
+    connect(&m_soundEffect, &QSoundEffect::playingChanged, this, &AudioUtils::playNext,
+            Qt::QueuedConnection);
+
 #ifdef Q_OS_ANDROID
     s_audioUtils = this;
     static const bool silentModeRegistered = [] {
@@ -81,9 +87,94 @@ AudioUtils::~AudioUtils()
 #endif
 }
 
+void AudioUtils::play(const QUrl &source)
+{
+    if (m_muted || m_isSilent)
+        return;
+
+    m_soundQueue.enqueue(source);
+    playNext();
+}
+
+void AudioUtils::playNext()
+{
+    if (m_playPending || m_soundEffect.isPlaying())
+        return;
+    if (m_muted || m_isSilent) {
+        m_soundQueue.clear();
+        return;
+    }
+    if (m_soundQueue.isEmpty())
+        return;
+
+    m_playPending = true;
+    m_soundEffect.setVolume(convertLogarithmicToLinearVolumeScale(m_volume));
+    m_soundEffect.setSource(m_soundQueue.dequeue());
+    if (m_playPending && m_soundEffect.status() != QSoundEffect::Loading)
+        onSoundStatusChanged();
+}
+
+void AudioUtils::onSoundStatusChanged()
+{
+    switch (m_soundEffect.status()) {
+    case QSoundEffect::Ready:
+        if (m_playPending) {
+            m_playPending = false;
+            if (m_muted || m_isSilent) {
+                m_soundQueue.clear();
+                return;
+            }
+            m_soundEffect.play();
+        }
+        break;
+    case QSoundEffect::Error:
+        qWarning() << "AudioUtils: Cannot load sound:" << m_soundEffect.source();
+        Q_FALLTHROUGH();
+    case QSoundEffect::Null:
+        m_playPending = false;
+        QMetaObject::invokeMethod(this, &AudioUtils::playNext, Qt::QueuedConnection);
+        break;
+    case QSoundEffect::Loading:
+        break;
+    }
+}
+
+void AudioUtils::stop()
+{
+    m_soundQueue.clear();
+    m_playPending = false;
+    m_soundEffect.stop();
+}
+
 qreal AudioUtils::convertLogarithmicToLinearVolumeScale(qreal volume) const
 {
     return QAudio::convertVolume(volume, QAudio::LogarithmicVolumeScale, QAudio::LinearVolumeScale);
+}
+
+bool AudioUtils::muted() const
+{
+    return m_muted;
+}
+
+void AudioUtils::setMuted(bool newMuted)
+{
+    if (m_muted == newMuted)
+        return;
+    m_muted = newMuted;
+    emit mutedChanged();
+}
+
+qreal AudioUtils::volume() const
+{
+    return m_volume;
+}
+
+void AudioUtils::setVolume(qreal newVolume)
+{
+    if (qFuzzyCompare(m_volume, newVolume))
+        return;
+    m_volume = newVolume;
+    emit volumeChanged();
 }
 
 bool AudioUtils::isSilent() const

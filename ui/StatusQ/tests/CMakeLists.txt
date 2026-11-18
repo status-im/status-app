@@ -3,7 +3,7 @@ project(TestStatusQ LANGUAGES CXX)
 set(CMAKE_AUTOMOC ON)
 
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS
-        QuickTest Qml Quick QuickPrivate QuickLayoutsPrivate WebEngineQuick REQUIRED)
+        QuickTest Qml Quick QuickPrivate QuickLayoutsPrivate WebEngineQuick Multimedia REQUIRED)
 
 ##############
 # Test Library
@@ -158,7 +158,7 @@ target_link_libraries(TestKeyboardState PRIVATE Qt::Test Qt::Gui Qt::Quick Statu
 add_test(NAME TestKeyboardState COMMAND TestKeyboardState)
 
 qt_add_executable(TestAudioUtils src/tst_audioutils.cpp)
-target_link_libraries(TestAudioUtils PRIVATE Qt::Test Qt::Gui StatusQ)
+target_link_libraries(TestAudioUtils PRIVATE Qt::Test Qt::Gui Qt::Multimedia StatusQ)
 add_test(NAME TestAudioUtils COMMAND TestAudioUtils)
 
 if(NOT ANDROID AND NOT IOS)
