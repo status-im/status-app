@@ -127,8 +127,8 @@ endif()
 string(REPLACE ";" "|" _nim_args_joined "${_nim_args}")
 
 # The wrapper writes a depfile listing every Nim module, {.compile.}'d C++
-# source/header and Nim config file the build read, so updating any vendored
-# dependency (seaqt, nimqml, results, ...) or the app's
+# source/header and Nim config file the build read, so updating any resolved
+# package (seaqt, nimqml, results, ...) or the app's
 # config.nims / nim.cfg rebuilds the archive and relinks its hosts.
 if (POLICY CMP0116)
   cmake_policy(SET CMP0116 NEW)

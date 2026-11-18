@@ -93,7 +93,7 @@ switch("define", "chronicles_runtime_filtering=on")
 switch("define", "chronicles_default_output_device=dynamic")
 switch("define", "chronicles_log_level=trace")
 
-# Compatibility include path for the vendored (Qt 6.4-generated) nim-seaqt
+# Compatibility include path for the (Qt 6.4-generated) nim-seaqt
 # bindings: gen_qvariant.cpp does `#include <QVariantConstPointer>`, a convenience
 # header Qt removed after 6.4 (absent in 6.11+). seaqt_compat/ provides a shim of
 # that name so the *generated code stays pristine* and still compiles on newer Qt.

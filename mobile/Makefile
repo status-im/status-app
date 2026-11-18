@@ -63,7 +63,7 @@ ifeq ($(OS),android)
 		ANDROID_NDK_ROOT="$(ANDROID_NDK_ROOT)" \
 		ANDROID_API="$(ANDROID_API)" \
 		HOST_OS="$(HOST_OS)" \
-		$(call statusgo_nim_config,$(LIB_NIM_PARAMS_ANDROID)) \
+		$(call statusgo_nim_config,$(LIB_NIM_PARAMS_MOBILE)) \
 		GO_GENERATE_CMD="go generate" \
 		SHELL=/bin/sh
 	@$(ANDROID_NDK_ROOT)/toolchains/llvm/prebuilt/$(HOST_OS)-x86_64/bin/llvm-objcopy \
@@ -79,7 +79,7 @@ else ifeq ($(OS),ios)
 		ARCH=$(ARCH) \
 		IPHONE_SDK="$(IPHONE_SDK)" \
 		IOS_TARGET="$(IOS_TARGET)" \
-		$(call statusgo_nim_config,$(LIB_NIM_PARAMS_IOS)) \
+		$(call statusgo_nim_config,$(LIB_NIM_PARAMS_MOBILE)) \
 		SHELL=/bin/sh
 endif
 	@echo "Copying library to mobile lib directory"

@@ -661,7 +661,7 @@ else
  UI_SOURCES := $(shell find ui -type f -regextype egrep -iregex '.*(qmldir|qml|qrc|js)$$' -not -iname 'resources.qrc')
 endif
 
-# QML modules of the vendored Nim libraries, bundled as qrc:/<Module>/... so an
+# QML modules of the Nim packages, bundled as qrc:/<Module>/... so an
 # installed app finds them through its "qrc:/" import path (their install()
 # only adds import paths inside this checkout).
 # Read when the recipe runs, after nimble.paths is made; resolved packages never

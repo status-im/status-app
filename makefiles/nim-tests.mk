@@ -173,8 +173,7 @@ endif
 nim-test-run/%: NIM_PARAMS += --nimcache:$(NIMCACHE_BASE)-$(call nim_test_cache,$@)$(NIM_TEST_CACHE_TOOLCHAIN)
 
 # Windows links the sds/status import libraries by explicit path
-# (NIM_EXTRA_PARAMS); status-go's build can delete an earlier sds.lib, so wait
-# for the import libraries like the client does.
+# (NIM_EXTRA_PARAMS), so wait for them like the client does.
 ifeq ($(mkspecs),win32)
  NIM_TEST_ORDER_DEPS := $(WIN_IMPORT_LIBS)
 endif

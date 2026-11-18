@@ -3,8 +3,7 @@
 LIB_NIM_POLICY := --mm:orc -d:useMalloc --threads:on
 LIB_NIM_PARAMS_DESKTOP = $(LIB_NIM_POLICY) --opt:speed -d:chronicles_line_numbers -d:chronicles_log_level=TRACE \
 	$(if $(filter true,$(INCLUDE_DEBUG_SYMBOLS)),-d:debug,-d:release)
-LIB_NIM_PARAMS_ANDROID := $(LIB_NIM_POLICY) --opt:size -d:release -d:chronicles_log_level=ERROR
-LIB_NIM_PARAMS_IOS := $(LIB_NIM_POLICY) --opt:size -d:release -d:chronicles_log_level=ERROR
+LIB_NIM_PARAMS_MOBILE := $(LIB_NIM_POLICY) --opt:size -d:release -d:chronicles_log_level=ERROR
 
 # The compiler the manifest pins, as nimble set it up, else the one on PATH
 # (nimble only uses a system Nim that satisfies the pin). Expanded when used,

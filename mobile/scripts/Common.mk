@@ -98,4 +98,3 @@ NIM_STATUS_CLIENT_LIB := $(LIB_PATH)/libnim_status_client$(LIB_EXT)
 STATUS_DESKTOP_RCC := $(STATUS_DESKTOP)/ui/resources.qrc
 STATUS_GO_STUB_LIB := $(LIB_PATH)/libstatus_stub$(LIB_EXT)
 STATUS_GO_SERVICE_LIB := $(LIB_PATH)/libstatus_service$(LIB_EXT)
-
