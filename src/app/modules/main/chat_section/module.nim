@@ -1284,6 +1284,7 @@ proc addNewChat(
     sharedUrlsService: shared_urls_service.Service,
     setChatAsActive: bool = true,
     insertIntoModel: bool = true,
+    isSectionBuild: bool = false,
   ) =
 
   let isUsersListAvailable = chatDto.chatType != ChatType.OneToOne
@@ -1305,8 +1306,7 @@ proc addNewChat(
 
   if insertIntoModel:
     self.view.chatsModel().appendItem(chatItem)
-  # Set active if it's the only chat or if specified
-  if setChatAsActive or self.chatContentModules.len == 1:
+  if activatesWhenAdded(setChatAsActive, isSectionBuild, self.chatContentModules.len):
     self.setActiveItem(chatItem.id)
 
 method switchToChannel*(self: Module, channelName: string) =
@@ -2090,6 +2090,7 @@ method addOrUpdateChat(self: Module,
       sharedUrlsService,
       setChatAsActive,
       insertIntoModel,
+      isSectionBuild,
     )
 
 method contactsStatusUpdated*(self: Module, statusUpdates: seq[StatusUpdateDto]) =

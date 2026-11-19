@@ -71,3 +71,15 @@ suite "navigation during the first channel build":
     discard pending.resolveInitialNavigation(["general", "privacy-news"], "general")
     let navigation = pending.resolveInitialNavigation(["general", "privacy-news"], "general")
     check navigation.chatId == "general"
+
+suite "selecting a chat as it is added":
+  # The first build adds every chat before the list is in place; a chat selected
+  # then gets its history fetched with no view to receive it.
+  test "the first chat of a section build is left to the build's navigation":
+    check not activatesWhenAdded(requested = false, sectionBuild = true, chatCount = 1)
+
+  test "a section's only chat added later is selected":
+    check activatesWhenAdded(requested = false, sectionBuild = false, chatCount = 1)
+
+  test "a requested chat is selected":
+    check activatesWhenAdded(requested = true, sectionBuild = false, chatCount = 3)
