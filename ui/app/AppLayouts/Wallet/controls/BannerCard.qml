@@ -27,6 +27,12 @@ Control {
         id: d
         // Touch screens: long-press pins the close button visible.
         property bool closeVisible: false
+        property bool mouseHovered: false
+        property bool pressedOnClose: false
+
+        function isOverCloseButton(x, y) {
+            return closeButton.visible && closeButton.contains(mouseArea.mapToItem(closeButton, x, y))
+        }
     }
 
     implicitHeight: 70
@@ -34,29 +40,6 @@ Control {
     padding: Theme.halfPadding
     leftPadding: 20
 
-    TapHandler {
-        acceptedButtons: Qt.LeftButton
-        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.Stylus
-        enabled: !closeHandler.pressed
-        onTapped: root.clicked()
-    }
-
-    // Long press (touch screens): pins the close button visible.
-    // exclusiveSignals ensures tapped and longPressed are mutually exclusive.
-    TapHandler {
-        acceptedDevices: PointerDevice.TouchScreen
-        exclusiveSignals: TapHandler.SingleTap | TapHandler.LongPress
-        enabled: !closeHandler.pressed
-        onTapped: {
-            d.closeVisible = false
-            root.clicked()
-        }
-        onLongPressed: d.closeVisible = true
-    }
-
-    HoverHandler {
-        cursorShape: Qt.PointingHandCursor
-    }
     background: StatusBackgroundPanel {
         radius: 12
         border.width: 1
@@ -98,19 +81,48 @@ Control {
             Layout.preferredWidth: 24
             Layout.preferredHeight: 24
             icon: "close"
-            color: closeHoverHandler.hovered ? Theme.palette.directColor1 : Theme.palette.baseColor1
-            visible: root.closeEnabled && (d.closeVisible || root.hovered)
-            TapHandler {
-                id: closeHandler
-                acceptedButtons: Qt.LeftButton
-                onTapped: {
+            color: d.mouseHovered && d.isOverCloseButton(mouseArea.mouseX, mouseArea.mouseY)
+                   ? Theme.palette.directColor1 : Theme.palette.baseColor1
+            visible: root.closeEnabled && (d.closeVisible || d.mouseHovered)
+        }
+    }
+
+    MouseArea {
+        id: mouseArea
+        anchors.fill: parent
+        hoverEnabled: true
+        cursorShape: Qt.PointingHandCursor
+        acceptedButtons: Qt.LeftButton
+
+        onPositionChanged: (mouse) => {
+            if (!pressed && mouse.source === Qt.MouseEventNotSynthesized)
+                d.mouseHovered = true
+        }
+
+        onExited: d.mouseHovered = false
+
+        onPressed: (mouse) => {
+            d.pressedOnClose = d.isOverCloseButton(mouse.x, mouse.y)
+            if (mouse.source !== Qt.MouseEventNotSynthesized)
+                d.mouseHovered = false
+        }
+
+        onPressAndHold: (mouse) => {
+            if (mouse.source !== Qt.MouseEventNotSynthesized && !d.pressedOnClose)
+                d.closeVisible = true
+        }
+
+        onClicked: (mouse) => {
+            if (d.pressedOnClose) {
+                if (d.isOverCloseButton(mouse.x, mouse.y)) {
                     d.closeVisible = false
                     root.close()
                 }
+                return
             }
-            HoverHandler {
-                id: closeHoverHandler
-            }
+
+            d.closeVisible = false
+            root.clicked()
         }
     }
 }

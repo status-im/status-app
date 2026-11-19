@@ -20,19 +20,21 @@ SplitView {
             buyEnabled: buyEnabled.checked
             receiveEnabled: receiveEnabled.checked
             onBuyClicked: {
-                print("Buy clicked")
+                console.info("Buy clicked")
             }
             onReceiveClicked: {
-                print("Receive clicked")
+                console.info("Receive clicked")
             }
             onCloseBuy: {
                 buyEnabled.checked = false
+                console.info("Buy closed")
             }
             onCloseReceive: {
                 receiveEnabled.checked = false
+                console.info("Receive closed")
             }
             onAnyVisibleItemsChanged: {
-                print("Any visible: ", anyVisibleItems)
+                console.info("Any visible:", anyVisibleItems)
             }
         }
     }
@@ -72,3 +74,6 @@ SplitView {
         }
     }
 }
+
+// category: Panels
+// status: good
