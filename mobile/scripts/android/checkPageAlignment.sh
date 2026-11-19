@@ -11,7 +11,10 @@ READELF=$(find "${ANDROID_NDK_ROOT:?ANDROID_NDK_ROOT is not set}/toolchains/llvm
 
 FAILED=0
 while IFS= read -r -d '' lib; do
-  for align in $("$READELF" -lW "$lib" | awk '$1 == "LOAD" { print $NF }'); do
+  headers=$("$READELF" -lW "$lib") || { echo "Error: llvm-readelf failed on $(basename "$lib")"; exit 1; }
+  aligns=$(awk '$1 == "LOAD" { print $NF }' <<< "$headers")
+  [[ -n "$aligns" ]] || { echo "Error: $(basename "$lib") has no LOAD segments"; exit 1; }
+  for align in $aligns; do
     if (( align < MIN_ALIGN )); then
       echo "Error: $(basename "$lib") has LOAD alignment $align (< 16 KB)"
       FAILED=1
