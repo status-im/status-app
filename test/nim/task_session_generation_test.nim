@@ -10,7 +10,8 @@ import app/core/signal_handler
 import app/global/app_lifecycle
 # Selective import: pulling all of gen_qcoreapplication would re-export the seaqt
 # QObject and make the nimqml QtObject macro below ambiguous.
-from seaqt/qcoreapplication import QCoreApplication, create, processEvents
+from seaqt/qcoreapplication import QCoreApplication, processEvents
+import ./support/qt_app
 
 type
   AsyncGenerationTaskArg = ref object of QObjectTaskArg
@@ -31,7 +32,7 @@ QtObject:
   proc onDone*(self: Receiver, response: string) {.slot.} =
     self.got.add response
 
-discard QCoreApplication.create()
+ensureQtCoreApp()
 
 proc taskArg(r: Receiver): AsyncGenerationTaskArg =
   # ThreadPool.start stamps this; the tests stamp it directly.
