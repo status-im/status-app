@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Adds build-config.json to an APK and signs it again.
+# Adds build-config to an APK and signs it again.
 set -euo pipefail
 
 if [[ $# -ne 2 ]]; then
@@ -10,7 +10,7 @@ fi
 INPUT="$1"
 OUTPUT="$2"
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-ASSET=assets/build-config.json
+ASSET=assets/build-config
 
 : "${STATUS_APP_KEYSTORE_PATH:?}" "${STATUS_APP_KEYSTORE_PASSWORD:?}"
 : "${STATUS_APP_KEY_ALIAS:?}" "${STATUS_APP_KEY_PASSWORD:?}"

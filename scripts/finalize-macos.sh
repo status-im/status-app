@@ -14,7 +14,7 @@ REPO="$(dirname "${SCRIPTS}")"
 ENTITLEMENTS="${ENTITLEMENTS:-${REPO}/resources/Entitlements.plist}"
 DMGBUILD="${DMGBUILD:-nix run ${REPO}#dmgbuild --}"
 
-"${SCRIPTS}/write-build-config.sh" "${BUNDLE}/Contents/Resources/build-config.json"
+"${SCRIPTS}/write-build-config.sh" "${BUNDLE}/Contents/Resources/build-config"
 
 xattr -cr "${BUNDLE}"
 

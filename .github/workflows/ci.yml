@@ -43,7 +43,7 @@ env:
   # sets the three keys passes them on to the packaging scripts.
   IN_IMAGE: >-
     docker exec --env STATUS_BUILD_LIFI_API_KEY --env STATUS_BUILD_RELAY_API_KEY
-    --env STATUS_BUILD_KLIPY_API_KEY build
+    --env STATUS_BUILD_KLIPY_API_KEY --env STATUS_CONFIG_KEY build
 
 jobs:
   # Tells the jobs whether a pull request touches anything but documentation.
@@ -267,6 +267,17 @@ jobs:
         run: $IN_IMAGE make update
       - name: status-go
         run: $IN_IMAGE make status-go
+      # A key for this build only: compiled into the app, and sealed so that
+      # only Jenkins can read it to encrypt the build config file.
+      - &config-key
+        name: Build config key
+        run: |
+          key="$(openssl rand -hex 32)"
+          echo "::add-mask::$key"
+          echo "STATUS_CONFIG_KEY=$key" >> "$GITHUB_ENV"
+          mkdir -p pkg
+          printf '%s' "$key" | openssl pkeyutl -encrypt -pubin -inkey ci/build-config.pub \
+            -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 -out pkg/config-bundle.key
       - name: Bundle
         run: |
           $IN_IMAGE make bundle-linux
@@ -285,7 +296,9 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: Status-linux-x86_64-bundle
-          path: pkg/Status-linux-x86_64-bundle.tar.gz
+          path: |
+            pkg/Status-linux-x86_64-bundle.tar.gz
+            pkg/config-bundle.key
           if-no-files-found: error
           retention-days: 7
           compression-level: 0
@@ -357,6 +370,7 @@ jobs:
           $IN_IMAGE sh -c 'keytool -genkeypair -keystore "$STATUS_APP_KEYSTORE_PATH" -storetype PKCS12 \
             -storepass "$STATUS_APP_KEYSTORE_PASSWORD" -alias "$STATUS_APP_KEY_ALIAS" \
             -keyalg RSA -keysize 2048 -validity 30 -dname "CN=Status PR build"'
+      - *config-key
       - name: Build
         run: |
           $IN_IMAGE make mobile-build PACKAGE_TYPE=apk
@@ -369,7 +383,9 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: Status-android-arm64-bundle
-          path: pkg/StatusPR-bundle.apk
+          path: |
+            pkg/StatusPR-bundle.apk
+            pkg/config-bundle.key
           compression-level: 0
           if-no-files-found: error
           retention-days: 7
@@ -419,6 +435,7 @@ jobs:
           make deps
       - name: status-go
         run: make status-go
+      - *config-key
       - name: Bundle
         run: |
           make bundle-macos
@@ -430,7 +447,9 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: Status-macos-aarch64-bundle
-          path: pkg/Status-macos-aarch64-bundle.tar.gz
+          path: |
+            pkg/Status-macos-aarch64-bundle.tar.gz
+            pkg/config-bundle.key
           compression-level: 0
           if-no-files-found: error
           retention-days: 7
@@ -484,6 +503,7 @@ jobs:
           xcrun --sdk "$IPHONE_SDK" --show-sdk-version
           xcbeautify --version
           make update
+      - *config-key
       - name: App
         run: make mobile-build
       - *save-go
@@ -500,7 +520,9 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: Status-ios-arm64-unsigned
-          path: pkg/StatusPR-unsigned.ipa
+          path: |
+            pkg/StatusPR-unsigned.ipa
+            pkg/config-bundle.key
           # Compressed already.
           compression-level: 0
           if-no-files-found: error
@@ -635,6 +657,7 @@ jobs:
           make deps
       - name: status-go
         run: make status-go
+      - *config-key
       - name: Bundle
         run: |
           make bundle-windows
@@ -645,7 +668,9 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: Status-windows-x86_64-bundle
-          path: pkg/Status-windows-x86_64-bundle.tar.gz
+          path: |
+            pkg/Status-windows-x86_64-bundle.tar.gz
+            pkg/config-bundle.key
           compression-level: 0
           if-no-files-found: error
           retention-days: 7

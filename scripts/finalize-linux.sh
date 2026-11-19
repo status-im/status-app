@@ -10,7 +10,7 @@ APPIMAGE="${2}"
 
 SCRIPTS="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-"${SCRIPTS}/write-build-config.sh" "${APP_DIR}/usr/build-config.json"
+"${SCRIPTS}/write-build-config.sh" "${APP_DIR}/usr/build-config"
 
 mkdir -p "$(dirname "${APPIMAGE}")"
 rm -f "${APPIMAGE}"

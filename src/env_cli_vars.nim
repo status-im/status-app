@@ -365,11 +365,11 @@ let desktopConfig = StatusDesktopConfig.load(
   secondarySources = proc (
       config: StatusDesktopConfig, sources: auto
   ) {.raises: [ConfigurationError], gcsafe.} =
-    let content = getEnv(BUILD_CONFIG_CONTENT_ENV)
-    let path = buildConfigPath()
-    if content.len > 0:
-      sources.addConfigFileContentWithParams(Json, content, allowUnknownFields = true)
-    elif path.len > 0:
-      sources.addConfigFileWithParams(Json, InputFile(path), allowUnknownFields = true)
+    try:
+      let content = readBuildConfig()
+      if content.len > 0:
+        sources.addConfigFileContentWithParams(Json, content, allowUnknownFields = true)
+    except IOError, ValueError:
+      raise newException(ConfigurationError, "build config: " & getCurrentExceptionMsg())
 )
 delEnv(BUILD_CONFIG_CONTENT_ENV)

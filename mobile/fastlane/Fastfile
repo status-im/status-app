@@ -143,7 +143,7 @@ platform :ios do
     end
 
     sh(File.join(PROJECT_DIR, "..", "scripts", "write-build-config.sh"),
-       File.join(app_path, "build-config.json"))
+       File.join(app_path, "build-config"))
 
     UI.message("Creating unsigned IPA...")
     FileUtils.rm_f(ipa_path)

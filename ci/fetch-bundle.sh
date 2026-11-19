@@ -25,9 +25,16 @@ rm -rf "${DEST}"
 mkdir -p "${DEST}"
 gh run download "${RUN_ID}" --repo "${REPO}" --name "${ARTIFACT}" --dir "${DEST}"
 
-SOURCE="$(gh attestation verify "${DEST}/${FILE}" --repo "${REPO}" \
-  --signer-workflow "${REPO}/.github/workflows/ci.yml" --deny-self-hosted-runners --format json \
-  --jq '.[0].verificationResult.signature.certificate | "\(.sourceRepositoryRef) \(.sourceRepositoryDigest)"')"
+verify() {
+  gh attestation verify "$1" --repo "${REPO}" \
+    --signer-workflow "${REPO}/.github/workflows/ci.yml" --deny-self-hosted-runners --format json \
+    --jq '.[0].verificationResult.signature.certificate | "\(.sourceRepositoryRef) \(.sourceRepositoryDigest)"'
+}
+SOURCE="$(verify "${DEST}/${FILE}")"
+if [[ "$(verify "${DEST}/config-bundle.key")" != "${SOURCE}" ]]; then
+  echo "ERROR: the app and its sealed key come from different builds" >&2
+  exit 1
+fi
 SOURCE_REF="${SOURCE% *}"
 SOURCE_SHA="${SOURCE#* }"
 echo "Built from ${SOURCE_REF} (${SOURCE_SHA})"

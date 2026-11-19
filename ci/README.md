@@ -60,7 +60,13 @@ Nothing is compiled, and the scripts need neither Qt nor the git submodules. `ma
 
 ### The build config file
 
-[`scripts/write-build-config.sh`](../scripts/write-build-config.sh) writes `build-config.json` from the `STATUS_BUILD_*` environment variables: `STATUS_BUILD_INFURA_TOKEN=abc` becomes `"INFURA_TOKEN": "abc"`. It goes into the package before signing, so the signature covers it. The app reads it at startup ([`src/build_config.nim`](../src/build_config.nim)); an option takes the first value found in:
+[`scripts/write-build-config.sh`](../scripts/write-build-config.sh) writes `build-config`, a JSON object, from the `STATUS_BUILD_*` environment variables: `STATUS_BUILD_INFURA_TOKEN=abc` becomes `"INFURA_TOKEN": "abc"`. It goes into the package before signing, so the signature covers it.
+
+The file is encrypted (AES-256-CTR) with a key that exists for one build only. The workflow generates it, compiles it into the app, and uploads it next to the bundle as `config-bundle.key`, sealed with the public key in [`build-config.pub`](./build-config.pub). Only Jenkins holds the private key (credential `status-app-config-private-key`), so only Jenkins can write a build config file that a given app accepts. The workflow run that built the app also knows the key, which is how it packages a pull request's build.
+
+This keeps the values from being read out of the package; it does not protect them from someone who takes the app apart. An app compiled without a key, as in a local build, reads the file as plain JSON.
+
+The app reads it at startup ([`src/build_config.nim`](../src/build_config.nim)); an option takes the first value found in:
 
 1. the command line
 2. the `STATUS_RUNTIME_*` environment variable

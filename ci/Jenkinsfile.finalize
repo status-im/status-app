@@ -98,7 +98,7 @@ pipeline {
             https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
           chmod +x tmp/tools/appimagetool
         '''
-        status.signingSecrets('linux') { status.commonSecrets {
+        withSecrets('linux') {
           withEnv(['APPIMAGE_TOOL=tmp/tools/appimagetool']) {
             sh "scripts/finalize-linux.sh bundle/dist ${appimage}"
           }
@@ -108,7 +108,7 @@ pipeline {
               ${utils.getFilename(appimage)} ${utils.getFilename(appimage)}.asc
           """
           sh "scripts/sign-linux-file.sh ${tarball}"
-        } }
+        }
         publish(AppImage: tarball)
       } }
       post { cleanup { cleanWs(disableDeferredWipeout: true) } }
@@ -127,9 +127,9 @@ pipeline {
       steps { script {
         fetchBundle()
         def dmg = pkgName('dmg', 'aarch64')
-        status.signingSecrets('macos') { status.commonSecrets {
+        withSecrets('macos') {
           sh "scripts/finalize-macos.sh bundle/Status.app ${dmg}"
-        } }
+        }
         if (params.RELEASE) {
           withCredentials([
             usernamePassword(
@@ -159,11 +159,11 @@ pipeline {
         fetchBundle()
         def exe = pkgName('exe', 'x86_64')
         def archive = pkgName('7z', 'x86_64')
-        status.signingSecrets('windows') { status.commonSecrets {
+        withSecrets('windows') {
           withEnv(["DESKTOP_VERSION=${env.BUNDLE_VERSION}"]) {
             sh "scripts/finalize-windows.sh ./bundle/Status ${exe}"
           }
-        } }
+        }
         sh "7z a ${archive} ./bundle/Status"
         publish(Exe: exe, Zip: archive)
       } }
@@ -188,9 +188,9 @@ pipeline {
       steps { script {
         fetchBundle()
         def apk = pkgName('apk', 'arm64')
-        status.signingSecrets('android') { status.commonSecrets {
+        withSecrets('android') {
           sh "mobile/scripts/android/finalize.sh bundle/StatusPR-bundle.apk ${apk}"
-        } }
+        }
         publish(APK: apk)
       } }
       post { cleanup { cleanWs(disableDeferredWipeout: true) } }
@@ -213,13 +213,13 @@ pipeline {
           mkdir -p mobile/bin/ios/qt6
           mv bundle/Payload/StatusPR.app mobile/bin/ios/qt6/
         '''
-        status.signingSecrets('ios') { status.commonSecrets {
+        withSecrets('ios') {
           dir('mobile/fastlane') {
             sshagent(credentials: ['status-im-auto-ssh']) {
               nix.develop("bundle exec fastlane ios ${env.BUILD_VARIANT}", pure: false)
             }
           }
-        } }
+        }
         sh "mkdir -p pkg && cp mobile/bin/ios/qt6/StatusPR.ipa ${ipa}"
         publish(Ipa: ipa)
       } }
@@ -252,6 +252,16 @@ def fetchBundle() {
   }
   env.BUNDLE_VERSION = readFile('bundle/VERSION').trim()
   env.BUNDLE_COMMIT = readFile('bundle/COMMIT').trim()
+}
+
+def withSecrets(String platform, Closure body) {
+  status.signingSecrets(platform) { status.commonSecrets {
+    withCredentials([file(credentialsId: 'status-app-config-private-key', variable: 'STATUS_CONFIG_PRIVATE_KEY')]) {
+      withEnv(["STATUS_CONFIG_SEALED_KEY=${env.WORKSPACE}/bundle/config-bundle.key"]) {
+        body()
+      }
+    }
+  } }
 }
 
 def pkgName(String ext, String arch) {

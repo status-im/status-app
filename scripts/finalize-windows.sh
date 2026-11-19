@@ -12,7 +12,7 @@ INSTALLER="${2}"
 SCRIPTS="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INSTALLER_DIR="$(dirname "${INSTALLER}")"
 
-"${SCRIPTS}/write-build-config.sh" "${DIST}/resources/build-config.json"
+"${SCRIPTS}/write-build-config.sh" "${DIST}/resources/build-config"
 
 if [[ -n "${WINDOWS_CODESIGN_PFX_PATH}" ]]; then
     "${SCRIPTS}/sign-windows-bin.sh" "${DIST}"
