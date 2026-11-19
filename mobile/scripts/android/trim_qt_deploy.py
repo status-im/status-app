@@ -35,7 +35,8 @@ def dynamic(f):
 
 
 present = {f.name: dynamic(f) for f in libdir.glob('*.so')}
-broken = sorted((n, d) for n, (needed, _) in present.items() for d in needed if d in dropped)
+broken = sorted((n, d) for n, (needed, _) in present.items() for d in needed
+                if any(p.search(d) for p in deny))
 if broken:
     sys.exit('trim: kept libs need dropped libs: %s' % broken)
 

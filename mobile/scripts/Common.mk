@@ -86,6 +86,11 @@ QRCODEGEN_SCRIPT := $(SCRIPTS_PATH)/buildQRCodeGen.sh
 STATUS_KEYCARD_QT_SCRIPT := $(SCRIPTS_PATH)/buildStatusKeycardQt.sh
 NIM_STATUS_CLIENT_SCRIPT := $(SCRIPTS_PATH)/buildNimStatusClient.sh
 APP_SCRIPT := $(SCRIPTS_PATH)/buildApp.sh
+ifeq ($(OS),android)
+QT_TRIM_FILES := $(SCRIPTS_PATH)/android/trim_qt_deploy.py $(SCRIPTS_PATH)/android/qt-deploy-deny.txt
+else ifeq ($(OS),ios)
+QT_TRIM_FILES := $(SCRIPTS_PATH)/ios/filter_qml_imports.py $(SCRIPTS_PATH)/ios/qml-import-deny.txt
+endif
 RUN_SCRIPT := $(SCRIPTS_PATH)/$(OS)/run.sh
 
 # lib files
