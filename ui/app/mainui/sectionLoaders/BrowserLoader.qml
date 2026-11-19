@@ -27,6 +27,8 @@ StatusSectionLoader {
 
     required property HandlersManagerLoader popupHandler
 
+    /// The Browser is turned on (settings and feature flag).
+    property bool sectionEnabled: true
     /// The Browser section is the current one.
     property bool sectionCurrent: false
     /// Suspended or Hidden (the owner's one notion of background).
@@ -50,6 +52,7 @@ StatusSectionLoader {
         d.pendingUrls = d.pendingUrls.concat([url])
     }
 
+    active: root.keepLoaded
     asynchronous: false
 
     LoggingCategory {
@@ -63,8 +66,8 @@ StatusSectionLoader {
 
         enabled: SQUtils.Utils.isMobile
 
-        shown: root.sectionCurrent && !root.appInBackground
-        current: root.sectionCurrent
+        shown: root.sectionEnabled && root.sectionCurrent && !root.appInBackground
+        current: root.sectionEnabled && root.sectionCurrent
         inBackground: root.appInBackground
         hasLivePage: root.item?.hasLivePage ?? false
         keepAlive: root.item?.keepAlive ?? false
