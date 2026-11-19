@@ -246,7 +246,12 @@ endif
 # This tool generates the .pc files
 # Installs a pkg-config wrapper that's profiding the `prefix` config for pkg-config files
 
+# Its two tools are compiled with the resolved Nim, after the resolution.
+QT_PC_NIM = $(NIM)
 -include vendor/prl-to-pc/qt-pkgconfig.mk
+ifdef QT_PC_WRAPPER
+$(QT_PC_WRAPPER) $(QT_PC_GENERATOR): | nimble.paths
+endif
 # -----------------------------------------------------
 
 ifneq ($(mkspecs),win32)
