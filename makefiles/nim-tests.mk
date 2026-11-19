@@ -110,7 +110,7 @@ ifeq ($(mkspecs),linux)
  NIM_TEST_CACHE_TOOLCHAIN := -$(shell gcc -dumpmachine)-gcc$(shell gcc -dumpfullversion)-gxx$(shell g++ -dumpfullversion)
 endif
 ifeq ($(NIM_TESTS_SHARED_CACHE),1)
- nim_test_cache = $(if $(filter $(NIM_MODEL_SPY_TARGETS),$1),shared-spy,shared)
+ nim_test_cache = $(if $(filter $(NIM_MODEL_SPY_TARGETS),$1),shared-spy,shared)$(if $(filter $(NIM_BENCHES),$1),-bench)
 else
  nim_test_cache = $(notdir $(basename $1))
 endif
@@ -122,9 +122,12 @@ nim-test-run/%: NIM_PARAMS += --nimcache:$(NIMCACHE_BASE)-$(call nim_test_cache,
 ifeq ($(mkspecs),win32)
  NIM_TEST_ORDER_DEPS := $(WIN_IMPORT_LIBS)
 endif
+# Tests build without LTO, which only lengthens their links; the benchmarks keep the application's flags.
+$(NIM_TESTS): NIM_TEST_DROP := -d:lto
+
 nim-test-run/%: | qt-pkgconfig $(STATUSGO) $(QRCODEGEN) $(NIM_TEST_ORDER_DEPS)
 	LD_LIBRARY_PATH="$(QT_LIBDIR)":"$(NIMSDS_LIBDIR)":"$(STATUSGO_LIBDIR)":"$(STATUSKEYCARD_QT_LIBDIR)":"$(EXTRA_LIBS_PATH)":"$(LD_LIBRARY_PATH)" $(ENV_SCRIPT) \
-	nim c $(NIM_PARAMS) $(NIM_EXTRA_PARAMS) --mm:orc --passL:"-L$(STATUSGO_LIBDIR)" --passL:"-lstatus" --passL:"$(QRCODEGEN)" -r $(subst nim-test-run/,,$@)
+	nim c $(filter-out $(NIM_TEST_DROP),$(NIM_PARAMS)) $(NIM_EXTRA_PARAMS) --mm:orc --passL:"-L$(STATUSGO_LIBDIR)" --passL:"-lstatus" --passL:"$(QRCODEGEN)" -r $(subst nim-test-run/,,$@)
 
 tests-nim: $(NIM_TESTS)
 

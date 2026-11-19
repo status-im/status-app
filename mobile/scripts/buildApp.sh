@@ -179,6 +179,17 @@ else
     XCODE_FLAGS+=(-allowProvisioningUpdates)
   fi
 
+  # qmake's ccache feature does nothing in an Xcode project, so a compiler launcher
+  # such as ccache wraps the compilers here. The linkers stay as they are.
+  if [[ -n "${CMAKE_CXX_COMPILER_LAUNCHER:-}" ]]; then
+    for tool in clang clang++; do
+      printf '#!/bin/sh\nexec %s "%s" "$@"\n' "$CMAKE_CXX_COMPILER_LAUNCHER" "$(xcrun -f "$tool")" > "$BUILD_DIR/$tool-launcher"
+      chmod +x "$BUILD_DIR/$tool-launcher"
+    done
+    XCODE_FLAGS+=(CC="$BUILD_DIR/clang-launcher" CXX="$BUILD_DIR/clang++-launcher"
+      LD="$(xcrun -f clang)" LDPLUSPLUS="$(xcrun -f clang++)" COMPILER_INDEX_STORE_ENABLE=NO)
+  fi
+
   BIN_DIR=${BIN_DIR:-"$CWD/../bin/ios"}
   mkdir -p "$BIN_DIR"
 

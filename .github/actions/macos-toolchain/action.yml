@@ -78,6 +78,9 @@ runs:
           echo "CMAKE_BUILD_PARALLEL_LEVEL=$(sysctl -n hw.logicalcpu)"
           echo "CMAKE_C_COMPILER_LAUNCHER=ccache"
           echo "CMAKE_CXX_COMPILER_LAUNCHER=ccache"
+          # The runner images carry the same Xcode with different file dates,
+          # which is what ccache tells compilers apart by unless told otherwise.
+          echo "CCACHE_COMPILERCHECK=%compiler% --version"
         } >> "$GITHUB_ENV"
         echo "$qt/bin" >> "$GITHUB_PATH"
 
