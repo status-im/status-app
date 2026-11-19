@@ -272,7 +272,7 @@ Item {
             if (root.sectionLayout?.isPortrait)
                 Backpressure.setTimeout(root, 50, () => {
                     if (d.openThreadId)
-                        root.sectionLayout.currentIndex = StatusSectionLayout.RightPanel
+                        root.sectionLayout.setCurrentIndex(StatusSectionLayout.RightPanel)
                 })
         }
 
@@ -309,7 +309,7 @@ Item {
             if (newThreadParentMessageId === parentMessageId && newThreadParentChatId === root.activeItemId) {
                 threadPanelRevision++
                 if (root.sectionLayout?.isPortrait)
-                    root.sectionLayout.currentIndex = StatusSectionLayout.RightPanel
+                    root.sectionLayout.setCurrentIndex(StatusSectionLayout.RightPanel)
                 rightPanelLoader.item?.newThreadPanel?.chatInput.forceInputActiveFocus()
                 return
             }
@@ -321,7 +321,7 @@ Item {
             newThreadParentMessageId = parentMessageId
             threadOpenedFromInfo = false
             if (root.sectionLayout?.isPortrait)
-                root.sectionLayout.currentIndex = StatusSectionLayout.RightPanel
+                root.sectionLayout.setCurrentIndex(StatusSectionLayout.RightPanel)
         }
 
         function closeThreadPanel() {
@@ -551,7 +551,7 @@ Item {
         if (root.navToMsgDetails) {
             d.requestCenterPanel()
             if (root.sectionLayout)
-                root.sectionLayout.currentIndex = StatusSectionLayout.CentralPanel
+                root.sectionLayout.setCurrentIndex(StatusSectionLayout.CentralPanel)
             root.navToMsgDetailsRequested(false)
         }
     }
@@ -570,7 +570,7 @@ Item {
 
     function navigateToMessageList() {
         if (root.sectionLayout)
-            root.sectionLayout.currentIndex = StatusSectionLayout.LeftPanel
+            root.sectionLayout.setCurrentIndex(StatusSectionLayout.LeftPanel)
         root.navToMsgListRequested(false)
     }
 
@@ -706,7 +706,7 @@ Item {
                 onJumpToMessageRequested: messageId => {
                     infoMessageStore.jumpToMessage(messageId)
                     if (root.sectionLayout?.isPortrait)
-                        root.sectionLayout.currentIndex = StatusSectionLayout.CentralPanel
+                        root.sectionLayout.setCurrentIndex(StatusSectionLayout.CentralPanel)
                 }
                 onSetNeverAskAboutUnfurlingAgain: neverAskAgain => root.setNeverAskAboutUnfurlingAgain(neverAskAgain)
                 onOpenGifPopupRequest: (params, cbOnGifSelected, cbOnClose) => root.openGifPopupRequest(params, cbOnGifSelected, cbOnClose)
@@ -973,7 +973,7 @@ Item {
         if(root.navToMsgDetails) {
             d.requestCenterPanel()
             if (root.sectionLayout)
-                root.sectionLayout.currentIndex = StatusSectionLayout.CentralPanel
+                root.sectionLayout.setCurrentIndex(StatusSectionLayout.CentralPanel)
             root.navToMsgDetailsRequested(false)
         }
     }

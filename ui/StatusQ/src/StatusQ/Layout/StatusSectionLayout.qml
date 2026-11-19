@@ -173,9 +173,20 @@ LayoutChooser {
         This property holds the current index of the active panel.
 
         Kept here rather than in the portrait view, which only exists while
-        portrait is the chosen layout; landscape ignores it.
+        portrait is the chosen layout; landscape ignores it. Changed with
+        \l setCurrentIndex() or by the portrait view (swipes).
     */
-    property int currentIndex: 0
+    readonly property int currentIndex: d.currentIndex
+
+    /*!
+        \qmlproperty int StatusSectionLayout::initialIndex
+        The panel index the section starts on.
+    */
+    property int initialIndex: 0
+
+    function setCurrentIndex(index: int) {
+        d.currentIndex = index
+    }
 
     /*!
         \qmlsignal
@@ -191,12 +202,12 @@ LayoutChooser {
         This method is used to focus the panel that needs to be active.
     */
     function goToNextPanel() {
-        if (d.portrait)
+        if (root.isPortrait && d.portrait)
             d.portrait.incrementCurrentIndex()
     }
 
     function goToPreviousPanel() {
-        if (d.portrait)
+        if (root.isPortrait && d.portrait)
             d.portrait.decrementCurrentIndex()
     }
 
@@ -223,7 +234,7 @@ LayoutChooser {
     function tryGoBack() {
         if (root.contentHistory && root.contentHistory.tryGoBack()) // content tier
             return true
-        if (d.portrait && d.portrait.tryGoBack(false)) // content tier was already tried
+        if (root.isPortrait && d.portrait && d.portrait.tryGoBack(false)) // content tier was already tried
             return true
         if (root.subsectionHistory && root.subsectionHistory.tryGoBack()) { // subsection tier
             // Advance to the central panel so the restored subsection's detail is
@@ -254,7 +265,7 @@ LayoutChooser {
     */
     readonly property bool canGoBack:
         (!!root.contentHistory && root.contentHistory.canGoBack)
-        || (!!d.portrait && d.portrait.canGoBackInternally)
+        || (root.isPortrait && !!d.portrait && d.portrait.canGoBackInternally)
         || (!!root.subsectionHistory && root.subsectionHistory.canGoBack)
 
     /*!
@@ -289,7 +300,7 @@ LayoutChooser {
     onCurrentIndexChanged: {
         root.swiped(d.currentIndexCache, root.currentIndex)
         d.currentIndexCache = root.currentIndex
-        if (!d.portrait) {
+        if (!root.isPortrait) {
             root.panelSwitchStarted()
             root.panelSwitchEnded()
         }
@@ -481,7 +492,7 @@ LayoutChooser {
 
             onCurrentIndexChanged: {
                 if (indexSynced)
-                    root.currentIndex = currentIndex
+                    d.currentIndex = currentIndex
 
                 // Workaround for QTBUG-74328
                 interactive = false
@@ -504,7 +515,8 @@ LayoutChooser {
 
         readonly property Item portrait: portraitLoader.item
         readonly property Item landscape: landscapeLoader.item
-        property int currentIndexCache: 0
+        property int currentIndex: root.initialIndex
+        property int currentIndexCache: root.initialIndex
 
         // Set by every geometry input, cleared by the settle tick that sees it.
         // Only ever read from that tick, so a stale true costs one extra tick

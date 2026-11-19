@@ -1172,7 +1172,7 @@ Item {
             profileLoader.settingsSubsection = appMain.isPortraitMode ? -1 : Constants.settingsSubsection.profile
             appMain.rootStore.setActiveSectionBySectionType(Constants.appSection.profile)
             if (profileLoader.item)
-                profileLoader.item.currentIndex = StatusSectionLayout.LeftPanel
+                profileLoader.item.setCurrentIndex(StatusSectionLayout.LeftPanel)
         }
 
         function maybeDisplayIntroduceYourselfPopup() {

@@ -76,7 +76,7 @@ StatusSectionLoader {
         id: sectionLayout
 
         anchors.fill: parent
-        currentIndex: 1
+        initialIndex: StatusSectionLayout.CentralPanel
 
         userUID: root.userUID
         sectionName: root.sectionName

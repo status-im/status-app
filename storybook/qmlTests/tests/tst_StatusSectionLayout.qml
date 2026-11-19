@@ -24,6 +24,24 @@ Item {
     }
 
     Component {
+        id: initialIndexComponent
+
+        StatusSectionLayout {
+            anchors.fill: parent
+            initialIndex: StatusSectionLayout.CentralPanel
+        }
+    }
+
+    Component {
+        id: mirrorComponent
+
+        QtObject {
+            property Item source
+            readonly property int index: source ? source.currentIndex : -1
+        }
+    }
+
+    Component {
         id: landscapeComponent
 
         StatusSectionLayoutLandscape {
@@ -159,7 +177,7 @@ Item {
             verify(!!pv)
             pv.contentItem.highlightMoveDuration = 60000 // hold the slide
 
-            layout.currentIndex = StatusSectionLayout.RightPanel
+            layout.setCurrentIndex(StatusSectionLayout.RightPanel)
             compare(startedSpy.count, 1)
             compare(endedSpy.count, 0)
 
@@ -175,7 +193,7 @@ Item {
         // portrait afterwards builds the view on the kept index, with no slide
         // and so no further bracket.
         function test_rotateToPortraitKeepsTheIndexWithoutASlide() {
-            layout.currentIndex = StatusSectionLayout.RightPanel
+            layout.setCurrentIndex(StatusSectionLayout.RightPanel)
             compare(startedSpy.count, 1, "landscape pair")
             compare(endedSpy.count, 1, "landscape pair")
 
@@ -190,7 +208,7 @@ Item {
         }
 
         function test_landscapeSwitchEmitsPairBackToBack() {
-            layout.currentIndex = StatusSectionLayout.RightPanel
+            layout.setCurrentIndex(StatusSectionLayout.RightPanel)
 
             compare(startedSpy.count, 1,
                     "a landscape switch must emit panelSwitchStarted")
@@ -200,6 +218,72 @@ Item {
             wait(500)
             compare(startedSpy.count, 1)
             compare(endedSpy.count, 1)
+        }
+
+        // The portrait view is kept after rotating back, but stays out of Back
+        // and panel navigation while hidden.
+        function test_keptPortraitViewIsInertInLandscape() {
+            layout.setCurrentIndex(StatusSectionLayout.CentralPanel)
+            rotate(true)
+            rotate(false)
+            const pv = loaderOf("StatusSectionLayoutPortrait").item
+            verify(!!pv)
+            verify(pv.canGoBackInternally)
+
+            verify(!layout.canGoBack)
+            verify(!layout.tryGoBack())
+            layout.goToNextPanel()
+            compare(layout.currentIndex, StatusSectionLayout.CentralPanel)
+        }
+
+        function test_landscapeSwitchAfterRoundTripEmitsPair() {
+            rotate(true)
+            rotate(false)
+            startedSpy.clear()
+            endedSpy.clear()
+
+            layout.setCurrentIndex(StatusSectionLayout.RightPanel)
+            compare(startedSpy.count, 1)
+            compare(endedSpy.count, 1)
+        }
+
+        function test_currentIndexIsReadOnly() {
+            let threw = false
+            try {
+                layout.currentIndex = StatusSectionLayout.RightPanel
+            } catch (e) {
+                threw = true
+            }
+            verify(threw)
+            compare(layout.currentIndex, StatusSectionLayout.LeftPanel)
+        }
+
+        function test_initialIndexIsTheStartingPanel() {
+            const l = createTemporaryObject(initialIndexComponent, root)
+            verify(!!l)
+            compare(l.currentIndex, StatusSectionLayout.CentralPanel)
+            l.setCurrentIndex(StatusSectionLayout.RightPanel)
+            compare(l.currentIndex, StatusSectionLayout.RightPanel)
+        }
+
+        // Swipes and setCurrentIndex() both reach currentIndex, so a consumer
+        // binding on it follows every change.
+        function test_consumerBindingFollowsSetterAndSwipes() {
+            const mirror = createTemporaryObject(mirrorComponent, root, { source: layout })
+            verify(!!mirror)
+
+            layout.setCurrentIndex(StatusSectionLayout.CentralPanel)
+            compare(mirror.index, StatusSectionLayout.CentralPanel)
+
+            const pv = rotate(true).item
+            verify(!!pv)
+            pv.decrementCurrentIndex()
+            compare(layout.currentIndex, StatusSectionLayout.LeftPanel)
+            compare(mirror.index, StatusSectionLayout.LeftPanel)
+
+            layout.setCurrentIndex(StatusSectionLayout.CentralPanel)
+            compare(pv.currentIndex, StatusSectionLayout.CentralPanel)
+            compare(mirror.index, StatusSectionLayout.CentralPanel)
         }
 
         function test_landscapeSplitStateIsIsolatedPerUserAndSection() {
