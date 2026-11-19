@@ -147,6 +147,32 @@ Item {
             verify(policy.d.timer.running)
         }
 
+        // A hold that comes and goes while the delay runs (a dApp polling)
+        // must not push the drop out forever.
+        function test_aHoldTogglingBeforeTheDropKeepsTheRunningDelay() {
+            const policy = makePolicy({ shown: true, dropDelay: 200 })
+            const toggler = createTemporaryQmlObject(
+                "import QtQuick; Timer { interval: 40; repeat: true; running: true }", root)
+            toggler.triggered.connect(() => { policy.held = true; policy.held = false })
+
+            policy.shown = false
+
+            tryVerify(() => !policy.keepLoaded, 1000)
+        }
+
+        function test_aDeferredDropRestartsWhenTheHoldEnds() {
+            const policy = makePolicy({ shown: true, held: true, dropDelay: 60000 })
+            policy.shown = false
+            policy.memoryPressure(true)
+
+            policy.held = false
+            policy.held = true
+            policy.held = false
+
+            verify(policy.d.timer.running, "one restart for the deferred drop")
+            compare(policy.heldDrops, 1)
+        }
+
         function test_showingAgainBringsTheUiBack() {
             const policy = makePolicy({ shown: true, dropDelay: 60000 })
             policy.shown = false
