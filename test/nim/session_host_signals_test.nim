@@ -11,9 +11,10 @@ import app/core/keycard_epoch
 import app/core/signal_epoch
 import app/core/signal_handler
 import backend/general as status_general
-from seaqt/qcoreapplication import QCoreApplication, create, processEvents
+from seaqt/qcoreapplication import QCoreApplication, processEvents
+import ./support/qt_app
 
-discard QCoreApplication.create()
+ensureQtCoreApp()
 
 proc pump() =
   for _ in 0 ..< 30:
