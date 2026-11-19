@@ -20,6 +20,11 @@ public:
     ~SystemUtilsInternal() override;
 
     Q_INVOKABLE QString qtRuntimeVersion() const;
+    // Gives memory back after a section's UI went away: deletes what is
+    // scheduled for deletion, trims the component cache of the context's
+    // engine, collects JS garbage and, on Android, releases the allocator's
+    // free pages.
+    Q_INVOKABLE void releaseMemory(QObject *context);
     // Desktop: relaunch on application destruction, preserving arguments, cwd and environment.
     // The application owner must release backend/single-instance resources before deleting qApp.
     Q_INVOKABLE void restartApplication() const;
@@ -116,6 +121,12 @@ signals:
     // onTrimMemory RUNNING_LOW/CRITICAL below API 34); else a trim of the app
     // in the background (BACKGROUND, MODERATE, COMPLETE).
     void memoryPressure(bool critical);
+
+    // The app left the front (Suspended or Hidden). Emitted after the QML
+    // handlers of Qt.application.state ran, so a handler here may delete
+    // objects that listen to the state; Android stops the event loop right
+    // after, so it is the last moment to run anything.
+    void enteringBackground();
 
 private:
     int m_androidKeyboardHeight = 0;

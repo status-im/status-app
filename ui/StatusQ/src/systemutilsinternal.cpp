@@ -21,6 +21,7 @@
 #include <QDebug>
 #include <QMetaObject>
 #include <QPointer>
+#include <QQmlEngine>
 #include <atomic>
 #include <mutex>
 #include <QQuickWindow>
@@ -30,6 +31,7 @@
 #include <QJniObject>
 #include <QJniEnvironment>
 #include <QtCore/qnativeinterface.h>
+#include <malloc.h>
 #endif
 
 #ifdef Q_OS_IOS
@@ -84,6 +86,19 @@ SystemUtilsInternal::SystemUtilsInternal(QObject *parent)
     app->installEventFilter(filter);
 
     QObject::connect(filter, &QuitFilter::quit, this, &SystemUtilsInternal::quit);
+
+    // Connected once the event loop runs, after Qt.application connected:
+    // slots run in connection order.
+    QMetaObject::invokeMethod(this, [this] {
+        connect(qGuiApp, &QGuiApplication::applicationStateChanged, this,
+                [this, wasInBackground = false](Qt::ApplicationState state) mutable {
+            const bool inBackground = state == Qt::ApplicationSuspended
+                                      || state == Qt::ApplicationHidden;
+            if (inBackground && !wasInBackground)
+                emit enteringBackground();
+            wasInBackground = inBackground;
+        });
+    }, Qt::QueuedConnection);
 
 #ifdef Q_OS_ANDROID
     // Register native methods for the density and memory pressure listeners,
@@ -175,6 +190,23 @@ SystemUtilsInternal::~SystemUtilsInternal()
 
 QString SystemUtilsInternal::qtRuntimeVersion() const {
     return qVersion();
+}
+
+void SystemUtilsInternal::releaseMemory(QObject *context)
+{
+    // what was dropped is only scheduled for deletion until now
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    if (auto engine = context ? qmlEngine(context) : nullptr) {
+        engine->trimComponentCache();
+        engine->collectGarbage();
+    }
+#ifdef Q_OS_ANDROID
+#ifndef M_PURGE_ALL
+#define M_PURGE_ALL (-104)
+#endif
+    if (mallopt(M_PURGE_ALL, 0) != 1)
+        mallopt(M_PURGE, 0);
+#endif
 }
 
 bool SystemUtilsInternal::fileExists(const QString &path) const
