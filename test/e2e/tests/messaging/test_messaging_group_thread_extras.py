@@ -24,6 +24,10 @@ from scripts.utils.generators import random_text_message
 
 
 @pytest.mark.threads
+@pytest.mark.spec('SC-THRD-01')
+@pytest.mark.spec('SC-THRD-03')
+@pytest.mark.spec('SC-THRD-06')
+@pytest.mark.spec('SC-THRD-12')
 def test_messaging_group_thread_create_reply_and_rename(multiple_instances):
     user_one, user_two, user_three = RandomUser(), RandomUser(), RandomUser()
     parent_message = thread_parent_message_literal()
@@ -60,6 +64,11 @@ def test_messaging_group_thread_create_reply_and_rename(multiple_instances):
 
 
 @pytest.mark.threads
+@pytest.mark.spec('SC-THRD-17')
+@pytest.mark.spec('SC-THRD-18')
+@pytest.mark.spec('SC-THRD-26')
+@pytest.mark.spec('SC-THRD-27')
+@pytest.mark.spec('SC-THRD-37')
 def test_messaging_group_thread_mute_and_mention(multiple_instances):
     user_one, user_two, user_three = RandomUser(), RandomUser(), RandomUser()
     parent_message = thread_parent_message_literal()

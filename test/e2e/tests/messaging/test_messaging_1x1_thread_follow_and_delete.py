@@ -28,6 +28,8 @@ from scripts.utils.generators import random_text_message
 
 
 @pytest.mark.threads
+@pytest.mark.spec('SC-THRD-17')
+@pytest.mark.spec('SC-THRD-22')
 def test_messaging_1x1_thread_follow_and_delete(multiple_instances):
     user_one: UserAccount = RandomUser()
     user_two: UserAccount = RandomUser()
