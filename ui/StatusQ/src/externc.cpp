@@ -17,6 +17,7 @@
 #include <StatusQ/networkaccessfactory.h>
 #include <StatusQ/typesregistration.h>
 #include <StatusQ/osnotification.h>
+#include <StatusQ/qmlinventory.h>
 #include <StatusQ/shareintake.h>
 #include <StatusQ/urlschemeevent.h>
 #ifdef MONITORING
@@ -262,6 +263,11 @@ Q_DECL_EXPORT bool statusq_incubationDebugStats(void* engine, int* count, int* p
 
 Q_DECL_EXPORT void statusq_installBackgroundGraphicsRelease() {
     new Status::BackgroundGraphicsRelease(qApp);
+}
+
+// Also keeps qmlinventory.o, and its load-time hook, linked into the static iOS build.
+Q_DECL_EXPORT void statusq_setQmlInventoryOutputDir(const char* dir) {
+    Status::QmlInventory::setOutputDir(QString::fromUtf8(dir));
 }
 
 Q_DECL_EXPORT void* statusq_osnotification_create() {

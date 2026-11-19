@@ -391,6 +391,7 @@ proc mainProc() =
     app.icon(app.applicationDirPath & statusAppIconPath)
 
   statusq_installMessageHandler(logHandlerCallback)
+  statusq_setQmlInventoryOutputDir(DATADIR.cstring)
 
   when defined(USE_QML_SERVER):
     echo "Setting remote import path: ", remoteImportPath
