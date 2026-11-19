@@ -438,8 +438,22 @@ jobs:
         env: *build-keys
         run: |
           ccache --zero-stats
-          make mobile-build
+          CCACHE_DIAG_MATCH='FavoritesList_qml.cpp main.cpp qrc_img.cpp' CCACHE_DIAG_DIR=$PWD/ccache-diag/pass1 CCACHE_LOGFILE=$PWD/ccache-diag/pass1.log make mobile-build
           ccache --show-stats
+      # Diagnostic: the Xcode build again from its sources, on the same machine.
+      - name: App again
+        env: *build-keys
+        run: |
+          find mobile/build/ios -type d -name Objects-normal -prune -exec rm -rf {} +
+          ccache --zero-stats
+          CCACHE_DIAG_MATCH='FavoritesList_qml.cpp main.cpp qrc_img.cpp' CCACHE_DIAG_DIR=$PWD/ccache-diag/pass2 CCACHE_LOGFILE=$PWD/ccache-diag/pass2.log make mobile-build
+          ccache --show-stats
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: ${{ !cancelled() }}
+        with:
+          name: ccache-diag-ios-${{ github.run_attempt }}
+          path: ccache-diag
+          retention-days: 7
       - *save-go
       - *save-ccache
       # The layout of an .ipa; it installs only after it is signed.

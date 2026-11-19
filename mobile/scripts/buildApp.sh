@@ -182,8 +182,26 @@ else
   # qmake's ccache feature does nothing in an Xcode project, so a compiler launcher
   # such as ccache wraps the compilers here. The linkers stay as they are.
   if [[ -n "${CMAKE_CXX_COMPILER_LAUNCHER:-}" ]]; then
+    # CCACHE_DIAG_DIR: for sources matching a CCACHE_DIAG_MATCH word, keep the
+    # command line and ccache's hashed inputs there.
     for tool in clang clang++; do
-      printf '#!/bin/sh\nexec %s "%s" "$@"\n' "$CMAKE_CXX_COMPILER_LAUNCHER" "$(xcrun -f "$tool")" > "$BUILD_DIR/$tool-launcher"
+      cat > "$BUILD_DIR/$tool-launcher" <<EOF
+#!/bin/sh
+if [ -n "\$CCACHE_DIAG_DIR" ]; then
+  for pat in \$CCACHE_DIAG_MATCH; do
+    case " \$* " in
+      *"\$pat "*)
+        d="\$CCACHE_DIAG_DIR/\$pat.\$\$"
+        mkdir -p "\$d"
+        { echo "cwd: \$(pwd)"; printf '%s\n' "\$@"; } > "\$d/argv.txt"
+        for a in "\$@"; do case "\$a" in @*) cp "\${a#@}" "\$d/" 2>/dev/null ;; esac; done
+        export CCACHE_DEBUG=1 CCACHE_DEBUGDIR="\$d"
+        break ;;
+    esac
+  done
+fi
+exec $CMAKE_CXX_COMPILER_LAUNCHER "$(xcrun -f "$tool")" "\$@"
+EOF
       chmod +x "$BUILD_DIR/$tool-launcher"
     done
     XCODE_FLAGS+=(CC="$BUILD_DIR/clang-launcher" CXX="$BUILD_DIR/clang++-launcher"
