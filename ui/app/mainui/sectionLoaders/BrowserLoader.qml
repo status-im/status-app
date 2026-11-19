@@ -29,6 +29,12 @@ StatusSectionLoader {
 
     /// The Browser section is the current one.
     property bool sectionCurrent: false
+    /// Suspended or Hidden (the owner's one notion of background).
+    property bool appInBackground: Qt.application.state === Qt.ApplicationSuspended
+                                   || Qt.application.state === Qt.ApplicationHidden
+
+    /// The layout was unloaded: the owner may give the memory back.
+    signal uiReleased()
 
     /// Whether the layout should exist. Mobile gives it back when inactive
     /// (BrowserDropPolicy); desktop keeps it from the first visit on.
@@ -57,10 +63,9 @@ StatusSectionLoader {
 
         enabled: SQUtils.Utils.isMobile
 
-        // Inactive (a system sheet on top) is still in front; Suspended is not.
-        shown: root.sectionCurrent && (Qt.application.state === Qt.ApplicationActive
-                                       || Qt.application.state === Qt.ApplicationInactive)
+        shown: root.sectionCurrent && !root.appInBackground
         current: root.sectionCurrent
+        inBackground: root.appInBackground
         hasLivePage: root.item?.hasLivePage ?? false
         keepAlive: root.item?.keepAlive ?? false
 
@@ -182,6 +187,7 @@ StatusSectionLoader {
             d.storeParent.destroy()
             d.storeParent = null
         }
+        root.uiReleased()
     }
     onLoaded: {
         item.visible = true

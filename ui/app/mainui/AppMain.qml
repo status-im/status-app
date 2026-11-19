@@ -2451,6 +2451,8 @@ Item {
 
                         active: d.isBrowserEnabled && keepLoaded
                         sectionCurrent: appView.currentIndex === Constants.appViewStackIndex.browser
+                        appInBackground: memoryRelease.appInBackground
+                        onUiReleased: memoryRelease.request()
 
                         userUID: d.myPublicKey
                         sectionName: "browser"
