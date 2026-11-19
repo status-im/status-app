@@ -437,6 +437,7 @@ jobs:
       - name: App
         env: *build-keys
         run: |
+          mkdir -p ccache-diag
           ccache --zero-stats
           CCACHE_DIAG_MATCH='FavoritesList_qml.cpp main.cpp qrc_img.cpp' CCACHE_DIAG_DIR=$PWD/ccache-diag/pass1 CCACHE_LOGFILE=$PWD/ccache-diag/pass1.log make mobile-build
           ccache --show-stats
@@ -445,6 +446,7 @@ jobs:
         env: *build-keys
         run: |
           find mobile/build/ios -type d -name Objects-normal -prune -exec rm -rf {} +
+          mkdir -p ccache-diag
           ccache --zero-stats
           CCACHE_DIAG_MATCH='FavoritesList_qml.cpp main.cpp qrc_img.cpp' CCACHE_DIAG_DIR=$PWD/ccache-diag/pass2 CCACHE_LOGFILE=$PWD/ccache-diag/pass2.log make mobile-build
           ccache --show-stats
