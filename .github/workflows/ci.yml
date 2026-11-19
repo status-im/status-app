@@ -437,6 +437,7 @@ jobs:
       - name: App
         env: *build-keys
         run: |
+          ccache --zero-stats
           make mobile-build
           ccache --show-stats
       - *save-go
