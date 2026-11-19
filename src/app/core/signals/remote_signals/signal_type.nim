@@ -5,6 +5,7 @@ type SignalType* {.pure.} = enum
   SectionUnreadCountsChanged = "section.unread_counts.changed"
   MessageDelivered = "message.delivered"
   NotificationReplySent = "notification.reply.sent"
+  NotificationConversationRead = "notification.conversation.read"
   ## Wallet Signals
   Wallet = "wallet"
   WalletSignTransactions = "wallet.sign.transactions"

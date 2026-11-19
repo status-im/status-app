@@ -28,6 +28,7 @@ NIM_TESTS_LINK_STATUSQ := \
 	input_area_text_send_test \
 	message_history_paging_test \
 	message_loading_isolation_test \
+	notification_conversation_read_test \
 	send_handler_adaptors_bench \
 	send_handler_lookup_bench \
 	send_modal_instantiation_bench \
