@@ -32,9 +32,21 @@ QtObject {
     readonly property bool threadMuted: messageModule ? messageModule.threadMuted : false
     readonly property real threadMuteTill: messageModule ? messageModule.threadMuteTill : 0
 
-    // Where the reader was in the chat and its threads; getRecord(threadId) /
-    // setRecord(threadId, json)
-    readonly property var readingPositions: messageModule ? messageModule.readingPositions : null
+    // Where the reader was in the chat (thread "") and in its threads, kept by
+    // the backend, as {read(threadId), write(threadId, record)} over the chat
+    // the store shows now; null without a chat.
+    function readingPositions() {
+        const positions = root.messageModule ? root.messageModule.readingPositions : null
+        if (!positions)
+            return null
+        return {
+            read: threadId => {
+                const json = positions.getRecord(threadId)
+                return json ? JSON.parse(json) : null
+            },
+            write: (threadId, record) => positions.setRecord(threadId, record ? JSON.stringify(record) : "")
+        }
+    }
 
     function setThreadMuted(interval: int) {
         if (root.messageModule)
