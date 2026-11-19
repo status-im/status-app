@@ -15859,6 +15859,13 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     </message>
 </context>
 <context>
+    <name>SessionRoot</name>
+    <message>
+        <source>Saving the password could not be confirmed — the option was left enabled and will be verified at your next login</source>
+        <translation type="unfinished">L’enregistrement du mot de passe n’a pas pu être confirmé — l’option est restée activée et sera vérifiée lors de votre prochaine connexion</translation>
+    </message>
+</context>
+<context>
     <name>SessionTransitionView</name>
     <message>
         <source>Finishing background work…</source>
