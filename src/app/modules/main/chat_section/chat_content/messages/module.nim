@@ -88,6 +88,8 @@ method delete*(self: Module) =
   self.viewVariant.delete
 
 method load*(self: Module) =
+  # Pages fetched before this module listened never reached its model.
+  self.controller.restartHistory()
   self.controller.init()
   # Sends announced before this chat loaded (a share landing here) are echoed now.
   for args in self.controller.pendingSends():
