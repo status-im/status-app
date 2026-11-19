@@ -140,7 +140,7 @@ make mobile-run
 The build system uses several environment variables to control the build process:
 
 #### Build Control Variables
-- `USE_SYSTEM_NIM=1`: Use system-installed Nim instead of building from source. Make sure `nim` and `nimble` are available
+- `NIMBLE`: nimble 0.26.2 or newer (defaults to `nimble` on `PATH`). The Nim compiler comes from `nim_status_client.nimble`
 
 #### Platform Configuration
 - `OS`: Target platform (`ios` or `android`)

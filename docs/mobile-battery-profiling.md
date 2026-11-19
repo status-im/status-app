@@ -96,7 +96,7 @@ private final java.util.concurrent.atomic.AtomicBoolean pprofStarted =
 Usual mobile build (see `CLAUDE.md` for the full env):
 
 ```bash
-make mobile-run -j10 V=3 USE_SYSTEM_NIM=1
+make mobile-run -j10 V=3
 ```
 
 ### Inspect (host)
@@ -138,7 +138,7 @@ Added to master in [`beb8fefc2d`](https://github.com/status-im/status-app/commit
 
 ```bash
 export ANDROID_SERIAL=<device-serial>   # skips run.sh device picker
-make mobile-profile -j10 V=3 USE_SYSTEM_NIM=1
+make mobile-profile -j10 V=3
 # override port: QML_DEBUG_PORT=NNNN make mobile-profile
 ```
 

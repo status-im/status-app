@@ -99,6 +99,8 @@ add_executable(
 
 target_compile_definitions(QmlFilesServer PRIVATE
         QML_IMPORT_ROOT="${CMAKE_CURRENT_LIST_DIR}"
+        NIM_QTCAMERA_QML="${NIM_QTCAMERA_DIR}/qml"
+        NIM_QRSCAN_QML="${NIM_QRSCAN_DIR}/qml"
         STATUSQ_MODULE_IMPORT_PATH="${STATUSQ_MODULE_IMPORT_PATH}"
     )
 

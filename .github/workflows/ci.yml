@@ -29,7 +29,6 @@ env:
     qtpositioning qtserialport qtshadertools qtimageformats qtscxml qthttpserver
   # The merge commit is built; scripts/version.sh names the build after the pull request's head.
   STATUS_APP_VERSION_COMMIT: ${{ github.event.pull_request.head.sha }}
-  USE_SYSTEM_NIM: 1
   NIMFLAGS: --colors:off
   FLAG_SWAP_ENABLED: 1
   FLAG_RELAY_ENABLED: 1
@@ -162,6 +161,27 @@ jobs:
           path: .ci-cache/ccache
           key: ccache-${{ github.job }}-${{ steps.keys.outputs.day }}
           restore-keys: ccache-${{ github.job }}-
+      # The compiler and packages nimble.lock pins, kept per lock (and image: a
+      # compiler nimble built in one may not run in another). nimble.paths is not
+      # kept: it holds absolute paths, and the resolution writes it again.
+      - &restore-nimble
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        id: nimble
+        with:
+          path: nimbledeps
+          key: nimbledeps-${{ runner.os }}-${{ runner.arch }}-${{ env.IMAGE }}-${{ hashFiles('nimble.lock', 'nim_status_client.nimble') }}
+      - &nim-packages
+        name: Nim packages
+        id: nim-packages
+        run: $IN_IMAGE make nimble-deps
+      # Only a complete resolution is saved: the key has no fallback, so a
+      # partial one would be restored for as long as the lock stays.
+      - &save-nimble
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        if: ${{ steps.nim-packages.outcome == 'success' && steps.nimble.outputs.cache-hit != 'true' }}
+        with:
+          path: nimbledeps
+          key: ${{ steps.nimble.outputs.cache-primary-key }}
       - name: QML lint
         run: $IN_IMAGE make qml-lint
       - name: StatusQ tests
@@ -220,6 +240,9 @@ jobs:
           key: go-${{ github.job }}-${{ steps.keys.outputs.status-go }}
           restore-keys: go-${{ github.job }}-
       - *restore-ccache
+      - *restore-nimble
+      - *nim-packages
+      - *save-nimble
       - name: Dependencies
         run: $IN_IMAGE make update
       - name: status-go
@@ -228,7 +251,7 @@ jobs:
       # with every core.
       - name: Libraries and resources
         run: |
-          for target in statusq qrcodegen zxing status-keycard-qt rcc; do
+          for target in statusq qrcodegen status-keycard-qt rcc; do
             $IN_IMAGE make "$target"
           done
       # Nim generates the same C for a test whose sources did not change, so
@@ -266,6 +289,9 @@ jobs:
       - *cache-keys
       - *restore-go
       - *restore-ccache
+      - *restore-nimble
+      - *nim-packages
+      - *save-nimble
       - name: Dependencies
         run: $IN_IMAGE make update
       - name: status-go
@@ -312,6 +338,9 @@ jobs:
       - *cache-keys
       - *restore-go
       - *restore-ccache
+      - *restore-nimble
+      - *nim-packages
+      - *save-nimble
       # OpenSSL changes only with its submodule and the build scripts. The
       # libraries are touched after the restore: make compares them with the sources.
       - &openssl-cache
@@ -376,6 +405,11 @@ jobs:
       - *restore-ccache
       - *openssl-cache
       - *openssl-touch
+      - *restore-nimble
+      - name: Nim packages
+        id: nim-packages
+        run: make nimble-deps
+      - *save-nimble
       - name: Dependencies
         run: |
           pipx install dmgbuild==1.6.7
@@ -429,6 +463,11 @@ jobs:
       - *restore-ccache
       - *openssl-cache
       - *openssl-touch
+      - *restore-nimble
+      - name: Nim packages
+        id: nim-packages
+        run: make nimble-deps
+      - *save-nimble
       - name: Dependencies
         run: |
           xcrun --sdk "$IPHONE_SDK" --show-sdk-version
@@ -467,12 +506,16 @@ jobs:
     timeout-minutes: 120
     env:
       # Nim dependency trees nest past MAX_PATH, and Bash needs the scripts with LF
-      # endings. Set here so that the checkout and nimble's clones see it too.
-      GIT_CONFIG_COUNT: 2
+      # endings. Symlinks are checked out as files: nimble cannot handle the
+      # directory symlinks zxing-cpp's wrappers have, and the Windows build reads
+      # none. Set here so that the checkout and nimble's clones see it too.
+      GIT_CONFIG_COUNT: 3
       GIT_CONFIG_KEY_0: core.longpaths
       GIT_CONFIG_VALUE_0: 'true'
       GIT_CONFIG_KEY_1: core.autocrlf
       GIT_CONFIG_VALUE_1: 'false'
+      GIT_CONFIG_KEY_2: core.symlinks
+      GIT_CONFIG_VALUE_2: 'false'
     steps:
       - *checkout
       - name: Fetch submodules
@@ -506,13 +549,14 @@ jobs:
           fetch https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.8/LLVM-22.1.8-win64.exe \
             16e5709785fef73c854646241c4a92c5cd574318d1b33c63330dd7721903e55c "$tools/llvm-setup.exe"
           extract "$tools/llvm-setup.exe" "$tools/llvm"
-          # Nim 2.2.10
+          # Nim 2.2.10, the version nim_status_client.nimble pins: nimble takes it
+          # instead of building one from source.
           fetch https://github.com/nim-lang/nightlies/releases/download/2026-04-24-version-2-2-bfeb3146d1638b39f69007a4ae5a23e23ae4e5ef/nim-2.2.10-windows_x64.zip \
             fe0686a9b298e5b13d0a983df37e002a8c6320f8b16cc45a51d15cf4046a109f "$tools/nim.zip"
           extract "$tools/nim.zip" "$tools"
-          # nimble 0.26.1
-          fetch https://github.com/nim-lang/nimble/releases/download/v0.26.1/nimble-windows_x64.zip \
-            e158b8e501f6b1055cc5d4fef742e1eb928b685d67842a7b4e384183079b42f3 "$tools/nimble.zip"
+          # nimble 0.26.2, which reuses the packages a restored cache holds
+          fetch https://github.com/nim-lang/nimble/releases/download/v0.26.2/nimble-windows_x64.zip \
+            4c3788511c66ac8b552264313ffedd1549637bec750d8c9ca03029321bc52a50 "$tools/nimble.zip"
           extract "$tools/nimble.zip" "$tools/nimble"
           # protoc 36.0
           fetch https://github.com/protocolbuffers/protobuf/releases/download/v36.0/protoc-36.0-win64.zip \
@@ -536,7 +580,7 @@ jobs:
             # Where windeployqt finds the Visual C++ runtime installer.
             echo "VCINSTALLDIR=$(cygpath -m "$vs")/VC"
             echo "GOPATH=$(cygpath -m "$RUNNER_TEMP")/go"
-            echo "MAKEFLAGS=-j$(nproc) V=1 USE_SYSTEM_NIM=1"
+            echo "MAKEFLAGS=-j$(nproc) V=1"
             echo "CMAKE_BUILD_PARALLEL_LEVEL=$(nproc)"
           } >> "$GITHUB_ENV"
           # The path added last comes first.
@@ -569,8 +613,10 @@ jobs:
           done
           [ "$missing" = 0 ]
           go version
-          nim --version | head -n 1
-          nimble --version | grep -F 'nimble v0.26.1'
+          pin="$(sed -nE 's/^requires "nim == ([^"]+)".*/\1/p' nim_status_client.nimble)"
+          nim --version | head -n 1 | grep -F "Version $pin " ||
+            { echo "::error::The prebuilt Nim is not $pin, the version nim_status_client.nimble pins"; exit 1; }
+          nimble --version | grep -F 'nimble v0.26.2'
           gcc --version | head -n 1
           make --version | head -n 1
           clang --version | head -n 1
@@ -581,6 +627,11 @@ jobs:
           ls "$VCINSTALLDIR/Redist/MSVC"
       - *cache-keys
       - *restore-go
+      - *restore-nimble
+      - name: Nim packages
+        id: nim-packages
+        run: make nimble-deps
+      - *save-nimble
       - name: Dependencies
         run: |
           make update

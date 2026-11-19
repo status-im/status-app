@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Extracted from Makefile to avoid nimbus-build-system blocking use.
+# Cleans the checkout and removes the submodule checkouts.
 git clean -qfdx
 # nuke vendor, they're regenerated anyways
 rm -rf vendor

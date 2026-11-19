@@ -42,7 +42,7 @@ runs:
         docker run --detach --name build --entrypoint "" \
           --cap-add=SYS_ADMIN --security-opt apparmor=unconfined \
           --volume "$PWD:$PWD" --workdir "$PWD" \
-          --env "MAKEFLAGS=-j$(nproc) V=1 USE_SYSTEM_NIM=1" \
+          --env "MAKEFLAGS=-j$(nproc) V=1" \
           --env "CMAKE_BUILD_PARALLEL_LEVEL=$(nproc)" \
           --env-file "$RUNNER_TEMP/build.env" \
           "$IMAGE" sleep infinity
