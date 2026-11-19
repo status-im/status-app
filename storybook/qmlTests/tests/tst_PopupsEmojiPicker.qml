@@ -51,10 +51,8 @@ Item {
         property var watched: null  // a var drops to null when its object is destroyed
 
         function init() {
-            // Popups builds its signing/auth/keycard stores and the community fetch
-            // popup up front; they reach for backend context the test does not provide.
-            ignoreWarning(/Popups\.qml:14[56]: TypeError: Cannot read property 'communityFetch.*' of null/)
-            ignoreWarning(/Popups\.qml:14[56]: TypeError: Cannot read property 'communityFetch.*' of null/)
+            // Popups builds its signing/auth/keycard stores up front; they reach for
+            // backend context the test does not provide.
             ignoreWarning(/AuthenticationStore\.qml:\d+: ReferenceError: mainModule is not defined/)
             ignoreWarning(/SigningStore\.qml:\d+: ReferenceError: mainModule is not defined/)
             ignoreWarning(/KeycardManagementStore\.qml:\d+: ReferenceError: mainModule is not defined/)

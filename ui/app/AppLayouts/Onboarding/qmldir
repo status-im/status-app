@@ -3,5 +3,6 @@ LoginBySyncingFlow 1.0 LoginBySyncingFlow.qml
 OnboardingFlow 1.0 OnboardingFlow.qml
 OnboardingLayout 1.0 OnboardingLayout.qml
 OnboardingStackView 1.0 OnboardingStackView.qml
+RecoveryPhraseFlowType 1.0 RecoveryPhraseFlowType.qml
 UseRecoveryPhraseFlow 1.0 UseRecoveryPhraseFlow.qml
 StartupOnboardingWrapper 1.0 StartupOnboardingWrapper.qml

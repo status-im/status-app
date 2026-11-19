@@ -4,19 +4,23 @@ import QtQuick.Effects
 
 import StatusQ.Core.Theme
 
+import AppLayouts.Profile.helpers
 import AppLayouts.Wallet.stores as WalletStores
 import shared.controls
+import shared.stores as SharedStores
 import shared.views as SharedViews
 
 Item {
-    property alias contactDetails: profilePreview.contactDetails
+    id: root
+
+    required property ContactDetails contactDetails
 
     property alias profileStore: profilePreview.profileStore
     property alias contactsStore: profilePreview.contactsStore
     property alias utilsStore: profilePreview.utilsStore
-    property alias networksStore: profilePreview.networksStore
+    required property SharedStores.NetworksStore networksStore
 
-    property alias sendToAccountEnabled: profilePreview.sendToAccountEnabled
+    required property bool sendToAccountEnabled
 
     property alias showcaseCommunitiesModel: profilePreview.showcaseCommunitiesModel
     property alias showcaseAccountsModel: profilePreview.showcaseAccountsModel
@@ -57,6 +61,9 @@ Item {
             Layout.fillHeight: true
             Layout.maximumHeight: implicitHeight
 
+            contactDetails: root.contactDetails
+            networksStore: root.networksStore
+            sendToAccountEnabled: root.sendToAccountEnabled
             walletStore: WalletStores.RootStore
 
             readOnly: true

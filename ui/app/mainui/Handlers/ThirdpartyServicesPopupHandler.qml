@@ -1,6 +1,6 @@
 import QtQuick
 
-import shared.popups
+import StatusQ.Core.Utils as SQUtils
 
 QtObject {
     id: root
@@ -18,13 +18,13 @@ QtObject {
         thirdpartyServicesPopupInst.open()
     }
 
-    readonly property Component thirdpartyServicesPopup: Component {
-        ThirdpartyServicesPopup {
-            thirdPartyServicesEnabled: root.thirdPartyServicesEnabled
-
-            onToggleThirdpartyServicesEnabledRequested: root.toggleThirdpartyServicesEnabledRequested()
-            onOpenDiscussPageRequested: root.openDiscussPageRequested()
-            onOpenThirdpartyServicesArticleRequested: root.openThirdpartyServicesArticleRequested()
+    readonly property SQUtils.DeferredComponent thirdpartyServicesPopup: SQUtils.DeferredComponent {
+        source: Qt.resolvedUrl("../../../imports/shared/popups/ThirdpartyServicesPopup.qml")
+        properties: ({ thirdPartyServicesEnabled: Qt.binding(() => root.thirdPartyServicesEnabled) })
+        onCreated: popup => {
+            popup.toggleThirdpartyServicesEnabledRequested.connect(root.toggleThirdpartyServicesEnabledRequested)
+            popup.openDiscussPageRequested.connect(root.openDiscussPageRequested)
+            popup.openThirdpartyServicesArticleRequested.connect(root.openThirdpartyServicesArticleRequested)
         }
     }
 }

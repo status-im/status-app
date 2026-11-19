@@ -372,12 +372,16 @@ Page {
         }
     }
 
-    StatusMessageDialog {
+    Component {
         id: accountsLoadErrorDialog
-        objectName: "accountsLoadErrorDialog"
-        title: qsTr("Error loading accounts")
-        text: qsTr("Failed to load accounts. Please restart the app and try again.")
-        icon: StatusMessageDialog.StandardIcon.Critical
+
+        StatusMessageDialog {
+            objectName: "accountsLoadErrorDialog"
+            title: qsTr("Error loading accounts")
+            text: qsTr("Failed to load accounts. Please restart the app and try again.")
+            icon: StatusMessageDialog.StandardIcon.Critical
+            destroyOnClose: true
+        }
     }
 
     Connections {
@@ -394,7 +398,7 @@ Page {
                 loginScreen.setAccountLoginError(error, wrongPassword)
                 return
             }
-            accountsLoadErrorDialog.open()
+            accountsLoadErrorDialog.createObject(root).open()
         }
     }
 

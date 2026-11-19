@@ -725,13 +725,30 @@ Window {
             service: "StatusDesktop.AutoLogin"
         }
 
+        // created on the first non-idle keycard state, released when closed in idle
         Loader {
-            active: SQUtils.Utils.isAndroid
-            sourceComponent: KeycardChannelDrawer {
-                id: keycardChannelDrawer
-                currentState: applicationWindow.keycardStateStore.state
-                onDismissed: {
-                    applicationWindow.keycardStateStore.keycardDismissed()
+            id: keycardChannelDrawerLoader
+
+            property bool needed: applicationWindow.keycardStateStore.state !== Constants.keycardChannelState.idle
+
+            active: SQUtils.Utils.isAndroid && needed
+            source: Qt.resolvedUrl("imports/shared/popups/KeycardChannelDrawer.qml")
+
+            onLoaded: {
+                item.currentState = Qt.binding(() => applicationWindow.keycardStateStore.state)
+                item.dismissed.connect(() => applicationWindow.keycardStateStore.keycardDismissed())
+                item.closed.connect(() => Qt.callLater(() => {
+                    if (applicationWindow.keycardStateStore.state === Constants.keycardChannelState.idle)
+                        keycardChannelDrawerLoader.needed = false
+                }))
+            }
+
+            Connections {
+                target: applicationWindow.keycardStateStore
+
+                function onStateChanged() {
+                    if (applicationWindow.keycardStateStore.state !== Constants.keycardChannelState.idle)
+                        keycardChannelDrawerLoader.needed = true
                 }
             }
         }

@@ -213,61 +213,31 @@ QtObject {
         return false
     }
 
-    readonly property Component enablePushNotificationsPopupComponent: Component {
-        EnablePushNotificationsPopup {
-            id: enablePushNotificationsPopup
-            destroyOnClose: true
-            hasPermission: PushNotifications.status === PushNotifications.Granted &&
-                            root.notificationsStore.notificationsSettings.remotePushNotificationsEnabled
-
-            onClosed: {
+    readonly property SQUtils.DeferredComponent enablePushNotificationsPopupComponent: SQUtils.DeferredComponent {
+        source: Qt.resolvedUrl("EnablePushNotificationsPopupInstance.qml")
+        properties: ({
+            hasPermission: Qt.binding(() => PushNotifications.status === PushNotifications.Granted &&
+                                             root.notificationsStore.notificationsSettings.remotePushNotificationsEnabled)
+        })
+        onCreated: popup => {
+            popup.closed.connect(() => {
                 appMainLocalSettings.enablePushNotificationsFreshInstallSeen = true
-                appMainLocalSettings.enablePushNotificationsDontAskAgain = enablePushNotificationsPopup.dontAskAgain
+                appMainLocalSettings.enablePushNotificationsDontAskAgain = popup.dontAskAgain
                 appMainLocalSettings.enablePushNotificationsLastShownVersion = currentMinorVersion()
-            }
-
-            onEnablePushNotifications: {
+            })
+            popup.enablePushNotifications.connect(() => {
                 if (SQUtils.Utils.isIOS) {
                     root.notificationsStore.notificationsSettings.remotePushNotificationsEnabled = true
                 } else {
                     root.notificationsStore.notificationsSettings.notifSettingAllowNotifications = true
                 }
-                if (PushNotifications.status !== PushNotifications.Granted) {
-                    pushNotificationsConnections.enabled = true
-                    PushNotifications.request()
-                    enablePushNotificationsPopup.loading = true
-                }
-            }
-
-            onOpenSettingsRequested: {
+                if (PushNotifications.status !== PushNotifications.Granted)
+                    popup.requestPermission()
+            })
+            popup.openSettingsRequested.connect(() => {
                 PushNotifications.openSettings()
-                enablePushNotificationsPopup.close()
-            }
-
-
-            Connections {
-                id: pushNotificationsConnections
-                target: PushNotifications
-
-                function onStatusChanged() {
-                    enablePushNotificationsPopup.loading = false
-                    enablePushNotificationsPopup.hasPermission = PushNotifications.status === PushNotifications.Granted
-
-                    if (PushNotifications.status === PushNotifications.Granted) {
-                        Global.displayToastMessage(
-                            qsTr("Push notifications enabled"),
-                            "",
-                            "checkmark-circle",
-                            false,
-                            Constants.ephemeralNotificationType.success,
-                            ""
-                        )
-                        enablePushNotificationsPopup.close()
-                        pushNotificationsConnections.enabled = false
-                        return
-                    }
-                }
-            }
+                popup.close()
+            })
         }
     }
 
