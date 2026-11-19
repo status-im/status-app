@@ -14,14 +14,14 @@ import app_service/service/chat/dto/chat
 import app_service/service/community/service as community_service
 import app_service/service/community/dto/community
 import app_service/service/message/service as message_service
-from seaqt/qcoreapplication import QCoreApplication, create
+import ./support/qt_app
 
 privateAccess(section_module.Module)
 privateAccess(main_controller.Controller)
 privateAccess(community_service.Service)
 privateAccess(message_service.Service)
 
-discard QCoreApplication.create()
+ensureQtCoreApp()
 
 type BadgeDelegate = ref object of main_interface.AccessInterface
   updates: seq[tuple[sectionId: string, unread: bool, mentions: int]]

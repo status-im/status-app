@@ -97,6 +97,62 @@ NIM_TESTS_MODEL_SPY := \
 NIM_MODEL_SPY_TARGETS := $(patsubst %,nim-test-run/test/nim/%.nim,$(NIM_TESTS_MODEL_SPY))
 $(NIM_MODEL_SPY_TARGETS): NIM_PARAMS += -d:QT_MODEL_SPY
 
+# Most tests build and run as two programs, so the modules they share are
+# compiled and linked once:
+#   main    - built with QT_MODEL_SPY and StatusQ, which the other tests tolerate
+#   threads - the thread tests: they turn the threads feature flag on for the process
+# NIM_TESTS_MERGE=0 builds every test as its own program.
+NIM_TESTS_MERGE ?= 1
+NIM_MERGED_GROUPS := main threads
+nim_test_paths = $(patsubst %,test/nim/%.nim,$1)
+nim_merged_file = build/nim-tests/merged_$1_tests.nim
+nim_merged_target = nim-test-run/$(call nim_merged_file,$1)
+
+# Kept apart: a define or resource of their own, or a GUI application object.
+NIM_OWN_PROGRAM := $(call nim_test_paths,qml_libs_resources_test qrscan_zxing_errors_test) \
+	$(shell grep -lE 'newQ(Gui)?Application|QQmlApplicationEngine' $(NIM_TEST_FILES))
+# Found by what they read, so a new test of the threads flag joins this program.
+NIM_MERGED_threads := $(filter-out $(NIM_OWN_PROGRAM),$(shell grep -l 'THREADS_ENABLED' $(NIM_TEST_FILES)))
+NIM_MERGED_main := $(filter-out $(NIM_OWN_PROGRAM) $(NIM_MERGED_threads),$(NIM_TEST_FILES))
+NIM_MERGED_TARGETS := $(foreach g,$(NIM_MERGED_GROUPS),$(call nim_merged_target,$g))
+
+ifeq ($(NIM_TESTS_MERGE),1)
+ NIM_TESTS_RUN := $(addprefix nim-test-run/,$(filter $(NIM_OWN_PROGRAM),$(NIM_TEST_FILES))) $(NIM_MERGED_TARGETS)
+else
+ NIM_TESTS_RUN := $(NIM_TESTS)
+endif
+
+$(NIM_MERGED_TARGETS): NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-lStatusQ"
+$(NIM_MERGED_TARGETS): | statusq
+NIM_MODEL_SPY_TARGETS += $(call nim_merged_target,main)
+$(call nim_merged_target,main): NIM_PARAMS += -d:QT_MODEL_SPY
+$(call nim_merged_target,threads): export FLAG_THREADS_ENABLED := 1
+$(call nim_merged_target,threads): NIM_PARAMS += --passL:"-L$(STATUSKEYCARD_QT_LIBDIR)" --passL:"-l$(STATUSKEYCARD_QT_LINKNAME)"
+$(call nim_merged_target,threads): | $(STATUSKEYCARD_QT_LIB)
+ifeq ($(mkspecs),linux)
+$(call nim_merged_target,threads): export LD_LIBRARY_PATH := $(shell pkg-config --variable=libdir libpcsclite):$(LD_LIBRARY_PATH)
+endif
+
+# Each program is a file of imports, written on every run so it follows test/nim/.
+define nim_write_merged
+{ echo '{.warning[UnusedImport]: off.}'; printf 'import "../../%s"\n' $(basename $(NIM_MERGED_$1)); } > $(call nim_merged_file,$1)
+endef
+$(NIM_MERGED_TARGETS): | nim-merged-tests nim-tests-qt-app
+nim-merged-tests:
+	mkdir -p build/nim-tests
+	$(foreach g,$(NIM_MERGED_GROUPS),$(call nim_write_merged,$g);)
+.PHONY: nim-merged-tests
+
+# A test that creates a QCoreApplication of its own destroys the one the merged tests share.
+nim-tests-qt-app:
+	@own=$$(grep -lE 'QCoreApplication\.create' $(NIM_TEST_FILES)); \
+	if [ -n "$$own" ]; then \
+		echo "These tests create their own QCoreApplication:"; echo "$$own"; \
+		echo "Use ensureQtCoreApp() from test/nim/support/qt_app.nim instead."; \
+		exit 1; \
+	fi
+.PHONY: nim-tests-qt-app
+
 ifneq ($(mkspecs),win32)
 nim-test-run/%: NIM_PARAMS += --passL:"$(QT_SEAQT_EXTRA_LIBS)"
 endif
@@ -123,13 +179,13 @@ ifeq ($(mkspecs),win32)
  NIM_TEST_ORDER_DEPS := $(WIN_IMPORT_LIBS)
 endif
 # Tests build without LTO, which only lengthens their links; the benchmarks keep the application's flags.
-$(NIM_TESTS): NIM_TEST_DROP := -d:lto
+$(NIM_TESTS) $(NIM_MERGED_TARGETS): NIM_TEST_DROP := -d:lto
 
 nim-test-run/%: | qt-pkgconfig $(STATUSGO) $(QRCODEGEN) $(NIM_TEST_ORDER_DEPS)
 	LD_LIBRARY_PATH="$(QT_LIBDIR)":"$(NIMSDS_LIBDIR)":"$(STATUSGO_LIBDIR)":"$(STATUSKEYCARD_QT_LIBDIR)":"$(EXTRA_LIBS_PATH)":"$(LD_LIBRARY_PATH)" $(ENV_SCRIPT) \
 	nim c $(filter-out $(NIM_TEST_DROP),$(NIM_PARAMS)) $(NIM_EXTRA_PARAMS) --mm:orc --passL:"-L$(STATUSGO_LIBDIR)" --passL:"-lstatus" --passL:"$(QRCODEGEN)" -r $(subst nim-test-run/,,$@)
 
-tests-nim: $(NIM_TESTS)
+tests-nim: $(NIM_TESTS_RUN)
 
 benches-nim: $(NIM_BENCHES)
 
