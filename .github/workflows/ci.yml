@@ -506,12 +506,16 @@ jobs:
     timeout-minutes: 120
     env:
       # Nim dependency trees nest past MAX_PATH, and Bash needs the scripts with LF
-      # endings. Set here so that the checkout and nimble's clones see it too.
-      GIT_CONFIG_COUNT: 2
+      # endings. Symlinks are checked out as files: nimble cannot handle the
+      # directory symlinks zxing-cpp's wrappers have, and the Windows build reads
+      # none. Set here so that the checkout and nimble's clones see it too.
+      GIT_CONFIG_COUNT: 3
       GIT_CONFIG_KEY_0: core.longpaths
       GIT_CONFIG_VALUE_0: 'true'
       GIT_CONFIG_KEY_1: core.autocrlf
       GIT_CONFIG_VALUE_1: 'false'
+      GIT_CONFIG_KEY_2: core.symlinks
+      GIT_CONFIG_VALUE_2: 'false'
     steps:
       - *checkout
       - name: Fetch submodules
