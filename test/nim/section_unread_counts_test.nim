@@ -5,12 +5,12 @@ import app_service/service/chat/service as chat_service
 import app_service/service/message/service as message_service
 import app_service/service/activity_center/service as activity_service
 import backend/response_type
-from seaqt/qcoreapplication import QCoreApplication, create
+import ./support/qt_app
 from seaqt/qtimer import isActive, stop
 
 privateAccess(chat_service.Service)
 
-discard QCoreApplication.create()
+ensureQtCoreApp()
 
 proc snapshot(personalUnread = 2, communityUnread = 5, mentions = 1): string =
   $ %* {"response": {"sections": [
