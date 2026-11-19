@@ -5,6 +5,7 @@ import utils
 QtObject {
     id: root
 
+
     // Wired from ChatStoresConfig so pages can inject mocks even when this
     // store is created internally by a component under test (section loaders)
     property var chatCommunitySectionModule: ChatStoresConfig.chatSectionModule
@@ -76,8 +77,9 @@ QtObject {
         return text
     }
 
-    function sendMessage() {
-        return false
+    property var sendMessageHandler: null
+    function sendMessage(chatId, text, replyId, files, startNewThread, name) {
+        return sendMessageHandler ? sendMessageHandler(chatId, text, replyId, files, startNewThread, name) : false
     }
 
     function sendSticker() {}

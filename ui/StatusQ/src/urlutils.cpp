@@ -5,6 +5,7 @@
 #include <QDir>
 #include <QFile>
 #include <QImageReader>
+#include <QMimeDatabase>
 #include <QRegularExpression>
 #include <QStandardPaths>
 #include <QUrl>
@@ -14,29 +15,47 @@
 #endif
 
 namespace {
+struct ImageMimeType {
+    const char* name;
+    const char* suffixes; // preferred first
+};
+
+// QMimeDatabase's entries for these types. Not looked up at runtime: the first lookup parses
+// the whole database into the heap for the process lifetime.
+constexpr ImageMimeType imageMimeTypes[] = {
+    {"image/jpeg", "jpg jpeg jpe jif jfif jfi"},
+    {"image/png", "png"},
+    {"image/gif", "gif"},
+    {"image/webp", "webp"},
+    {"image/svg+xml", "svg"}, // chat Attachments only, rasterised by AttachmentPreparer
+};
+
 constexpr auto webpMime = "image/webp";
+constexpr auto svgMime = "image/svg+xml";
 }
 
 UrlUtils::UrlUtils(QObject *parent): QObject(parent) {
-    QStringList mimeTypes{QStringLiteral("image/jpeg"), QStringLiteral("image/png"), QStringLiteral("image/gif")};
-    if (QImageReader::supportedMimeTypes().contains(webpMime))
-        mimeTypes.append(webpMime);
-
-    m_imageTypes = makeImageTypes(mimeTypes);
-    m_chatImageTypes = makeImageTypes(mimeTypes + QStringList{QStringLiteral("image/svg+xml")});
+    m_imageTypes = makeImageTypes(false);
+    m_chatImageTypes = makeImageTypes(true);
 }
 
-UrlUtils::ImageTypes UrlUtils::makeImageTypes(const QStringList& mimeTypes) const
+UrlUtils::ImageTypes UrlUtils::makeImageTypes(bool withSvg)
 {
-    ImageTypes types;
-    types.mimeTypes = mimeTypes;
+    const auto webpSupported = QImageReader::supportedMimeTypes().contains(webpMime);
 
+    ImageTypes types;
     QStringList imgFilters;
-    for (const auto& mime: mimeTypes) {
-        const auto mimeData = m_mimeDb.mimeTypeForName(mime);
-        imgFilters.append(mimeData.globPatterns());
-        types.preferredSuffixes.append(mimeData.preferredSuffix());
-        types.allSuffixes.append(mimeData.suffixes());
+    for (const auto& mime: imageMimeTypes) {
+        if (!webpSupported && qstrcmp(mime.name, webpMime) == 0)
+            continue;
+        if (!withSvg && qstrcmp(mime.name, svgMime) == 0)
+            continue;
+        const auto suffixes = QString::fromLatin1(mime.suffixes).split(' ');
+        types.mimeTypes.append(QString::fromLatin1(mime.name));
+        types.preferredSuffixes.append(suffixes.first());
+        types.allSuffixes.append(suffixes);
+        for (const auto& suffix: suffixes)
+            imgFilters.append(QStringLiteral("*.") + suffix);
     }
 
     types.nameFilters = imgFilters.join(' ');
@@ -70,7 +89,7 @@ bool UrlUtils::isValidImageUrl(const QUrl &url, const ImageTypes& types) const
     if (url.scheme().startsWith(QLatin1String("http"))) // truly remote URLs, not virtual like Android content://
         return urlEndsWithSupportedExtension(filePath); // QMimeDatabase::mimeTypeForUrl(url) returns 'application/octet-stream'
 
-    const auto mimeType = m_mimeDb.mimeTypeForFile(filePath, QMimeDatabase::MatchContent).name();
+    const auto mimeType = QMimeDatabase().mimeTypeForFile(filePath, QMimeDatabase::MatchContent).name();
 
     return types.mimeTypes.contains(mimeType);
 }

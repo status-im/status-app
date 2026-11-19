@@ -1,7 +1,8 @@
 import unittest, json, options, sequtils, times
+import ./support/qt_app
 import stint
 import nimqml
-from seaqt/qcoreapplication import QCoreApplication, create, processEvents
+from seaqt/qcoreapplication import QCoreApplication, processEvents
 
 import app/core/eventemitter
 import app/core/signals/types
@@ -9,7 +10,7 @@ import app/modules/shared_modules/collectibles/controller
 import app/modules/shared_models/collectibles_model
 import backend/collectibles as backend_collectibles
 
-discard QCoreApplication.create()  # the ownership refresh is debounced by a QTimer
+ensureQtCoreApp()  # the ownership refresh is debounced by a QTimer
 
 const
   RequestId = 7'i32

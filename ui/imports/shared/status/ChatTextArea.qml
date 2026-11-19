@@ -654,6 +654,32 @@ StatusTextArea {
             return
         }
 
+        // macOS: Cmd+Backspace / Cmd+Delete remove from the caret to the start / end of the
+        // visual line (or the selection). Qt binds neither there. At the line edge nothing
+        // is removed and the key falls through. Keyed on the platform plugin because that
+        // is what selects the key bindings.
+        if (Qt.platform.pluginName === "cocoa" && (event.key === Qt.Key_Backspace || event.key === Qt.Key_Delete)
+                && (event.modifiers & Qt.ControlModifier)
+                && !(event.modifiers & Qt.AltModifier)) {
+            let from = root.selectionStart
+            let to = root.selectionEnd
+            if (noSelection) {
+                const lineY = root.cursorRectangle.y + root.cursorRectangle.height / 2
+                if (event.key === Qt.Key_Backspace) {
+                    from = highlighter.snapToQuoteContent(root.positionAt(0, lineY))
+                    to = root.cursorPosition
+                } else {
+                    from = root.cursorPosition
+                    to = root.positionAt(root.width, lineY)
+                }
+            }
+            if (from < to) {
+                event.accepted = true
+                TextDocumentUtils.deleteRange(root.textDocument, from, to)
+                return
+            }
+        }
+
         if (event.key === Qt.Key_Backspace && noSelection
                 && highlighter.isQuoteContentStart(root.cursorPosition)) {
             event.accepted = true

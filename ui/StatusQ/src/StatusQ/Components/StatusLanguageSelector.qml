@@ -131,6 +131,8 @@ Button {
         margins: Theme.halfPadding
         padding: Theme.padding
 
+        // populated on the first open: the native names (한국어, ...) load fallback fonts
+        onAboutToShow: userSelectorPanel.model = d.languageModel
         onOpened: if (!Utils.isMobile) searchField.forceActiveFocus()
         onClosed: searchField.input.edit.clear()
 
@@ -152,7 +154,6 @@ Button {
 
                 id: userSelectorPanel
                 objectName: "statusLanguageSelectorListView"
-                model: d.languageModel
                 highlightFollowsCurrentItem: true
                 highlight: Rectangle {
                     radius: Theme.radius

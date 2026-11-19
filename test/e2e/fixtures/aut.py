@@ -63,6 +63,21 @@ def aut(user_data) -> AUT:
     yield _aut
 
 
+@pytest.fixture
+def aut_without_test_mode(user_data) -> AUT:
+    if not configs.AUT_PATH.exists():
+        pytest.exit(f"Application not found: {configs.AUT_PATH}")
+    yield AUT(user_data=user_data, test_mode=False)
+
+
+@pytest.fixture
+def main_window_without_test_mode(aut_without_test_mode: AUT):
+    aut_without_test_mode.launch()
+    main_window = MainWindow().wait_until_appears().prepare()
+    yield aut_without_test_mode, main_window
+    aut_without_test_mode.stop()
+
+
 @pytest.fixture()
 def multiple_instances(user_data):
     def _aut(user_data: SystemPath = None) -> AUT:

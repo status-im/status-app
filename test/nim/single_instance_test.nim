@@ -3,11 +3,12 @@
 ## Needs a QCoreApplication + processEvents pumping to deliver QLocalServer.newConnection.
 
 import unittest, os
+import ./support/qt_app
 import nimqml
 import app/global/single_instance
 # Selective import: pulling all of gen_qcoreapplication would re-export the seaqt
 # gen_qobject_types.QObject and make the nimqml QtObject macro below ambiguous.
-from seaqt/qcoreapplication import QCoreApplication, create,
+from seaqt/qcoreapplication import QCoreApplication,
   processEvents
 
 # Minimal receiver to capture the forwarded event via a method-form connect.
@@ -29,7 +30,7 @@ QtObject:
     self.received = eventStr
     inc self.count
 
-discard QCoreApplication.create()  # one app for the whole suite
+ensureQtCoreApp()  # one app for the whole suite
 
 suite "SingleInstance":
 

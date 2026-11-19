@@ -1,11 +1,11 @@
 import std/[importutils, json, sets, tables, unittest]
 import app/core/eventemitter
 import app_service/service/contacts/service as contacts_service
-from seaqt/qcoreapplication import QCoreApplication, create
+import ./support/qt_app
 
 privateAccess(contacts_service.Service)
 
-discard QCoreApplication.create()
+ensureQtCoreApp()
 
 suite "contact info request coalescing":
   setup:

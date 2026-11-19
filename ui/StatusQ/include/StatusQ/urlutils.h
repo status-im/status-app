@@ -1,14 +1,13 @@
 #pragma once
 
 #include <QObject>
-#include <QMimeDatabase>
 
 class UrlUtils : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QString validImageNameFilters READ validImageNameFilters FINAL CONSTANT) // "*.jpg *.jpe *.jp *.jpeg *.png *.webp *.gif"
-    Q_PROPERTY(QStringList validPreferredImageExtensions READ validPreferredImageExtensions FINAL CONSTANT) // ["jpg", "png", "webp", "gif"]
-    Q_PROPERTY(QStringList allValidImageExtensions READ allValidImageExtensions FINAL CONSTANT) // ["jpg", "jpe", "jp", "jpeg", "png", "webp", "gif"]
+    Q_PROPERTY(QString validImageNameFilters READ validImageNameFilters FINAL CONSTANT) // "*.jpg *.jpeg *.jpe *.jif *.jfif *.jfi *.png *.gif *.webp"
+    Q_PROPERTY(QStringList validPreferredImageExtensions READ validPreferredImageExtensions FINAL CONSTANT) // ["jpg", "png", "gif", "webp"]
+    Q_PROPERTY(QStringList allValidImageExtensions READ allValidImageExtensions FINAL CONSTANT) // ["jpg", "jpeg", "jpe", "jif", "jfif", "jfi", "png", "gif", "webp"]
     // Chat Attachments additionally accept SVG, which is rasterised before sending (AttachmentPreparer)
     Q_PROPERTY(QString validChatImageNameFilters READ validChatImageNameFilters FINAL CONSTANT)
     Q_PROPERTY(QStringList validChatPreferredImageExtensions READ validChatPreferredImageExtensions FINAL CONSTANT)
@@ -35,16 +34,14 @@ public:
     Q_INVOKABLE QString displayPathLabel(const QString& path) const;
 
 private:
-    QMimeDatabase m_mimeDb;
-
     struct ImageTypes
     {
         QStringList mimeTypes;
-        QString nameFilters;           // "*.jpg *.jpe *.jp *.jpeg *.png *.webp *.gif" (+ uppercase)
-        QStringList preferredSuffixes; // ["jpg", "png", "webp", "gif"]
-        QStringList allSuffixes;       // ["jpg", "jpe", "jp", "jpeg", "png", "webp", "gif"]
+        QString nameFilters;           // "*.jpg *.jpeg *.jpe *.jif *.jfif *.jfi *.png *.gif *.webp" (+ uppercase)
+        QStringList preferredSuffixes; // ["jpg", "png", "gif", "webp"]
+        QStringList allSuffixes;       // ["jpg", "jpeg", "jpe", "jif", "jfif", "jfi", "png", "gif", "webp"]
     };
-    ImageTypes makeImageTypes(const QStringList& mimeTypes) const;
+    static ImageTypes makeImageTypes(bool withSvg);
     bool isValidImageUrl(const QUrl& url, const ImageTypes& types) const;
 
     // Images status-go can decode (webp only when Qt can display it)

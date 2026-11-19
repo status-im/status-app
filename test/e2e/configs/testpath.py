@@ -5,6 +5,11 @@ from datetime import datetime
 from scripts.utils.system_path import SystemPath
 
 ROOT: SystemPath = SystemPath(__file__).resolve().parent.parent
+REPO_ROOT: SystemPath = ROOT.parent.parent
+KEYCARD_SIMULATOR_DIR: SystemPath = (
+    REPO_ROOT / 'vendor' / 'status-keycard-qt' / 'test' / 'keycard-simulator'
+)
+LOCAL_WAKU_FLEETS_CONFIG: SystemPath = REPO_ROOT / 'assets' / 'local-waku-fleets-config.json'
 
 # Runtime initialisation
 TEST: typing.Optional[SystemPath] = None

@@ -1,12 +1,12 @@
 import unittest
+import ./support/qt_app
 import nimqml
-from seaqt/qcoreapplication import QCoreApplication, create
 
 import app/core/eventemitter
 import app/modules/main/profile_section/contacts/module as contacts_module
 import app/modules/main/profile_section/wallet/accounts/module as accounts_module
 
-discard QCoreApplication.create()
+ensureQtCoreApp()
 
 suite "collectibles request ids":
   test "profile accounts and contacts showcase don't share a collectibles request id":

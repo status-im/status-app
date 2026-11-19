@@ -2,11 +2,12 @@
 ## Proves a queued, by-name slot invocation with a QString arg via QCoreApplication.processEvents.
 
 import unittest, os
+import ./support/qt_app
 import nimqml
 import app/core/signal_handler
 # Selective import: pulling all of gen_qcoreapplication would re-export the seaqt
 # gen_qobject_types.QObject and make the nimqml QtObject macro below ambiguous.
-from seaqt/qcoreapplication import QCoreApplication, create, processEvents
+from seaqt/qcoreapplication import QCoreApplication, processEvents
 
 QtObject:
   type Receiver = ref object of QObject
@@ -26,7 +27,7 @@ QtObject:
     self.got = signal
     inc self.count
 
-discard QCoreApplication.create()  # one app for the whole suite
+ensureQtCoreApp()  # one app for the whole suite
 
 suite "signal_handler":
 

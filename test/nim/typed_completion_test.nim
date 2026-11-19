@@ -9,12 +9,13 @@
 ## processEvents harness.
 
 import unittest, os
+import ./support/qt_app
 import nimqml
 import app/core/tasks/qt
 import app/global/app_lifecycle
 # Selective import: pulling all of gen_qcoreapplication would re-export the seaqt
 # QObject and make the nimqml QtObject macro below ambiguous.
-from seaqt/qcoreapplication import QCoreApplication, create, processEvents
+from seaqt/qcoreapplication import QCoreApplication, processEvents
 
 # Pilot payload: a ref graph the worker builds and hands over intact. A dedicated
 # task-arg subtype is declared for the pilot per project convention (every new
@@ -54,7 +55,7 @@ QtObject:
     self.lastItemsLen = r.items.len
     self.order.add r.seqNo
 
-discard QCoreApplication.create()   # one app for the whole suite
+ensureQtCoreApp()   # one app for the whole suite
 
 # Simulate a worker completion: build the finished graph, hand it off. In the real
 # system this body runs on a threadpool thread; here we invoke it directly since

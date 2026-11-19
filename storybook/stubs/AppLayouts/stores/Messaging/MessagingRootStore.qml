@@ -1,6 +1,7 @@
 import QtQuick
 
 QtObject {
+    readonly property ThreadReplyStore threadReplyStore: ThreadReplyStore {}
     readonly property MessagingSettingsStore messagingSettingsStore: MessagingSettingsStore {}
 
     function createCommunityRootStore(parent, communityId) {

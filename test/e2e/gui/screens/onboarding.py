@@ -10,6 +10,7 @@ import constants.tesseract
 from constants.onboarding import OnboardingScreensHeaders
 import driver
 from constants import ColorCodes
+from constants.keycard import KEYCARD_NOT_VERIFIED_SNIPPET
 from driver.objects_access import walk_children
 from gui.components.onboarding.language_selector import LanguageSelector
 from gui.components.onboarding.login_by_syncing_checklist import LogInBySyncingDialog
@@ -565,6 +566,18 @@ class OnboardingCreatePasswordView(OnboardingView):
         self.create_password_view = QObject(onboarding_names.createPasswordView)
         self.password_strength_indicator = QObject(onboarding_names.passwordStrengthIndicator)
         self.password_component_indicator = QObject(onboarding_names.passwordComponentIndicator)
+        self.stay_logged_in_switch = QObject(onboarding_names.stayLoggedInSwitch)
+
+    @allure.step('Set stay logged in switch')
+    def set_stay_logged_in(self, enabled: bool):
+        self.stay_logged_in_switch.wait_until_appears()
+        if self.stay_logged_in_switch.is_checked == enabled:
+            return
+        self.stay_logged_in_switch.click()
+        assert driver.waitFor(
+            lambda: self.stay_logged_in_switch.is_checked == enabled,
+            configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+        ), f'Save password switch did not become {enabled}'
 
     @allure.step('Set password and open Confirmation password view')
     def create_password(self, value: str):
@@ -777,6 +790,22 @@ class KeycardLoginView(QObject):
             timeout_msec,
         ), f'PIN input was not ready, info={self._safe_info_text()!r}'
         time.sleep(0.3)
+
+    @allure.step('Wait until login shows untrusted Keycard and hides PIN')
+    def wait_until_untrusted_keycard_no_pin(
+            self,
+            timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
+    ):
+        assert driver.waitFor(
+            lambda: (
+                KEYCARD_NOT_VERIFIED_SNIPPET in self._safe_info_text()
+                and not self.pin_input.is_visible
+            ),
+            timeout_msec,
+        ), (
+            f'Expected untrusted Keycard login, info={self._safe_info_text()!r}, '
+            f'pin_visible={self.pin_input.is_visible}'
+        )
 
     @allure.step('Open Lost Keycard page')
     def open_lost_keycard_page(self) -> 'KeycardLostView':
