@@ -99,14 +99,14 @@ StatusSectionLoader {
         shown: root.sectionCurrent && root.appInFront
         current: root.sectionCurrent
         inBackground: !root.appInFront
-
-        onKeepLoadedChanged: console.info(dropLog, root.sectionId, keepLoaded ? "kept" : "dropped")
     }
 
     Connections {
         target: SystemUtils
         function onMemoryPressure(critical) { dropPolicy.memoryPressure(critical) }
     }
+
+    onKeepLoadedChanged: console.info(dropLog, root.sectionId, keepLoaded ? "kept" : "dropped")
 
     // Back-navigation contract for AppMain's back chain. The chrome is
     // interactive while the section item still incubates, so the loader must
