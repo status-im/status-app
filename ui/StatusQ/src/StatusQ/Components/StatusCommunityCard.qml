@@ -251,6 +251,7 @@ Rectangle {
             fillMode: Image.PreserveAspectCrop
             // as StatusImage: decoded for the rendered size
             sourceSize: Qt.size(Math.ceil(width), Math.ceil(height))
+            maxDecodeDevicePixelRatio: 2
             smooth: true
             visible: root.loaded
             cache: false

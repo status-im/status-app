@@ -1268,11 +1268,8 @@ method activeSectionSet*[T](self: Module[T], sectionId: string, skipSavingInSett
     warn "main-module, incorrect section id", sectionId
     return
 
-  case sectionId:
-    of COMMUNITIESPORTAL_SECTION_ID:
-      self.communitiesModule.onActivated()
-    of BROWSER_SECTION_ID:
-      self.browserSectionModule.onActivated()
+  if sectionId == BROWSER_SECTION_ID:
+    self.browserSectionModule.onActivated()
 
   self.view.model().setActiveSection(sectionId)
   self.view.activeSectionSet(item)

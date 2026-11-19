@@ -25,6 +25,7 @@ NIM_TESTS_LINK_STATUSQ := \
 	community_accept_request_test \
 	community_permission_save_test \
 	contact_info_requests_test \
+	curated_communities_load_test \
 	input_area_text_send_test \
 	message_history_paging_test \
 	message_loading_isolation_test \
@@ -84,6 +85,7 @@ NIM_TESTS_MODEL_SPY := \
 	collectibles_model_test \
 	collectibles_selector_model_test \
 	community_roster_model_test \
+	curated_community_model_test \
 	grouped_account_assets_model_test \
 	market_leaderboard_model_test \
 	member_model_test \

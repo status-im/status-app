@@ -23,6 +23,7 @@ QtObject:
       curatedCommunitiesModel: CuratedCommunityModel
       curatedCommunitiesModelVariant: QVariant
       curatedCommunitiesLoading: bool
+      curatedCommunitiesRefreshError: int
       tokenListLoading: bool
       tokenListModel: TokenListModel
       tokenListModelVariant: QVariant
@@ -375,6 +376,20 @@ QtObject:
     read = getCuratedCommunitiesLoading
     notify = curatedCommunitiesLoadingChanged
 
+  proc curatedCommunitiesRefreshErrorChanged*(self: View) {.signal.}
+
+  proc setCuratedCommunitiesRefreshError*(self: View, error: int) =
+    if self.curatedCommunitiesRefreshError == error: return
+    self.curatedCommunitiesRefreshError = error
+    self.curatedCommunitiesRefreshErrorChanged()
+
+  proc getCuratedCommunitiesRefreshError*(self: View): int {.slot.} =
+    return self.curatedCommunitiesRefreshError
+
+  QtProperty[int] curatedCommunitiesRefreshError:
+    read = getCuratedCommunitiesRefreshError
+    notify = curatedCommunitiesRefreshErrorChanged
+
   proc discordFileListModel*(self: View): DiscordFileListModel =
     result = self.discordFileListModel
 
@@ -469,6 +484,15 @@ QtObject:
 
   proc navigateToCommunity*(self: View, communityId: string) {.slot.} =
     self.delegate.navigateToCommunity(communityId)
+
+  proc refreshCuratedCommunities*(self: View) {.slot.} =
+    self.delegate.refreshCuratedCommunities()
+
+  proc stopCuratedCommunitiesRefresh*(self: View) {.slot.} =
+    self.delegate.stopCuratedCommunitiesRefresh()
+
+  proc retryCuratedCommunitiesRefresh*(self: View) {.slot.} =
+    self.delegate.retryCuratedCommunitiesRefresh()
 
   proc spectateCommunity*(self: View, communityId: string) {.slot.} =
     discard self.delegate.spectateCommunity(communityId)

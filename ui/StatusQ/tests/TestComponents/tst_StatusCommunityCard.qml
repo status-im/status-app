@@ -58,8 +58,9 @@ Item {
             tryCompare(banner, "status", Image.Ready)
 
             // PreserveAspectCrop covers the banner box: a square source is decoded at the
-            // box width rounded up to the next decode step
-            const devicePx = banner.width * banner.Screen.devicePixelRatio
+            // box width, for a device pixel ratio of 2 at most, rounded up to the next
+            // decode step
+            const devicePx = banner.width * Math.min(banner.Screen.devicePixelRatio, 2)
             let expected = 0
             while (expected < devicePx)
                 expected += Math.max(16, Math.ceil(expected / 8))
