@@ -29,6 +29,9 @@ Item {
             signal connectorCallRPCResult(int requestId, string payload)
             signal chainIdSwitched(string payload)
             signal accountChanged(string payload)
+            signal connectRequested(string requestId, string payload)
+            signal sendTransaction(string requestId, string payload)
+            signal sign(string requestId, string payload)
 
             property var disconnectCalls: []
 
