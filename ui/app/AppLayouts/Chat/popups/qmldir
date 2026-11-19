@@ -1,3 +1,4 @@
 PinnedMessagesPopup 1.0 PinnedMessagesPopup.qml
 PaymentRequestModal 1.0 PaymentRequestModal.qml
 ThreadContextMenu 1.0 ThreadContextMenu.qml
+ThreadListContextMenu 1.0 ThreadListContextMenu.qml

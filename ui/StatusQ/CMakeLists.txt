@@ -366,7 +366,8 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
     find_library(UserNotifications UserNotifications)
     find_library(CoreMotion CoreMotion)
     find_library(PhotosUI PhotosUI)
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${UIKit} ${Foundation} ${Security} ${LocalAuthentication} ${WebKit} ${UserNotifications} ${CoreMotion} ${PhotosUI})
+    find_library(AVFoundation AVFoundation REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${UIKit} ${Foundation} ${Security} ${LocalAuthentication} ${WebKit} ${UserNotifications} ${CoreMotion} ${PhotosUI} ${AVFoundation})
     target_sources(StatusQ PRIVATE
         src/ios_utils.mm
         src/shareutils_ios.mm
@@ -379,6 +380,8 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
         src/StatusQ/Controls/NativePasteButtonItem_ios.mm
         src/localnetworkpermission_ios.mm
     )
+    # Keep AudioUtils cross-platform while allowing native AVAudioSession setup on iOS.
+    set_source_files_properties(src/audioutils.cpp PROPERTIES COMPILE_OPTIONS "-x;objective-c++")
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Android")
     target_sources(StatusQ PRIVATE
         src/keychain_android.cpp
@@ -441,18 +444,26 @@ function(statusq_add_hunspell)
 endfunction()
 statusq_add_hunspell()
 target_link_libraries(StatusQ PRIVATE hunspell)
+
+set(_dict_big "")
+if (NOT (ANDROID OR IOS))
+    set(_dict_big BIG_RESOURCES)
+endif()
 qt_add_resources(StatusQ "statusq_dictionaries"
     PREFIX "/StatusQ/dictionaries"
     BASE "${CMAKE_CURRENT_SOURCE_DIR}/src/assets/dictionaries"
+    ${_dict_big}
     FILES
         src/assets/dictionaries/cs_CZ.aff
         src/assets/dictionaries/cs_CZ.dic
         src/assets/dictionaries/en_US.aff
         src/assets/dictionaries/en_US.dic
+        src/assets/dictionaries/en_GB.aff
+        src/assets/dictionaries/en_GB.dic
         src/assets/dictionaries/es_ES.aff
         src/assets/dictionaries/es_ES.dic
-        src/assets/dictionaries/fr.aff
-        src/assets/dictionaries/fr.dic
+        src/assets/dictionaries/fr_FR.aff
+        src/assets/dictionaries/fr_FR.dic
         src/assets/dictionaries/ko_KR.aff
         src/assets/dictionaries/ko_KR.dic
         src/assets/dictionaries/uk_UA.aff

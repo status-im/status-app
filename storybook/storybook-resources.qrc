@@ -13,6 +13,5 @@ TODO #14696: remove this workaround by moving SDK files to StatusQ and ensure th
     <file alias="StatusQ/Components/private/qwebchannel/qwebchannel.js">../ui/StatusQ/src/StatusQ/Components/private/qwebchannel/qwebchannel.js</file>
     <file alias="StatusQ/Components/private/qwebchannel/helpers.js">../ui/StatusQ/src/StatusQ/Components/private/qwebchannel/helpers.js</file>
     <file>testData/file_example1.mov</file>
-    <file>testData/audio_file_example.wav</file>
   </qresource>
 </RCC>

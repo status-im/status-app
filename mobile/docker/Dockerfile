@@ -8,7 +8,7 @@ ARG QT_MODULES="qt5compat qtmultimedia qtwebsockets qtpositioning qtshadertools 
 ARG JAVA_VERSION=17
 ARG ANDROID_API_LEVEL=36
 ARG ANDROID_NDK_VERSION=27.2.12479018
-ARG GOLANG_VERSION="1.24.7"
+ARG GOLANG_VERSION="1.26.5"
 ARG NIM_VERSION="2.2.10"
 ARG NIMBLE_VERSION="0.26.1"
 ARG NIX_VERSION="2.24.11"
@@ -93,7 +93,7 @@ ENV LANG=en_US.UTF-8 \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     # Build essentials
     build-essential cmake ninja-build pkg-config extra-cmake-modules \
-    autoconf automake libtool gcc-13 g++-13 \
+    autoconf automake libtool gcc-13 g++-13 ccache \
     # Dev tools
     git git-lfs curl wget unzip file xz-utils jq rsync s3cmd fuse \
     gnupg2 openssh-client ca-certificates locales sudo \
@@ -154,7 +154,7 @@ RUN echo "/opt/qt/${QT_VERSION}/gcc_64/lib" > /etc/ld.so.conf.d/qt.conf && ldcon
 # =============================================================================
 # Install Golang
 # =============================================================================
-RUN GOLANG_SHA256="da18191ddb7db8a9339816f3e2b54bdded8047cdc2a5d67059478f8d1595c43f" \
+RUN GOLANG_SHA256="5c2c3b16caefa1d968a94c1daca04a7ca301a496d9b086e17ad77bb81393f053" \
  && GOLANG_TARBALL="go${GOLANG_VERSION}.linux-amd64.tar.gz" \
  && wget -q "https://dl.google.com/go/${GOLANG_TARBALL}" \
  && echo "${GOLANG_SHA256} ${GOLANG_TARBALL}" | sha256sum -c \

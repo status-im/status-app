@@ -58,9 +58,13 @@ Item {
                 property string threadParentChatName: "Parent chat"
                 property bool canEditThread: true
                 property bool threadEditPending: false
+                property bool threadDeletePending: false
+                property bool threadFollowed: true
+                property var requestedFollowed: null
                 property bool threadMuted: false
                 property real threadMuteTill: 0
                 property int requestedMuteInterval: -1
+                property int deleteRequests: 0
                 property var model: null
                 property string requestedName
                 property string parentChatId: "parent-chat"
@@ -68,6 +72,14 @@ Item {
                 function getChatId() { return parentChatId }
                 function editThread(name) { requestedName = name }
                 function setThreadMuted(interval) { requestedMuteInterval = interval }
+                function setThreadFollowedById(id, followed) {
+                    if (id === threadId)
+                        requestedFollowed = followed
+                }
+                function deleteThreadById(id) {
+                    if (id === threadId)
+                        deleteRequests++
+                }
             }
         }
 
@@ -150,6 +162,7 @@ Item {
                     if (row.type === Constants.chatType.communityChat && row.itemId !== view.activeItemId) {
                         messages.threadId = row.itemId
                         threadName = row.name
+                        model.setProperty(i, "followed", true)
                         model.setProperty(i, "isThread", true)
                         break
                     }
@@ -181,8 +194,28 @@ Item {
                 menu = findChild(centralHeader, "threadHeaderContextMenu")
             }
             tryCompare(menu, "opened", true)
-            if (data.fromList)
+            if (data.fromList) {
                 verifyThreadMuteMenu(menu, messages)
+                const parentStore = findChild(menu, "threadListParentMessageStore")
+                verify(!!parentStore)
+                parentStore.messageModule = messages
+                compare(menu.threadId, messages.threadId)
+                compare(menu.followEnabled, true)
+                compare(menu.followed, true)
+                findChild(menu, "threadContextMenu_follow").trigger()
+                compare(messages.requestedFollowed, false)
+                messages.threadFollowed = false
+                compare(menu.followed, false)
+                findChild(menu, "threadContextMenu_follow").trigger()
+                compare(messages.requestedFollowed, true)
+                compare(menu.deleteEnabled, true)
+                messages.threadDeletePending = true
+                compare(menu.deleteEnabled, false)
+                compare(menu.editEnabled, false)
+                messages.threadDeletePending = false
+                menu.deleteRequested()
+                compare(messages.deleteRequests, 1)
+            }
             compare(menu.actionAt(0).objectName, "threadContextMenu_editName")
             verify(menu.actionAt(0).enabled)
             menu.actionAt(0).trigger()
@@ -233,7 +266,7 @@ Item {
             tryVerify(() => loader.status === Loader.Ready, 120000)
             const view = harness.findChildByTypePrefix(loader, "ChatView")
             view.threadsFeatureEnabled = true
-            view.sectionLayout.criteria = data.portrait ? [true, true] : [false, false]
+            view.sectionLayout.criteria = data.portrait ? [true, true] : [false, true]
             const model = view.rootStore.chatCommunitySectionModule.model
             let threadId = ""
             for (let i = 0; i < model.count; ++i) {
@@ -249,6 +282,10 @@ Item {
             harness.mock.setActiveChat(parentChatId)
             view.rootStore.openThreadPanel(threadId, "Thread", parentChatId)
             tryCompare(view.rightPanel, "status", Loader.Ready)
+            tryCompare(view.sectionLayout, "isPortrait", data.portrait)
+            tryCompare(view.threadToolbarHeader, "active", data.portrait)
+            if (!data.portrait)
+                compare(view.threadToolbarHeader.item, null)
             if (data.portrait)
                 view.sectionLayout.currentIndex = StatusSectionLayout.RightPanel
             const header = data.portrait ? view.threadToolbarHeader : view.rightPanel.item

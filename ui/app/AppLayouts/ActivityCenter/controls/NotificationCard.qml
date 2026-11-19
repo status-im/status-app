@@ -270,6 +270,8 @@ Control {
 
         // Full-card left-click: close context menu if open, otherwise navigate.
         TapHandler {
+            // Own the tap so passive handlers in the underlying sidebar cannot also select a chat.
+            gesturePolicy: TapHandler.WithinBounds
             enabled: !d.hasInteractiveChildHovered
             onTapped: {
                 if (d.contextMenuOpen) {
@@ -368,6 +370,7 @@ Control {
                     }
 
                     TapHandler {
+                        gesturePolicy: TapHandler.WithinBounds
                         enabled: !root.isAvatarClickable
                         onTapped: root.clicked()
                     }

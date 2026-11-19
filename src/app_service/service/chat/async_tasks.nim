@@ -20,6 +20,18 @@ proc asyncGetActiveChatsTask(argEncoded: string) {.gcsafe, nimcall.} =
     })
 
 type
+  AsyncSectionUnreadCountsTaskArg = ref object of QObjectTaskArg
+    includeThreads: bool
+
+proc asyncSectionUnreadCountsTask(argEncoded: string) {.gcsafe, nimcall.} =
+  let arg = decode[AsyncSectionUnreadCountsTaskArg](argEncoded)
+  try:
+    let response = status_chat.sectionUnreadCounts(arg.includeThreads)
+    arg.finish(%* {"response": response.result, "error": ""})
+  except Exception as e:
+    arg.finish(%* {"error": e.msg})
+
+type
   AsyncCheckChannelPermissionsTaskArg = ref object of QObjectTaskArg
     communityId: string
     chatId: string

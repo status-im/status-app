@@ -3431,6 +3431,14 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
 <context>
     <name>ChatView</name>
     <message>
+        <source>Couldn&apos;t follow thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t unfollow thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Search</source>
         <translation type="unfinished">Hledat</translation>
     </message>
@@ -10528,16 +10536,12 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <translation>Jazyk</translation>
     </message>
     <message>
+        <source>Want to improve a translation, help add a new language, or request one? Let us know in %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Skip capitalized words and acronyms</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Want to improve a translation, help add a new language, or request one? Let us know in our %1.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>channel</source>
-        <translation type="unfinished">kanál</translation>
     </message>
     <message>
         <source>Spell Check</source>
@@ -11828,6 +11832,17 @@ selhalo</translation>
     <message>
         <source>Add reaction</source>
         <translation>Přidat reakci</translation>
+    </message>
+</context>
+<context>
+    <name>MessageStore</name>
+    <message>
+        <source>Only the thread creator or an admin can delete this thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t delete thread</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -17103,6 +17118,10 @@ selhalo</translation>
 <context>
     <name>StatusLanguageSelector</name>
     <message>
+        <source>Select language</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Search</source>
         <translation type="unfinished">Hledat</translation>
     </message>
@@ -18538,6 +18557,10 @@ Tuto akci nelze vzít zpět.</translation>
 <context>
     <name>ThreadHeader</name>
     <message>
+        <source>Couldn&apos;t delete thread: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Couldn&apos;t rename thread: %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -18552,6 +18575,10 @@ Tuto akci nelze vzít zpět.</translation>
     </message>
     <message>
         <source>Renaming...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Deleting...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

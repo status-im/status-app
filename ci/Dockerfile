@@ -98,7 +98,7 @@ RUN apt update -yq && apt install -yq software-properties-common \
     libxext6 libxrender1 libxkbcommon-dev libxkbcommon-x11-dev libxcomposite1 libxtst6 \
     libxrandr2 libxcursor1 libxi6 libxcb-randr0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
     libxcb-render-util0 libxcb-shape0 libxcb-render0 libxcb-xinerama0 \
-    autoconf automake libtool gcc-11 g++-11 \
+    autoconf automake libtool gcc-11 g++-11 ccache \
     libxslt1.1 libxslt1-dev libxkbfile1 libxkbfile-dev \
     libxcb-cursor0 libxcb-cursor-dev \
     libatk1.0-0 libatk1.0-dev \
@@ -147,8 +147,8 @@ RUN wget https://github.com/Kitware/CMake/releases/download/v3.22.1/cmake-3.22.1
 ENV PATH="/opt/cmake/bin:${PATH}"
 
 # Installing Golang
-RUN GOLANG_SHA256="da18191ddb7db8a9339816f3e2b54bdded8047cdc2a5d67059478f8d1595c43f" \
- && GOLANG_TARBALL="go1.24.7.linux-amd64.tar.gz" \
+RUN GOLANG_SHA256="5c2c3b16caefa1d968a94c1daca04a7ca301a496d9b086e17ad77bb81393f053" \
+ && GOLANG_TARBALL="go1.26.5.linux-amd64.tar.gz" \
  && wget -q "https://dl.google.com/go/${GOLANG_TARBALL}" \
  && echo "${GOLANG_SHA256} ${GOLANG_TARBALL}" | sha256sum -c \
  && sudo tar -C /usr/local -xzf "${GOLANG_TARBALL}" \

@@ -235,8 +235,20 @@ QtObject {
     // End of Notifications related stuff
 
     // Settings related properties and functions that shall be moved to `SettingsRootStore`
-    property real volume: !!appSettings ? appSettings.volume * 0.01 : 0.5
-    property bool notificationSoundsEnabled: !!appSettings ? appSettings.notificationSoundsEnabled : true
+    readonly property real volume: !!appSettings ? appSettings.volume * 0.01 : 0.5
+    readonly property bool notificationSoundsEnabled: !!appSettings ? appSettings.notificationSoundsEnabled : true
+
+    readonly property Binding soundMutedBinding: Binding {
+        target: AudioUtils
+        property: "muted"
+        value: !root.notificationSoundsEnabled
+    }
+
+    readonly property Binding soundVolumeBinding: Binding {
+        target: AudioUtils
+        property: "volume"
+        value: root.volume
+    }
 
     readonly property bool openLinksInStatus: localAccountSensitiveSettings.openLinksInStatus
 

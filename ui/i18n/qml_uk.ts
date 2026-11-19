@@ -3431,6 +3431,14 @@ Do you wish to override the security check and continue?</source>
 <context>
     <name>ChatView</name>
     <message>
+        <source>Couldn&apos;t follow thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t unfollow thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Search</source>
         <translation type="unfinished">Пошук</translation>
     </message>
@@ -10529,16 +10537,12 @@ corruption, loss of your Status profile and the inability to restart Status.</so
         <translation>Мова</translation>
     </message>
     <message>
+        <source>Want to improve a translation, help add a new language, or request one? Let us know in %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Skip capitalized words and acronyms</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Want to improve a translation, help add a new language, or request one? Let us know in our %1.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>channel</source>
-        <translation type="unfinished">канал</translation>
     </message>
     <message>
         <source>Spell Check</source>
@@ -11829,6 +11833,17 @@ to load</source>
     <message>
         <source>Add reaction</source>
         <translation>Додати реакцію</translation>
+    </message>
+</context>
+<context>
+    <name>MessageStore</name>
+    <message>
+        <source>Only the thread creator or an admin can delete this thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t delete thread</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -17104,6 +17119,10 @@ to load</source>
 <context>
     <name>StatusLanguageSelector</name>
     <message>
+        <source>Select language</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Search</source>
         <translation type="unfinished">Пошук</translation>
     </message>
@@ -18539,6 +18558,10 @@ This action cannot be undone.</source>
 <context>
     <name>ThreadHeader</name>
     <message>
+        <source>Couldn&apos;t delete thread: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Couldn&apos;t rename thread: %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -18553,6 +18576,10 @@ This action cannot be undone.</source>
     </message>
     <message>
         <source>Renaming...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Deleting...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

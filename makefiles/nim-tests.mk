@@ -33,12 +33,14 @@ NIM_TESTS_LINK_STATUSQ := \
 	services_pause_bridge_test \
 	share_intake_wake_test \
 	signal_handler_test \
+	section_unread_counts_test \
 	thread_edit_service_test \
 	swap_key_harvest_bench \
 	swap_modal_instantiation_bench \
 	thread_navigation_test \
 	thread_notifications_test \
 	thread_search_test \
+	thread_section_badges_test \
 	token_selector_module_test \
 	typed_completion_test \
 	url_scheme_event_test \
@@ -49,18 +51,17 @@ $(NIM_STATUSQ_TARGETS): NIM_PARAMS += --passL:"-L$(STATUSQ_LIB_PATH)" --passL:"-
 $(NIM_STATUSQ_TARGETS): | statusq
 
 nim-test-run/test/nim/thread_search_test.nim: export FLAG_THREADS_ENABLED := 1
+nim-test-run/test/nim/thread_section_badges_test.nim: export FLAG_THREADS_ENABLED := 1
 
 nim-test-run/test/nim/thread_notifications_test.nim: export FLAG_THREADS_ENABLED := 1
-nim-test-run/test/nim/thread_notifications_test.nim: NIM_PARAMS += --passL:"-L$(STATUSKEYCARD_QT_LIBDIR)" --passL:"-l$(STATUSKEYCARD_QT_LINKNAME)"
-nim-test-run/test/nim/thread_notifications_test.nim: | $(STATUSKEYCARD_QT_LIB)
-
 # The messages module also imports the existing keycard service bindings.
-nim-test-run/test/nim/thread_navigation_test.nim nim-test-run/test/nim/thread_search_test.nim: NIM_PARAMS += --passL:"-L$(STATUSKEYCARD_QT_LIBDIR)" --passL:"-l$(STATUSKEYCARD_QT_LINKNAME)"
-nim-test-run/test/nim/thread_navigation_test.nim nim-test-run/test/nim/thread_search_test.nim: | $(STATUSKEYCARD_QT_LIB)
+NIM_TESTS_LINK_KEYCARD := thread_navigation_test thread_search_test thread_notifications_test thread_section_badges_test
+NIM_KEYCARD_TARGETS := $(patsubst %,nim-test-run/test/nim/%.nim,$(NIM_TESTS_LINK_KEYCARD))
+$(NIM_KEYCARD_TARGETS): NIM_PARAMS += --passL:"-L$(STATUSKEYCARD_QT_LIBDIR)" --passL:"-l$(STATUSKEYCARD_QT_LINKNAME)"
+$(NIM_KEYCARD_TARGETS): | $(STATUSKEYCARD_QT_LIB)
 
 ifeq ($(mkspecs),linux)
-nim-test-run/test/nim/thread_navigation_test.nim nim-test-run/test/nim/thread_search_test.nim: export LD_LIBRARY_PATH := $(shell pkg-config --variable=libdir libpcsclite):$(LD_LIBRARY_PATH)
-nim-test-run/test/nim/thread_notifications_test.nim: export LD_LIBRARY_PATH := $(shell pkg-config --variable=libdir libpcsclite):$(LD_LIBRARY_PATH)
+$(NIM_KEYCARD_TARGETS): export LD_LIBRARY_PATH := $(shell pkg-config --variable=libdir libpcsclite):$(LD_LIBRARY_PATH)
 endif
 
 nim-test-run/test/nim/qrscan_zxing_errors_test.nim: NIM_PARAMS += -d:qrscanZxingLib="$(abspath $(ZXING))"
@@ -103,12 +104,17 @@ endif
 # Per-test nimcache by default so parallel test builds don't race.
 # NIM_TESTS_SHARED_CACHE=1 shares one cache.
 NIMCACHE_BASE ?= $(or $(WORKSPACE_TMP),build)/nimcache
+# Nim does not invalidate cached C/C++ objects when GCC changes. LTO objects
+# must be compiled and linked with compatible compiler versions.
+ifeq ($(mkspecs),linux)
+ NIM_TEST_CACHE_TOOLCHAIN := -$(shell gcc -dumpmachine)-gcc$(shell gcc -dumpfullversion)-gxx$(shell g++ -dumpfullversion)
+endif
 ifeq ($(NIM_TESTS_SHARED_CACHE),1)
- nim_test_cache = $(if $(filter $(NIM_MODEL_SPY_TARGETS),$1),shared-spy,shared)
+ nim_test_cache = $(if $(filter $(NIM_MODEL_SPY_TARGETS),$1),shared-spy,shared)$(if $(filter $(NIM_BENCHES),$1),-bench)
 else
  nim_test_cache = $(notdir $(basename $1))
 endif
-nim-test-run/%: NIM_PARAMS += --nimcache:$(NIMCACHE_BASE)-$(call nim_test_cache,$@)
+nim-test-run/%: NIM_PARAMS += --nimcache:$(NIMCACHE_BASE)-$(call nim_test_cache,$@)$(NIM_TEST_CACHE_TOOLCHAIN)
 
 # Windows links the sds/status import libraries by explicit path
 # (NIM_EXTRA_PARAMS); status-go's build can delete an earlier sds.lib, so wait
@@ -116,9 +122,12 @@ nim-test-run/%: NIM_PARAMS += --nimcache:$(NIMCACHE_BASE)-$(call nim_test_cache,
 ifeq ($(mkspecs),win32)
  NIM_TEST_ORDER_DEPS := $(WIN_IMPORT_LIBS)
 endif
+# Tests build without LTO, which only lengthens their links; the benchmarks keep the application's flags.
+$(NIM_TESTS): NIM_TEST_DROP := -d:lto
+
 nim-test-run/%: | qt-pkgconfig $(STATUSGO) $(QRCODEGEN) $(NIM_TEST_ORDER_DEPS)
 	LD_LIBRARY_PATH="$(QT_LIBDIR)":"$(NIMSDS_LIBDIR)":"$(STATUSGO_LIBDIR)":"$(STATUSKEYCARD_QT_LIBDIR)":"$(EXTRA_LIBS_PATH)":"$(LD_LIBRARY_PATH)" $(ENV_SCRIPT) \
-	nim c $(NIM_PARAMS) $(NIM_EXTRA_PARAMS) --mm:orc --passL:"-L$(STATUSGO_LIBDIR)" --passL:"-lstatus" --passL:"$(QRCODEGEN)" -r $(subst nim-test-run/,,$@)
+	nim c $(filter-out $(NIM_TEST_DROP),$(NIM_PARAMS)) $(NIM_EXTRA_PARAMS) --mm:orc --passL:"-L$(STATUSGO_LIBDIR)" --passL:"-lstatus" --passL:"$(QRCODEGEN)" -r $(subst nim-test-run/,,$@)
 
 tests-nim: $(NIM_TESTS)
 

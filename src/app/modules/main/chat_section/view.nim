@@ -234,6 +234,10 @@ QtObject:
   proc markAllMessagesRead*(self: View, chatId: string, threadId: string = "") {.slot.} =
     self.delegate.markAllMessagesRead(chatId, threadId)
 
+  proc threadFollowFailed*(self: View, threadId: string, followed: bool, error: string) {.signal.}
+  proc emitThreadFollowFailed*(self: View, threadId: string, followed: bool, error: string) =
+    self.threadFollowFailed(threadId, followed, error)
+
   proc clearChatHistory*(self: View, chatId: string) {.slot.} =
     self.delegate.clearChatHistory(chatId)
 

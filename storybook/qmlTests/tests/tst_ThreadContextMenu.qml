@@ -301,6 +301,19 @@ Item {
 
         // TDD: discrete true/false coverage of the "do not show again"
         // persisted setting gating the delete confirmation dialog.
+        function test_deleteConfirmationDoesNotFollowNavigation() {
+            const menu = createMenu({ deleteEnabled: true, showDeleteThreadWarning: true, threadId: "first" })
+            deleteSpy.target = menu
+            deleteSpy.clear()
+            findEntry(menu, "threadContextMenu_delete").trigger()
+            tryVerify(() => !!root.activePopup)
+            tryCompare(root.activePopup, "opened", true)
+            menu.threadId = "second"
+            root.activePopup.confirmButtonClicked()
+            compare(deleteSpy.count, 0)
+            menu.close()
+        }
+
         function test_04_delete_confirmation_gated_by_showDeleteThreadWarning_data() {
             return [
                 { tag: "warning enabled: confirmation dialog gates delete", showDeleteThreadWarning: true },
@@ -378,6 +391,14 @@ Item {
             // platform-specific and out of scope for this offscreen suite).
             tryCompare(ClipboardUtils, "text", menu.threadLinkToCopyShare)
 
+            menu.close()
+        }
+
+        function test_copy_or_share_is_disabled_without_a_link() {
+            const menu = createMenu({ threadLinkToCopyShare: "" })
+            const copyShareEntry = findEntry(menu, "threadContextMenu_copyShare")
+            verify(!!copyShareEntry)
+            compare(copyShareEntry.enabled, false)
             menu.close()
         }
     }

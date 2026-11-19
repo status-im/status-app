@@ -238,6 +238,7 @@ Item {
             openThreadPanel(threadId, threadName, parentChatId)
         }
 
+        property string threadIdToRename: ""
         function openThreadPanel(threadId, threadName, parentChatId = root.activeItemId) {
             threadPanelRevision++
             root.rootStore.openThreadPanel(threadId, threadName, parentChatId)
@@ -247,6 +248,13 @@ Item {
                     if (d.openThreadId)
                         root.sectionLayout.currentIndex = StatusSectionLayout.RightPanel
                 })
+        }
+
+        function renameThreadFromList(threadId, threadName, parentChatId) {
+            threadOpenedFromInfo = false
+            root.rootStore.chatCommunitySectionModule.setActiveItem(parentChatId)
+            threadIdToRename = threadId
+            openThreadPanel(threadId, threadName, parentChatId)
         }
         // The thread closes when the active chat changes, so the parent is always the active one
         readonly property string openThreadParentChatName: {
@@ -274,6 +282,7 @@ Item {
         function closeThreadPanel() {
             threadPanelRevision++
             threadNameEditId = ""
+            threadIdToRename = ""
             root.rootStore.closeThreadPanel()
         }
     }
@@ -340,6 +349,11 @@ Item {
         function onActiveItemChanged() {
             Global.closeCreateChatView()
         }
+
+        function onThreadFollowFailed(threadId: string, followed: bool, error: string) {
+            Global.displayToastMessage(followed ? qsTr("Couldn't follow thread") : qsTr("Couldn't unfollow thread"),
+                                       error, "warning", false, Constants.ephemeralNotificationType.danger, "")
+        }
     }
 
     readonly property Item headerContent: Loader {
@@ -391,6 +405,14 @@ Item {
             onEditRequestedChanged: if (editRequested) Qt.callLater(panelThreadHeader.editRequestedName)
             Component.onCompleted: if (editRequested) Qt.callLater(panelThreadHeader.editRequestedName)
 
+            Timer {
+                interval: 0
+                running: !!d.threadIdToRename && d.threadIdToRename === panelThreadHeader.threadId && panelThreadHeader.canEdit
+                onTriggered: {
+                    d.threadIdToRename = ""
+                    panelThreadHeader.beginEditing()
+                }
+            }
             threadId: d.openThreadId
             threadName: threadMessageStore.threadName
             muted: threadMessageStore.threadMuted
@@ -400,6 +422,11 @@ Item {
             canEdit: threadMessageStore.canEditThread
             pending: threadMessageStore.threadEditPending
             onEditNameRequested: Qt.callLater(panelThreadHeader.beginEditing)
+            deletePending: threadMessageStore.threadDeletePending
+            followed: threadMessageStore.threadFollowed
+            onFollowRequested: threadMessageStore.setThreadFollowed(true)
+            onUnfollowRequested: threadMessageStore.setThreadFollowed(false)
+            onDeleteRequested: threadMessageStore.deleteThread()
             onRenameRequested: name => threadMessageStore.editThread(name)
             onMarkAsReadRequested: root.rootStore.chatCommunitySectionModule.markAllMessagesRead(d.openThreadParentChatId, d.openThreadId)
 
@@ -412,6 +439,9 @@ Item {
 
             Connections {
                 target: threadMessageStore.messageModule
+                function onThreadDeleteFinished(error: string) {
+                    panelThreadHeader.deleteFinished(threadMessageStore.threadDeleteErrorMessage(error))
+                }
                 function onThreadEditFinished(error: string) {
                     panelThreadHeader.editFinished(error)
                 }
@@ -530,6 +560,7 @@ Item {
 
         ChatInfoPanel {
             id: infoPanel
+            sectionModule: root.rootStore.chatCommunitySectionModule
             headerInToolbar: !!root.sectionLayout?.isPortrait
             visible: rightPanelLoader.status === Loader.Ready
             chatKey: root.chatContentModule?.getMyChatId() ?? ""
@@ -549,6 +580,8 @@ Item {
                 const title = ModelUtils.getByKey(threadsModel, "key", threadId, "title")
                 d.openThreadPanel(threadId, title)
             }
+            onRenameThreadRequested: (threadId, threadName, parentChatId) =>
+                d.renameThreadFromList(threadId, threadName, parentChatId)
         }
     }
 
@@ -941,6 +974,11 @@ Item {
 
             onOpenStickerPackPopup: stickerPackId => Global.openPopup(statusStickerPackClickPopup, {packId: stickerPackId})
             onTokenPaymentRequested: root.tokenPaymentRequested(recipientAddress, tokenKey, rawAmount)
+            onRenameThreadRequested: (threadId, threadName) => {
+                d.threadOpenedFromInfo = false
+                d.threadIdToRename = threadId
+                d.openThreadPanel(threadId, threadName)
+            }
             onOpenThreadRequested: (threadId, threadName) => {
                 d.threadOpenedFromInfo = false
                 d.openThreadPanel(threadId, threadName)
@@ -998,18 +1036,22 @@ Item {
 
         ThreadContextMenu {
             objectName: "threadListContextMenu"
+            threadId: threadMenuData.threadId
             isMobile: SQUtils.Utils.isMobile
-            followed: false
+            followed: listedThreadMessages.threadFollowed
             muted: listedThreadMessages.threadMuted
             pinned: false
-            followEnabled: false
             pinEnabled: false
-            deleteEnabled: false
+            deleteEnabled: listedThreadMessages.canEditThread && !listedThreadMessages.threadEditPending &&
+                           !listedThreadMessages.threadDeletePending && !listedThreadParentMessages.threadDeletePending
             threadLinkToCopyShare: ""
-            editEnabled: listedThreadMessages.canEditThread && !listedThreadMessages.threadEditPending
+            editEnabled: deleteEnabled
             openHandler: function(threadId) { threadMenuData.threadId = threadId }
             onMuteRequested: interval => listedThreadMessages.setThreadMuted(interval)
             onUnmuteRequested: listedThreadMessages.setThreadMuted(Constants.MutingVariations.Unmuted)
+            onFollowRequested: listedThreadMessages.setThreadFollowed(true)
+            onUnfollowRequested: listedThreadMessages.setThreadFollowed(false)
+            onDeleteRequested: listedThreadParentMessages.deleteThreadById(threadMenuData.threadId)
             onEditNameRequested: d.editThreadName(threadMenuData.threadId, listedThreadMessages.threadName, listedThreadMessages.chatId)
             onMarkAsReadRequested: root.rootStore.chatCommunitySectionModule.markAllMessagesRead(listedThreadMessages.chatId, threadMenuData.threadId)
 
@@ -1023,6 +1065,12 @@ Item {
                 objectName: "threadListMessageStore"
                 messageModule: d.getThreadMessageModule(threadMenuData.threadId)
             }
+
+            ChatStores.MessageStore {
+                id: listedThreadParentMessages
+                objectName: "threadListParentMessageStore"
+                messageModule: d.getThreadMessageModule(listedThreadMessages.chatId)
+            }
         }
     }
 
@@ -1032,6 +1080,8 @@ Item {
             threadContextMenu: threadListContextMenuComponent
             chatSectionModule: root.rootStore.chatCommunitySectionModule
             store: root.rootStore
+            onRenameThreadRequested: (threadId, threadName, parentChatId) =>
+                d.renameThreadFromList(threadId, threadName, parentChatId)
 
             onShareOwnProfileRequested: Global.shareProfileDialogRequested(root.myPublicKey)
             onOpenAppSearch: {
@@ -1054,6 +1104,8 @@ Item {
         CommunityColumnView {
             threadContextMenu: threadListContextMenuComponent
             communitySectionModule: root.rootStore.chatCommunitySectionModule
+            onRenameThreadRequested: (threadId, threadName, parentChatId) =>
+                d.renameThreadFromList(threadId, threadName, parentChatId)
             communityData: root.sectionItemModel
             joinedMembersCount: root.joinedMembersCount
             store: root.rootStore

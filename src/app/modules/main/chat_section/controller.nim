@@ -153,6 +153,10 @@ proc init*(self: Controller) =
     let args = message_service.ChatThreadsForChatsLoadedArgs(e)
     self.delegate.onChatThreadsForChatsLoaded(args.threads, args.completedChatIds)
 
+  self.events.on(message_service.SIGNAL_THREAD_FOLLOW_FINISHED) do(e: Args):
+    let args = message_service.ThreadFollowFinishedArgs(e)
+    self.delegate.onThreadFollowFinished(args.chatId, args.threadId, args.followed, args.error)
+
   self.events.on(message_service.SIGNAL_CHAT_THREADS_LOADING_FAILED) do(e: Args):
     let args = message_service.ChatThreadsLoadingFailedArgs(e)
     if not args.summariesRequested:
@@ -527,9 +531,11 @@ proc getChatsAndBuildUI*(self: Controller) =
         self.sharedUrlsService,
       )
 
-proc sectionUnreadMessagesAndMentionsCount*(self: Controller, communityId: string, sectionIsMuted: bool):
+proc sectionUnreadMessagesAndMentionsCount*(self: Controller):
     tuple[unviewedMessagesCount: int, unviewedMentionsCount: int] =
-  return self.chatService.sectionUnreadMessagesAndMentionsCount(communityId, sectionIsMuted)
+  let sectionId = if self.isCommunitySection: self.sectionId else: PERSONAL_SECTION_ID
+  let counts = self.chatService.getSectionUnreadCounts(sectionId)
+  (counts.unviewedMessagesCount, counts.unviewedMentionsCount)
 
 proc getChatDetails*(self: Controller, chatId: string): lent ChatDto =
   return self.chatService.getChatById(chatId)
@@ -541,7 +547,8 @@ proc getChatDetailsByIds*(self: Controller, chatIds: seq[string]): seq[ChatDto] 
   return self.chatService.getChatsByIds(chatIds)
 
 proc categoryHasUnreadMessages*(self: Controller, communityId: string, categoryId: string): bool =
-  return self.communityService.categoryHasUnreadMessages(communityId, categoryId)
+  return self.communityService.categoryHasUnreadMessages(communityId, categoryId) or
+    self.messageService.categoryThreadsHaveUnreadMessages(communityId, categoryId)
 
 proc getCommunityCategoryDetails*(self: Controller, communityId: string, categoryId: string): lent Category =
   return self.communityService.getCategoryById(communityId, categoryId)

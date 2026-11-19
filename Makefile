@@ -980,6 +980,8 @@ MACOS_OUTER_BUNDLE := tmp/macos/dist/Status.app
 MACOS_INNER_BUNDLE := $(MACOS_OUTER_BUNDLE)/Contents/Frameworks/QtWebEngineCore.framework/Versions/Current/Helpers/QtWebEngineProcess.app
 
 STATUS_CLIENT_DMG ?= pkg/Status.dmg
+# The command that builds the disk image.
+DMGBUILD ?= nix run .\#dmgbuild --
 
 $(STATUS_CLIENT_DMG): MACOS_OUTER_BUNDLE := tmp/macos/dist/Status.app
 $(STATUS_CLIENT_DMG): MACOS_INNER_BUNDLE := $(MACOS_OUTER_BUNDLE)/Contents/Frameworks/QtWebEngineCore.framework/Versions/Current/Helpers/QtWebEngineProcess.app
@@ -1008,21 +1010,29 @@ endif
 		$(MACOS_OUTER_BUNDLE) \
 		-executable=$(MACOS_OUTER_BUNDLE)/Contents/MacOS/nim_status_client \
 		-qmldir=ui \
-		-qmlimport=$(QT_QMLDIR)
+		-qmlimport=$(QT_QMLDIR) \
+		-no-codesign
 	macdeployqt \
 		$(MACOS_INNER_BUNDLE) \
-		-executable=$(MACOS_INNER_BUNDLE)/Contents/MacOS/QtWebEngineProcess
+		-executable=$(MACOS_INNER_BUNDLE)/Contents/MacOS/QtWebEngineProcess \
+		-no-codesign
 
-	# if MACOS_CODESIGN_IDENT is not set then the outer and inner .app
-	# bundles are not signed
+	# codesign refuses files with Finder info or a resource fork; make run leaves a custom icon on the binary.
+	xattr -cr $(MACOS_OUTER_BUNDLE)
+
+	# Without MACOS_CODESIGN_IDENT the bundle gets an ad-hoc signature: it
+	# starts, but Gatekeeper does not accept it.
 ifdef MACOS_CODESIGN_IDENT
 	scripts/sign-macos-pkg.sh $(MACOS_OUTER_BUNDLE) $(MACOS_CODESIGN_IDENT) \
 		--entitlements $(ENTITLEMENTS)
+else
+	codesign --force --deep --sign - $(MACOS_OUTER_BUNDLE)
+	codesign --verify --strict=all --deep $(MACOS_OUTER_BUNDLE)
 endif
 
 	echo -e $(BUILD_MSG) "dmg"
 	mkdir -p pkg
-	nix run .#dmgbuild -- \
+	$(DMGBUILD) \
 		-s scripts/dmg-settings.py -D app=$(MACOS_OUTER_BUNDLE) "Status" pkg/Status.dmg
 	mv "`ls pkg/*.dmg`" $(STATUS_CLIENT_DMG)
 
@@ -1055,11 +1065,9 @@ $(STATUS_CLIENT_EXE): compile_windows_resources nim_status_client nim_windows_la
 	rcedit $(OUTPUT)/bin/Status.exe --set-icon $(OUTPUT)/resources/status.ico
 	rcedit $(OUTPUT)/Status.exe --set-icon $(OUTPUT)/resources/status.ico
 	cp $(STATUSGO) $(STATUSKEYCARD_QT_LIB) $(NIMSDS_LIBFILE) $(STATUSQ_LIB_PATH)/* $(STATUSQ_BUILD_PATH)/bin/$(COMMON_CMAKE_BUILD_TYPE)/* $(OUTPUT)/bin/
-	cp "$(shell which libstdc++-6.dll)"     $(OUTPUT)/bin/
-	cp "$(shell which libgcc_s_seh-1.dll)"  $(OUTPUT)/bin/
-	cp "$(shell which libwinpthread-1.dll)" $(OUTPUT)/bin/
-	cp "$(shell which libcrypto-3-x64.dll)" $(OUTPUT)/bin/
-	cp "$(shell which libssl-3-x64.dll)"    $(OUTPUT)/bin/
+	# The runtime of the gcc that built the libraries, and the OpenSSL they link against.
+	cp -v "$$(dirname "$$(which gcc)")"/{libstdc++-6,libgcc_s_seh-1,libwinpthread-1}.dll $(OUTPUT)/bin/
+	cp -v "$(WIN_OPENSSL_ROOT)"/bin/{libcrypto,libssl}-3-x64.dll $(OUTPUT)/bin/
 ifeq ($(USE_SIMULATED_KEYCARD),true)
 	$(MAKE) keycard-simulator
 	$(MAKE) keycard-simulator-bundle KEYCARD_SIM_DEST=$(OUTPUT)/resources/keycard-simulator

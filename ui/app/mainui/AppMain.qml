@@ -361,8 +361,7 @@ Item {
         }
 
         function onPlayNotificationSound() {
-            notificationSound.stop()
-            notificationSound.play()
+            AudioUtils.play("qrc:/imports/assets/audio/notification.wav")
         }
 
         function onMailserverWorking() {
@@ -1458,18 +1457,15 @@ Item {
         }
 
         function onPlaySendMessageSound() {
-            sendMessageSound.stop()
-            sendMessageSound.play()
+            AudioUtils.play("qrc:/imports/assets/audio/send_message.wav")
         }
 
         function onPlayNotificationSound() {
-            notificationSound.stop()
-            notificationSound.play()
+            AudioUtils.play("qrc:/imports/assets/audio/notification.wav")
         }
 
         function onPlayErrorSound() {
-            errorSound.stop()
-            errorSound.play()
+            AudioUtils.play("qrc:/imports/assets/audio/error.mp3")
         }
 
         function onSetNthEnabledSectionActive(nthSection: int) {
@@ -1637,51 +1633,6 @@ Item {
         Backpressure.setTimeout(this, 1, () => {
             appMain.rootStore.setActiveSectionById(sectionId)
         })
-    }
-
-    StatusSoundEffect {
-        id: sendMessageSound
-
-        volume: convertVolume(rootStore.volume)
-        muted: !rootStore.notificationSoundsEnabled
-        source: "qrc:/imports/assets/audio/send_message.wav"
-
-        onIsErrorChanged: {
-            if(isError) {
-                console.warn("Sound error:",
-                             statusString)
-            }
-        }
-    }
-
-    StatusSoundEffect {
-        id: notificationSound
-
-        volume: convertVolume(rootStore.volume)
-        muted: !rootStore.notificationSoundsEnabled
-        source: "qrc:/imports/assets/audio/notification.wav"
-
-        onIsErrorChanged: {
-            if(isError) {
-                console.warn("Sound error:",
-                             statusString)
-            }
-        }
-    }
-
-    StatusSoundEffect {
-        id: errorSound
-
-        volume: convertVolume(rootStore.volume)
-        muted: !rootStore.notificationSoundsEnabled
-        source: "qrc:/imports/assets/audio/error.mp3"
-
-        onIsErrorChanged: {
-            if(isError) {
-                console.warn("Sound error:",
-                             statusString)
-            }
-        }
     }
 
     Loader {
@@ -2098,19 +2049,20 @@ Item {
                 height: parent.height * 0.9
                 y: parent.height - height
 
+                readonly property int animDuration: ThemeUtils.AnimationDuration.Default
+
                 enter: Transition {
                     ParallelAnimation {
                         NumberAnimation {
                             property: "opacity"
                             from: 0.0; to: 1.0
-                            duration: ThemeUtils.AnimationDuration.Slow
+                            duration: acPortraitPopup.animDuration
                         }
                         NumberAnimation {
                             property: "y"
                             from: acPortraitPopup.parent.height
                             to: acPortraitPopup.parent.height - acPortraitPopup.height
-                            duration: ThemeUtils.AnimationDuration.Slow
-                            easing.type: Easing.OutCubic
+                            duration: acPortraitPopup.animDuration
                         }
                     }
                 }
@@ -2120,14 +2072,13 @@ Item {
                         NumberAnimation {
                             property: "opacity"
                             from: 1.0; to: 0.0
-                            duration: ThemeUtils.AnimationDuration.Slow
+                            duration: acPortraitPopup.animDuration
                         }
                         NumberAnimation {
                             property: "y"
                             from: acPortraitPopup.parent.height - acPortraitPopup.height
                             to: acPortraitPopup.parent.height
-                            duration: ThemeUtils.AnimationDuration.Slow
-                            easing.type: Easing.OutCubic
+                            duration: acPortraitPopup.animDuration
                         }
                     }
                 }

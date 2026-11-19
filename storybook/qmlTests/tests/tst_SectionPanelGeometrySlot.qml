@@ -28,6 +28,9 @@ Item {
     width: 390
     height: 844
 
+    // Longest a single frame may take before the test moves on without it.
+    readonly property int frameMs: 100
+
     // Widths measured on device across an Android rotation, both times
     // (.plan/panelgeo-device-capture.txt, episodes 7 and 9). The first four
     // are the platform animating the window in portrait; the crossing at 1048
@@ -129,7 +132,7 @@ Item {
             chrome.leftPanel = left
             chrome.centerPanel = center
             chrome.footer = createTemporaryObject(footerComponent, root)
-            waitForRendering(chrome)
+            waitForRendering(chrome, root.frameMs)
             settle(chrome)
             return {chrome: chrome, left: left, center: center}
         }
@@ -138,7 +141,7 @@ Item {
         // left-column NumberAnimation (AnimationDuration.Slow = 400ms).
         function settle(chrome) {
             wait(600)
-            waitForRendering(chrome)
+            waitForRendering(chrome, root.frameMs)
             wait(60)
         }
 
@@ -147,7 +150,7 @@ Item {
                 root.width = root.rotationWidths[i]
                 root.height = root.rotationWidths[i] < 752 ? root.portraitHeight
                                                            : root.landscapeHeight
-                waitForRendering(chrome)
+                waitForRendering(chrome, root.frameMs)
                 wait(16)                 // a frame apart, as on the device
             }
             settle(chrome)
@@ -192,7 +195,7 @@ Item {
         function test_unbracketedResizeTracksLive() {
             const s = makeSection(false)
             root.width = 500
-            waitForRendering(s.chrome); wait(30)
+            waitForRendering(s.chrome, root.frameMs); wait(30)
             compare(s.center.width > 0, true)
             compare(s.center.width, s.center.parent.width,
                     "outside a bracket the panel tracks its slot immediately")
@@ -208,10 +211,10 @@ Item {
             verify(before > 0)
 
             root.height = 4                // collapses the centre slot
-            waitForRendering(s.chrome); wait(80)
+            waitForRendering(s.chrome, root.frameMs); wait(80)
             const collapsed = s.center.height
             root.height = root.portraitHeight
-            waitForRendering(s.chrome); wait(80)
+            waitForRendering(s.chrome, root.frameMs); wait(80)
             console.info("SLOT degenerate: panel height while host collapsed =",
                          collapsed, "(was " + before + ")")
             compare(collapsed, before, "the slot keeps the last good box")
@@ -369,14 +372,14 @@ Item {
 
             const section = createTemporaryObject(slotPreSizedSectionComponent, root,
                                                   {sectionLayout: s.chrome})
-            waitForRendering(s.chrome); wait(30)
+            waitForRendering(s.chrome, root.frameMs); wait(30)
             compare(!!section.centerPanel.parent, false,
                     "a panel declared as a property value has no visual parent")
 
             const rec = createTemporaryObject(recorderComponent, root,
                                               {watched: section.centerPanel})
             s.chrome.centerPanel = section.centerPanel
-            waitForRendering(s.chrome); wait(60)
+            waitForRendering(s.chrome, root.frameMs); wait(60)
             console.info("SLOTPRESIZE (" + data.tag + ") handoff events:",
                          JSON.stringify(rec.events))
             compare(rec.resizeCount(), 0,
@@ -391,7 +394,7 @@ Item {
             const s = makeSection(true)
             const section = createTemporaryObject(slotPreSizedSectionComponent, root,
                                                   {sectionLayout: s.chrome})
-            waitForRendering(s.chrome); wait(30)
+            waitForRendering(s.chrome, root.frameMs); wait(30)
             s.chrome.centerPanel = section.centerPanel
             settle(s.chrome)
 
@@ -425,7 +428,7 @@ Item {
             // Nothing changes; if two slots were fighting they would trade the
             // panel back and forth on their own.
             wait(300)
-            waitForRendering(s.chrome)
+            waitForRendering(s.chrome, root.frameMs)
             console.info("SLOT arbitration idle churn (" + data.tag + "):",
                          JSON.stringify(rec.settled))
             compare(rec.settled.length, 0,

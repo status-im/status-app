@@ -7,7 +7,7 @@ LIB_DIR=${LIB_DIR}
 
 echo "Building QRCodeGen for ${ARCH} using compiler: ${CC}"
 make -C "${QRCODEGEN}" clean
-make -C "${QRCODEGEN}" -j"$(nproc)"
+make -C "${QRCODEGEN}" -j"$(nproc 2>/dev/null || sysctl -n hw.ncpu)"
 
 mkdir -p "${LIB_DIR}"
 cp "${QRCODEGEN}/libqrcodegen.a" "${LIB_DIR}/libqrcodegen.a"

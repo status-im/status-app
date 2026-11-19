@@ -294,6 +294,10 @@ method onCategoryUnmuted*(self: AccessInterface, categoryId: string) {.base.} =
 method markAllMessagesRead*(self: AccessInterface, chatId: string, threadId: string = "") {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method onThreadFollowFinished*(self: AccessInterface, parentChatId: string, threadId: string,
+    followed: bool, error: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method clearChatHistory*(self: AccessInterface, chatId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 

@@ -55,15 +55,14 @@ private slots:
         QVERIFY(active.contains("cs_CZ"_L1));
         QVERIFY(active.contains("en_US"_L1));
 
-        service.toggleSpellcheckLanguage("en_US"_L1, false); // can't be toggled off
+        service.toggleSpellcheckLanguage("en_US"_L1, false);
         active = service.property("activeSpellcheckLanguages").toStringList();
-        QCOMPARE(active.size(), 2);
+        QCOMPARE(active.size(), 1);
         QVERIFY(active.contains("cs_CZ"_L1));
-        QVERIFY(active.contains("en_US"_L1));
 
         service.toggleSpellcheckLanguage("cs_CZ"_L1, false);
-        QCOMPARE(service.property("activeSpellcheckLanguages").toStringList(), QStringList{"en_US"_L1});
-        service.toggleSpellcheckLanguage("en_US"_L1, false);
+        QCOMPARE(service.property("activeSpellcheckLanguages").toStringList(), QStringList());
+        service.toggleSpellcheckLanguage("en_US"_L1, true);
         QCOMPARE(service.property("activeSpellcheckLanguages").toStringList(), QStringList{"en_US"_L1});
     }
 
