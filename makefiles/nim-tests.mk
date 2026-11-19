@@ -111,7 +111,8 @@ nim_merged_target = nim-test-run/$(call nim_merged_file,$1)
 # Kept apart: a define or resource of their own, or a GUI application object.
 NIM_OWN_PROGRAM := $(call nim_test_paths,qml_libs_resources_test qrscan_zxing_errors_test) \
 	$(shell grep -lE 'newQ(Gui)?Application|QQmlApplicationEngine' $(NIM_TEST_FILES))
-NIM_MERGED_threads := $(call nim_test_paths,thread_navigation_test thread_notifications_test thread_search_test)
+# Found by what they read, so a new test of the threads flag joins this program.
+NIM_MERGED_threads := $(filter-out $(NIM_OWN_PROGRAM),$(shell grep -l 'THREADS_ENABLED' $(NIM_TEST_FILES)))
 NIM_MERGED_main := $(filter-out $(NIM_OWN_PROGRAM) $(NIM_MERGED_threads),$(NIM_TEST_FILES))
 NIM_MERGED_TARGETS := $(foreach g,$(NIM_MERGED_GROUPS),$(call nim_merged_target,$g))
 
