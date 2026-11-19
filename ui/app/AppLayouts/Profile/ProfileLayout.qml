@@ -139,22 +139,6 @@ StatusSectionLayout {
     QtObject {
         id: d
 
-        // The subviews are loaded by URL; fetch their types in the background once the
-        // settings section is up, so a first open does not wait for them.
-        property var prefetchedSubviews: []
-        function prefetchSubviews() {
-            const comps = [myProfileViewComp, walletViewComp, messagingViewComp, changePasswordViewComp,
-                           keycardViewNewComp, ensViewComp, syncingViewComp, backupViewComp,
-                           logosNetworkViewComp, browserViewComp, communitiesViewComp,
-                           privacyAndSecurityViewComp, appearanceViewComp, languageViewComp,
-                           notificationsViewComp, contactsViewComp, advancedViewComp, aboutViewComp]
-            for (const c of comps) {
-                prefetchedSubviews.push(c.source.toString() !== ""
-                                        ? Qt.createComponent(c.source, Component.Asynchronous)
-                                        : Qt.createComponent(c.module, c.typeName, Component.Asynchronous))
-            }
-        }
-
         readonly property int contentWidth: Math.min(profileContainer.width, 560)
         readonly property int rightPanelWidth: Math.min(profileContainer.height, 768)
 
@@ -208,8 +192,6 @@ StatusSectionLayout {
             root.goToNextPanel();
         }
     }
-
-    Component.onCompleted: Qt.callLater(d.prefetchSubviews)
 
     function loadSection(section: int): void {
         d.backButtonName = ""
@@ -290,7 +272,8 @@ StatusSectionLayout {
             const item = profileContainer.replaceCurrentItem(componentToLoad.component(),
                                                              componentToLoad.properties,
                                                              StackView.Immediate)
-            componentToLoad.adopt(item)
+            if (item)
+                componentToLoad.adopt(item)
         } else if (!!componentToLoad) {
             profileContainer.replaceCurrentItem(componentToLoad, {}, StackView.Immediate)
         }
@@ -315,6 +298,7 @@ StatusSectionLayout {
             id: myProfileViewComp
 
             source: Qt.resolvedUrl("views/MyProfileView.qml")
+            prefetch: true
             properties: ({
                 ignoreDirty: Qt.binding(() => root.isPortrait),
                 profileStore: root.profileStore,
@@ -367,6 +351,7 @@ StatusSectionLayout {
             id: changePasswordViewComp
 
             source: Qt.resolvedUrl("views/ChangePasswordView.qml")
+            prefetch: true
             properties: ({
                 privacyStore: root.privacyStore,
                 keychain: root.keychain,
@@ -381,6 +366,7 @@ StatusSectionLayout {
             id: contactsViewComp
 
             source: Qt.resolvedUrl("views/ContactsView.qml")
+            prefetch: true
             properties: ({
                 contactsStore: root.contactsStore,
                 utilsStore: root.utilsStore,
@@ -398,6 +384,7 @@ StatusSectionLayout {
             id: ensViewComp
 
             source: Qt.resolvedUrl("views/EnsView.qml")
+            prefetch: true
             properties: ({
                 ensUsernamesStore: root.ensUsernamesStore,
                 walletAssetsStore: root.walletAssetsStore,
@@ -416,6 +403,7 @@ StatusSectionLayout {
             id: messagingViewComp
 
             source: Qt.resolvedUrl("views/MessagingView.qml")
+            prefetch: true
             properties: ({
                 contentWidth: Qt.binding(() => d.contentWidth),
                 sectionTitle: Qt.binding(() => settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.messaging)),
@@ -428,6 +416,7 @@ StatusSectionLayout {
             id: walletViewComp
 
             source: Qt.resolvedUrl("views/WalletView.qml")
+            prefetch: true
             properties: ({
                 contentWidth: Qt.binding(() => d.contentWidth),
                 settingsSubSubsection: Qt.binding(() => root.settingsSubSubsection),
@@ -456,6 +445,7 @@ StatusSectionLayout {
             id: appearanceViewComp
 
             source: Qt.resolvedUrl("views/AppearanceView.qml")
+            prefetch: true
             properties: ({
                 sectionTitle: Qt.binding(() => settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.appearance)),
                 contentWidth: Qt.binding(() => d.contentWidth),
@@ -474,6 +464,7 @@ StatusSectionLayout {
             id: languageViewComp
 
             source: Qt.resolvedUrl("views/LanguageView.qml")
+            prefetch: true
             properties: ({
                 sectionTitle: Qt.binding(() => settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.language)),
                 contentWidth: Qt.binding(() => d.contentWidth),
@@ -506,6 +497,7 @@ StatusSectionLayout {
             id: notificationsViewComp
 
             source: Qt.resolvedUrl("views/NotificationsView.qml")
+            prefetch: true
             properties: ({
                 privacyStore: root.privacyStore,
                 notificationsStore: root.notificationsStore,
@@ -518,6 +510,7 @@ StatusSectionLayout {
             id: syncingViewComp
 
             source: Qt.resolvedUrl("views/SyncingView.qml")
+            prefetch: true
             properties: ({
                 profileStore: root.profileStore,
                 devicesStore: root.devicesStore,
@@ -537,6 +530,7 @@ StatusSectionLayout {
             id: browserViewComp
 
             source: Qt.resolvedUrl("views/BrowserView.qml")
+            prefetch: true
             properties: ({
                 userUID: Qt.binding(() => root.userUID),
                 accountSettings: Qt.binding(() => localAccountSensitiveSettings),
@@ -550,6 +544,7 @@ StatusSectionLayout {
             id: advancedViewComp
 
             source: Qt.resolvedUrl("views/AdvancedView.qml")
+            prefetch: true
             properties: ({
                 advancedStore: root.advancedStore,
                 walletStore: root.walletStore,
@@ -566,6 +561,7 @@ StatusSectionLayout {
             id: aboutViewComp
 
             source: Qt.resolvedUrl("views/AboutView.qml")
+            prefetch: true
             properties: ({
                 sectionTitle: Qt.binding(() => settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.about)),
                 contentWidth: Qt.binding(() => d.contentWidth),
@@ -591,6 +587,7 @@ StatusSectionLayout {
             }
 
             source: Qt.resolvedUrl("views/CommunitiesView.qml")
+            prefetch: true
             properties: ({
                 rootStore: root.globalStore,
                 sectionTitle: Qt.binding(() => settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.communitiesSettings)),
@@ -618,6 +615,7 @@ StatusSectionLayout {
             id: keycardViewNewComp
 
             source: Qt.resolvedUrl("views/KeycardViewNew.qml")
+            prefetch: true
             properties: ({
                 keycardNewStore: root.keycardNewStore,
                 areTestNetworksEnabled: Qt.binding(() => root.networksStore.areTestNetworksEnabled),
@@ -668,6 +666,7 @@ StatusSectionLayout {
             id: privacyAndSecurityViewComp
 
             source: Qt.resolvedUrl("views/PrivacyAndSecurityView.qml")
+            prefetch: true
             properties: ({
                 whitelistedDomainsModel: Qt.binding(() => root.whitelistedDomainsModel),
                 isStatusNewsViaRSSEnabled: Qt.binding(() => root.privacyStore.isStatusNewsViaRSSEnabled),
@@ -691,6 +690,7 @@ StatusSectionLayout {
             id: backupViewComp
 
             source: Qt.resolvedUrl("views/BackupView.qml")
+            prefetch: true
             properties: ({
                 contentWidth: Qt.binding(() => d.contentWidth),
                 sectionTitle: Qt.binding(() => settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.backupSettings)),
@@ -714,6 +714,7 @@ StatusSectionLayout {
             id: logosNetworkViewComp
 
             source: Qt.resolvedUrl("views/LogosNetworkView.qml")
+            prefetch: true
             properties: ({
                 contentWidth: Qt.binding(() => d.contentWidth),
                 sectionTitle: Qt.binding(() => settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.logosNetworkSettings)),

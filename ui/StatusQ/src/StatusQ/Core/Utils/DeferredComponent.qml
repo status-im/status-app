@@ -33,13 +33,16 @@ QtObject {
     // initial properties of every created object; use Qt.binding() for live values
     property var properties: ({})
 
+    // load the type in the background right after creation, so the first use does not wait
+    property bool prefetch: false
+
     signal created(var object)
 
-    function component() {
-        const c = root.source.toString() !== "" ? Qt.createComponent(root.source)
-                                                : Qt.createComponent(root.module, root.typeName)
+    function component(mode = Component.PreferSynchronous) {
+        const c = root.source.toString() !== "" ? Qt.createComponent(root.source, mode)
+                                                : Qt.createComponent(root.module, root.typeName, mode)
         if (c.status === Component.Error)
-            console.error("DeferredComponent:", c.errorString())
+            console.warn("DeferredComponent:", c.errorString())
         return c
     }
 
@@ -54,10 +57,21 @@ QtObject {
             return null
         const object = c.createObject(parent, Object.assign({}, root.properties, params))
         if (!object) {
-            console.error("DeferredComponent: cannot create", c.url, c.errorString())
+            console.warn("DeferredComponent: cannot create", c.url, c.errorString())
             return null
         }
         root.adopt(object)
         return object
+    }
+
+    Component.onCompleted: {
+        if (root.prefetch)
+            Qt.callLater(() => d.prefetched = root.component(Component.Asynchronous))
+    }
+
+    readonly property QtObject _d: QtObject {
+        id: d
+
+        property Component prefetched
     }
 }
