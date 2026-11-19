@@ -10,6 +10,14 @@ QtObject {
     property var _timers: ({})
     property int _nextId: 0
 
+    // ahead-of-time compiled, unlike a Qt.createQmlObject() string compiled on every call
+    readonly property Component _timerComponent: Component {
+        Timer {
+            running: false
+            repeat: false
+        }
+    }
+
     function setTimeout(owner, timeout, callback) {
         const tid = ++_nextId
 
@@ -23,11 +31,7 @@ QtObject {
 
         owner.Component.onDestruction.connect(cleanup)
 
-        const obj = Qt.createQmlObject(
-                    'import QtQml; Timer { '
-                    + 'running: false; repeat: false; '
-                    + `interval: ${timeout}}`,
-                    root, "setTimeout")
+        const obj = _timerComponent.createObject(root, { interval: timeout })
 
         obj.triggered.connect(() => {
             callback()

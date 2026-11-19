@@ -1,9 +1,0 @@
-pragma Singleton
-
-import QtQml
-
-QtObject {
-    id: root
-
-    property bool testMode: @TEST_MODE@
-}

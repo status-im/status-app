@@ -13,5 +13,4 @@ StatusFileDialog 0.1 StatusFileDialog.qml
 StatusFolderDialog 0.1 StatusFolderDialog.qml
 StatusHeaderActions 0.1 StatusHeaderActions.qml
 StatusMessageDialog 0.1 StatusMessageDialog.qml
-StatusSaveFileDialog 0.1 StatusSaveFileDialog.qml
 StatusTitleSubtitle 0.1 StatusTitleSubtitle.qml
