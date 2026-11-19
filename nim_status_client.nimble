@@ -31,7 +31,7 @@ requires "https://github.com/status-im/nim-taskpools.git#4acdc6ef005a93dba09f902
 requires "https://github.com/seaqt/nim-seaqt.git#7d40abd7b493036b4ede5b111fc4260237504796"  # seaqt (branch qt-6.8)
 requires "https://github.com/seaqt/nimqml-seaqt.git#fa084a8d9bcf00c9ed4c2adf857793fcc059357f"  # nimqml
 requires "https://github.com/status-im/nim-qtcamera#01fcedd967abc35d5255a008b9008177926ba2cc"  # qtcamera
-requires "https://github.com/status-im/nim-qrscan#a375437ffaf45e46317d9c447daff86a19335401"  # qrscan
+requires "https://github.com/status-im/nim-qrscan#5e66fe20d1a7913d25599515cc6faad2aeae7a2b"  # qrscan
 # Transitive packages, pinned to the revisions the app was built with as submodules.
 requires "isaac == 0.2.0"  # isaac (uuids); by version: uuids requires it by version
 requires "https://github.com/status-im/nim-secp256k1.git#d8f1288b7c72f00be5fc2c5ea72bf5cae1eafb15"  # secp256k1 (eth)

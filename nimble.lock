@@ -120,8 +120,8 @@
       }
     },
     "qrscan": {
-      "version": "#a375437ffaf45e46317d9c447daff86a19335401",
-      "vcsRevision": "a375437ffaf45e46317d9c447daff86a19335401",
+      "version": "#5e66fe20d1a7913d25599515cc6faad2aeae7a2b",
+      "vcsRevision": "5e66fe20d1a7913d25599515cc6faad2aeae7a2b",
       "url": "https://github.com/status-im/nim-qrscan",
       "downloadMethod": "git",
       "dependencies": [
@@ -129,7 +129,7 @@
         "results"
       ],
       "checksums": {
-        "sha1": "1d4634e943dc8fe37252e507612bd4cff6298210"
+        "sha1": "360b5cd5bef0bfb2034e1170d25dbaae08e1a8b0"
       }
     },
     "nat_traversal": {
