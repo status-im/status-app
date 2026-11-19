@@ -37,6 +37,7 @@ Item {
     property bool supportsHistory: true
     property bool hasNativeFindPanel: false
     property bool clearSiteDataSupported: true
+    property bool revivesAfterRendererLoss: false
 
     // LazyWebViewAdapter's Connections block warns on any it cannot find.
     signal linkHovered(string hoveredUrl)
@@ -66,4 +67,6 @@ Item {
 
     /// Convenience: the Backend values a WebEngine crash reports.
     function simulateCrash() { root.renderProcessTerminated(2 /*Crashed*/, 133) }
+    /// The system killed the renderer (low memory), the page did nothing wrong.
+    function simulateKill() { root.renderProcessTerminated(3 /*Killed*/, 0) }
 }

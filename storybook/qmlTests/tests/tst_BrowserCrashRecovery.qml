@@ -101,6 +101,39 @@ Item {
             compare(fake.reloadCalls, 1)
         }
 
+        // A Backend that revives its view brings a killed renderer back itself.
+        function test_aKilledRendererOfARevivingBackendShowsNothing() {
+            const { view, fake } = makeView()
+            fake.revivesAfterRendererLoss = true
+
+            fake.simulateKill()
+
+            verify(!view.crashed)
+            compare(fake.reloadCalls, 0)
+        }
+
+        // Hidden, it comes back when shown: no crashed page to meet the user.
+        function test_aHiddenCrashOfARevivingBackendShowsNothing() {
+            const { view, fake } = makeView()
+            fake.revivesAfterRendererLoss = true
+            view.visible = false
+
+            fake.simulateCrash()
+
+            verify(!view.crashed)
+        }
+
+        // On screen it stays down: reloading a crashing page is the user's call.
+        function test_aShownCrashOfARevivingBackendShowsTheCrashedPage() {
+            const { view, fake } = makeView()
+            fake.revivesAfterRendererLoss = true
+
+            fake.simulateCrash()
+
+            verify(view.crashed)
+            compare(fake.reloadCalls, 0)
+        }
+
         // No Tab left to show a crashed page in (ADR 0006 §6).
         function test_retainedViewsAreLeftAlone() {
             const { view, fake } = makeView({ retained: true })
