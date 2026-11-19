@@ -66,11 +66,19 @@ StatusSectionLoader {
     /// The community section is the current one.
     property bool sectionCurrent: false
 
-    /// Whether the section's UI should exist. Mobile gives it back while it is
-    /// not on screen (SectionDropPolicy); desktop keeps it from the first visit
-    /// on.
-    readonly property bool keepLoaded: SQUtils.Utils.isMobile ? dropPolicy.keepLoaded
-                                                              : d.visited || root.sectionCurrent
+    /// The app is in front: Inactive (a system sheet on top) still is,
+    /// Suspended is not.
+    property bool appInFront: Qt.application.state === Qt.ApplicationActive
+                              || Qt.application.state === Qt.ApplicationInactive
+
+    /// Mobile gives the UI back while it is not on screen (SectionDropPolicy);
+    /// desktop keeps it from the first visit on.
+    property bool dropWhenNotShown: SQUtils.Utils.isMobile
+    property alias dropDelay: dropPolicy.dropDelay
+
+    /// Whether the section's UI should exist.
+    readonly property bool keepLoaded: root.dropWhenNotShown ? dropPolicy.keepLoaded
+                                                             : d.visited || root.sectionCurrent
 
     /// The section's UI went away (a Drop).
     signal uiReleased()
@@ -80,10 +88,10 @@ StatusSectionLoader {
 
     SectionDropPolicy {
         id: dropPolicy
+        objectName: "dropPolicy"
 
-        // Inactive (a system sheet on top) is still in front; Suspended is not.
-        shown: root.sectionCurrent && (Qt.application.state === Qt.ApplicationActive
-                                       || Qt.application.state === Qt.ApplicationInactive)
+        shown: root.sectionCurrent && root.appInFront
+        current: root.sectionCurrent
 
         onKeepLoadedChanged: console.info("[Community] Drop:", root.sectionId,
                                           keepLoaded ? "kept" : "dropped")
@@ -91,10 +99,9 @@ StatusSectionLoader {
 
     Connections {
         target: SystemUtils
-        function onMemoryPressure() { dropPolicy.memoryPressure() }
+        function onMemoryPressure(critical) { dropPolicy.memoryPressure(critical) }
     }
 
-    onSectionCurrentChanged: if (sectionCurrent) d.visited = true
 
     // Back-navigation contract for AppMain's back chain. The chrome is
     // interactive while the section item still incubates, so the loader must
@@ -418,6 +425,7 @@ StatusSectionLoader {
 
     onLoaded: {
         d.uiBuilt = true
+        d.visited = true
         root.item.visible = true
         if (d.pendingViewIndex !== -1) {
             root.item.currentIndex = d.pendingViewIndex

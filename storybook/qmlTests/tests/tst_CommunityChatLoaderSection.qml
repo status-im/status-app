@@ -4,6 +4,7 @@ import QtTest
 
 import StatusQ
 import StatusQ.Components
+import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils as SQUtils
 import StatusQ.Layout
@@ -36,6 +37,10 @@ Item {
 
     width: 1000
     height: 700
+
+    // AppMain's wiring: the loader is active while it keeps its UI
+    property bool wired: false
+    property bool mainReady: true
 
     CommunitySectionMock { id: mock }
 
@@ -72,7 +77,7 @@ Item {
         sourceComponent: CommunityChatLoader {
             textAppearance: root.textAppearance
             previewAppearance: root.previewAppearance
-            active: true
+            active: root.wired ? root.mainReady && keepLoaded : true
 
             userUID: "0xdeadbeef"
             sectionName: "community_%1".arg(sectionId)
@@ -136,6 +141,8 @@ Item {
 
         function cleanup() {
             harness.active = false
+            root.wired = false
+            root.mainReady = true
             mock.uninstall()
             contactsStoreMock.myPublicKey = "0xdeadbeef"
             root.height = 700
@@ -851,6 +858,92 @@ Item {
             wait(50)
 
             compare(spy.count, 0)
+        }
+
+        // ---- when the UI is dropped (AppMain's wiring) ---------------------
+
+        function wiredLoader(props) {
+            root.wired = true
+            harness.active = true
+            const loader = harness.item
+            verify(!!loader)
+            for (const name in props ?? {})
+                loader[name] = props[name]
+            return loader
+        }
+
+        function showSection(loader) {
+            loader.sectionCurrent = true
+            tryVerify(() => loader.status === Loader.Ready, 10000)
+        }
+
+        function dropTimer(loader) {
+            return findChild(loader, "dropPolicy").d.timer
+        }
+
+        function test_aLeftCommunityDropsAfterTheDelay() {
+            const loader = wiredLoader({ dropWhenNotShown: true, dropDelay: 50 })
+            showSection(loader)
+
+            loader.sectionCurrent = false
+
+            tryVerify(() => !loader.item)
+            verify(!loader.active)
+        }
+
+        function test_theCurrentCommunityStaysInTheBackground() {
+            const loader = wiredLoader({ dropWhenNotShown: true, dropDelay: 50 })
+            showSection(loader)
+
+            loader.appInFront = false
+
+            verify(!dropTimer(loader).running)
+            verify(loader.keepLoaded)
+        }
+
+        function test_memoryPressureDropsTheCurrentCommunityInTheBackground() {
+            const loader = wiredLoader({ dropWhenNotShown: true })
+            showSection(loader)
+            loader.appInFront = false
+
+            SystemUtils.memoryPressure(true)
+
+            tryVerify(() => !loader.item)
+        }
+
+        function test_aBackgroundTrimDropsOnlyACommunityTheUserLeft() {
+            const loader = wiredLoader({ dropWhenNotShown: true })
+            showSection(loader)
+            loader.appInFront = false
+
+            SystemUtils.memoryPressure(false)
+            verify(loader.keepLoaded)
+
+            loader.sectionCurrent = false
+            SystemUtils.memoryPressure(false)
+            tryVerify(() => !loader.item)
+        }
+
+        function test_desktopKeepsTheUiOfAVisitedCommunity() {
+            const loader = wiredLoader({ dropWhenNotShown: false, dropDelay: 50 })
+            showSection(loader)
+
+            loader.sectionCurrent = false
+            SystemUtils.memoryPressure(true)
+
+            verify(loader.keepLoaded)
+            verify(!!loader.item)
+        }
+
+        function test_aCommunityLeftBeforeTheAppIsReadyIsNotLoaded() {
+            root.mainReady = false
+            const loader = wiredLoader({ dropWhenNotShown: false })
+
+            loader.sectionCurrent = true
+            loader.sectionCurrent = false
+            root.mainReady = true
+
+            verify(!loader.active)
         }
 
         function test_theDraftSurvivesADrop() {
