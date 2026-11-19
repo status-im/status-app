@@ -136,10 +136,12 @@ Item {
             // A non-empty credential is only sent when the preference is ON or the
             // onboarding opt-in was taken (enforced Nim-side).
             const status = root.secureStorage.setCredential(account, credential)
-            if (enablePreference && status === SecureStorage.StatusSuccess)
+            if (!enablePreference)
+                return
+            if (status === SecureStorage.StatusSuccess) {
                 root.onboardingStore.setStayLoggedIn(true)
-            // The write may have committed: converge to OFF, else match the worst case (ON)
-            if (enablePreference && status === SecureStorage.StatusIndeterminate) {
+            } else if (status === SecureStorage.StatusIndeterminate) {
+                // The write may have committed: converge to OFF, else match the worst case (ON)
                 const cleanupStatus = root.secureStorage.deleteCredential(account)
                 if (cleanupStatus !== SecureStorage.StatusSuccess
                         && cleanupStatus !== SecureStorage.StatusNotFound) {
