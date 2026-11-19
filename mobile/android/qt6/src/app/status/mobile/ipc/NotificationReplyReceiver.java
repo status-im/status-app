@@ -201,10 +201,8 @@ public final class NotificationReplyReceiver extends BroadcastReceiver {
         final PendingResult pendingResult = goAsync();
         REPLY_EXECUTOR.execute(() -> {
             try {
-                resumeMessagingForBackgroundSend();
                 markConversationRead(conversationId, threadId);
             } finally {
-                StatusGoService.scheduleMessagingRepause();
                 pendingResult.finish();
             }
         });
