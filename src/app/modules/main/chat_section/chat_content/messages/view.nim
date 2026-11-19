@@ -66,6 +66,9 @@ QtObject:
   QtProperty[QVariant] model:
     read = getModel
 
+  proc readingPositions*(self: View): ReadingPositions =
+    return self.readingPositions
+
   proc getReadingPositions(self: View): QVariant {.slot.} =
     return self.readingPositionsVariant
   QtProperty[QVariant] readingPositions:

@@ -7,7 +7,7 @@ import app/modules/main/chat_section/chat_content/io_interface as chat_content_i
 import app/modules/main/chat_section/chat_content/messages/module as messages_module
 import app_service/service/message/service as message_service
 import app/global/feature_flags
-import app/modules/main/chat_section/chat_content/messages/[controller, view]
+import app/modules/main/chat_section/chat_content/messages/[controller, view, reading_positions]
 import app/modules/main/chat_section/chat_content/messages/io_interface as messages_interface
 import app/modules/shared_models/message_model
 import app/modules/shared_models/message_item
@@ -243,6 +243,27 @@ suite "thread navigation":
       check(module.controller.getSearchedMessageId() == "")
       check(not module.view.getMessageSearchOngoing())
       check(not module.view.isLoading())
+
+  # search, notification, Activity Center, pinned and deep-link jumps all go
+  # through scrollToMessage: a view built later still finds the jump
+  test "a jump to a loaded message is kept until a view takes it":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    let contacts = contact_service.newService(events, nil, nil, nil)
+    let chats = chat_service.newService(events, nil, contacts)
+    let communities = community_service.newService(events, nil, chats, nil, service)
+    let module = messages_module.newModule(MockDelegate(), events, "section-id", "chat-id",
+      true, contacts, communities, chats, service, nil, nil)
+    defer: module.delete()
+    module.newMessagesLoaded(@[MessageDto(id: "old-message", clock: 1)], @[])
+
+    module.controller.setSearchedMessageId("old-message")
+    module.view.setMessageSearchOngoing(true)
+    module.onGetMessageById(module.getMessageRequestId, "old-message",
+      MessageDto(id: "old-message", clock: 1), "")
+
+    check(module.view.readingPositions().takeJump() == "old-message")
+    check(module.view.readingPositions().takeJump() == "")
 
   test "thread reply visibility follows the feature flag for loaded and added messages":
     let events = createEventEmitter()

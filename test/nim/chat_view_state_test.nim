@@ -25,6 +25,14 @@ suite "reading positions":
     check positions.getRecord("") == """{"atBottom":true}"""
     check positions.getRecord("thread-1") == """{"key":"m1","offset":12}"""
 
+  test "a jump is taken once":
+    let positions = newReadingPositions()
+    check positions.takeJump() == ""
+
+    positions.setJump("m1")
+    check positions.takeJump() == "m1"
+    check positions.takeJump() == ""
+
   test "a record is replaced, and cleared by an empty one":
     let positions = newReadingPositions()
     positions.setRecord("", """{"key":"m1","offset":12}""")
