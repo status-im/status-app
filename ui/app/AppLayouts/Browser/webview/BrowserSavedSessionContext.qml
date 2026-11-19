@@ -138,7 +138,7 @@ QtObject {
                 currentIndex = records.length
             records.push({
                 uuid: view.uid,
-                url: view.url.toString(),
+                url: (view.sessionUrl ?? view.url).toString(),
                 title: view.title || "",
                 icon: BrowserSessionUtils.normalizeIcon(view.icon),
                 offTheRecord: !!view.offTheRecord,

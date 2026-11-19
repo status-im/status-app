@@ -15,6 +15,7 @@ Item {
         QtObject {
             property string uid: ""
             property url url: ""
+            property url sessionUrl: url
             property string title: ""
             property url icon: ""
             property bool offTheRecord: false
@@ -131,6 +132,20 @@ Item {
             compare(cache.tabs[1].uuid, "b")
             verify(cache.tabs[1].offTheRecord)
             compare(cache.currentIndex, 1)
+        }
+
+        // A Tab whose url turned into a Download keeps its page, or nothing.
+        function test_captureTakesTheSessionUrl() {
+            const { tabs, webViewContext, cache, context } = makeAll()
+            webViewContext.views = [
+                fakeViewComponent.createObject(root, { uid: "d", url: "https://a.example/file.bin",
+                                                       sessionUrl: "" })
+            ]
+            tabs.count = 1
+
+            context.captureToCache()
+
+            compare(cache.tabs[0].url, "")
         }
 
         function test_restoreRebuildsTheTabsAndLoadsOnlyTheActiveOne() {
