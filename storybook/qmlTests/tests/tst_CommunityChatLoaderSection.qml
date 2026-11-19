@@ -825,6 +825,34 @@ Item {
             tryVerify(() => loader.status === Loader.Ready, 10000)
         }
 
+        Component {
+            id: releasedSpyComp
+            SignalSpy { signalName: "uiReleased" }
+        }
+
+        function test_aDropReleasesTheUiOnce() {
+            const loader = loadSection()
+            const spy = createTemporaryObject(releasedSpyComp, root, { target: loader })
+
+            dropAndRestore(loader)
+
+            compare(spy.count, 1)
+        }
+
+        function test_nothingButADropReleasesTheUi() {
+            const loader = loadSection()
+            const spy = createTemporaryObject(releasedSpyComp, root, { target: loader })
+
+            loader.sectionCurrent = true
+            loader.sectionCurrent = false
+            loader.chromeNeeded = false
+            loader.chromeNeeded = true
+            mock.setActiveChat("channel-u-1")
+            wait(50)
+
+            compare(spy.count, 0)
+        }
+
         function test_theDraftSurvivesADrop() {
             const loader = loadSectionWithInput()
             const preserved = mock.d.contentModuleFor(mock.activeChatId).inputAreaModule.preservedProperties
