@@ -60,6 +60,7 @@ StatusSectionLoader {
         // Inactive (a system sheet on top) is still in front; Suspended is not.
         shown: root.sectionCurrent && (Qt.application.state === Qt.ApplicationActive
                                        || Qt.application.state === Qt.ApplicationInactive)
+        current: root.sectionCurrent
         hasLivePage: root.item?.hasLivePage ?? false
         keepAlive: root.item?.keepAlive ?? false
 
@@ -78,7 +79,7 @@ StatusSectionLoader {
 
     Connections {
         target: SystemUtils
-        function onMemoryPressure() { dropPolicy.memoryPressure() }
+        function onMemoryPressure(critical) { dropPolicy.memoryPressure(critical) }
     }
 
     QtObject {

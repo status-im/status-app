@@ -71,7 +71,7 @@ Item {
                                         dropDelay: 60000 })
 
             policy.shown = false
-            policy.memoryPressure()
+            policy.memoryPressure(true)
 
             verify(policy.keepLoaded)
             compare(policy.idleDrops, 1)
@@ -82,7 +82,7 @@ Item {
             const policy = makePolicy({ shown: true, hasLivePage: true, keepAlive: true,
                                         dropDelay: 60000 })
             policy.shown = false
-            policy.memoryPressure()
+            policy.memoryPressure(true)
             policy.dropDelay = 50
 
             policy.keepAlive = false
@@ -110,12 +110,78 @@ Item {
 
             policy.shown = true
             policy.shown = false
-            policy.memoryPressure()
+            policy.memoryPressure(true)
 
             verify(policy.keepLoaded)
             verify(policy.policy.shown, "the shared policy never sees an exit")
             compare(policy.droppings, 0)
             compare(policy.idleDrops, 0)
+        }
+
+        // In focus when the app goes to the background: it stays, no delay runs.
+        function test_aBrowserInFocusStaysInTheBackground() {
+            const policy = makePolicy({ shown: true, current: true, hasLivePage: true })
+
+            policy.inBackground = true
+            policy.shown = false
+
+            verify(policy.keepLoaded)
+            verify(!policy.policy.d.timer.running)
+            compare(policy.droppings, 0)
+        }
+
+        function test_aBackgroundTrimSparesTheCurrentBrowser() {
+            const policy = makePolicy({ shown: true, current: true, hasLivePage: true })
+            policy.inBackground = true
+            policy.shown = false
+
+            policy.memoryPressure(false)
+
+            verify(policy.keepLoaded)
+            compare(policy.droppings, 0)
+        }
+
+        // Android stops the event loop in the background: the drop happens on the way out.
+        function test_anOffScreenBrowserDropsWhenTheAppGoesToTheBackground() {
+            const policy = makePolicy({ shown: true, current: true, hasLivePage: true,
+                                        dropDelay: 60000 })
+            policy.current = false
+            policy.shown = false
+
+            policy.inBackground = true
+
+            verify(!policy.keepLoaded)
+            compare(policy.droppings, 1)
+        }
+
+        function test_aHeldBrowserSurvivesTheBackgroundAndDropsBackInFront() {
+            const policy = makePolicy({ shown: true, current: true, hasLivePage: true,
+                                        keepAlive: true, dropDelay: 50 })
+            policy.current = false
+            policy.shown = false
+
+            policy.inBackground = true
+            verify(policy.keepLoaded)
+            compare(policy.idleDrops, 1)
+
+            policy.keepAlive = false
+            verify(policy.keepLoaded, "nothing runs in the background")
+            policy.inBackground = false
+
+            tryVerify(() => !policy.keepLoaded)
+        }
+
+        function test_theDelayRunsOnlyInFront() {
+            const policy = makePolicy({ shown: true, current: true, hasLivePage: true,
+                                        dropDelay: 60000 })
+            policy.current = false
+            policy.shown = false
+            verify(policy.policy.d.timer.running)
+
+            policy.keepAlive = true
+            policy.inBackground = true
+
+            verify(!policy.policy.d.timer.running)
         }
 
         function test_aReasonOnTheWayOutStillDelays() {
