@@ -402,7 +402,18 @@ QtObject {
         if (!found)
             return
         _retainedViews = next
+        // Every Tab was dropped meanwhile: no Web View is left on the renderer.
+        if (next.length === 0 && !root._anyTabLoaded() && typeof view.terminateRenderer === "function")
+            view.terminateRenderer()
         root._destroyWebView(view)
+    }
+
+    function _anyTabLoaded() {
+        for (let i = 0; i < tabsModel.count; ++i) {
+            if (getWebView(i)?.adapterItem)
+                return true
+        }
+        return false
     }
 
     readonly property Connections _retainedDownloadsConnections: Connections {
