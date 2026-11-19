@@ -6,6 +6,7 @@ import allure
 
 import configs
 import driver
+from gui.components.messaging.mention_suggestions_popup import MentionSuggestionsPopup
 from gui.components.messaging.thread_header_context_menu import ThreadHeaderMenu
 from gui.elements.button import Button
 from gui.elements.object import QObject
@@ -74,13 +75,58 @@ class ThreadPanel:
         except TimeoutError:
             return False
 
+    def _composer(self) -> tuple[TextEdit, Button, bool]:
+        """Draft panel from Create Thread, or the composer of an existing thread."""
+        draft_field = TextEdit(messaging_names.newThreadMessageInputField)
+        thread_field = TextEdit(messaging_names.threadMessageInputField)
+        timeout_msec = configs.timeouts.UI_LOAD_TIMEOUT_MSEC
+        found = {}
+
+        def ready() -> bool:
+            if draft_field.is_visible:
+                found['field'] = draft_field
+                found['button'] = Button(messaging_names.newThreadSendButton)
+                found['drafting'] = True
+                return True
+            if thread_field.is_visible:
+                found['field'] = thread_field
+                found['button'] = self._send_button
+                found['drafting'] = False
+                return True
+            return False
+
+        assert driver.waitFor(ready, timeout_msec), (
+            f'Thread composer did not appear within {timeout_msec} ms'
+        )
+        found['field'].click()
+        return found['field'], found['button'], found['drafting']
+
+    def _wait_until_draft_created(self):
+        draft_field = TextEdit(messaging_names.newThreadMessageInputField)
+        timeout_msec = configs.timeouts.MESSAGING_TIMEOUT_SEC * 1000
+        assert driver.waitFor(lambda: not draft_field.is_visible, timeout_msec), (
+            'New thread draft did not finish after the first reply'
+        )
+
     @allure.step('Send message in the open thread panel')
     def send_message(self, message: str):
-        field = TextEdit(messaging_names.threadMessageInputField)
-        field.wait_until_appears()
-        field.click()
+        field, button, drafting = self._composer()
         field.set_text_property(message)
-        self._send_button.wait_until_enabled().click()
+        button.wait_until_enabled().click()
+        if drafting:
+            self._wait_until_draft_created()
+
+    @allure.step('Send @mention of {display_name} in the open thread panel')
+    def send_mention(self, display_name: str):
+        field, button, drafting = self._composer()
+        field.clear(verify=False)
+        driver.type(field.object, '@')
+        MentionSuggestionsPopup().wait_until_appears()
+        driver.type(field.object, MentionSuggestionsPopup.mention_filter_text(display_name))
+        MentionSuggestionsPopup().select(display_name)
+        button.wait_until_enabled().click()
+        if drafting:
+            self._wait_until_draft_created()
 
     @allure.step('Send image in the open thread or thread main chat')
     def send_image(self, path_or_base64: str):
@@ -140,6 +186,40 @@ def follow_open_thread():
 @allure.step('Delete the open thread from its header menu')
 def delete_open_thread():
     ThreadHeaderMenu().open().select_delete().confirm()
+
+
+@allure.step('Mute the open thread until turned back on')
+def mute_open_thread():
+    ThreadHeaderMenu().open().select_mute_until_turned_on()
+
+
+@allure.step('Rename the open thread to {new_name!r}')
+def rename_open_thread(new_name: str):
+    ThreadHeaderMenu().open().select_edit_name()
+    field = TextEdit(messaging_names.threadNameInput)
+    field.wait_until_appears()
+    field.set_text_property(new_name)
+    driver.type(field.object, '<Return>')
+    timeout_msec = configs.timeouts.MESSAGING_TIMEOUT_SEC * 1000
+    assert driver.waitFor(lambda: not field.is_visible, timeout_msec), (
+        f'Thread name field did not close after submitting {new_name!r}'
+    )
+
+
+@allure.step('Start thread from parent message with reply in side panel')
+def start_thread_from_message(messages_screen, parent_message: str, reply_message: str, thread_panel: ThreadPanel):
+    parent = messages_screen.chat.find_message_by_text(parent_message, 0)
+    parent.open_context_menu().create_thread()
+    assert thread_panel.is_open
+    thread_panel.send_message(reply_message)
+    thread_panel.find_message(reply_message)
+    thread_panel.close()
+
+
+@allure.step('Open thread {thread_title!r} from chat list')
+def open_thread_from_list(messages_screen, thread_title: str):
+    messages_screen.left_panel.click_chat_by_name(thread_title)
+    wait_for_chat_header(thread_title)
 
 
 @allure.step('Wait until thread row {thread_title!r} listed={present}')

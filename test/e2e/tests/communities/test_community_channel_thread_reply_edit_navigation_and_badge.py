@@ -101,13 +101,12 @@ def test_community_channel_thread_reply_edit_navigation_and_badge(multiple_insta
             messages_screen = MessagesScreen()
             parent = messages_screen.chat.find_message_by_text(parent_message, 0)
             parent.open_context_menu().create_thread()
+            assert thread_panel.is_open, 'New thread panel did not open after Create Thread'
+            thread_panel.send_message(reply_message)
             assert driver.waitFor(
                 lambda: parent.has_thread_card(),
-                configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
-            ), 'Thread card did not appear after Create Thread'
-            parent.open_thread_from_card()
-            assert thread_panel.is_open, 'Thread side panel did not open from the thread card'
-            thread_panel.reply_to_message(parent_message, reply_message)
+                configs.timeouts.MESSAGING_TIMEOUT_SEC * 1000,
+            ), 'Thread card did not appear after the first thread reply'
             thread_panel.find_message(reply_message)
             thread_panel.close()
             wait_until_reply_not_in_main_chat(messages_screen.chat, reply_message)
