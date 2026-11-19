@@ -2584,6 +2584,7 @@ Item {
 
                             active: appMain.mainReady && keepLoaded
                             sectionCurrent: sectionId === appMain.rootStore.activeSectionId
+                            onUiReleased: memoryRelease.request()
 
                             userUID: d.myPublicKey
                             sectionName: "community_%1".arg(sectionId)

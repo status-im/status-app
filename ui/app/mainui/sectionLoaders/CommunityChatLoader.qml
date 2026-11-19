@@ -72,6 +72,9 @@ StatusSectionLoader {
     readonly property bool keepLoaded: SQUtils.Utils.isMobile ? dropPolicy.keepLoaded
                                                               : d.visited || root.sectionCurrent
 
+    /// The section's UI went away (a Drop).
+    signal uiReleased()
+
     signal openAppSearchRequested(string chatId, string threadId)
     signal supportBotChatRequested()
 
@@ -303,6 +306,7 @@ StatusSectionLoader {
         property bool showUsersPanel: root.accountSettingsStore.showUsersList
         property int pendingViewIndex: -1
         property bool visited: false
+        property bool uiBuilt: false
 
         function restoreShownPanel() {
             if (chromeLoader.item && d.chatRootStore)
@@ -414,6 +418,7 @@ StatusSectionLoader {
     }
 
     onLoaded: {
+        d.uiBuilt = true
         root.item.visible = true
         if (d.pendingViewIndex !== -1) {
             root.item.currentIndex = d.pendingViewIndex
@@ -428,6 +433,10 @@ StatusSectionLoader {
             return
         }
         d.clearStores()
+        if (d.uiBuilt) {
+            d.uiBuilt = false
+            root.uiReleased()
+        }
     }
 
     Component.onCompleted: {
