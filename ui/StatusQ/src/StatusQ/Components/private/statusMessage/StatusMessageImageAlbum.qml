@@ -12,6 +12,8 @@ RowLayout {
 
     property var album: []
     property int albumCount: 0
+    // Format of the image when the album holds a single one (see StatusImageMessage.format)
+    property string singleImageFormat: ""
     property real imageWidth: 144
     property int shapeType: -1
     property real loadingComponentHeight: 194
@@ -72,6 +74,7 @@ RowLayout {
             isFillCropMode: root.isFillCropMode
             imageWidth: root.imageWidth
             source: imagePath
+            format: d.totalAlbumItems === 1 ? root.singleImageFormat : ""
             shapeType: root.shapeType
             imageClickable: root.imageClickable
             imageCursorShape: root.imageCursorShape

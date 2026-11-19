@@ -34,6 +34,10 @@ proc statusq_shareintake_pending_dir*(): cstring {.cdecl, importc.}
 # shared images; "" outside iOS. Pointer valid for process lifetime.
 proc statusq_shareintake_cache_dir*(): cstring {.cdecl, importc.}
 
+# Directory AttachmentPreparer writes prepared image Attachments to. Pointer
+# valid for process lifetime.
+proc statusq_prepared_attachments_dir*(): cstring {.cdecl, importc.}
+
 when defined(monitoring):
   proc statusq_registerMonitoringType*() {.cdecl, importc.}
   proc statusq_initializeMonitoring*(engine: pointer) {.cdecl, importc.}

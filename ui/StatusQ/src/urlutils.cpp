@@ -27,38 +27,60 @@ constexpr ImageMimeType imageMimeTypes[] = {
     {"image/png", "png"},
     {"image/gif", "gif"},
     {"image/webp", "webp"},
+    {"image/svg+xml", "svg"}, // chat Attachments only, rasterised by AttachmentPreparer
 };
 
 constexpr auto webpMime = "image/webp";
+constexpr auto svgMime = "image/svg+xml";
 }
 
 UrlUtils::UrlUtils(QObject *parent): QObject(parent) {
+    m_imageTypes = makeImageTypes(false);
+    m_chatImageTypes = makeImageTypes(true);
+}
+
+UrlUtils::ImageTypes UrlUtils::makeImageTypes(bool withSvg)
+{
     const auto webpSupported = QImageReader::supportedMimeTypes().contains(webpMime);
 
+    ImageTypes types;
     QStringList imgFilters;
     for (const auto& mime: imageMimeTypes) {
         if (!webpSupported && qstrcmp(mime.name, webpMime) == 0)
             continue;
+        if (!withSvg && qstrcmp(mime.name, svgMime) == 0)
+            continue;
         const auto suffixes = QString::fromLatin1(mime.suffixes).split(' ');
-        m_validImageMimeTypes.append(QString::fromLatin1(mime.name));
-        m_imgExtensions.append(suffixes.first());
-        m_allImgExtensions.append(suffixes);
+        types.mimeTypes.append(QString::fromLatin1(mime.name));
+        types.preferredSuffixes.append(suffixes.first());
+        types.allSuffixes.append(suffixes);
         for (const auto& suffix: suffixes)
             imgFilters.append(QStringLiteral("*.") + suffix);
     }
 
-    m_imgFilters = imgFilters.join(' ');
-    m_imgFilters.append(QStringLiteral(" "));
-    m_imgFilters.append(m_imgFilters.toUpper()); // include the uppercase extensions too for case sensitive file systems
+    types.nameFilters = imgFilters.join(' ');
+    types.nameFilters.append(QStringLiteral(" "));
+    types.nameFilters.append(types.nameFilters.toUpper()); // include the uppercase extensions too for case sensitive file systems
+    return types;
 }
 
 bool UrlUtils::isValidImageUrl(const QUrl &url) const
+{
+    return isValidImageUrl(url, m_imageTypes);
+}
+
+bool UrlUtils::isValidChatImageUrl(const QUrl &url) const
+{
+    return isValidImageUrl(url, m_chatImageTypes);
+}
+
+bool UrlUtils::isValidImageUrl(const QUrl &url, const ImageTypes& types) const
 {
     const auto urlEndsWithSupportedExtension = [&](const QString& url) {
         const auto suffix = url.mid(url.lastIndexOf('.')+1);
         if (suffix.isEmpty())
             return false;
-        return m_allImgExtensions.contains(suffix, Qt::CaseInsensitive);
+        return types.allSuffixes.contains(suffix, Qt::CaseInsensitive);
     };
 
     // don't convert "content:/" like URLs to an empty path
@@ -69,7 +91,7 @@ bool UrlUtils::isValidImageUrl(const QUrl &url) const
 
     const auto mimeType = QMimeDatabase().mimeTypeForFile(filePath, QMimeDatabase::MatchContent).name();
 
-    return m_validImageMimeTypes.contains(mimeType);
+    return types.mimeTypes.contains(mimeType);
 }
 
 qint64 UrlUtils::getFileSize(const QUrl& url)

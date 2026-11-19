@@ -20,6 +20,7 @@ import app/global/[global_singleton, utils]
 import app/global/feature_flags
 import app/core/eventemitter
 import app/core/intake/share_intake_cache
+import app/core/prepared_attachments
 import app/core/signals/types
 
 import ../../common/message as message_common
@@ -586,15 +587,18 @@ QtObject:
         releaseCachedFiles: releaseCachedFiles,
         sendToken: token,
         releasePathsJson: $(%releasePaths),
+        preparedAttachmentsDir: getPreparedAttachmentsDir(),
       )
 
       self.threadpool.start(arg)
     except Exception as e:
       error "Error sending images", msg = e.msg
       # The task's finally never ran; release the cached copies here instead.
-      when defined(android) or defined(ios):
-        if releaseCachedFiles:
-          releaseCachedShareFiles(parseImagePathsJson(imagePathsJson) & releasePaths)
+      if releaseCachedFiles:
+        let toRelease = parseImagePathsJson(imagePathsJson) & releasePaths
+        releasePreparedAttachments(toRelease, getPreparedAttachmentsDir())
+        when defined(android) or defined(ios):
+          releaseCachedShareFiles(toRelease)
       self.events.emit(SIGNAL_SENDING_FAILED, MessageSendingFailure(chatId: chatId, error: e.msg))
       self.finishSending(chatId, token)
 

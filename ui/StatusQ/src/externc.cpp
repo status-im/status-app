@@ -13,6 +13,7 @@
 #include <QQmlIncubator>
 #include <QTimerEvent>
 
+#include <StatusQ/attachmentpreparer.h>
 #include <StatusQ/backgroundgraphicsrelease.h>
 #include <StatusQ/networkaccessfactory.h>
 #include <StatusQ/typesregistration.h>
@@ -347,6 +348,14 @@ Q_DECL_EXPORT const char* statusq_shareintake_pending_dir() {
 // pointer stays valid for the process lifetime.
 Q_DECL_EXPORT const char* statusq_shareintake_cache_dir() {
     static const QByteArray dir = Status::ShareIntake::shareIntakeCacheDir().toUtf8();
+    return dir.constData();
+}
+
+// Directory AttachmentPreparer writes prepared image Attachments to; the image
+// send deletes the files found there once sent. The returned pointer stays
+// valid for the process lifetime.
+Q_DECL_EXPORT const char* statusq_prepared_attachments_dir() {
+    static const QByteArray dir = AttachmentPreparer::defaultDirectory().toUtf8();
     return dir.constData();
 }
 

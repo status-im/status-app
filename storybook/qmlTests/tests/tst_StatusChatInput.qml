@@ -383,6 +383,20 @@ Item {
             compare(sendButton.iconName, data.iconName)
         }
 
+        function test_rejectedAttachment_showsReasonAndIsRemoved() {
+            // 2-frame GIF, 2400x2 px: wider than the 2000 px animation limit
+            const tooWideGif = "data:image/gif;base64,R0lGODlhYAkCAPAAAP8AAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQACgAAACwAAAAAYAkCAAACS4SPqcvtD6OctNqLs968+w+G4kiW5omm6sq27gvH8kzX9o3n+s73/g8MCofEovGITCqXzKbzCY1Kp9Sq9YrNarfcrvcLDovH5PKsAAAh+QQACgAAACwAAAAAYAkCAIAAAP8AAAACS4SPqcvtD6OctNqLs968+w+G4kiW5omm6sq27gvH8kzX9o3n+s73/g8MCofEovGITCqXzKbzCY1Kp9Sq9YrNarfcrvcLDovH5PKsAAA7"
+            const validator = findChild(controlUnderTest, "imagePreparationValidator")
+            verify(!!validator)
+            verify(validator.isValid)
+
+            controlUnderTest.validateImagesAndShowImageArea([tooWideGif])
+
+            tryCompare(validator, "isValid", false)
+            compare(validator.errorMessage, "Animated images can be at most 350 KB and 2000 px")
+            compare(controlUnderTest.fileUrlsAndSources.length, 0)
+        }
+
         function test_editMode_toolbarButtons() {
             controlUnderTest.isEdit = true
 

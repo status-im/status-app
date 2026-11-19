@@ -125,6 +125,12 @@ target_compile_definitions(TestRenderSizedImage PRIVATE
     TEST_ASSETS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/TestComponents/assets/")
 add_test(NAME TestRenderSizedImage COMMAND TestRenderSizedImage)
 
+add_executable(TestImagePreparation src/tst_imagepreparation.cpp)
+target_link_libraries(TestImagePreparation PRIVATE Qt::Test Qt::Gui Qt::Qml StatusQ)
+target_compile_definitions(TestImagePreparation PRIVATE
+    TEST_ASSETS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/TestComponents/assets/")
+add_test(NAME TestImagePreparation COMMAND TestImagePreparation)
+
 add_executable(TestIncubationCadence src/tst_incubationcadence.cpp)
 target_link_libraries(TestIncubationCadence PRIVATE Qt::Test Qt::Gui Qt::Qml Qt::Quick StatusQ)
 add_test(NAME TestIncubationCadence COMMAND TestIncubationCadence)

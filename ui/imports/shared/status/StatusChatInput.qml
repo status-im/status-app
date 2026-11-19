@@ -102,6 +102,28 @@ Control {
 
     property var fileUrlsAndSources: []
 
+    // Attachments are prepared (resized/compressed) in the background as soon as they're
+    // attached, so that sending doesn't have to (see AttachmentPreparer).
+    onFileUrlsAndSourcesChanged: {
+        for (const fileUrlOrSource of (root.fileUrlsAndSources || [])) {
+            const source = fileUrlOrSource.toString()
+            AttachmentPreparer.prepare(source, source.startsWith(Constants.dataImagePrefix)
+                                       ? source : UrlUtils.convertUrlToLocalPath(source))
+        }
+    }
+
+    Connections {
+        target: AttachmentPreparer
+
+        function onRejected(source, reason) {
+            const urls = (root.fileUrlsAndSources || []).map(x => x.toString())
+            if (!urls.includes(source))
+                return
+            root.showImageArea(urls.filter(url => url !== source))
+            imagePreparationValidator.reject(reason)
+        }
+    }
+
     property var linkPreviewModel: null
     property var paymentRequestModel: null
 
@@ -565,7 +587,7 @@ Control {
         selectMultiple: true
         usePhotoLibrary: true
         nameFilters: [
-            qsTr("Image files (%1)").arg(UrlUtils.validImageNameFilters)
+            qsTr("Image files (%1)").arg(UrlUtils.validChatImageNameFilters)
         ]
         onAccepted: {
             validateImagesAndShowImageArea(selectedFiles)
@@ -778,6 +800,11 @@ Control {
                     id: imageSizeValidator
                     Layout.alignment: Qt.AlignHCenter
                 }
+                StatusChatImagePreparationValidator {
+                    id: imagePreparationValidator
+                    objectName: "imagePreparationValidator"
+                    Layout.alignment: Qt.AlignHCenter
+                }
                 StatusChatImageQtyValidator {
                     id: imageQtyValidator
                     objectName: "imageQtyValidator"
@@ -854,8 +881,11 @@ Control {
                     onImageRemoved: (index) => {
                         // Spread into a new array so assigning back triggers the property change notification
                         let urls = [...root.fileUrlsAndSources]
-                        if (index < urls.length)
+                        if (index < urls.length) {
+                            // its prepared file isn't needed anymore
+                            AttachmentPreparer.forget(urls[index].toString())
                             urls.splice(index, 1)
+                        }
                         root.fileUrlsAndSources = urls
                         validateImages(root.fileUrlsAndSources)
                     }

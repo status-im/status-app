@@ -12,6 +12,7 @@ import statusq_bridge
 import app/core/signal_handler
 import app/core/custom_urls/url_scheme_event
 import app/core/intake/pending_intake_slot
+import app/core/prepared_attachments
 import app/global/single_instance
 import app/global/qr_camera_frames
 import qtcamera/qml as qtcamera_qml
@@ -367,6 +368,8 @@ proc mainProc() =
   # the copies the still-pending slot payload references).
   statusFoundation.initUrlSchemeManager(urlSchemeEvent, singleInstance, openUri,
     pendingIntakeSlot, $statusq_shareintake_cache_dir())
+  # The image send deletes the prepared Attachments it carried once sent.
+  setPreparedAttachmentsDir($statusq_prepared_attachments_dir())
 
   when defined(ios):
     # iOS runs status-go in-process, so the app lifecycle must drive the

@@ -36,6 +36,8 @@ Control {
     signal paymentRequestRemoveRequested(int index)
 
     function reset() {
+        d.cancelPendingSend()
+        d.forgetAttachments()
         chatInput.setText(root.text)
         d.attachSharedImages()
     }
@@ -51,11 +53,61 @@ Control {
     }
 
     Component.onCompleted: reset()
+    Component.onDestruction: {
+        d.cancelPendingSend()
+        d.forgetAttachments()
+    }
 
     QtObject {
         id: d
 
         readonly property int paymentRequestCount: root.paymentRequestModel?.ModelCount.count ?? 0
+
+        // The send waiting for its Attachments to be prepared, if any. A plain
+        // JS object so the waiting callback can still see it got cancelled
+        // (payload replaced, picker closed) after this component is gone.
+        property var pendingSend: null
+
+        function cancelPendingSend() {
+            if (pendingSend)
+                pendingSend.cancelled = true
+            pendingSend = null
+        }
+
+        // Payload replaced or picker closed: the prepared files of the
+        // Attachments still in the input aren't needed anymore. After a send
+        // this is a no-op: the send released them.
+        function forgetAttachments() {
+            if (!chatInput)
+                return
+            chatInput.fileUrlsAndSources.forEach(
+                source => AttachmentPreparer.forget(source.toString()))
+        }
+
+        // Same as the in-chat send (RootStore.sendMessage): wait for the
+        // Attachments to be prepared, drop the rejected ones, send the
+        // prepared files. Replaced cached copies end up detached, so the host
+        // releases them right away.
+        function send(text: string, sources) {
+            if (pendingSend)
+                return // already waiting; ignore repeated presses
+            const pending = { cancelled: false }
+            pendingSend = pending
+            AttachmentPreparer.whenPrepared(sources, () => {
+                if (pending.cancelled)
+                    return
+                d.pendingSend = null
+                const imagePaths = sources
+                    .filter(source => !AttachmentPreparer.isRejected(source))
+                    .map(source => AttachmentPreparer.resolve(source, d.toImagePath(source)))
+                // The send owns the prepared files now and deletes them once sent
+                sources.forEach(source => AttachmentPreparer.release(source))
+                if (text.trim() === "" && imagePaths.length === 0
+                        && d.paymentRequestCount === 0)
+                    return
+                root.sendRequested(text, imagePaths)
+            })
+        }
 
         // Nim hands over plain absolute file paths; the input's image area
         // needs URLs. Already-formed URLs (file:, data:, qrc:, image:) pass through.
@@ -111,12 +163,11 @@ Control {
             // Images or payment requests alone are sendable (empty caption);
             // otherwise text is needed. The toolbar send button enables on
             // whitespace too, so guard here.
-            const imagePaths = chatInput.fileUrlsAndSources.map(
-                                 url => d.toImagePath(url))
-            if (chatInput.getPlainText().trim() === "" && imagePaths.length === 0
+            const sources = chatInput.fileUrlsAndSources.map(url => url.toString())
+            if (chatInput.getPlainText().trim() === "" && sources.length === 0
                     && d.paymentRequestCount === 0)
                 return
-            root.sendRequested(chatInput.getTextWithPublicKeys(), imagePaths)
+            d.send(chatInput.getTextWithPublicKeys(), sources)
         }
     }
 }

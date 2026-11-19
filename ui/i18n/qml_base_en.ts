@@ -2253,6 +2253,17 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
     </message>
 </context>
 <context>
+    <name>AttachmentPreparer</name>
+    <message>
+        <source>Animated images can be at most %1 KB and %2 px</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>This image can&apos;t be sent</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>AuthenticationPopup</name>
     <message>
         <source>Authenticate</source>

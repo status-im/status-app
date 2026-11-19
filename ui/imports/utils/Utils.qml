@@ -399,6 +399,11 @@ QtObject {
         return String(url).startsWith(Constants.dataImagePrefix) || UrlUtils.isValidImageUrl(url)
     }
 
+    // Chat Attachments also accept SVG (rasterised before sending)
+    function isValidChatImage(url) {
+        return String(url).startsWith(Constants.dataImagePrefix) || UrlUtils.isValidChatImageUrl(url)
+    }
+
     function isFilesizeValid(img) {
         if (String(img).startsWith(Constants.dataImagePrefix)) {
             return img.length < Constants.maxImgSizeBytes

@@ -88,9 +88,22 @@ Item {
             tryCompare(chatInput.fileUrlsAndSources, "length", 2)
             chatInput.setText("Edited")
             mouseClick(findChild(drawer, "statusChatInputSendButton"))
-            compare(sendSpy.count, 1)
+            tryCompare(sendSpy, "count", 1)
             compare(plainText(sendSpy.signalArguments[0][0]), "Edited")
             compare(sendSpy.signalArguments[0][1].length, 2)
+        }
+
+        // The send waits for AttachmentPreparer and hands over its files: a
+        // data: URI is written out, so the host gets a plain path to send.
+        function test_sendHandsOverPreparedFiles() {
+            const drawer = create({ text: "", imagePaths: [root.redImage] })
+            const chatInput = findChild(drawer, "statusChatInput")
+            tryCompare(chatInput.fileUrlsAndSources, "length", 1)
+            mouseClick(findChild(drawer, "statusChatInputSendButton"))
+            tryCompare(sendSpy, "count", 1)
+            const path = sendSpy.signalArguments[0][1][0]
+            verify(!path.startsWith("data:"), path)
+            verify(path.indexOf("status-attachments") >= 0, path)
         }
 
         function test_sendBlockedOnBlankTextWithoutImages() {
@@ -106,7 +119,7 @@ Item {
             const chatInput = findChild(drawer, "statusChatInput")
             tryCompare(chatInput.fileUrlsAndSources, "length", 1)
             mouseClick(findChild(drawer, "statusChatInputSendButton"))
-            compare(sendSpy.count, 1)
+            tryCompare(sendSpy, "count", 1)
         }
 
         function test_sendConvertsSingleSlashFileUrlToPlainPath() {
@@ -118,7 +131,7 @@ Item {
             chatInput.selectImageString("file:" + absPath)
             compare(chatInput.fileUrlsAndSources.length, 1)
             mouseClick(findChild(drawer, "statusChatInputSendButton"))
-            compare(sendSpy.count, 1)
+            tryCompare(sendSpy, "count", 1)
             compare(sendSpy.signalArguments[0][1][0], absPath)
         }
 
@@ -133,7 +146,7 @@ Item {
             const chatInput = findChild(drawer, "statusChatInput")
             tryCompare(chatInput.fileUrlsAndSources, "length", 7)
             mouseClick(findChild(drawer, "statusChatInputSendButton"))
-            compare(sendSpy.count, 1)
+            tryCompare(sendSpy, "count", 1)
             compare(sendSpy.signalArguments[0][1].length, 7)
         }
 

@@ -142,6 +142,7 @@ endif()
 
 add_library(StatusQ ${LIB_TYPE}
         ${STATUSQ_QRC_COMPILED}
+        include/StatusQ/attachmentpreparer.h
         include/StatusQ/audioutils.h
         include/StatusQ/skeletontileitem.h
         include/StatusQ/rippleitem.h
@@ -166,6 +167,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/genericvalidator.h
         include/StatusQ/httpstats.h
         include/StatusQ/imageencoderutils.h
+        include/StatusQ/imagepreparation.h
         include/StatusQ/inputmethodeventfilter.h
         include/StatusQ/keychain.h
         include/StatusQ/securestorage.h
@@ -204,6 +206,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/undefinedfilter.h
         include/StatusQ/urlutils.h
         include/StatusQ/statuslayoutstate.h
+        src/attachmentpreparer.cpp
         src/audioutils.cpp
         src/skeletontileitem.cpp
         src/rippleitem.cpp
@@ -231,6 +234,7 @@ add_library(StatusQ ${LIB_TYPE}
         src/genericvalidator.cpp
         src/httpstats.cpp
         src/imageencoderutils.cpp
+        src/imagepreparation.cpp
         src/inputmethodeventfilter.cpp
         src/keychain.cpp
         src/securestorage.cpp

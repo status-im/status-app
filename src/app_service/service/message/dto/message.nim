@@ -107,6 +107,7 @@ type MessageDto* = object
   ensName*: string
   sticker*: Sticker
   image*: string
+  imageFormat*: string # "jpeg", "png", "gif", "webp" (empty if unknown)
   albumId*: string
   albumImagesCount*: int
   gapParameters*: GapParameters
@@ -250,6 +251,7 @@ proc toMessageDto*(jsonObj: JsonNode): MessageDto =
   discard jsonObj.getProp("messageType", result.messageType)
   discard jsonObj.getProp("contactRequestState", result.contactRequestState)
   discard jsonObj.getProp("image", result.image)
+  discard jsonObj.getProp("imageFormat", result.imageFormat)
   discard jsonObj.getProp("albumId", result.albumId)
   discard jsonObj.getProp("albumImagesCount", result.albumImagesCount)
   discard jsonObj.getProp("editedAt", result.editedAt)
