@@ -1,7 +1,7 @@
 import nimqml, chronicles, sequtils, uuids, sets, times, tables, system, options, strutils
 import io_interface
 import ../io_interface as delegate_interface
-import view, controller
+import view, controller, reading_positions
 import ../../../../shared_models/[message_model, message_item]
 import ../../../../shared_models/link_preview_model
 import ../../../../shared_models/thread_model
@@ -288,6 +288,8 @@ proc checkIfMessageLoadedAndScroll(self: Module) =
   self.controller.clearSearchedMessageId()
   self.controller.resetLoadingMessagesPerPageFactor()
   if index != -1:
+    # kept until the view takes it: a dropped section's view is built later
+    self.view.readingPositions().setJump(searchedMessageId)
     self.view.emitScrollToMessageSignal(index)
   self.view.setMessageSearchOngoing(false)
   self.reevaluateViewLoadingState()

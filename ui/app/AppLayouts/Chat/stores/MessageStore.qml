@@ -33,8 +33,9 @@ QtObject {
     readonly property real threadMuteTill: messageModule ? messageModule.threadMuteTill : 0
 
     // Where the reader was in the chat (thread "") and in its threads, kept by
-    // the backend, as {read(threadId), write(threadId, record)} over the chat
-    // the store shows now; null without a chat.
+    // the backend, as {read(threadId), write(threadId, record), takeJump()}
+    // over the chat the store shows now; null without a chat. takeJump() is a
+    // message to jump to that no view took yet.
     function readingPositions() {
         const positions = root.messageModule ? root.messageModule.readingPositions : null
         if (!positions)
@@ -44,7 +45,8 @@ QtObject {
                 const json = positions.getRecord(threadId)
                 return json ? JSON.parse(json) : null
             },
-            write: (threadId, record) => positions.setRecord(threadId, record ? JSON.stringify(record) : "")
+            write: (threadId, record) => positions.setRecord(threadId, record ? JSON.stringify(record) : ""),
+            takeJump: () => positions.takeJump()
         }
     }
 

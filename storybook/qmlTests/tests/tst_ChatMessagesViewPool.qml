@@ -117,7 +117,13 @@ Item {
             // the backend's per-chat record of where the reader was
             readonly property var readingPositions: QtObject {
                 property var records: ({})
+                property string jump
 
+                function takeJump() {
+                    const id = jump
+                    jump = ""
+                    return id
+                }
                 function getRecord(threadId) { return records[threadId] ?? "" }
                 function setRecord(threadId, record) {
                     if (record)
@@ -301,6 +307,7 @@ Item {
             moduleA.messagesModule.readingPositions.records = {}
             moduleB.messagesModule.readingPositions.records = {}
             moduleT.messagesModule.readingPositions.records = {}
+            moduleA.messagesModule.readingPositions.jump = ""
         }
 
         function cleanup() {
@@ -666,6 +673,37 @@ Item {
                 const after = messageIdAtViewportTop(view)
                 return !lv.busy && !!after && after.key === "a-130"
             }, 5000, "at the recorded message")
+        }
+
+        // A jump asked for while the view did not exist (a dropped section
+        // built again for a search result, a notification...) beats the record.
+        function test_aPendingJumpBeatsTheRecordedPosition() {
+            prewarmedPool()
+            moduleA.messagesModule.readingPositions.setRecord("", JSON.stringify({ atBottom: true }))
+            moduleA.messagesModule.readingPositions.jump = "a-120"
+
+            const view = openView()
+            const lv = view.chatLogView
+
+            tryVerify(() => {
+                if (lv.busy)
+                    return false
+                const row = lv.rowForKey("a-120")
+                const offset = row >= 0 ? lv.viewportOffsetToRow(row) : NaN
+                return !isNaN(offset) && Math.abs(offset) < lv.height
+            }, 5000, "the jump target is on screen")
+            compare(moduleA.messagesModule.readingPositions.jump, "", "the jump is taken")
+        }
+
+        // handled by a live view, the jump is not taken again on the next open
+        function test_aJumpHandledByTheViewIsNotRepeated() {
+            prewarmedPool()
+            const view = openView()
+            moduleA.messagesModule.readingPositions.jump = "a-120"
+
+            moduleA.messagesModule.scrollToMessage(120)
+
+            compare(moduleA.messagesModule.readingPositions.jump, "")
         }
 
         function test_aRecordWhoseMessageIsGoneOpensAtTheNewest() {

@@ -309,6 +309,15 @@ Item {
         // Where the window opens on `model` for the latched chat: around its
         // recorded position, or at the newest message.
         function openingStart(model, store) {
+            // a jump asked for before this view existed beats the record
+            const jump = d.recordPositions ? d.recordPositions.takeJump() : ""
+            const jumpIndex = jump ? SQUtils.ModelUtils.indexOf(model, "id", jump) : -1
+
+            if (jumpIndex >= 0) {
+                d.jumpKey = jump
+                return Math.max(0, jumpIndex - Math.floor(d.windowSize / 2))
+            }
+
             const record = d.readRecord()
 
             if (!record || record.atBottom)
@@ -966,6 +975,8 @@ Item {
         }
 
         function onScrollToMessage(messageIndex) {
+            if (d.recordPositions)
+                d.recordPositions.takeJump()
             d.goToMessage(messageIndex)
         }
 
