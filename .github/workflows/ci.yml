@@ -555,7 +555,6 @@ jobs:
             fe0686a9b298e5b13d0a983df37e002a8c6320f8b16cc45a51d15cf4046a109f "$tools/nim.zip"
           extract "$tools/nim.zip" "$tools"
           # nimble 0.26.2, which reuses the packages a restored cache holds
-          # (scripts/windows_build_setup.ps1's scoop bucket has 0.26.1 only)
           fetch https://github.com/nim-lang/nimble/releases/download/v0.26.2/nimble-windows_x64.zip \
             4c3788511c66ac8b552264313ffedd1549637bec750d8c9ca03029321bc52a50 "$tools/nimble.zip"
           extract "$tools/nimble.zip" "$tools/nimble"
