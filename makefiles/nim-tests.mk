@@ -110,7 +110,7 @@ ifeq ($(mkspecs),linux)
  NIM_TEST_CACHE_TOOLCHAIN := -$(shell gcc -dumpmachine)-gcc$(shell gcc -dumpfullversion)-gxx$(shell g++ -dumpfullversion)
 endif
 ifeq ($(NIM_TESTS_SHARED_CACHE),1)
- nim_test_cache = $(if $(filter $(NIM_MODEL_SPY_TARGETS),$1),shared-spy,shared)
+ nim_test_cache = $(if $(filter $(NIM_MODEL_SPY_TARGETS),$1),shared-spy,shared)$(if $(filter $(NIM_BENCHES),$1),-bench)
 else
  nim_test_cache = $(notdir $(basename $1))
 endif
