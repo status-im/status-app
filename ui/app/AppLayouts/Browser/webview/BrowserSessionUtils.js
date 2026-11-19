@@ -61,7 +61,8 @@ function buildTabDto(webView, savedTabs, determineRealURL) {
     if (webView.profileParams && webView.profileParams.localPreview)
         return null
 
-    const rawUrl = webView.url.toString()
+    // A url that turned into a Download is no page to come back to.
+    const rawUrl = (webView.sessionUrl ?? webView.url).toString()
     const normalizedUrl = determineRealURL(rawUrl)
     if (!normalizedUrl)
         return null

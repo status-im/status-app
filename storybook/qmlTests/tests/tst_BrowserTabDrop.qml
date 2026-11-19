@@ -121,6 +121,40 @@ Item {
             compare(fake.terminateRendererCalls, 1)
         }
 
+        // A url that turned into a Download is no page: bringing the Tab back
+        // must not download it again (B10).
+        function test_aDownloadUrlIsNotLoadedAgainAfterADrop() {
+            const view = createTemporaryObject(lazyViewComponent, root)
+            view.loadUrl("https://example.com/file.bin")
+            view.adapterItem.downloadRequested({ url: "https://example.com/file.bin" }, "")
+
+            view.drop()
+            view.ensureLoaded()
+
+            compare(view.adapterItem.loadedUrls, [])
+            compare(String(view.adapterItem.url), "")
+            compare(String(view.sessionUrl), "")
+        }
+
+        // The page the Tab still shows is what comes back, not the Download.
+        function test_aDownloadFromAPageKeepsThePageAsTheTabsUrl() {
+            const { view, fake } = makeLoadedView()
+            view.loadUrl("https://status.app/file.bin")
+            fake.downloadRequested({ url: "https://status.app/file.bin" }, "")
+
+            compare(String(view.sessionUrl), "https://status.app/")
+            view.drop()
+            compare(String(view.url), "https://status.app/")
+        }
+
+        function test_aRealNavigationAfterADownloadIsTheTabsUrl() {
+            const { view, fake } = makeLoadedView()
+            fake.downloadRequested({ url: "https://status.app/file.bin" }, "")
+            view.loadUrl("https://status.app/next")
+
+            compare(String(view.sessionUrl), "https://status.app/next")
+        }
+
         function test_droppingAnUnloadedTabDoesNothing() {
             const view = createTemporaryObject(lazyViewComponent, root)
             view.drop()

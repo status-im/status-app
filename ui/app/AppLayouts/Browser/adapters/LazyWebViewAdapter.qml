@@ -36,6 +36,9 @@ AbstractWebView {
         property bool crashed: false
         // Back/forward history to rebuild on the next load (see drop()).
         property var pendingState: null
+        // The last committed page, and the last url that became a Download.
+        property url pageUrl: ""
+        property string downloadUrl: ""
     }
 
     function _handleRenderProcessTerminated(status) {
@@ -66,7 +69,16 @@ AbstractWebView {
     property bool htmlPageLoaded: false
     // A committed page load ends "pristine" for good — from here the Tab shows a
     // page of its own, so no Download may close it.
-    onHtmlPageLoadedChanged: if (htmlPageLoaded) root.pristinePopup = false
+    onHtmlPageLoadedChanged: {
+        if (!htmlPageLoaded)
+            return
+        root.pristinePopup = false
+        d.pageUrl = root.url
+    }
+
+    /// What the Tab comes back to: its url, unless that url turned into a
+    /// Download (no page to show), then the page it still shows, if any.
+    readonly property url sessionUrl: root.url.toString() === d.downloadUrl ? d.pageUrl : root.url
     readonly property bool loading: loader.item ? loader.item.loading : false
     readonly property bool playingAudio: loader.item ? !!loader.item.playingAudio : false
     readonly property bool canGoBack: loader.item ? loader.item.canGoBack : false
@@ -136,6 +148,9 @@ AbstractWebView {
         d.pendingState = root.saveState()
         loader.item.detachView()
         loader.source = ""
+        // Loading a Download url again would download it again.
+        if (root.url.toString() !== root.sessionUrl.toString())
+            root.url = root.sessionUrl
         root.htmlPageLoaded = false
         d.crashed = false
     }
@@ -250,7 +265,10 @@ AbstractWebView {
         }
         function onLinkHovered(hoveredUrl)             { root.linkHovered(hoveredUrl) }
         function onWindowCloseRequested()              { root.windowCloseRequested() }
-        function onDownloadRequested(download, token)  { root.downloadRequested(download, token) }
+        function onDownloadRequested(download, token)  {
+            d.downloadUrl = download?.url?.toString() ?? ""
+            root.downloadRequested(download, token)
+        }
         function onLinkLongPressed(linkUrl, imageUrl, position) {
             root.linkLongPressed(linkUrl, imageUrl, position)
         }
