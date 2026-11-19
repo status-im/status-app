@@ -1,3 +1,4 @@
+import std/os
 import nimqml, strutils, json, chronicles
 import ./url_scheme_event
 import app/global/single_instance
@@ -37,6 +38,8 @@ QtObject:
       self, SLOT("onUrlActivated(QString)"), ConnectionType.QueuedConnection)
     discard QObject.connect(urlSchemeEvent, SIGNAL("shareActivated(QString,QString)"),
       self, SLOT("onShareActivated(QString,QString)"), ConnectionType.QueuedConnection)
+    discard QObject.connect(urlSchemeEvent, SIGNAL("fileActivated(QString,bool)"),
+      self, SLOT("onFileActivated(QString,bool)"), ConnectionType.QueuedConnection)
     discard QObject.connect(urlSchemeEvent, SIGNAL("appForegrounded()"),
       self, SLOT("onAppForegrounded()"), ConnectionType.QueuedConnection)
     # direct: the process may be frozen before a queued slot runs
@@ -103,10 +106,22 @@ QtObject:
       self.consumePendingIntake()
       return
 
+    if isOpenedFileUrl(urlRaw):
+      # A path may hold spaces; only the single-instance line ending goes.
+      self.intake.submit(ExternalIntakeEvent(kind: ExternalIntakeFile,
+        fileUrl: urlRaw.strip(leading = false, chars = {'\r', '\n'})))
+      return
+
     let url = urlRaw.multiReplace((" ", ""))
       .multiReplace(("\r\n", ""))
       .multiReplace(("\n", ""))
     self.intake.submit(ExternalIntakeEvent(kind: ExternalIntakeUrl, url: url))
+
+  proc onFileActivated*(self: UrlsManager, fileUrl: string, copied: bool) {.slot.} =
+    ## An Opened File handed over by the platform layer (iOS document open,
+    ## Android VIEW intent: a content:// URI read in place or a copy).
+    self.intake.submit(ExternalIntakeEvent(kind: ExternalIntakeFile,
+      fileUrl: fileUrl, copied: copied))
 
   proc onAppForegrounded*(self: UrlsManager) {.slot.} =
     ## Wake-less fallback (iOS): the app came to the foreground; if the share
@@ -159,6 +174,17 @@ QtObject:
     result.intake.onShare = proc(text: string, imagePaths: seq[string]) =
       self.events.emit(SIGNAL_EXTERNAL_SHARE_INTAKE,
         ExternalShareIntakeArgs(text: text, imagePaths: imagePaths))
+    result.intake.onOpenedFile = proc(fileUrl: string) =
+      self.events.emit(SIGNAL_EXTERNAL_FILE_INTAKE,
+        ExternalFileIntakeArgs(fileUrl: fileUrl))
+    result.intake.onOpenedFileRefused = proc(fileUrl: string) =
+      self.events.emit(SIGNAL_EXTERNAL_FILE_INTAKE,
+        ExternalFileIntakeArgs(fileUrl: fileUrl, refused: true))
+    result.intake.onOpenedFileCopyDiscarded = proc(fileUrl: string) =
+      try:
+        removeFile(openedFilePath(fileUrl))
+      except OSError:
+        warn "an opened file copy could not be deleted"
     result.intake.onShareImagesDiscarded = proc(imagePaths: seq[string]) =
       # A pending share was replaced last-wins before delivery: its cached
       # image copies are unreferenced now and must not accumulate.

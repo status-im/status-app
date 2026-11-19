@@ -15,6 +15,8 @@
     <file>community/airdrops8_1.png</file>
     <file>community/mint2_1.png</file>
     <file>community/permissions2_3.png</file>
+    <file>empty-states/onchain-friends-empty-dark.png</file>
+    <file>empty-states/onchain-friends-empty-light.png</file>
     <file>ens/ens-header-dark@2x.png</file>
     <file>ens/ens-header-light@2x.png</file>
     <file>keycard/authenticate.png</file>
@@ -711,7 +713,5 @@
     <file>wallet/handwrite.png</file>
     <file>wallet/rocket.png</file>
     <file>wallet/wallet-green.png</file>
-    <file>wallet/onchain-friends-empty-dark.png</file>
-    <file>wallet/onchain-friends-empty-light.png</file>
   </qresource>
 </RCC>

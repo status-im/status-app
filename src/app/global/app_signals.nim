@@ -62,6 +62,16 @@ const SIGNAL_EXTERNAL_SHARE_INTAKE* = "externalShareIntake"
 ## Text and links both arrive as `text`; shared images arrive as `imagePaths`
 ## (app-private cached copies made at receipt, never OS-managed URIs).
 
+type
+  ExternalFileIntakeArgs* = ref object of Args
+    fileUrl*: string
+    refused*: bool
+
+const SIGNAL_EXTERNAL_FILE_INTAKE* = "externalFileIntake"
+## Emitted for an Opened File: it opens in a Preview Tab, or, when refused,
+## the Tab shows that it could not be opened. A refused burst overflow has an
+## empty `fileUrl`.
+
 const SIGNAL_MAIN_LOADED* = "signalMainLoaded"
 
 const SIGNAL_APP_BACKGROUNDED* = "appBackgrounded"

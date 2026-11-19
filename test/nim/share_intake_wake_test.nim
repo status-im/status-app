@@ -343,3 +343,35 @@ suite "share_intake_wake":
     drainEvents()
 
     check browserTabUrls == @["https://share-intake"]
+
+  test "a file url keeps its spaces and opens as a file, not a deep link":
+    var openedFiles: seq[string] = @[]
+    var deepLinks: seq[string] = @[]
+    events.on(SIGNAL_EXTERNAL_FILE_INTAKE) do(e: Args):
+      openedFiles.add(ExternalFileIntakeArgs(e).fileUrl)
+    events.on(SIGNAL_STATUS_URL_ACTIVATED) do(e: Args):
+      deepLinks.add(StatusUrlArgs(e).url)
+    manager.appReady()
+
+    statusq_urlscheme_emit_deeplink(urlSchemeEvent.vptr,
+      "file:///Users/me/My Docs/a b.pdf".cstring)
+    drainEvents()
+
+    check openedFiles == @["file:///Users/me/My Docs/a b.pdf"]
+    check deepLinks.len == 0
+
+  test "a file the platform hands over reaches the file signal, copy flag included":
+    var files: seq[ExternalFileIntakeArgs] = @[]
+    events.on(SIGNAL_EXTERNAL_FILE_INTAKE) do(e: Args):
+      files.add(ExternalFileIntakeArgs(e))
+    manager.appReady()
+
+    statusq_urlscheme_emit_file(urlSchemeEvent.vptr, "file:///Users/me/In Place.pdf".cstring, false)
+    statusq_urlscheme_emit_file(urlSchemeEvent.vptr, "file:///nonexistent/Inbox/copy.pdf".cstring, true)
+    drainEvents()
+
+    check files.len == 2
+    check files[0].fileUrl == "file:///Users/me/In Place.pdf"
+    check not files[0].refused
+    # A copy that is gone is refused; only a copy is checked at all.
+    check files[1].refused

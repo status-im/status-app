@@ -20,6 +20,11 @@ StatusTextField {
     property bool showFavicon
     property bool loading
 
+    /// Shown instead of the URL while the field is not being edited, such as
+    /// an Opened File's name. Editing starts from the URL itself.
+    property string label: ""
+    readonly property string shownText: root.label || root.url.toString()
+
     readonly property url searchEngineIcon: Assets.svg(SearchEnginesConfig.getEngineIcon(localAccountSensitiveSettings.selectedBrowserSearchEngineId))
 
     implicitHeight: 40
@@ -38,13 +43,15 @@ StatusTextField {
                       | Qt.ImhNoPredictiveText | Qt.ImhNoAutoUppercase | Qt.ImhSensitiveData
     EnterKey.type: Qt.EnterKeyGo
 
-    text: root.url
+    text: root.shownText
     onActiveFocusChanged: {
         if (activeFocus) {
+            if (root.label)
+                text = root.url.toString()
             selectAll()
         } else {
-            if (text !== root.url.toString() && root.url.toString() !== "") // restore the old (non empty) URL
-                text = Qt.binding(() => root.url)
+            if (text !== root.shownText && root.shownText !== "") // restore the old (non empty) address
+                text = Qt.binding(() => root.shownText)
         }
     }
 
@@ -57,7 +64,8 @@ StatusTextField {
         anchors.leftMargin: height/3
         anchors.verticalCenter: parent.verticalCenter
         image.source: {
-            if (root.url.toString() !== root.text || root.text === "") {
+            const edited = root.text !== root.shownText && root.text !== root.url.toString()
+            if (edited || root.text === "") {
                 return root.searchEngineIcon
             }
 

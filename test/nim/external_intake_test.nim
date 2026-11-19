@@ -1,11 +1,12 @@
 ## Unit tests for the external intake seam (app/core/intake/external_intake).
 ## Covers the routing decision (Status links keep deep-link behavior, any other
 ## web URL becomes a browser-tab intake), the share-event route (share target:
-## shared text/links launch the share flow) and the pending intake slot
-## semantics (pre-ready buffering, single slot, last-wins across kinds,
-## delivered once at ready). Prior art: url_scheme_event_test.nim exercises the
+## shared text/links launch the share flow), opened files (own route, burst and
+## copy limits) and the pending intake slot semantics (pre-ready buffering,
+## single slot, last-wins across kinds, delivered once at ready). Prior art: url_scheme_event_test.nim exercises the
 ## platform side of this same boundary.
 
+import std/[os, tempfiles]
 import unittest
 import app/core/intake/external_intake
 
@@ -15,6 +16,9 @@ type Capture = ref object
   shares: seq[string]
   shareImagePaths: seq[seq[string]]
   discardedImagePaths: seq[seq[string]]
+  openedFiles: seq[string]
+  refusedFiles: seq[string]
+  discardedCopies: seq[string]
 
 proc newCapturingIntake(capture: Capture): ExternalIntake =
   result = newExternalIntake()
@@ -27,9 +31,18 @@ proc newCapturingIntake(capture: Capture): ExternalIntake =
     capture.shareImagePaths.add(imagePaths)
   result.onShareImagesDiscarded = proc(imagePaths: seq[string]) =
     capture.discardedImagePaths.add(imagePaths)
+  result.onOpenedFile = proc(fileUrl: string) =
+    capture.openedFiles.add(fileUrl)
+  result.onOpenedFileRefused = proc(fileUrl: string) =
+    capture.refusedFiles.add(fileUrl)
+  result.onOpenedFileCopyDiscarded = proc(fileUrl: string) =
+    capture.discardedCopies.add(fileUrl)
 
 proc urlIntake(url: string): ExternalIntakeEvent =
   ExternalIntakeEvent(kind: ExternalIntakeUrl, url: url)
+
+proc fileIntake(fileUrl: string, copied = false): ExternalIntakeEvent =
+  ExternalIntakeEvent(kind: ExternalIntakeFile, fileUrl: fileUrl, copied: copied)
 
 proc shareIntake(text: string, imagePaths: seq[string] = @[]): ExternalIntakeEvent =
   ExternalIntakeEvent(kind: ExternalIntakeShare, text: text, imagePaths: imagePaths)
@@ -302,3 +315,126 @@ suite "external_intake pending slot":
 
     check capture.browserTabs == @["https://example.com/one", "https://example.com/two"]
     check not intake.hasPending()
+
+suite "external_intake opened files":
+
+  test "a file url no longer takes the deep-link route":
+    check routeForUrl("file:///Users/me/a.pdf") == UrlIntakeOpenedFile
+    check routeForUrl("FILE:///Users/me/a.pdf") == UrlIntakeOpenedFile
+    check isOpenedFileUrl("file:///Users/me/a.pdf")
+    check not isOpenedFileUrl("https://example.com/a.pdf")
+    check not isOpenedFileUrl("status-app://c/x")
+
+  test "a file reaches the opened-file handler with its path unchanged":
+    let capture = Capture()
+    let intake = newCapturingIntake(capture)
+    intake.setReady()
+
+    intake.submit(fileIntake("file:///Users/me/My Docs/a  b.pdf"))
+
+    check capture.openedFiles == @["file:///Users/me/My Docs/a  b.pdf"]
+    check capture.deepLinks.len == 0
+
+  test "a file url submitted as a url opens as a file":
+    let capture = Capture()
+    let intake = newCapturingIntake(capture)
+    intake.setReady()
+
+    intake.submit(urlIntake("file:///Users/me/a b.pdf"))
+
+    check capture.openedFiles == @["file:///Users/me/a b.pdf"]
+    check capture.deepLinks.len == 0
+
+  test "a burst opens ten files and refuses the rest once":
+    let capture = Capture()
+    let intake = newCapturingIntake(capture)
+    var now = 100.0
+    intake.clock = proc(): float = now
+    intake.setReady()
+
+    for i in 1 .. 12:
+      intake.submit(fileIntake("file:///f" & $i & ".txt", copied = i == 12))
+      now += 0.1
+
+    check capture.openedFiles.len == OpenedFileBurstLimit
+    check capture.openedFiles[^1] == "file:///f10.txt"
+    check capture.refusedFiles == @[""]
+    check capture.discardedCopies == @["file:///f12.txt"]
+
+  test "a pause ends the burst":
+    let capture = Capture()
+    let intake = newCapturingIntake(capture)
+    var now = 100.0
+    intake.clock = proc(): float = now
+    intake.setReady()
+
+    for i in 1 .. OpenedFileBurstLimit:
+      intake.submit(fileIntake("file:///a" & $i & ".txt"))
+    now += OpenedFileBurstGap + 0.1
+    intake.submit(fileIntake("file:///b.txt"))
+
+    check capture.openedFiles.len == OpenedFileBurstLimit + 1
+    check capture.refusedFiles.len == 0
+
+  test "a copy over the size limit is refused and released":
+    let dir = createTempDir("intake", "")
+    defer: removeDir(dir)
+    let big = dir / "big copy.pdf"
+    writeFile(big, newString(64))
+    let capture = Capture()
+    let intake = newCapturingIntake(capture)
+    intake.copyLimitBytes = 32
+    intake.setReady()
+
+    intake.submit(fileIntake("file://" & big, copied = true))
+
+    check capture.openedFiles.len == 0
+    check capture.refusedFiles == @["file://" & big]
+    check capture.discardedCopies == @["file://" & big]
+
+  test "the size limit applies to copies only":
+    let dir = createTempDir("intake", "")
+    defer: removeDir(dir)
+    let big = dir / "big.pdf"
+    writeFile(big, newString(64))
+    let capture = Capture()
+    let intake = newCapturingIntake(capture)
+    intake.copyLimitBytes = 32
+    intake.setReady()
+
+    intake.submit(fileIntake("file://" & big))
+
+    check capture.openedFiles == @["file://" & big]
+
+  test "a copy that is gone is refused":
+    let capture = Capture()
+    let intake = newCapturingIntake(capture)
+    intake.setReady()
+
+    intake.submit(fileIntake("file:///nonexistent/intake-copy.pdf", copied = true))
+
+    check capture.refusedFiles == @["file:///nonexistent/intake-copy.pdf"]
+
+  test "while locked only the last intake waits, and a replaced copy is released":
+    let capture = Capture()
+    let intake = newCapturingIntake(capture)
+
+    intake.submit(fileIntake("file:///first.pdf", copied = true))
+    intake.submit(urlIntake("https://example.com/"))
+    intake.submit(fileIntake("file:///last.pdf"))
+    intake.setReady()
+
+    check capture.openedFiles == @["file:///last.pdf"]
+    check capture.browserTabs.len == 0
+    check capture.discardedCopies == @["file:///first.pdf"]
+
+  test "a file replacing a pending image share releases the images":
+    let capture = Capture()
+    let intake = newCapturingIntake(capture)
+
+    intake.submit(shareIntake("", @["/cache/a.jpg"]))
+    intake.submit(fileIntake("file:///doc.pdf"))
+    intake.setReady()
+
+    check capture.discardedImagePaths == @[@["/cache/a.jpg"]]
+    check capture.openedFiles == @["file:///doc.pdf"]

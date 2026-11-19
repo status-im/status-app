@@ -4,6 +4,7 @@ import QtTest
 import StatusQ.Internal
 
 import AppLayouts.Browser.adapters
+import AppLayouts.Browser.webview
 
 /**
  * The open-a-downloaded-file seam (ADR 0006 §8): render/media allowlist and
@@ -14,8 +15,11 @@ import AppLayouts.Browser.adapters
 Item {
     id: root
 
-    readonly property url openContextUrl: Qt.resolvedUrl(
-        "../../../ui/app/AppLayouts/Browser/webview/BrowserDownloadOpenContext.qml")
+    Component {
+        id: openContextComponent
+
+        BrowserDownloadOpenContext {}
+    }
 
     TestCase {
         name: "BrowserDownloadOpenContext"
@@ -23,19 +27,26 @@ Item {
 
         property var openedUrls: []
         property var openedFileUrls: []
+        property var openedPaths: []
+        property var openedTitles: []
 
         function createContext() {
             openedUrls = []
             openedFileUrls = []
-            const component = Qt.createComponent(root.openContextUrl)
-            verify(component.status === Component.Ready, component.errorString())
-            const ctx = createTemporaryObject(component, root)
+            openedPaths = []
+            openedTitles = []
+            const ctx = createTemporaryObject(openContextComponent, root)
             ctx.mediaPlayerDirectory = "/tmp/status-player"
             ctx.ensureDirectoryFn = function(path) { return true }
             ctx.writeTextFileFn = function(path, data) { return true }
-            ctx.openUrlFn = (url) => openedUrls.push(String(url))
-            ctx.openFileUrlFn = (fileUrl, readAccessUrl) => openedFileUrls.push(
-                { url: String(fileUrl), readAccess: String(readAccessUrl || "") })
+            ctx.openPreviewFn = plan => {
+                if (plan.readAccessUrl)
+                    openedFileUrls.push({ url: String(plan.url), readAccess: String(plan.readAccessUrl) })
+                else
+                    openedUrls.push(String(plan.url))
+                openedPaths.push(plan.openedFilePath || "")
+                openedTitles.push(plan.title || "")
+            }
             // The player page is what the desktop Backend needs; tests that
             // exercise the direct route flip this Capability themselves.
             ctx.mediaPlayerPageRequired = true
@@ -67,13 +78,16 @@ Item {
             pngRec.missingFile = true
             verify(!ctx.canOpenInBrowser(pngRec, false))
 
-            // The rest of the enumerated raster set, plus plain text.
+            // The rest of the enumerated raster set, plus plain text and JSON.
             verify(ctx.canOpenInBrowser(completed("image/jpeg", "a.jpg"), false))
             verify(ctx.canOpenInBrowser(completed("image/gif", "a.gif"), false))
             verify(ctx.canOpenInBrowser(completed("image/webp", "a.webp"), false))
             verify(ctx.canOpenInBrowser(completed("image/bmp", "a.bmp"), false))
+            verify(ctx.canOpenInBrowser(completed("image/x-ms-bmp", "picture"), false))
             verify(ctx.canOpenInBrowser(completed("", "a.jpeg"), false))
             verify(ctx.canOpenInBrowser(completed("text/plain", "notes.txt"), false))
+            verify(ctx.canOpenInBrowser(completed("application/json", "data.json"), false))
+            verify(ctx.canOpenInBrowser(completed("application/json", "data"), false))
         }
 
         /// A Download opens in the isolated local-preview profile — no scripts
@@ -270,19 +284,22 @@ Item {
             verify(openedUrls[0].startsWith("file:///tmp/status-player/player-"))
             verify(openedUrls[0].endsWith(".html"))
 
-            // Static route: direct navigation to the Download Target.
+            // Static route: the Download Target itself, read-granted to itself.
             verify(ctx.openInBrowser(completed("image/png", "photo.png"), false))
-            compare(openedUrls.length, 2)
-            verify(openedUrls[1].indexOf("photo.png") >= 0)
+            compare(openedUrls.length, 1)
+            compare(openedFileUrls.length, 1)
+            verify(openedFileUrls[0].url.endsWith("/tmp/downloads/photo.png"))
+            compare(openedFileUrls[0].readAccess, openedFileUrls[0].url)
+            compare(openedPaths, ["", ""], "a Download's Tab is no Opened File")
 
             // Not renderable here → false: the caller hands off to the OS.
             verify(!ctx.openInBrowser(completed("application/octet-stream", "a.bin"), true))
-            compare(openedUrls.length, 2)
+            compare(openedUrls.length + openedFileUrls.length, 2)
 
             // No player page (write failed) → false, same OS handoff.
             ctx.writeTextFileFn = function() { return false }
             verify(!ctx.openInBrowser(completed("video/webm", "b.webm"), false))
-            compare(openedUrls.length, 2)
+            compare(openedUrls.length + openedFileUrls.length, 2)
         }
 
         /// The player page is a Backend workaround, so the route follows the
@@ -300,32 +317,276 @@ Item {
             compare(openedFileUrls.length, 1)
             verify(openedFileUrls[0].url.startsWith("file://"))
             verify(openedFileUrls[0].url.endsWith("/tmp/downloads/tune.mp3"))
-            // Empty read access = the file's own directory, the narrowest grant.
-            compare(openedFileUrls[0].readAccess, "")
-
-            // Non-media is unaffected: still a plain navigation.
-            verify(ctx.openInBrowser(completed("image/png", "photo.png"), false))
-            compare(openedFileUrls.length, 1)
-            compare(openedUrls.length, 1)
-            verify(openedUrls[0].indexOf("photo.png") >= 0)
+            compare(openedFileUrls[0].readAccess, openedFileUrls[0].url)
 
             // Flipping the Capability back restores the player-page route —
             // the fallback stays one property away.
             ctx.mediaPlayerPageRequired = true
             verify(ctx.openInBrowser(completed("audio/mpeg", "tune.mp3"), false))
             compare(openedFileUrls.length, 1)
-            compare(openedUrls.length, 2)
-            verify(openedUrls[1].startsWith("file:///tmp/status-player/player-"))
+            compare(openedUrls.length, 1)
+            verify(openedUrls[0].startsWith("file:///tmp/status-player/player-"))
             compare(written, 1)
         }
 
         /// The Capability is a Backend fact, not a platform check.
         function test_mediaPlayerPageRequired_defaultsToTheBackendCapability() {
-            const component = Qt.createComponent(root.openContextUrl)
-            verify(component.status === Component.Ready, component.errorString())
-            const ctx = createTemporaryObject(component, root)
+            const ctx = createTemporaryObject(openContextComponent, root)
             compare(ctx.mediaPlayerPageRequired,
                     BrowserBackendCapabilities.mediaPlayerPageRequired)
+        }
+
+        /// An Opened File: a context whose probe sees exactly these paths.
+        function openedFileContext(existing) {
+            const ctx = createContext()
+            ctx.fileExistsFn = (path) => existing.indexOf(path) >= 0
+            return ctx
+        }
+
+        function test_openOpenedFile_grantsTheFileAlone() {
+            const ctx = openedFileContext(["/Users/me/My Docs/a b.txt"])
+
+            verify(ctx.openOpenedFile("file:///Users/me/My Docs/a b.txt", false))
+
+            compare(openedFileUrls.length, 1)
+            compare(openedFileUrls[0].url, "file:///Users/me/My Docs/a b.txt")
+            compare(openedFileUrls[0].readAccess, "file:///Users/me/My Docs/a b.txt")
+            compare(openedPaths, ["/Users/me/My Docs/a b.txt"])
+            compare(openedUrls.length, 0)
+        }
+
+        // WKWebView gives a local file no title of its own.
+        function test_openOpenedFile_titlesItsTabWithTheFileName() {
+            const ctx = openedFileContext(["/Users/me/My Docs/a b.txt", "/Users/me/song.mp3"])
+
+            verify(ctx.openOpenedFile("file:///Users/me/My Docs/a b.txt", false))
+            verify(ctx.openOpenedFile("file:///Users/me/song.mp3", false))
+
+            compare(openedTitles, ["a b.txt", "song.mp3"])
+        }
+
+        function test_openOpenedFile_titlesADescribedFileWithItsName() {
+            const url = "content://com.example.files/doc/9"
+            const ctx = describedFileContext({
+                [url]: { name: "report.pdf", mimeType: "application/pdf", readable: true }
+            })
+
+            verify(ctx.openOpenedFile(url, true))
+
+            compare(openedTitles, ["report.pdf"])
+        }
+
+        function test_openInBrowser_leavesADownloadsTitleToThePage() {
+            const ctx = createContext()
+
+            verify(ctx.openInBrowser(completed("text/plain", "notes.txt"), false))
+
+            compare(openedTitles, [""])
+        }
+
+        function test_openOpenedFile_refusesWhatATabCannotShow() {
+            const ctx = openedFileContext(["/Users/me/setup.exe", "/Users/me/a.pdf"])
+
+            verify(!ctx.openOpenedFile("file:///Users/me/setup.exe", true))
+            verify(!ctx.openOpenedFile("file:///Users/me/a.pdf", false))
+            verify(ctx.openOpenedFile("file:///Users/me/a.pdf", true))
+            compare(openedFileUrls.length, 1)
+        }
+
+        function test_openOpenedFile_refusesAFileThatIsGone() {
+            const ctx = openedFileContext([])
+
+            verify(!ctx.openOpenedFile("file:///Users/me/a.txt", false))
+            compare(openedFileUrls.length, 0)
+        }
+
+        function test_openOpenedFile_playsMediaThroughThePlayerPage() {
+            const ctx = openedFileContext(["/Users/me/song.mp3"])
+
+            verify(ctx.openOpenedFile("file:///Users/me/song.mp3", false))
+            compare(openedUrls.length, 1)
+            verify(openedUrls[0].indexOf("/tmp/status-player/") >= 0, openedUrls[0])
+            compare(openedPaths, ["/Users/me/song.mp3"])
+            compare(openedFileUrls.length, 0)
+
+            ctx.mediaPlayerPageRequired = false
+            verify(ctx.openOpenedFile("file:///Users/me/song.mp3", false))
+            compare(openedFileUrls[0].readAccess, "file:///Users/me/song.mp3")
+        }
+
+        /// An Opened File the platform described (an Android content:// URI):
+        /// no path to probe, the platform's name and type instead.
+        function describedFileContext(descriptions) {
+            const ctx = createContext()
+            ctx.fileExistsFn = (path) => false
+            ctx.openedFileInfoFn = (url) => descriptions[url] || ({})
+            ctx.mediaPlayerPageRequired = false
+            return ctx
+        }
+
+        function test_openOpenedFile_opensADescribedFileInPlace() {
+            const url = "content://com.example.files/doc/7"
+            const ctx = describedFileContext({
+                [url]: { name: "report.pdf", mimeType: "application/pdf", readable: true }
+            })
+
+            verify(ctx.openOpenedFile(url, true))
+
+            compare(openedFileUrls.length, 1)
+            compare(openedFileUrls[0].url, url)
+            compare(openedFileUrls[0].readAccess, url)
+            compare(openedPaths, [url])
+        }
+
+        function test_openOpenedFile_refusesADescribedFileThatCannotBeRead() {
+            const url = "content://com.example.files/doc/8"
+            const ctx = describedFileContext({
+                [url]: { name: "notes.txt", mimeType: "text/plain", readable: false }
+            })
+
+            verify(!ctx.openOpenedFile(url, true))
+            compare(openedFileUrls.length, 0)
+        }
+
+        function test_openOpenedFile_checksADescribedFileByItsNameThenItsType() {
+            const docx = "content://com.example.files/doc/9"
+            const bare = "content://com.example.files/doc/10"
+            const ctx = describedFileContext({
+                [docx]: { name: "notes.docx", mimeType: "text/plain", readable: true },
+                [bare]: { name: "notes", mimeType: "text/plain", readable: true }
+            })
+
+            verify(!ctx.openOpenedFile(docx, true))
+            verify(ctx.openOpenedFile(bare, true))
+            compare(openedFileUrls.length, 1)
+            compare(openedFileUrls[0].url, bare)
+        }
+
+        // A content:// URL renders by the type its provider reports, not by its name.
+        function test_openOpenedFile_refusesADescribedFileWhoseTypeIsNotAllowed() {
+            const html = "content://com.example.files/doc/20"
+            const untyped = "content://com.example.files/doc/21"
+            const ctx = describedFileContext({
+                [html]: { name: "invoice.pdf", mimeType: "text/html", readable: true },
+                [untyped]: { name: "report.pdf", mimeType: "", readable: true }
+            })
+
+            verify(!ctx.openOpenedFile(html, true))
+            verify(!ctx.openOpenedFile(untyped, true))
+            compare(openedFileUrls.length, 0)
+        }
+
+        function test_openOpenedFile_opensDescribedMediaByItsType() {
+            const m4v = "content://com.example.files/doc/22"
+            const ctx = describedFileContext({
+                [m4v]: { name: "clip.m4v", mimeType: "video/x-m4v", readable: true }
+            })
+            ctx.proprietaryCodecsSupported = true
+
+            verify(ctx.openOpenedFile(m4v, true))
+        }
+
+        // The plan a restored Session reopens an Opened File with.
+        function test_openedFilePlan_isTheTabAFileWouldOpenIn() {
+            const ctx = openedFileContext(["/Users/me/a b.pdf", "/Users/me/song.mp3"])
+
+            const pdf = ctx.openedFilePlan("file:///Users/me/a b.pdf", true)
+            compare(pdf.url, "file:///Users/me/a b.pdf")
+            compare(pdf.readAccessUrl, "file:///Users/me/a b.pdf")
+            compare(pdf.openedFilePath, "/Users/me/a b.pdf")
+            compare(pdf.title, "a b.pdf")
+
+            const song = ctx.openedFilePlan("file:///Users/me/song.mp3", true)
+            verify(String(song.url).indexOf("/tmp/status-player/") >= 0, song.url)
+            compare(song.readAccessUrl, "")
+
+            compare(ctx.openedFilePlan("file:///Users/me/gone.pdf", true), null)
+            compare(openedFileUrls.length + openedUrls.length, 0)
+        }
+
+        function test_openOpenedFile_opensDescribedImagesByTheirType() {
+            const urls = {
+                "content://com.example.files/doc/30": { name: "a.png", mimeType: "image/png", readable: true },
+                "content://com.example.files/doc/31": { name: "b.jpg", mimeType: "image/jpeg", readable: true },
+                "content://com.example.files/doc/32": { name: "c.webp", mimeType: "image/webp", readable: true },
+                "content://com.example.files/doc/33": { name: "d.bmp", mimeType: "image/bmp", readable: true }
+            }
+            const ctx = describedFileContext(urls)
+
+            for (const url in urls)
+                verify(ctx.openOpenedFile(url, true), url)
+        }
+
+        // MediaStore types a .bmp image/x-ms-bmp; mobilewebview shows it in an image page.
+        function test_openOpenedFile_opensABitmapTypedXMsBmp() {
+            const url = "content://com.example.files/doc/34"
+            const ctx = describedFileContext({
+                [url]: { name: "bars.bmp", mimeType: "image/x-ms-bmp", readable: true }
+            })
+
+            verify(ctx.openOpenedFile(url, true))
+        }
+
+        // On Android the local path of a content:// URL is a copy of the file.
+        function test_openOpenedFile_neverAsksForTheLocalPathOfADescribedFile() {
+            const url = "content://com.example.files/doc/14"
+            const ctx = describedFileContext({
+                [url]: { name: "report.pdf", mimeType: "application/pdf", readable: true }
+            })
+            const asked = []
+            ctx.localPathFn = (fileUrl) => { asked.push(fileUrl); return "/tmp/copy" }
+
+            verify(ctx.openOpenedFile(url, true))
+
+            compare(asked, [])
+            compare(openedPaths, [url])
+        }
+
+        function test_openedFileTag_isTheUrlOfADescribedFileOrTheLocalPath() {
+            const url = "content://com.example.files/doc/15"
+            const ctx = describedFileContext({
+                [url]: { name: "report.pdf", mimeType: "application/pdf", readable: false }
+            })
+            const asked = []
+            ctx.localPathFn = (fileUrl) => { asked.push(fileUrl); return "/Users/me/a.pdf" }
+
+            compare(ctx.openedFileTag(url), url)
+            compare(asked, [])
+            compare(ctx.openedFileTag("file:///Users/me/a.pdf"), "/Users/me/a.pdf")
+            compare(ctx.openedFileTag(""), "")
+        }
+
+        function test_openedFileName_isThePlatformNameOrThePathName() {
+            const url = "content://com.example.files/doc/11"
+            const ctx = describedFileContext({
+                [url]: { name: "report.pdf", mimeType: "application/pdf", readable: true }
+            })
+
+            compare(ctx.openedFileName(url), "report.pdf")
+            compare(ctx.openedFileName("/Users/me/My Docs/a b.txt"), "a b.txt")
+            compare(ctx.openedFileName(""), "")
+        }
+
+        function test_openedFileAddressLabel_namesTheFileWhileTheTabIsOnIt() {
+            const url = "content://com.example.files/doc/12"
+            const ctx = describedFileContext({
+                [url]: { name: "report.pdf", mimeType: "application/pdf", readable: true }
+            })
+
+            compare(ctx.openedFileAddressLabel({ openedFilePath: url, canGoBack: false }), "report.pdf")
+            compare(ctx.openedFileAddressLabel({ openedFilePath: "/Users/me/a b.txt", canGoBack: false }),
+                    "a b.txt")
+        }
+
+        function test_openedFileAddressLabel_isEmptyOffTheOpenedFile() {
+            const url = "content://com.example.files/doc/13"
+            const ctx = describedFileContext({
+                [url]: { name: "report.pdf", mimeType: "application/pdf", readable: true }
+            })
+
+            compare(ctx.openedFileAddressLabel({ openedFilePath: url, canGoBack: true }), "")
+            compare(ctx.openedFileAddressLabel({ openedFilePath: "", canGoBack: false }), "")
+            compare(ctx.openedFileAddressLabel(null), "")
         }
     }
 }

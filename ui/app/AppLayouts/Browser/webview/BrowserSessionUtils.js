@@ -52,13 +52,26 @@ function displayTitle(webView, persistedRecord, labels) {
     return fallback
 }
 
-function buildTabDto(webView, savedTabs, determineRealURL) {
-    if (!webView || webView.offTheRecord)
+// A described file (a URL with a scheme) and a failed Tab have nothing to reopen.
+function openedFileTabDto(webView) {
+    const path = String(webView.openedFilePath || "")
+    if (!path || webView.openFailed || /^[a-z][a-z0-9+.-]*:\/\//i.test(path))
         return null
-    // A local preview is not a browsing Tab (ADR 0006 §8): the file it shows is
-    // no page to restore to. Its params are off the record as well, so this is
-    // belt and braces — and deliberately so, rather than leaning on that.
-    if (webView.profileParams && webView.profileParams.localPreview)
+    return {
+        uuid: webView.uid || "",
+        url: String(webView.url || "") || path,
+        title: webView.title || "",
+        icon: "",
+        openedFile: path
+    }
+}
+
+function buildTabDto(webView, savedTabs, determineRealURL, keepOpenedFiles = false) {
+    // A local preview is not a browsing Tab (ADR 0006 §8): only an Opened File's
+    // Tab is kept, by its file, and reopened through the file route.
+    if (webView && webView.profileParams && webView.profileParams.localPreview)
+        return keepOpenedFiles ? openedFileTabDto(webView) : null
+    if (!webView || webView.offTheRecord)
         return null
 
     const rawUrl = webView.url.toString()

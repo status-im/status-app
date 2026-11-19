@@ -23,6 +23,15 @@ QtObject {
         put(BrowserPreferenceKeys.settingsCategory, BrowserPreferenceKeys.keyRestoreOpenTabs, value ? "true" : "false")
     }
 
+    // On unless the user turned it off.
+    function getSuggestDefaultViewer() {
+        return get(BrowserPreferenceKeys.settingsCategory, BrowserPreferenceKeys.keySuggestDefaultViewer) !== "false"
+    }
+
+    function setSuggestDefaultViewer(value) {
+        put(BrowserPreferenceKeys.settingsCategory, BrowserPreferenceKeys.keySuggestDefaultViewer, value ? "true" : "false")
+    }
+
     function getOpenTabs() {
         const raw = get(BrowserPreferenceKeys.settingsCategory, BrowserPreferenceKeys.keyOpenTabs)
         if (!raw)

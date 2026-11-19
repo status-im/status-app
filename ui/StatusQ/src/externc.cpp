@@ -317,6 +317,10 @@ Q_DECL_EXPORT void statusq_urlscheme_emit_appbackgrounded(void* obj) {
     static_cast<Status::UrlSchemeEvent*>(obj)->emitAppBackgroundedToQt();
 }
 
+Q_DECL_EXPORT void statusq_urlscheme_emit_file(void* obj, const char* fileUrl, bool copied) {
+    static_cast<Status::UrlSchemeEvent*>(obj)->emitFileToQt(QString::fromUtf8(fileUrl), copied);
+}
+
 // imagePathsJson: JSON array of absolute paths of app-private cached copies
 // of the shared images (may be null or "[]" for text-only shares).
 Q_DECL_EXPORT void statusq_urlscheme_emit_share(void* obj, const char* text, const char* imagePathsJson) {

@@ -24,6 +24,7 @@ proc statusq_urlscheme_emit_deeplink*(obj: pointer, url: cstring) {.cdecl, impor
 proc statusq_urlscheme_emit_appforegrounded*(obj: pointer) {.cdecl, importc.}
 proc statusq_urlscheme_emit_appbackgrounded*(obj: pointer) {.cdecl, importc.}
 proc statusq_urlscheme_emit_share*(obj: pointer, text: cstring, imagePathsJson: cstring) {.cdecl, importc.}
+proc statusq_urlscheme_emit_file*(obj: pointer, fileUrl: cstring, copied: bool) {.cdecl, importc.}
 proc statusq_urlscheme_delete*(obj: pointer) {.cdecl, importc.}
 
 # Pending intake slot dir (iOS share-extension App Group hand-off); "" on

@@ -26,6 +26,26 @@ public:
     Q_INVOKABLE void restartApplication(bool killBackend) const;
 
     Q_INVOKABLE bool fileExists(const QString &path) const;
+    // The Tab showing an Opened File is gone: end its iOS security scope or
+    // delete its copy. No-op elsewhere.
+    Q_INVOKABLE void releaseOpenedFile(const QString &path) const;
+    // Releases a file the OS handed over that never reached a Tab.
+    Q_INVOKABLE void releaseOpenedFileUrl(const QString &fileUrl) const;
+    // {name, mimeType, readable} the platform gave for an Opened File whose
+    // URL names no file Status can check (Android content://); empty otherwise.
+    Q_INVOKABLE QVariantMap openedFileInfo(const QString &fileUrl) const;
+    // Android: "self" when Status opens the type by default, "none" when the
+    // system asks each time, "other:<app name>" when another app does; "" for a
+    // type Status does not claim, and elsewhere.
+    Q_INVOKABLE QString defaultViewer(const QString &mimeType) const;
+    // Android: shows the system's choice of app for the type. False when nothing
+    // was shown, as when an app opens the type already.
+    Q_INVOKABLE bool offerDefaultViewer(const QString &mimeType) const;
+    // Android: the types Status opens by default; empty elsewhere.
+    Q_INVOKABLE QStringList defaultViewerTypes() const;
+    // Android: stops Status opening any type by default, or shows Status's app
+    // settings where the user does. True when no type is left.
+    Q_INVOKABLE bool resetDefaultViewer() const;
     Q_INVOKABLE bool ensureDirectory(const QString &path) const;
 
     // Desktop: reveal file in OS file manager. Android: open system Downloads UI.

@@ -61,7 +61,8 @@ QtObject {
     enum ContentMode {
         WebContent = 0,
         EmptyContent,
-        CrashedContent
+        CrashedContent,
+        OpenFailedContent
     }
 
     // Retained Views: host Web Views kept alive (hidden + frozen) after Tab close
@@ -72,6 +73,8 @@ QtObject {
     readonly property int currentContentMode: {
         if (!currentWebView)
             return BrowserWebViewContext.ContentMode.EmptyContent
+        if (currentWebView.openFailed)
+            return BrowserWebViewContext.ContentMode.OpenFailedContent
         // Before the URL check: a crashed View still has its URL.
         if (currentWebView.crashed)
             return BrowserWebViewContext.ContentMode.CrashedContent

@@ -13,12 +13,16 @@ for src in "$HERE"/*_test.cpp; do
   "$bin"
 done
 
-# Pure-Java IPC helpers (no Android classes), compiled straight against JUnit 4.
+# Pure-Java helpers (no Android classes), compiled straight against JUnit 4.
 JAVA_ROOT="$HERE/../../android/qt6"
 JAVA_SOURCES=(
   "$JAVA_ROOT/src/app/status/mobile/ipc/SignalEnvelope.java"
   "$JAVA_ROOT/src/app/status/mobile/ipc/SignalFanout.java"
   "$JAVA_ROOT/src/app/status/mobile/ipc/SignalTypeResolver.java"
+  "$JAVA_ROOT/src/app/status/mobile/DefaultViewerRules.java"
+  "$JAVA_ROOT/src/app/status/mobile/OpenedFileRules.java"
+  "$JAVA_ROOT/src/app/status/mobile/PickedFileRules.java"
+  "$JAVA_ROOT/src/app/status/mobile/ShareIntakeRules.java"
 )
 if [[ -z "${JUNIT_JAR:-}" ]]; then
   JUNIT_JAR="$(find "$HOME/.gradle/caches" -name 'junit-4.13.2.jar' 2>/dev/null | head -1)"
