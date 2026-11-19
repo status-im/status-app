@@ -194,12 +194,13 @@ USER root
 # the Nim compiler nim_status_client.nimble pins, so there is no system Nim.
 RUN set -eu; \
     case "$(dpkg --print-architecture)" in \
-    amd64) NIMBLE_ARCH="linux_x64" ;; \
-    arm64) NIMBLE_ARCH="linux_aarch64" ;; \
+    amd64) NIMBLE_ARCH="linux_x64"; NIMBLE_SHA256="facaf75407ea8cc4bb6b862a3299efa90ac57e05faa9e498402d0950e9d5cd2a" ;; \
+    arm64) NIMBLE_ARCH="linux_aarch64"; NIMBLE_SHA256="d8e270ec9661feb5b2571160afec650e7c8f275ea423853e5255c3e4edf320be" ;; \
     *) echo "ERROR: unsupported architecture" >&2; exit 1 ;; \
     esac; \
     curl -sSfL -o /tmp/nimble.tar.gz \
       "https://github.com/nim-lang/nimble/releases/download/v${NIMBLE_VERSION}/nimble-${NIMBLE_ARCH}.tar.gz" \
+ && echo "${NIMBLE_SHA256}  /tmp/nimble.tar.gz" | sha256sum -c - \
  && tar -xzf /tmp/nimble.tar.gz -C /usr/local/bin nimble \
  && chmod 755 /usr/local/bin/nimble \
  && rm /tmp/nimble.tar.gz
