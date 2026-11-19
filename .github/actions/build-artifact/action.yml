@@ -1,0 +1,45 @@
+name: Upload Status build
+description: Name and upload build packages.
+inputs:
+  platform:
+    description: Platform and architecture for the artifact name.
+    required: true
+  file:
+    description: Source path of the file to upload.
+    required: true
+  suffix:
+    description: Filename suffix, including the extension.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Name build file
+      id: package
+      shell: bash
+      env:
+        PR: ${{ github.event.pull_request.number }}
+        REF_NAME: ${{ github.ref_name }}
+        COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+        PLATFORM: ${{ inputs.platform }}
+        FILE: ${{ inputs.file }}
+        SUFFIX: ${{ inputs.suffix }}
+      run: |
+        if [[ -n "$PR" ]]; then
+          ref="pr$PR"
+        else
+          ref=$(printf '%s' "$REF_NAME" | LC_ALL=C sed -E 's/[^a-zA-Z0-9_-]+/-/g')
+        fi
+        directory=$(mktemp -d artifact-files.XXXXXX)
+        name="Status-${ref:0:80}-${COMMIT:0:7}-$PLATFORM$SUFFIX"
+        cp -- "$FILE" "$directory/$name"
+        printf 'name=%s\npath=%s/%s\n' "$name" "$directory" "$name" >> "$GITHUB_OUTPUT"
+    - name: Upload build file
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      with:
+        # Overwrite looks up the old artifact by name even without an archive.
+        name: ${{ steps.package.outputs.name }}
+        path: ${{ steps.package.outputs.path }}
+        archive: false
+        if-no-files-found: error
+        overwrite: true
+        retention-days: 7
