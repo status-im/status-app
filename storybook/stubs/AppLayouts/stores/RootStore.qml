@@ -6,6 +6,7 @@ QtObject {
     property bool isProduction: false
     property bool navToMsgDetails: false
     property bool navToMsgList: false
+    property bool thirdpartyServicesEnabled: false
 
     function setNavToMsgDetailsFlag(navigate) {
         navToMsgDetails = navigate

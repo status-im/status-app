@@ -2444,7 +2444,7 @@ Item {
                     BrowserLoader {
                         id: browserLayoutContainer
 
-                        active: d.isBrowserEnabled && keepLoaded
+                        sectionEnabled: d.isBrowserEnabled
                         sectionCurrent: appView.currentIndex === Constants.appViewStackIndex.browser
                         appInBackground: memoryRelease.appInBackground
                         onUiReleased: memoryRelease.request()
