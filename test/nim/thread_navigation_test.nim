@@ -50,6 +50,9 @@ method onThreadDeleteFinished(self: ThreadDetailsDelegate, requestId, error: str
 method onChatThreadsLoaded(self: ThreadDetailsDelegate, threads: seq[ThreadDto], listLoaded: bool = false) =
   self.summaries = threads
 
+method messagesDidLoad(self: MockDelegate) =
+  discard
+
 method openThreadAsChat(self: MockDelegate, threadId, threadName, parentMessageId: string,
     setActive: bool = true, hasUnreadMessages: bool = false, notificationsCount: int = 0) =
   self.opened.add(OpenedThread(threadId: threadId, name: threadName,
@@ -605,3 +608,35 @@ suite "thread navigation":
     check delegates[1].deletions == @["request"]
     check delegates[2].deletions.len == 0
     check delegates[3].deletions.len == 0
+
+suite "chat history before the messages module loads":
+  proc chatModule(events: EventEmitter, service: message_service.Service): messages_module.Module =
+    let contacts = contact_service.newService(events, nil, nil, nil)
+    let chats = chat_service.newService(events, nil, contacts)
+    let communities = community_service.newService(events, nil, chats, nil, service)
+    messages_module.newModule(MockDelegate(), events, "section-id", "chat-id",
+      true, contacts, communities, chats, service, nil, nil)
+
+  # A section build can select a chat, and fetch its newest page, before the
+  # chat's module listens: the page never reaches the model.
+  test "a page fetched before the module listened is fetched again":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    service.msgCursor["chat-id"] = initMessageCursor("cursor-2", false, false)
+    let module = chatModule(events, service)
+    defer: module.delete()
+
+    module.load()
+
+    check(not service.msgCursor.hasKey("chat-id"))
+
+  test "a page still in flight reaches the module that loads meanwhile":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    service.msgCursor["chat-id"] = initMessageCursor("cursor-1", true, false)
+    let module = chatModule(events, service)
+    defer: module.delete()
+
+    module.load()
+
+    check(service.msgCursor["chat-id"].isPending())

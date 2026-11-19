@@ -82,3 +82,28 @@ suite "pinned messages cursor after leave":
 
     check not service.pinnedMsgCursor.hasKey(chatId)
 
+
+suite "chat history fetched before its view listened":
+  test "a settled page is fetched again by the module that loads":
+    let answers = new seq[MessagesLoadedArgs]
+    let service = chatWithPageInFlight(answers)
+    service.onAsyncLoadMoreMessagesForChat($(%* {
+      "chatId": "chat-id",
+      "threadId": "",
+      "messages": [],
+      "messagesCursor": "cursor-2",
+      "reactions": []
+    }))
+
+    service.restartChatHistory("chat-id")
+
+    check not service.msgCursor.hasKey("chat-id")
+
+  test "a page still in flight is kept for the module that loads":
+    let answers = new seq[MessagesLoadedArgs]
+    let service = chatWithPageInFlight(answers)
+
+    service.restartChatHistory("chat-id")
+
+    check service.msgCursor["chat-id"].isPending()
+    check service.msgCursor["chat-id"].getValue() == "cursor-1"
