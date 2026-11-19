@@ -695,6 +695,28 @@ Item {
             compare(moduleA.messagesModule.readingPositions.jump, "", "the jump is taken")
         }
 
+        // the section loaded but not on screen: the jump waits for the view
+        // to be shown
+        function test_aJumpToAHiddenViewLandsWhenShown() {
+            prewarmedPool()
+            const view = openView()
+            const lv = view.chatLogView
+            view.visible = false
+            tryVerify(() => lv.rowCount === 0)
+
+            moduleA.messagesModule.readingPositions.jump = "a-120"
+            moduleA.messagesModule.scrollToMessage(120)
+            view.visible = true
+
+            tryVerify(() => {
+                if (lv.busy)
+                    return false
+                const row = lv.rowForKey("a-120")
+                const offset = row >= 0 ? lv.viewportOffsetToRow(row) : NaN
+                return !isNaN(offset) && Math.abs(offset) < lv.height
+            }, 5000, "the jump target is on screen")
+        }
+
         // handled by a live view, the jump is not taken again on the next open
         function test_aJumpHandledByTheViewIsNotRepeated() {
             prewarmedPool()
