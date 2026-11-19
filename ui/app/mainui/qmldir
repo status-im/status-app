@@ -1,5 +1,6 @@
 AppMain 1.0 AppMain.qml
 BalancesOnScreenTracker 1.0 BalancesOnScreenTracker.qml
+DeferredActionQueue 1.0 DeferredActionQueue.qml
 GlobalBanner 1.0 GlobalBanner.qml
 SplashScreen 1.0 SplashScreen.qml
 Popups 1.0 Popups.qml

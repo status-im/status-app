@@ -26,6 +26,7 @@ QtObject:
       sharePaymentRequestModelVariant: QVariant
       tmpCommunityId: string # shouldn't be used anywhere except in prepareCommunitySectionModuleForCommunityId/getCommunitySectionModule procs
       mainLoaded: bool
+      shareFlowPending: bool
 
   proc activeSectionSet*(self: View, item: SectionItem)
 
@@ -64,6 +65,20 @@ QtObject:
   QtProperty[bool] mainLoaded:
     read = getMainLoaded
     notify = mainLoadedChanged
+
+  proc shareFlowPendingChanged*(self: View) {.signal.}
+  proc getShareFlowPending(self: View): bool {.slot.} =
+    return self.shareFlowPending
+  proc setShareFlowPending*(self: View, pending: bool) =
+    if self.shareFlowPending == pending:
+      return
+    self.shareFlowPending = pending
+    self.shareFlowPendingChanged()
+
+  ## True while an external share is buffered until the chats load
+  QtProperty[bool] shareFlowPending:
+    read = getShareFlowPending
+    notify = shareFlowPendingChanged
 
   proc appNetworkChanged*(self: View) {.signal.}
   proc getAppNetworkId*(self: View): int {.slot.} =

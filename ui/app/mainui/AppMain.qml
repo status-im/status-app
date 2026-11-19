@@ -106,8 +106,10 @@ Item {
             }
         }
         onProfileMigrationFlowRequested: (migrateToKeycard) => {
-                                             appMain.rootStore.profileMigrationFlowOpened()
-                                             popups.openAlignWithPairedDevicePopup(migrateToKeycard)
+                                             loginPopupsQueue.schedule("profileMigration", () => {
+                                                 appMain.rootStore.profileMigrationFlowOpened()
+                                                 popups.openAlignWithPairedDevicePopup(migrateToKeycard)
+                                             })
                                          }
         keychain: appMain.keychain
         palette: appMain.Theme.palette
@@ -1242,9 +1244,21 @@ Item {
         }
 
         function tryOpenNavigationEducationPopup() {
-            if(!appMainGlobalSettings.newMenuEducationPopupSeen && !sidebar.alwaysVisible) {
-                Global.openNavigationEducationPopupRequested()
-            }
+            loginPopupsQueue.schedule("navigationEducation", () => {
+                if (!appMainGlobalSettings.newMenuEducationPopupSeen && !sidebar.alwaysVisible)
+                    Global.openNavigationEducationPopupRequested()
+            })
+        }
+
+        function maybeDisplayMessagingSectionPopups() {
+            if (d.maybeDisplayIntroduceYourselfPopup())
+                return
+            popupRequestsHandler.maybeDisplayEnableMessageBackupPopup()
+        }
+
+        function maybeDisplayEnablePushNotificationsPopup() {
+            loginPopupsQueue.schedule("enablePushNotifications",
+                                      () => popupRequestsHandler.maybeDisplayEnablePushNotificationsPopup())
         }
 
         function goToSupportChatBot() {
@@ -1404,7 +1418,7 @@ Item {
 
         Component.onCompleted: {
             if (appMain.mainReady)
-                Qt.callLater(() => popupRequestsHandler.maybeDisplayEnablePushNotificationsPopup())
+                Qt.callLater(d.maybeDisplayEnablePushNotificationsPopup)
         }
     }
 
@@ -1413,7 +1427,7 @@ Item {
 
         function onMainReadyChanged() {
             if (appMain.mainReady) {
-                popupRequestsHandler.maybeDisplayEnablePushNotificationsPopup()
+                d.maybeDisplayEnablePushNotificationsPopup()
 
                 Backpressure.debounce(appMain, 50, function() {
                     d.screen = appMain.Window.window.screen.name
@@ -2320,13 +2334,8 @@ Item {
                     }
                     onCurrentIndexChanged: {
                         // We cannot use isMessagingRelatedSectionType here because it is not updated yet
-                        if (d.activeSectionType === Constants.appSection.chat || d.activeSectionType === Constants.appSection.community) {
-                            if (d.maybeDisplayIntroduceYourselfPopup()) {
-                                // we displayed the popup, so we should not display the enable message backup popup
-                                return
-                            }
-                            popupRequestsHandler.maybeDisplayEnableMessageBackupPopup()
-                        }
+                        if (d.activeSectionType === Constants.appSection.chat || d.activeSectionType === Constants.appSection.community)
+                            loginPopupsQueue.schedule("messagingSection", d.maybeDisplayMessagingSectionPopups)
                     }
 
                     // NOTE:
@@ -2975,6 +2984,13 @@ Item {
         sequence: "Ctrl+,"
         onActivated: globalConns.onAppSectionBySectionTypeChanged(Constants.appSection.profile,
                                                                   Utils.getSettingsSubsectionForSection(d.activeSectionType))
+    }
+
+    DeferredActionQueue {
+        id: loginPopupsQueue
+
+        blocked: appMain.rootStore.shareFlowPending || shareFlowLoader.active
+        busy: SQUtils.Utils.hasPopups(appMain.Overlay.overlay?.children)
     }
 
     ShareFlowLoader {
