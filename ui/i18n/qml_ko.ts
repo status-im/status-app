@@ -15790,6 +15790,13 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>SessionRoot</name>
+    <message>
+        <source>Saving the password could not be confirmed — the option was left enabled and will be verified at your next login</source>
+        <translation type="unfinished">비밀번호 저장 여부를 확인할 수 없습니다 — 옵션은 활성화된 상태로 유지되며 다음 로그인 시 확인됩니다</translation>
+    </message>
+</context>
+<context>
     <name>SessionTransitionView</name>
     <message>
         <source>Finishing background work…</source>

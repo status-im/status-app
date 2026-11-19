@@ -15936,6 +15936,13 @@ selhalo</translation>
     </message>
 </context>
 <context>
+    <name>SessionRoot</name>
+    <message>
+        <source>Saving the password could not be confirmed — the option was left enabled and will be verified at your next login</source>
+        <translation type="unfinished">Uložení hesla nelze potvrdit — volba zůstala zapnutá a bude ověřena při příštím přihlášení</translation>
+    </message>
+</context>
+<context>
     <name>SessionTransitionView</name>
     <message>
         <source>Finishing background work…</source>

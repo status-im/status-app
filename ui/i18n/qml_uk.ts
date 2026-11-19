@@ -15937,6 +15937,13 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>SessionRoot</name>
+    <message>
+        <source>Saving the password could not be confirmed — the option was left enabled and will be verified at your next login</source>
+        <translation type="unfinished">Не вдалося підтвердити збереження пароля — параметр залишено ввімкненим, його буде перевірено під час наступного входу</translation>
+    </message>
+</context>
+<context>
     <name>SessionTransitionView</name>
     <message>
         <source>Finishing background work…</source>
