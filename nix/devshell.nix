@@ -44,11 +44,12 @@ in
         go_1_26                    # 1.26.3
         libglvnd
         mockgen                    # v0.6.0
-        nim                        # 2.2.4
+        # nimble installs the Nim nim_status_client.nimble pins; this nixpkgs has 0.20.1.
+        unstablePkgs.nimble        # 0.26.2
         openssl
         pcre
         pkg-config
-        unstablePkgs.protobuf_36   # 36.1
+        unstablePkgs.protobuf_36   # 36.2
         protoc-gen-go              # v1.36.11
         which
         curl
