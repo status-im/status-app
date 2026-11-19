@@ -71,8 +71,11 @@ Item {
                     creds[account] = credential
                     return SecureStorage.StatusSuccess
                 }
+                property int deleteStatus: SecureStorage.StatusSuccess
                 function deleteCredential(account) {
                     deleteCalls.push(account)
+                    if (deleteStatus !== SecureStorage.StatusSuccess)
+                        return deleteStatus
                     if (creds[account] === undefined)
                         return SecureStorage.StatusNotFound
                     delete creds[account]
@@ -267,5 +270,47 @@ Item {
             compare(wrapper.secureStorage.creds["uid_1"], undefined)
             compare(wrapper.onboardingStore.stayLoggedIn, false)
         }
+
+        function test_stayLoggedInIndeterminateEnable_data() {
+            return [
+                { tag: "cleanup verified", deleteStatus: SecureStorage.StatusSuccess,
+                    enabled: false, warned: false },
+                { tag: "cleanup unverified", deleteStatus: SecureStorage.StatusIndeterminate,
+                    enabled: true, warned: true },
+            ]
+        }
+
+        function test_stayLoggedInIndeterminateEnable(data) {
+            wrapper = createTemporaryObject(wrapperComponent, root)
+            verify(!!wrapper)
+            const unconfirmedSpy = signalSpy.createObject(wrapper, {
+                target: wrapper, signalName: "stayLoggedInSaveUnconfirmed" })
+            wrapper.secureStorage.setStatus = SecureStorage.StatusIndeterminate
+            wrapper.secureStorage.deleteStatus = data.deleteStatus
+
+            wrapper.onboardingStore.stayLoggedInSaveRequested("uid_1", "dek:" + root.dummyDekHex, true)
+
+            compare(wrapper.secureStorage.deleteCalls.length, 1)
+            compare(wrapper.onboardingStore.stayLoggedIn, data.enabled)
+            compare(unconfirmedSpy.count, data.warned ? 1 : 0)
+        }
+
+        // Without an opt-in the preference is already ON; next login reconciles
+        function test_stayLoggedInIndeterminateFollowStoredKeepsCredential() {
+            wrapper = createTemporaryObject(wrapperComponent, root)
+            verify(!!wrapper)
+            wrapper.onboardingStore.stayLoggedIn = true
+            wrapper.secureStorage.setStatus = SecureStorage.StatusIndeterminate
+
+            wrapper.onboardingStore.stayLoggedInSaveRequested("uid_1", "dek:" + root.dummyDekHex, false)
+
+            compare(wrapper.secureStorage.deleteCalls.length, 0)
+            compare(wrapper.onboardingStore.stayLoggedIn, true)
+        }
+    }
+
+    Component {
+        id: signalSpy
+        SignalSpy {}
     }
 }

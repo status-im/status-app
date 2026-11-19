@@ -36,6 +36,7 @@ Item {
     signal profileSelected(string keyUid)
     signal biometricFlowStarted()
     signal skippedBiometricFlow(bool available)
+    signal stayLoggedInSaveUnconfirmed()
     signal contentLoaded()
     // The converted profile's databases need a fresh backend: end the session, the next
     // one starts at the login screen
@@ -137,6 +138,15 @@ Item {
             const status = root.secureStorage.setCredential(account, credential)
             if (enablePreference && status === SecureStorage.StatusSuccess)
                 root.onboardingStore.setStayLoggedIn(true)
+            // The write may have committed: converge to OFF, else match the worst case (ON)
+            if (enablePreference && status === SecureStorage.StatusIndeterminate) {
+                const cleanupStatus = root.secureStorage.deleteCredential(account)
+                if (cleanupStatus !== SecureStorage.StatusSuccess
+                        && cleanupStatus !== SecureStorage.StatusNotFound) {
+                    root.onboardingStore.setStayLoggedIn(true)
+                    root.stayLoggedInSaveUnconfirmed()
+                }
+            }
         }
 
         function onStayLoggedInDeleteRequested(account) {
