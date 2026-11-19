@@ -137,11 +137,21 @@ endif
 define nim_write_merged
 { echo '{.warning[UnusedImport]: off.}'; printf 'import "../../%s"\n' $(basename $(NIM_MERGED_$1)); } > $(call nim_merged_file,$1)
 endef
-$(NIM_MERGED_TARGETS): | nim-merged-tests
+$(NIM_MERGED_TARGETS): | nim-merged-tests nim-tests-qt-app
 nim-merged-tests:
 	mkdir -p build/nim-tests
 	$(foreach g,$(NIM_MERGED_GROUPS),$(call nim_write_merged,$g);)
 .PHONY: nim-merged-tests
+
+# A test that creates a QCoreApplication of its own destroys the one the merged tests share.
+nim-tests-qt-app:
+	@own=$$(grep -lE 'QCoreApplication\.create' $(NIM_TEST_FILES)); \
+	if [ -n "$$own" ]; then \
+		echo "These tests create their own QCoreApplication:"; echo "$$own"; \
+		echo "Use ensureQtCoreApp() from test/nim/support/qt_app.nim instead."; \
+		exit 1; \
+	fi
+.PHONY: nim-tests-qt-app
 
 ifneq ($(mkspecs),win32)
 nim-test-run/%: NIM_PARAMS += --passL:"$(QT_SEAQT_EXTRA_LIBS)"
