@@ -350,6 +350,13 @@ Item {
             return total
         }
 
+        // waitForRendering waits for the next frame; when the switch has
+        // already been rendered nothing is dirty and it times out instead.
+        function waitForNextFrame(item) {
+            item.Window.window.update()
+            waitForRendering(item)
+        }
+
         function activeReadyLogView(loader) {
             const views = findAllIn(loader, "chatLogView", [])
             for (let i = 0; i < views.length; ++i) {
@@ -377,7 +384,7 @@ Item {
                     const lv = activeReadyLogView(loader)
                     return !!lv && lv.parent.visible
                 }, 120000)
-                waitForRendering(loader)
+                waitForNextFrame(loader)
                 // one shared view: what it holds after the switch is what the
                 // switch built
                 return { ms: Date.now() - t0, syncMs: syncMs,
@@ -396,7 +403,7 @@ Item {
             tryVerify(() => loader2.status === Loader.Ready, 60000)
             d.setActiveChat("chat-0")
             tryVerify(() => !!activeReadyLogView(loader2), 120000)
-            waitForRendering(loader2)
+            waitForNextFrame(loader2)
 
             const t0 = Date.now()
             d.setActiveChat("chat-2")
@@ -405,7 +412,7 @@ Item {
                 const lv = activeReadyLogView(loader2)
                 return !!lv && lv.parent.visible
             }, 120000)
-            waitForRendering(loader2)
+            waitForNextFrame(loader2)
             const large = { ms: Date.now() - t0, syncMs: syncMs,
                             rows: totalMessageRows(loader2) }
 
