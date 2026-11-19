@@ -157,7 +157,7 @@ Item {
             const view = harness.findChildByTypePrefix(loader, "ChatView")
             view.sectionLayout.criteria = [data.portrait, true]
             tryCompare(view.sectionLayout, "isPortrait", data.portrait)
-            view.sectionLayout.currentIndex = StatusSectionLayout.CentralPanel
+            view.sectionLayout.setCurrentIndex(StatusSectionLayout.CentralPanel)
             const messages = createTemporaryObject(threadMessagesComponent, this)
             verify(!!messages)
             let menu
@@ -177,7 +177,7 @@ Item {
                 }
                 verify(!!threadName)
                 tryCompare(view.leftPanel, "status", Loader.Ready)
-                view.sectionLayout.currentIndex = StatusSectionLayout.LeftPanel
+                view.sectionLayout.setCurrentIndex(StatusSectionLayout.LeftPanel)
                 let row
                 tryVerify(() => {
                     row = findChild(view.leftPanel.item, threadName)
@@ -295,7 +295,7 @@ Item {
             if (!data.portrait)
                 compare(view.threadToolbarHeader.item, null)
             if (data.portrait)
-                view.sectionLayout.currentIndex = StatusSectionLayout.RightPanel
+                view.sectionLayout.setCurrentIndex(StatusSectionLayout.RightPanel)
             const header = data.portrait ? view.threadToolbarHeader : view.rightPanel.item
             const button = findChild(header, data.portrait ? "searchThreadToolbarButton" : "searchThreadButton")
             verify(!!button)
@@ -311,11 +311,11 @@ Item {
             tryVerify(() => loader.status === Loader.Ready, 120000)
             const view = harness.findChildByTypePrefix(loader, "ChatView")
             view.sectionLayout.criteria = [true, true]
-            view.sectionLayout.currentIndex = StatusSectionLayout.CentralPanel
+            view.sectionLayout.setCurrentIndex(StatusSectionLayout.CentralPanel)
             tryCompare(view, "showUsersList", false)
             view.showUsersListRequested(true)
             tryCompare(view.rightPanel, "status", Loader.Ready)
-            view.sectionLayout.currentIndex = StatusSectionLayout.RightPanel
+            view.sectionLayout.setCurrentIndex(StatusSectionLayout.RightPanel)
             const header = view.rightPanel.item.headerContent
             tryVerify(() => header.Window.window !== null)
             let toolbar = header.parent
@@ -538,11 +538,11 @@ Item {
             view.threadsFeatureEnabled = true
             view.sectionLayout.criteria = [true, true]
             tryCompare(view.sectionLayout, "isPortrait", true)
-            view.sectionLayout.currentIndex = StatusSectionLayout.CentralPanel
+            view.sectionLayout.setCurrentIndex(StatusSectionLayout.CentralPanel)
             tryCompare(view, "showUsersList", false)
             view.showUsersListRequested(true)
             tryCompare(view.rightPanel, "status", Loader.Ready)
-            view.sectionLayout.currentIndex = StatusSectionLayout.RightPanel
+            view.sectionLayout.setCurrentIndex(StatusSectionLayout.RightPanel)
             verify(waitForPolish(view.sectionLayout))
             const panel = view.rightPanel.item
             const header = panel.headerContent
@@ -583,7 +583,7 @@ Item {
             verify(view.showUsersList)
             compare(panel.currentTab, ChatInfoPanel.Pins)
 
-            view.sectionLayout.currentIndex = StatusSectionLayout.RightPanel
+            view.sectionLayout.setCurrentIndex(StatusSectionLayout.RightPanel)
             mouseClick(findChild(header, "membersSearchButton"))
             const search = findChild(panel, "chatInfoSearchBox")
             tryCompare(search, "visible", true)
@@ -650,7 +650,7 @@ Item {
             const view = harness.findChildByTypePrefix(loader, "ChatView")
             view.threadsFeatureEnabled = true
             view.sectionLayout.criteria = data.portrait ? [true, true] : [false, false]
-            view.sectionLayout.currentIndex = StatusSectionLayout.CentralPanel
+            view.sectionLayout.setCurrentIndex(StatusSectionLayout.CentralPanel)
             const column = harness.findChildByTypePrefix(view.centerPanel, "ChatColumnView")
             verify(!!column)
             const parentInput = findChild(column, "statusChatInput")
@@ -963,7 +963,7 @@ Item {
             verify(!!state)
             // Isolate navigation state from asynchronous thread module loading.
             view.rightPanel.active = false
-            view.sectionLayout.currentIndex = StatusSectionLayout.CentralPanel
+            view.sectionLayout.setCurrentIndex(StatusSectionLayout.CentralPanel)
 
             const parentChatId = view.activeItemId
             const column = harness.findChildByTypePrefix(view.centerPanel, "ChatColumnView")

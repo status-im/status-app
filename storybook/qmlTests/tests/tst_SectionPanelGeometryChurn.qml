@@ -72,7 +72,7 @@ Item {
     Component { id: toolBarComponent; StatusToolBar { width: 390 } }
     Component {
         id: chromeComponent
-        StatusSectionLayout { anchors.fill: parent; currentIndex: 1 }
+        StatusSectionLayout { anchors.fill: parent; initialIndex: 1 }
     }
 
     // A section that builds its panels as unparented property Items, as

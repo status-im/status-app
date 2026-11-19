@@ -694,7 +694,7 @@ StatusSectionLayout {
         }
 
         function goTo(section: int, subSection: int) {
-            root.currentIndex = StatusSectionLayout.CentralPanel
+            root.setCurrentIndex(StatusSectionLayout.CentralPanel)
 
             const stackContent = stackLayout.children
 

@@ -88,7 +88,7 @@ Item {
     }
     Component {
         id: chromeComponent
-        StatusSectionLayout { anchors.fill: parent; currentIndex: 1 }
+        StatusSectionLayout { anchors.fill: parent; initialIndex: 1 }
     }
 
     // A section that pre-sizes its still-unparented panel to the slot geometry.

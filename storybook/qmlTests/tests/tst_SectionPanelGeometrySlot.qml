@@ -80,7 +80,7 @@ Item {
     Component { id: footerComponent; Rectangle { color: "green"; implicitHeight: 61 } }
     Component {
         id: chromeComponent
-        StatusSectionLayout { anchors.fill: parent; currentIndex: 1 }
+        StatusSectionLayout { anchors.fill: parent; initialIndex: 1 }
     }
 
     // A section built the way the loader-owned ones are: the panel is a
