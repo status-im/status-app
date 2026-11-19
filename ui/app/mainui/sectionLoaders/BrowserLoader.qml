@@ -32,13 +32,30 @@ StatusSectionLoader {
 
     /// Whether the layout should exist. Mobile gives it back when inactive
     /// (BrowserDropPolicy); desktop keeps it from the first visit on.
-    readonly property bool keepLoaded: SQUtils.Utils.isMobile ? dropPolicy.keepLoaded
-                                                              : d.visited || sectionCurrent
+    readonly property bool keepLoaded: dropPolicy.keepLoaded
+
+    /// Opens `url` in a new Tab, now or as soon as the layout is there (it may
+    /// be dropped, or not loaded until the app comes to the front).
+    function openUrlInNewTab(url) {
+        if (root.item && root.status === Loader.Ready) {
+            root.item.openUrlInNewTab?.(url)
+            return
+        }
+        d.pendingUrls = d.pendingUrls.concat([url])
+    }
 
     asynchronous: false
 
+    LoggingCategory {
+        id: dropLog
+        name: "status.browser.drop"
+        defaultLogLevel: LoggingCategory.Warning
+    }
+
     BrowserDropPolicy {
         id: dropPolicy
+
+        enabled: SQUtils.Utils.isMobile
 
         // Inactive (a system sheet on top) is still in front; Suspended is not.
         shown: root.sectionCurrent && (Qt.application.state === Qt.ApplicationActive
@@ -47,15 +64,15 @@ StatusSectionLoader {
         keepAlive: root.item?.keepAlive ?? false
 
         onDropIdleViewsRequested: {
-            console.info("[Browser] Drop: idle Web Views (a Keep-alive reason holds the layout)")
+            console.info(dropLog, "idle Web Views (a Keep-alive reason holds the layout)")
             root.item?.dropIdleTabs?.()
         }
         onDropping: {
             root.item?.captureSession?.()
             root.item?.terminateRenderers?.()
-            console.info("[Browser] Drop: Tabs kept in memory:", d.sessionCache.tabs.length)
+            console.info(dropLog, "Tabs kept in memory:", d.sessionCache.tabs.length)
         }
-        onKeepLoadedChanged: console.info("[Browser] Drop: layout", keepLoaded ? "kept" : "dropped")
+        onKeepLoadedChanged: console.info(dropLog, "layout", keepLoaded ? "kept" : "dropped")
         onShownChanged: if (shown) root.item?.resumeCurrentTab?.()
     }
 
@@ -63,8 +80,6 @@ StatusSectionLoader {
         target: SystemUtils
         function onMemoryPressure() { dropPolicy.memoryPressure() }
     }
-
-    onSectionCurrentChanged: if (sectionCurrent) d.visited = true
 
     QtObject {
         id: d
@@ -76,7 +91,7 @@ StatusSectionLoader {
         // Holder for the per-load store instances; rebuilt on each privacy-wall toggle.
         property QtObject storeParent: null
 
-        property bool visited: false
+        property var pendingUrls: []
 
         // The Tab set and back/forward histories across layout unloads.
         readonly property QtObject sessionCache: QtObject {
@@ -167,7 +182,14 @@ StatusSectionLoader {
             d.storeParent = null
         }
     }
-    onLoaded: item.visible = true
+    onLoaded: {
+        item.visible = true
+        const urls = d.pendingUrls
+        d.pendingUrls = []
+        // BrowserPrivacyWall (privacy mode) opens no Tabs.
+        if (item.openUrlInNewTab)
+            urls.forEach(url => item.openUrlInNewTab(url))
+    }
 
     Connections {
         target: root.rootStore

@@ -20,8 +20,11 @@ QtObject {
     property int dropDelay: 5 * 60 * 1000
     property int dropGrace: 3000
 
+    /// Off: no Drop at all, the layout stays from the first show on (desktop).
+    property bool enabled: true
+
     /// Whether the Browser layout should exist.
-    readonly property bool keepLoaded: policy.keepLoaded
+    readonly property bool keepLoaded: root.enabled ? policy.keepLoaded : d.visited
 
     /// Drop every Web View that holds no Keep-alive reason; the layout stays.
     signal dropIdleViewsRequested()
@@ -30,12 +33,22 @@ QtObject {
     signal dropping()
 
     function memoryPressure() {
-        policy.memoryPressure()
+        if (root.enabled)
+            policy.memoryPressure()
     }
 
     readonly property QtObject d: QtObject {
         // What there was when the Browser left the screen, kept while it is away.
         property bool liveOnExit: false
+        property bool visited: false
+
+        readonly property Binding visitTracker: Binding {
+            target: root.d
+            property: "visited"
+            value: true
+            when: root.shown
+            restoreMode: Binding.RestoreNone
+        }
 
         readonly property Binding liveTracker: Binding {
             target: root.d
@@ -47,7 +60,7 @@ QtObject {
     }
 
     readonly property SectionDropPolicy policy: SectionDropPolicy {
-        shown: root.shown
+        shown: !root.enabled || root.shown
         held: root.keepAlive
         dropDelay: root.d.liveOnExit ? root.dropDelay : root.dropGrace
 
