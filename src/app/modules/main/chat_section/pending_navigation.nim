@@ -19,3 +19,9 @@ proc resolveInitialNavigation*(pending: var ChatNavigation,
     return ChatNavigation(chatId: preferredChatId)
   if availableChatIds.len > 0:
     return ChatNavigation(chatId: availableChatIds[0])
+
+proc activatesWhenAdded*(requested: bool, sectionBuild: bool, chatCount: int): bool =
+  ## A chat added on its own is selected when asked, or when it is the section's
+  ## only chat. The first build adds every chat before the list is in place and
+  ## then selects one itself.
+  requested or (not sectionBuild and chatCount == 1)
