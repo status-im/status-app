@@ -30,6 +30,13 @@ CHANNEL_NAME = Channel.DEFAULT_CHANNEL_NAME.value
 
 @pytest.mark.communities
 @pytest.mark.threads
+@pytest.mark.spec('SC-THRD-06')
+@pytest.mark.spec('SC-THRD-08')
+@pytest.mark.spec('SC-THRD-10')
+@pytest.mark.spec('SC-THRD-12')
+@pytest.mark.spec('SC-THRD-25')
+@pytest.mark.spec('SC-THRD-26')
+@pytest.mark.spec('SC-THRD-27')
 def test_community_channel_thread_reply_edit_navigation_and_badge(multiple_instances):
     user_one: UserAccount = RandomUser()
     user_two: UserAccount = RandomUser()

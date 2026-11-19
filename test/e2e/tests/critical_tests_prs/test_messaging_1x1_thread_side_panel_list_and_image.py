@@ -28,6 +28,13 @@ from scripts.utils.generators import random_text_message
 @pytest.mark.critical
 @pytest.mark.smoke
 @pytest.mark.threads
+@pytest.mark.spec('SC-THRD-01')
+@pytest.mark.spec('SC-THRD-06')
+@pytest.mark.spec('SC-THRD-08')
+@pytest.mark.spec('SC-THRD-10')
+@pytest.mark.spec('SC-THRD-11')
+@pytest.mark.spec('SC-THRD-12')
+@pytest.mark.spec('SC-THRD-24')
 def test_messaging_1x1_thread_side_panel_list_and_image(multiple_instances):
     user_one: UserAccount = RandomUser()
     user_two: UserAccount = RandomUser()
