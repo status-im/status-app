@@ -1,0 +1,118 @@
+name: CI artifact links
+
+on:
+  workflow_call:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions:
+  actions: read
+  pull-requests: write
+
+jobs:
+  comment:
+    # Same-repository PRs call this job directly from CI. Fork PRs use the
+    # workflow_run trigger, which loads this workflow from the default branch.
+    if: >-
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.head.repo.full_name == github.repository) ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.event == 'pull_request' &&
+       github.event.workflow_run.head_repository.full_name != '' &&
+       github.event.workflow_run.head_repository.full_name != github.repository)
+    concurrency:
+      group: >-
+        ci-artifact-links-${{ github.event.workflow_run.head_repository.id || github.event.pull_request.head.repo.id }}-${{
+        github.event.workflow_run.head_branch || github.event.pull_request.head.ref }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      # This job can write comments even for fork PRs. Do not check out PR code
+      # or download artifacts; only use GitHub's run, PR and artifact metadata.
+      - name: Update PR build links
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPOSITORY_VISIBILITY: ${{ github.event.repository.visibility }}
+        run: |
+          repo="repos/$GITHUB_REPOSITORY"
+          if [[ "$GITHUB_EVENT_NAME" == pull_request ]]; then
+            run=$(gh api "$repo/actions/runs/$GITHUB_RUN_ID/attempts/$GITHUB_RUN_ATTEMPT")
+          else
+            run=$(jq -c '.workflow_run' "$GITHUB_EVENT_PATH")
+          fi
+          run_id=$(jq -r '.id' <<< "$run")
+          run_number=$(jq -r '.run_number' <<< "$run")
+          attempt=$(jq -r '.run_attempt' <<< "$run")
+          sha=$(jq -r '.head_sha' <<< "$run")
+          head=$(jq -r '.head_repository.owner.login + ":" + .head_branch' <<< "$run")
+          artifacts=$(gh api --paginate --slurp "$repo/actions/runs/$run_id/artifacts")
+
+          # GitHub can omit pull_requests for forks. Resolve an open PR using
+          # the source repository and branch, and never link a superseded SHA.
+          prs=$(gh api --method GET --paginate --slurp "$repo/pulls" -f state=open -f "head=$head")
+          pr=$(jq -r --argjson run "$run" --arg pr "$PR_NUMBER" '
+            add | map(select(.head.repo.id == $run.head_repository.id and
+                             .head.ref == $run.head_branch and .head.sha == $run.head_sha and
+                             ($pr == "" or (.number | tostring) == $pr) and
+                             (($run.pull_requests // []) as $prs |
+                               ($prs | length) == 0 or (.number as $n | any($prs[]; .number == $n)))))
+            | if length == 1 then .[0].number else empty end
+          ' <<< "$prs")
+          if [[ -z "$pr" ]]; then
+            echo "No unambiguous open PR for CI run $run_id at $sha."
+            exit 0
+          fi
+
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$run_id"
+          prefix="Status-pr$pr-${sha:0:7}-"
+          # QR links pass the public download URL to the QR provider only when clicked.
+          show_qr=false
+          if [[ "$REPOSITORY_VISIBILITY" == public && "$GITHUB_SERVER_URL" == https://github.com ]]; then
+            show_qr=true
+          fi
+          links=$(jq -r --arg prefix "$prefix" --arg url "$run_url" --argjson show_qr "$show_qr" '
+            def file_size:
+              if . >= 1e9 then "\((. / 1e8 | round) / 10) GB"
+              elif . >= 1e6 then "\((. / 1e5 | round) / 10) MB"
+              elif . >= 1e3 then "\((. / 1e2 | round) / 10) kB"
+              else "\(.) B"
+              end;
+            (["android-arm64.apk", "ios-arm64-unsigned.ipa",
+              "linux-x86_64.tar.gz", "macos-aarch64.dmg", "windows-x86_64.exe",
+              "windows-x86_64.7z"] | map($prefix + .)) as $names |
+            [.[].artifacts[] | select(.expired == false and
+              (.name as $name | $names | index($name) != null))]
+            | sort_by(.name)[]
+            | "\($url)/artifacts/\(.id)" as $download
+            | "- [\(.name)](\($download)) (\(.size_in_bytes | file_size))"
+              + (if $show_qr and (.name | endswith(".apk") or endswith(".ipa")) then
+                   " · [QR code](https://api.qrserver.com/v1/create-qr-code/?size=256x256&qzone=4&data=\($download | @uri))"
+                 else "" end)
+          ' <<< "$artifacts")
+          if [[ -z "$links" ]]; then
+            echo "No build artifacts to link for PR $pr."
+            exit 0
+          fi
+
+          existing=$(gh api --paginate --slurp "$repo/issues/$pr/comments" | jq -r '
+            add[] | select(.user.login == "github-actions[bot]") |
+            .id as $id | .body
+            | capture("^<!-- status-ci-artifacts:(?<run>[0-9]+):(?<attempt>[0-9]+) -->")
+            | [$id, .run, .attempt] | @tsv
+          ')
+          read -r comment_id previous_run previous_attempt <<< "$existing"
+          if [[ -n "$comment_id" ]] &&
+            (( previous_run > run_number || (previous_run == run_number && previous_attempt > attempt) )); then
+            exit 0
+          fi
+
+          body=$(printf '<!-- status-ci-artifacts:%s:%s -->\n### CI builds for `%s`\n\n%s\n\n[Workflow run #%s](%s) · Sign in to GitHub to download. Artifacts expire after 7 days.' \
+            "$run_number" "$attempt" "${sha:0:7}" "$links" "$run_number" "$run_url")
+          if [[ -n "$comment_id" ]]; then
+            gh api --method PATCH "$repo/issues/comments/$comment_id" -f "body=$body" --silent
+          else
+            gh api --method POST "$repo/issues/$pr/comments" -f "body=$body" --silent
+          fi

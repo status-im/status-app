@@ -304,14 +304,12 @@ jobs:
         run: $IN_IMAGE make tgz-linux
       - *save-go
       - *save-ccache
-      # The tarball keeps the AppImage executable; the artifact's zip would not.
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      # The tarball preserves the AppImage's executable bit.
+      - uses: ./.github/actions/build-artifact
         with:
-          name: Status-linux-x86_64
-          path: pkg/Status.tar.gz
-          if-no-files-found: error
-          retention-days: 7
-          compression-level: 0
+          platform: linux-x86_64
+          file: pkg/Status.tar.gz
+          suffix: .tar.gz
 
   android:
     name: android
@@ -372,14 +370,16 @@ jobs:
           ls -l mobile/bin/android/qt6/StatusPR.apk mobile/bin/android/qt6/StatusPR-mapping.txt
       - *save-go
       - *save-ccache
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: ./.github/actions/build-artifact
         with:
-          name: Status-android-arm64
-          path: |
-            mobile/bin/android/qt6/StatusPR.apk
-            mobile/bin/android/qt6/StatusPR-mapping.txt
-          if-no-files-found: error
-          retention-days: 7
+          platform: android-arm64
+          file: mobile/bin/android/qt6/StatusPR.apk
+          suffix: .apk
+      - uses: ./.github/actions/build-artifact
+        with:
+          platform: android-arm64
+          file: mobile/bin/android/qt6/StatusPR-mapping.txt
+          suffix: -mapping.txt
 
   macos:
     name: macos
@@ -423,14 +423,11 @@ jobs:
         run: make pkg-macos
       - *save-go
       - *save-ccache
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: ./.github/actions/build-artifact
         with:
-          name: Status-macos-aarch64
-          path: pkg/Status.dmg
-          # Compressed already.
-          compression-level: 0
-          if-no-files-found: error
-          retention-days: 7
+          platform: macos-aarch64
+          file: pkg/Status.dmg
+          suffix: .dmg
 
   ios:
     name: ios
@@ -489,14 +486,11 @@ jobs:
           cp -R "$app" pkg/Payload/
           (cd pkg && zip -qry StatusPR-unsigned.ipa Payload)
           ls -l pkg/StatusPR-unsigned.ipa
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: ./.github/actions/build-artifact
         with:
-          name: Status-ios-arm64-unsigned
-          path: pkg/StatusPR-unsigned.ipa
-          # Compressed already.
-          compression-level: 0
-          if-no-files-found: error
-          retention-days: 7
+          platform: ios-arm64-unsigned
+          file: pkg/StatusPR-unsigned.ipa
+          suffix: .ipa
 
   windows:
     name: windows
@@ -643,13 +637,23 @@ jobs:
         env: *build-keys
         run: make zip-windows
       - *save-go
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: ./.github/actions/build-artifact
         with:
-          name: Status-windows-x86_64
-          path: |
-            pkg/Status.exe
-            pkg/Status.7z
-          # Both are compressed already.
-          compression-level: 0
-          if-no-files-found: error
-          retention-days: 7
+          platform: windows-x86_64
+          file: pkg/Status.exe
+          suffix: .exe
+      - uses: ./.github/actions/build-artifact
+        with:
+          platform: windows-x86_64
+          file: pkg/Status.7z
+          suffix: .7z
+
+  artifact-links:
+    needs: [linux, android, macos, ios, windows]
+    if: >-
+      !cancelled() && github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      actions: read
+      pull-requests: write
+    uses: ./.github/workflows/ci-artifacts.yml
