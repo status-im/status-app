@@ -6,7 +6,8 @@ import QtQuick
 /// background; a background trim (no pressure, the app merely went to the
 /// background) drops only the sections the user left. A held section keeps
 /// its UI: the due drop is announced as dropHeld() instead, and the delay
-/// starts over once the hold ends.
+/// starts over once that hold ends. A hold that ends before a drop came due
+/// leaves the running delay alone.
 QtObject {
     id: root
 
@@ -40,14 +41,18 @@ QtObject {
     onCurrentChanged: d.update()
 
     onHeldChanged: {
-        if (!root.held && !root.current && !d.dropped)
+        if (!root.held && d.deferred && !root.current && !d.dropped) {
+            d.deferred = false
             d.timer.restart()
+        }
     }
 
     // A QtObject takes no children: the private state is a property.
     readonly property QtObject d: QtObject {
         // Nothing is loaded before the section is first shown.
         property bool dropped: true
+        // A drop came due while held.
+        property bool deferred: false
 
         readonly property Timer timer: Timer {
             interval: root.dropDelay
@@ -58,6 +63,7 @@ QtObject {
             if (root.shown)
                 d.dropped = false
             if (root.current) {
+                d.deferred = false
                 d.timer.stop()
                 return
             }
@@ -68,6 +74,7 @@ QtObject {
         function drop() {
             d.timer.stop()
             if (root.held) {
+                d.deferred = true
                 root.dropHeld()
                 return
             }
