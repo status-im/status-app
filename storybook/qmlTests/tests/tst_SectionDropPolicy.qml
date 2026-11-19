@@ -15,6 +15,7 @@ Item {
             property int heldDrops: 0
 
             shown: false
+            inBackground: false
             dropDelay: 50
 
             onDropping: droppings++
@@ -171,6 +172,81 @@ Item {
 
             verify(policy.d.timer.running, "one restart for the deferred drop")
             compare(policy.heldDrops, 1)
+        }
+
+        // ---- the app going to the background ----------------------------------
+        //
+        // Android stops the event loop and then freezes the process: what is
+        // to go goes on the way out, and the delay only runs in the app.
+
+        function test_goingToTheBackgroundDropsASectionTheUserLeft() {
+            const policy = makePolicy({ shown: true, current: true, dropDelay: 60000 })
+            policy.shown = false
+            policy.current = false
+
+            policy.inBackground = true
+
+            verify(!policy.keepLoaded)
+            compare(policy.droppings, 1)
+        }
+
+        function test_goingToTheBackgroundSparesTheCurrentSection() {
+            const policy = makePolicy({ shown: true, current: true, dropDelay: 60000 })
+            policy.shown = false
+
+            policy.inBackground = true
+
+            verify(policy.keepLoaded)
+            compare(policy.droppings, 0)
+        }
+
+        function test_goingToTheBackgroundSparesAHeldSection() {
+            const policy = makePolicy({ shown: true, current: true, held: true, dropDelay: 60000 })
+            policy.shown = false
+            policy.current = false
+
+            policy.inBackground = true
+
+            verify(policy.keepLoaded)
+            compare(policy.droppings, 0)
+        }
+
+        function test_theDelayDoesNotRunInTheBackground() {
+            const policy = makePolicy({ shown: true, current: true, held: true, dropDelay: 60000 })
+            policy.shown = false
+            policy.current = false
+            verify(policy.d.timer.running)
+
+            policy.inBackground = true
+            verify(!policy.d.timer.running)
+
+            policy.held = false
+            verify(!policy.d.timer.running, "not even when a hold ends")
+        }
+
+        function test_returningRestartsTheDelay() {
+            const policy = makePolicy({ shown: true, current: true, held: true, dropDelay: 60000 })
+            policy.shown = false
+            policy.current = false
+            policy.inBackground = true
+            policy.held = false
+
+            policy.inBackground = false
+
+            verify(policy.keepLoaded)
+            verify(policy.d.timer.running)
+        }
+
+        // a background trim handled on return finds the current section spared
+        function test_aBackgroundTrimAfterReturningSparesTheCurrentSection() {
+            const policy = makePolicy({ shown: true, current: true, dropDelay: 60000 })
+            policy.inBackground = true
+            policy.shown = false
+            policy.inBackground = false
+
+            policy.memoryPressure(false)
+
+            verify(policy.keepLoaded)
         }
 
         function test_showingAgainBringsTheUiBack() {

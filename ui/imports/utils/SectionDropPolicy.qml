@@ -1,10 +1,12 @@
 import QtQuick
 
 /// When a section gives its UI back (a Drop). A section the user left (not
-/// current) is dropped after dropDelay. On memory pressure every section not
-/// on screen is dropped at once, the current one too when the app is in the
-/// background; a background trim (no pressure, the app merely went to the
-/// background) drops only the sections the user left. A held section keeps
+/// current) is dropped after dropDelay, which runs only while the app is in
+/// front, or at once when the app goes to the background (Android then stops
+/// the event loop and freezes the process, so nothing could come due there).
+/// On memory pressure every section not on screen is dropped at once, the
+/// current one too when the app is in the background; a background trim
+/// (no pressure) drops only the sections the user left. A held section keeps
 /// its UI: the due drop is announced as dropHeld() instead, and the delay
 /// starts over once that hold ends. A hold that ends before a drop came due
 /// leaves the running delay alone.
@@ -19,6 +21,11 @@ QtObject {
     property bool held: false
 
     property int dropDelay: 5 * 60 * 1000
+
+    /// The app is in the background (Suspended or Hidden; Inactive, a system
+    /// sheet on top, is still in front).
+    property bool inBackground: Qt.application.state === Qt.ApplicationSuspended
+                                || Qt.application.state === Qt.ApplicationHidden
 
     /// Whether the section's UI should exist.
     readonly property bool keepLoaded: shown || !d.dropped
@@ -39,9 +46,10 @@ QtObject {
 
     onShownChanged: d.update()
     onCurrentChanged: d.update()
+    onInBackgroundChanged: d.update()
 
     onHeldChanged: {
-        if (!root.held && d.deferred && !root.current && !d.dropped) {
+        if (!root.held && d.deferred && !root.current && !d.dropped && !root.inBackground) {
             d.deferred = false
             d.timer.restart()
         }
@@ -65,6 +73,12 @@ QtObject {
             if (root.current) {
                 d.deferred = false
                 d.timer.stop()
+                return
+            }
+            if (root.inBackground) {
+                d.timer.stop()
+                if (!d.dropped && !d.deferred)
+                    d.drop()
                 return
             }
             if (!d.dropped && !d.timer.running)
