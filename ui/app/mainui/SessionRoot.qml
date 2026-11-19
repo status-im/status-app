@@ -52,6 +52,7 @@ Item {
         property bool appIsReady: false
         property bool biometricFlowPending: false
         property bool showSkippedBiometricFlow: false
+        property bool showStayLoggedInSaveUnconfirmed: false
 
         readonly property KeycardStateStore keycardStateStore: KeycardStateStore {}
 
@@ -63,6 +64,18 @@ Item {
             Global.appIsReady = true
             d.appIsReady = true
             root.storeAppStateRequested()
+        }
+
+        // waits for the toast listener, which loads only once AppMain is ready
+        readonly property bool stayLoggedInWarningDeliverable: d.showStayLoggedInSaveUnconfirmed
+                                                               && !!appMainLoader.item?.toastsManager
+        onStayLoggedInWarningDeliverableChanged: {
+            if (!d.stayLoggedInWarningDeliverable)
+                return
+            d.showStayLoggedInSaveUnconfirmed = false
+            Global.displayToastMessage(
+                        qsTr("Saving the password could not be confirmed — the option was left enabled and will be verified at your next login"),
+                        "", "warning", false, Constants.ephemeralNotificationType.danger, "")
         }
     }
 
@@ -204,6 +217,9 @@ Item {
         }
         function onSkippedBiometricFlow(available: bool) : void {
             d.showSkippedBiometricFlow = available
+        }
+        function onStayLoggedInSaveUnconfirmed() : void {
+            d.showStayLoggedInSaveUnconfirmed = true
         }
         function onProfileSelected(keyUid: string) : void {
             localAppSettings.selectedProfileKeyUid = keyUid
