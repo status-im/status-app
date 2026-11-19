@@ -21,7 +21,7 @@ QObject {
     readonly property bool visible: d.dialog?.visible ?? false
 
     readonly property string picturesShortcut: Utils.isIOS ? "assets-library://" :
-                            d.standardPictureLocations.length > 1 ? d.standardPictureLocations[1] // [0] is writable, don't need it here, we have StatusSaveFileDialog for that
+                            d.standardPictureLocations.length > 1 ? d.standardPictureLocations[1] // [0] is writable, not needed for picking
                                                                   : d.standardPictureLocations.length > 0 ? d.standardPictureLocations[0]
                                                                                                           : ""
 
@@ -154,10 +154,6 @@ QObject {
 
         function onRejected() {
             root.rejected()
-        }
-
-        function onCurrentFolderChanged() {
-            root.currentFolder = d.dialog.currentFolder
         }
     }
 }

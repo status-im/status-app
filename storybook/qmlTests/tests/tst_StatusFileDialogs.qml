@@ -29,12 +29,20 @@ Item {
     }
 
     Component {
-        id: saveFileDialogComponent
+        id: boundFileDialogComponent
 
-        StatusSaveFileDialog {
-            title: "Save"
-            defaultSuffix: "png"
-            selectedFile: "file:///tmp/image.png"
+        StatusFileDialog {
+            property url source: "file:///usr"
+            currentFolder: source
+        }
+    }
+
+    Component {
+        id: boundFolderDialogComponent
+
+        StatusFolderDialog {
+            property url source: "file:///usr"
+            currentFolder: source
         }
     }
 
@@ -87,16 +95,29 @@ Item {
             compare(acceptedSpy.count, 1)
         }
 
-        function test_saveFileDialogCreatedOnOpen() {
-            const wrapper = createTemporaryObject(saveFileDialogComponent, root)
-            compare(dialogOf(wrapper), null)
+        function test_currentFolderKeepsCallerBinding_data() {
+            return [
+                { tag: "file", component: boundFileDialogComponent, dialogFollows: true },
+                // Qt FolderDialog ignores currentFolder writes once opened
+                { tag: "folder", component: boundFolderDialogComponent, dialogFollows: false }
+            ]
+        }
+
+        function test_currentFolderKeepsCallerBinding(data) {
+            const wrapper = createTemporaryObject(data.component, root)
             wrapper.open()
             const dialog = dialogOf(wrapper)
-            verify(!!dialog)
-            compare(dialog.fileMode, FileDialog.SaveFile)
-            compare(dialog.defaultSuffix, "png")
+            compare(dialog.currentFolder, Qt.url("file:///usr"))
+
+            dialog.currentFolder = "file:///usr/lib"
             wrapper.close()
+
+            wrapper.source = "file:///usr/bin"
+            compare(wrapper.currentFolder, Qt.url("file:///usr/bin"))
+            if (data.dialogFollows)
+                compare(dialog.currentFolder, Qt.url("file:///usr/bin"))
         }
+
     }
 
     Component {

@@ -80,9 +80,5 @@ QObject {
         function onRejected() {
             root.rejected()
         }
-
-        function onCurrentFolderChanged() {
-            root.currentFolder = d.dialog.currentFolder
-        }
     }
 }
