@@ -46,16 +46,14 @@ Item {
             compare(policy.droppings, 1, "announced before it goes")
         }
 
-        // A state flicker (an intent bringing the app back) is no exit.
-        function test_comingBackWithinTheGraceKeepsTheLayout() {
-            const policy = makePolicy({ shown: true, dropGrace: 100 })
+        // Short, so a state flicker (an intent bringing the app back) is no exit;
+        // coming back in time is SectionDropPolicy's to keep.
+        function test_withoutALivePageTheGraceApplies() {
+            const policy = makePolicy({ shown: true, dropDelay: 60000, dropGrace: 3000 })
 
             policy.shown = false
-            policy.shown = true
-            wait(200)
 
-            verify(policy.keepLoaded)
-            compare(policy.droppings, 0)
+            compare(policy.policy.dropDelay, 3000)
         }
 
         function test_aLivePageGoesAfterTheDelay() {
@@ -100,9 +98,24 @@ Item {
             policy.shown = false
 
             policy.keepAlive = false
-            wait(100)
+
+            compare(policy.policy.dropDelay, 60000)
+            verify(policy.keepLoaded)
+        }
+
+        // Desktop keeps the layout from the first show on: no timer, no pressure.
+        function test_aDisabledPolicyNeverDrops() {
+            const policy = makePolicy({ enabled: false, dropGrace: 10, dropDelay: 10 })
+            verify(!policy.keepLoaded, "nothing before the first show")
+
+            policy.shown = true
+            policy.shown = false
+            policy.memoryPressure()
 
             verify(policy.keepLoaded)
+            verify(policy.policy.shown, "the shared policy never sees an exit")
+            compare(policy.droppings, 0)
+            compare(policy.idleDrops, 0)
         }
 
         function test_aReasonOnTheWayOutStillDelays() {
