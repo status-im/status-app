@@ -61,6 +61,7 @@ ColumnLayout {
 
     StatusChatInput {
         id: input
+        objectName: "newThreadChatInput"
         Layout.fillWidth: true
         Layout.margins: Theme.halfPadding
         threadsEnabled: true
