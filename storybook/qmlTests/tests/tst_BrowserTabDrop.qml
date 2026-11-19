@@ -72,6 +72,17 @@ Item {
             compare(String(revived.url), "https://status.app/")
         }
 
+        // The url set first would load before the history it is meant to back up.
+        function test_theRestoreReachesTheBackendBeforeTheUrl() {
+            const { view, fake } = makeLoadedView()
+            fake.savedState = "history"
+
+            view.drop()
+            view.ensureLoaded()
+
+            compare(view.adapterItem.calls, ["restore", "url:https://status.app/"])
+        }
+
         function test_aPendingStateIsUsedOnce() {
             const { view, fake } = makeLoadedView()
             fake.savedState = "history"

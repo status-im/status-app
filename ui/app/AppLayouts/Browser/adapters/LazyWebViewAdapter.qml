@@ -227,9 +227,11 @@ AbstractWebView {
         id: loader
         anchors.fill: parent
         onLoaded: {
-            if (root.url.toString()) loader.item.url = root.url
+            // A restore loads its own current entry; the url only backs it up.
             if (d.pendingState && typeof loader.item.restoreState === "function")
-                loader.item.restoreState(d.pendingState)
+                loader.item.restoreState(d.pendingState, root.url)
+            else if (root.url.toString())
+                loader.item.url = root.url
             d.pendingState = null
             root.syncFromAdapterItem()
         }

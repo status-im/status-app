@@ -58,6 +58,9 @@ Item {
     // Back/forward history as the Backend would hand it out, and what it was given.
     property var savedState: null
     property var restoredStates: []
+    // What reached the Backend, in order: "restore" and "url:<url>".
+    property var calls: []
+    onUrlChanged: root.calls = root.calls.concat(["url:" + root.url])
 
     function reload() { root.reloadCalls += 1 }
     function loadUrl(u) { root.url = u; root.loadedUrls = root.loadedUrls.concat([String(u)]) }
@@ -70,7 +73,12 @@ Item {
     function saveState() { return root.savedState }
     property int terminateRendererCalls: 0
     function terminateRenderer() { root.terminateRendererCalls += 1 }
-    function restoreState(state) { root.restoredStates = root.restoredStates.concat([state]) }
+    function restoreState(state, fallbackUrl) {
+        root.restoredStates = root.restoredStates.concat([state])
+        root.calls = root.calls.concat(["restore"])
+        if (fallbackUrl && fallbackUrl.toString())
+            root.url = fallbackUrl
+    }
     function triggerWebAction(action) {}
     function runJavaScript(script, callback) {}
 
