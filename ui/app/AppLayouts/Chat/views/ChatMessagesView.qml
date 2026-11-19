@@ -200,20 +200,21 @@ Item {
         // renumber while a chat is not shown: {atBottom: true}, or {key,
         // offset} with the window's bounds as {firstKey, lastKey}.
         function readRecord() {
-            const json = d.recordPositions ? d.recordPositions.getRecord(d.recordThread) : ""
-            return json ? JSON.parse(json) : null
+            return d.recordPositions ? d.recordPositions.read(d.recordThread) : null
         }
 
         function writeRecord(record) {
             if (d.recordPositions)
-                d.recordPositions.setRecord(d.recordThread, record ? JSON.stringify(record) : "")
+                d.recordPositions.write(d.recordThread, record)
         }
 
         // A recorded position waiting for the fill that brings its rows.
         property var pendingRestore: null
 
         function latchRecords(store) {
-            d.recordPositions = store ? store.readingPositions : null
+            // a store being destroyed has already dropped its functions
+            d.recordPositions = store && typeof store.readingPositions === "function"
+                    ? store.readingPositions() : null
             d.recordThread = store ? store.threadId : ""
         }
 
@@ -327,7 +328,8 @@ Item {
         }
 
         // The window start for the record: the recorded window while both its
-        // bounds are still there, else the one centring the record's message,
+        // bounds are still there and it still reaches the message (the view
+        // may have shrunk since), else the one centring the record's message,
         // or -1 when the model does not hold that; marks the record as the
         // one to restore.
         function startAround(model, record) {
@@ -341,7 +343,7 @@ Item {
             const first = record.firstKey ? SQUtils.ModelUtils.indexOf(model, "id", record.firstKey) : -1
             const last = record.lastKey ? SQUtils.ModelUtils.indexOf(model, "id", record.lastKey) : -1
 
-            if (first >= 0 && last >= 0)
+            if (first >= 0 && last >= 0 && index >= first && index < first + d.windowSize)
                 return first
 
             return Math.max(0, index - Math.floor(d.windowSize / 2))

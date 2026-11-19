@@ -652,6 +652,22 @@ Item {
             verify(row > lv.rowCount / 4 && row < lv.rowCount * 3 / 4, "centred in the window")
         }
 
+        // recorded in a taller view: the window from the recorded first row
+        // no longer reaches the message
+        function test_aRecordedWindowThatMissesItsMessageCentresOnIt() {
+            prewarmedPool()
+            moduleA.messagesModule.readingPositions.setRecord("", JSON.stringify(
+                { key: "a-130", offset: 0, firstKey: "a-50", lastKey: "a-149" }))
+
+            const view = openView({ height: 300 })
+            const lv = view.chatLogView
+
+            tryVerify(() => {
+                const after = messageIdAtViewportTop(view)
+                return !lv.busy && !!after && after.key === "a-130"
+            }, 5000, "at the recorded message")
+        }
+
         function test_aRecordWhoseMessageIsGoneOpensAtTheNewest() {
             prewarmedPool()
             moduleA.messagesModule.readingPositions.setRecord("", JSON.stringify(
