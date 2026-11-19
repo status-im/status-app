@@ -710,10 +710,6 @@ method load*[T](
   if activeSectionId == "" or activeSectionId == SETTINGS_SECTION_ID or
     (activeSectionId == HOMEPAGE_SECTION_ID and not homePageEnabled):
     activeSectionId = WALLET_SECTION_ID
-  # Mobile: the Browser opens on demand, never at start (#21528).
-  when defined(ios) or defined(android):
-    if activeSectionId == BROWSER_SECTION_ID:
-      activeSectionId = WALLET_SECTION_ID
 
   var homePageSectionItem: SectionItem
 
