@@ -61,7 +61,10 @@ ensureQtCoreApp()   # one app for the whole suite
 # system this body runs on a threadpool thread; here we invoke it directly since
 # the primitive under test is the completion handoff, not the scheduling.
 proc completeEcho(r: Receiver, seqNo: int, label: string, n: int) =
-  let arg = AsyncEchoPilotTaskArg(vptr: cast[uint](r.vptr), slot: "onTypedDone", seqNo: seqNo)
+  # The session generation `ThreadPool.start` stamps on submission: tests of this program
+  # may have advanced it already
+  let arg = AsyncEchoPilotTaskArg(vptr: cast[uint](r.vptr), slot: "onTypedDone", seqNo: seqNo,
+    sessionGeneration: currentSessionGeneration())
   var items = newSeq[int](n)
   for i in 0 ..< n:
     items[i] = i

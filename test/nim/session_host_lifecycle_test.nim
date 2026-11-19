@@ -11,9 +11,10 @@ import app/boot/session_host
 import app/core/signal_epoch
 import app/core/keycard_epoch
 import app/core/signal_handler
-from seaqt/qcoreapplication import QCoreApplication, create, processEvents
+from seaqt/qcoreapplication import QCoreApplication, processEvents
+import ./support/qt_app
 
-discard QCoreApplication.create()
+ensureQtCoreApp()
 
 # Stands in for status-keycard-qt: it queues its events through the GUI event loop
 # before they reach the C callback, which stamps them only then.
