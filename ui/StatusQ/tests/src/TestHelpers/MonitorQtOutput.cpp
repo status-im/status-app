@@ -31,8 +31,10 @@ MonitorQtOutput::~MonitorQtOutput()
 {
     std::unique_lock<std::mutex> localLock(m_mutex);
     if(m_thisMessageOutput.use_count() == 1) {
-        // Last instance, deregister the handler
-        qInstallMessageHandler(0);
+        // Last instance, restore the handler it replaced (QtTest's, so ignoreWarning keeps working)
+        auto current = qInstallMessageHandler(m_previousHandler);
+        if(current != qtMessageOutput)
+            qInstallMessageHandler(current);
         m_thisMessageOutput.reset();
     }
 }
