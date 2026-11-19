@@ -36,7 +36,7 @@ Item {
         id: mirrorComponent
 
         QtObject {
-            property Item source
+            property StatusSectionLayout source
             readonly property int index: source ? source.currentIndex : -1
         }
     }

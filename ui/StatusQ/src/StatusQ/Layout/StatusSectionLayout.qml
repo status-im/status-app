@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
@@ -501,10 +503,8 @@ LayoutChooser {
 
             onBackButtonClicked: root.backButtonClicked()
 
-            property bool switchOngoing: false
-
-            onPanelSwitchStarted: switchOngoing = true
-            onPanelSwitchEnded: switchOngoing = false
+            onPanelSwitchStarted: d.portraitSwitchOngoing = true
+            onPanelSwitchEnded: d.portraitSwitchOngoing = false
 
             Component.onCompleted: indexSynced = true
         }
@@ -513,8 +513,9 @@ LayoutChooser {
     QtObject {
         id: d
 
-        readonly property Item portrait: portraitLoader.item
-        readonly property Item landscape: landscapeLoader.item
+        readonly property StatusSectionLayoutPortrait portrait: portraitLoader.item as StatusSectionLayoutPortrait
+        readonly property StatusSectionLayoutLandscape landscape: landscapeLoader.item as StatusSectionLayoutLandscape
+        property bool portraitSwitchOngoing: false
         property int currentIndex: root.initialIndex
         property int currentIndexCache: root.initialIndex
 
@@ -536,7 +537,7 @@ LayoutChooser {
         // visible left to defer for); rotating into a still-running slide
         // opens one — start/end stay paired across orientation changes.
         readonly property bool panelSwitchOngoing:
-            root.isPortrait && !!d.portrait && d.portrait.switchOngoing
+            root.isPortrait && !!d.portrait && d.portraitSwitchOngoing
 
         onPanelSwitchOngoingChanged: {
             if (panelSwitchOngoing)
