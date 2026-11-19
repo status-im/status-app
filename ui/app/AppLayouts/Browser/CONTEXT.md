@@ -42,9 +42,11 @@ _Avoid_: unload, suspend, discard, hibernate.
 
 ### Keep-alive reason
 Something a Web View is doing for the user that a Drop would break: a
-non-terminal Download, a dApp request awaiting the user's answer, audible
-media, or camera or microphone use. A Web View with a Keep-alive reason is
-never dropped, and keeps the browser around it; the others are still dropped.
+non-terminal Download (paused ones included), a dApp request awaiting the
+user's answer, or audible media. Pages are never given the camera, the
+microphone or a file picker, so those hold nothing. A Web View with a
+Keep-alive reason is never dropped, and keeps the browser around it; the
+others are still dropped.
 _Avoid_: pin, lock, busy.
 
 ## Downloads
