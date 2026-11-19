@@ -793,6 +793,7 @@ Control {
                 }
                 StatusChatImagePreparationValidator {
                     id: imagePreparationValidator
+                    objectName: "imagePreparationValidator"
                     Layout.alignment: Qt.AlignHCenter
                 }
                 StatusChatImageQtyValidator {

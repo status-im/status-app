@@ -8,6 +8,7 @@
 #include <QPointer>
 #include <QQmlEngine>
 #include <QStandardPaths>
+#include <QTimeZone>
 #include <QUuid>
 
 namespace {
@@ -29,6 +30,8 @@ QByteArray readInput(const QString& input)
     return file.readAll();
 }
 
+// format is a QImageReader format name, empty when Qt can't identify the data; status-go
+// identifies images by content, so the suffix is only cosmetic.
 QString suffixFor(const QByteArray& format)
 {
     if (format == "jpeg")
@@ -41,10 +44,10 @@ QString suffixFor(const QByteArray& format)
 void sweepStaleFiles(const QString& directory)
 {
     const QDir dir(directory);
-    const auto cutoff = QDateTime::currentDateTime().addSecs(-staleFileAgeSecs);
+    const auto cutoff = QDateTime::currentDateTimeUtc().addSecs(-staleFileAgeSecs);
     const auto files = dir.entryInfoList(QDir::Files);
     for (const auto& file : files) {
-        if (file.lastModified() < cutoff)
+        if (file.lastModified(QTimeZone::UTC) < cutoff)
             QFile::remove(file.absoluteFilePath());
     }
 }
