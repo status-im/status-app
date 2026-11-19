@@ -15863,6 +15863,13 @@ al cargar</translation>
     </message>
 </context>
 <context>
+    <name>SessionRoot</name>
+    <message>
+        <source>Saving the password could not be confirmed — the option was left enabled and will be verified at your next login</source>
+        <translation type="unfinished">No se pudo confirmar que la contraseña se guardara: la opción sigue habilitada y se verificará en tu próximo inicio de sesión</translation>
+    </message>
+</context>
+<context>
     <name>SessionTransitionView</name>
     <message>
         <source>Finishing background work…</source>
