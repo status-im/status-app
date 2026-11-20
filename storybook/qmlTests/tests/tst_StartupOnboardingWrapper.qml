@@ -111,7 +111,10 @@ Item {
                 function inputConnectionStringForBootstrapping(connectionString) {}
                 function finishOnboardingFlow(flow, data) { return "" }
                 function loginRequested(keyUid, method, data) {}
-                function selectLoginAccount(keyUid) {}
+                property var selectLoginAccountCalls: []
+                function selectLoginAccount(keyUid) {
+                    selectLoginAccountCalls.push(keyUid)
+                }
 
                 signal accountLoginError(string error, bool wrongPassword)
                 signal stayLoggedInSaveRequested(string keyUid, string credential, bool enablePreference)
@@ -293,6 +296,29 @@ Item {
             compare(wrapper.secureStorage.deleteCalls.length, 1)
             compare(wrapper.onboardingStore.stayLoggedIn, data.enabled)
             compare(unconfirmedSpy.count, data.warned ? 1 : 0)
+        }
+
+        function test_selectLoginAccountBindsInitialProfileAndDetachesForNewProfile() {
+            wrapper = createTemporaryObject(wrapperComponent, root)
+            verify(!!wrapper)
+            const layout = findChild(wrapper, "startupOnboardingLayout")
+            verify(!!layout)
+            const store = wrapper.onboardingStore
+            store.selectLoginAccountCalls = []
+            const profileSpy = signalSpy.createObject(wrapper, {
+                target: wrapper, signalName: "profileSelected" })
+
+            layout.restartFlow()
+            tryVerify(() => store.selectLoginAccountCalls.length > 0)
+            compare(store.selectLoginAccountCalls[store.selectLoginAccountCalls.length - 1], "uid_1")
+            compare(profileSpy.count, 0)
+
+            const loginScreen = layout.stack.loginScreen
+            verify(!!loginScreen)
+            store.selectLoginAccountCalls = []
+            loginScreen.onboardingCreateProfileFlowRequested()
+            tryVerify(() => store.selectLoginAccountCalls.length > 0)
+            compare(store.selectLoginAccountCalls[store.selectLoginAccountCalls.length - 1], "")
         }
 
         // Without an opt-in the preference is already ON; next login reconciles
