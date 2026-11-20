@@ -91,6 +91,19 @@ Item {
             compare(policy.droppings, 0)
         }
 
+        // Pressure queued while frozen (before API 34) is handled on the way
+        // back, before the app is in front again: the current section stays.
+        function test_pressureWhileInTheBackgroundSparesTheCurrentSection() {
+            const policy = makePolicy({ shown: true, current: true, dropDelay: 60000 })
+            policy.shown = false
+            policy.inBackground = true
+
+            policy.memoryPressure(true)
+
+            verify(policy.keepLoaded)
+            compare(policy.droppings, 0)
+        }
+
         function test_pressureDropsAnySectionNotOnScreen() {
             const policy = makePolicy({ shown: true, current: true, dropDelay: 60000 })
             policy.shown = false

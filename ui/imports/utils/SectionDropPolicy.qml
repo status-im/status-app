@@ -37,9 +37,11 @@ QtObject {
     signal dropping()
 
     /// critical: real pressure, which spares only what is on screen; else a
-    /// background trim, which spares the current section too.
+    /// background trim, which spares the current section too. Ignored in the
+    /// background: what could go went on the way out, and pressure queued
+    /// while frozen is handled on the way back, before the app is in front.
     function memoryPressure(critical) {
-        if (d.dropped || root.shown || (!critical && root.current))
+        if (d.dropped || root.shown || root.inBackground || (!critical && root.current))
             return
         d.drop()
     }

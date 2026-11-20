@@ -116,8 +116,8 @@ signals:
     void nativeDprChanged(qreal value);
 
     // Android: critical - the system is short of memory (onLowMemory, and
-    // onTrimMemory below API 34); else the app went to the background
-    // (onTrimMemory BACKGROUND), which asks for what is not needed back.
+    // onTrimMemory RUNNING_LOW/CRITICAL below API 34); else a trim of the app
+    // in the background (BACKGROUND, MODERATE, COMPLETE).
     void memoryPressure(bool critical);
 
 private:
