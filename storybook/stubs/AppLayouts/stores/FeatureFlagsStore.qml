@@ -1,14 +1,24 @@
 import QtQuick
 
 QtObject {
-    property bool sendViaPersonalChatEnabled: false
-    property bool messageLinkSharingEnabled: false
-    property bool paymentRequestEnabled: false
-    property bool swapEnabled: false
-    property bool buyEnabled: false
-    property bool keycardEnabled: false
-    property bool paraswapEnabled: false
-    property bool lifiEnabled: false
-    property bool relayEnabled: false
-    property bool swapProvidersEnabled: false
+    property bool connectorEnabled
+    property bool dappsEnabled
+    property bool browserEnabled
+    property bool swapEnabled
+    property bool sendViaPersonalChatEnabled
+    property bool paymentRequestEnabled
+    property bool keycardEnabled
+    property bool marketEnabled
+    property bool homePageEnabled
+    property bool localBackupEnabled
+    property bool privacyModeFeatureEnabled
+    property bool messageLinkSharingEnabled
+    property bool statusSupportBotEnabled
+    property bool buyEnabled
+    property bool threadsEnabled
+    property bool threadsEnabledV2
+    property bool paraswapEnabled
+    property bool lifiEnabled
+    property bool relayEnabled
+    property bool swapProvidersEnabled
 }

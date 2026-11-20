@@ -136,6 +136,7 @@ Control {
     property string chatName    // chat or channel name (if `isThread`, this is the name of the parent chat)
 
     property bool threadsEnabled // feature flag
+    property bool threadsEnabledV2 // feature flag (post 2.40)
     property bool isThread       // is this chat an existing thread inside a different `chatName`?
     property string threadName   // (an existing) thread name
     property alias startNewThread: toolBar.threadButton.checked
@@ -1310,8 +1311,8 @@ Control {
             }
 
             threadReplyButton {
-                visible: root.threadsEnabled && root.isThread && !root.isEdit
-                onVisibleChanged: if (!root.threadsEnabled || !root.isThread || root.isEdit) toolBar.threadReplyButton.checked = false
+                visible: root.threadsEnabledV2 && root.isThread && !root.isEdit
+                onVisibleChanged: if (!root.threadsEnabledV2 || !root.isThread || root.isEdit) toolBar.threadReplyButton.checked = false
                 tooltipText: qsTr("Also send to %1").arg('#' + root.chatName)
             }
         }

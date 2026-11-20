@@ -111,6 +111,7 @@ StackLayout {
     property bool sendViaPersonalChatEnabled
     property bool messageLinkSharingEnabled
     property bool threadsFeatureEnabled
+    property bool threadsFeatureEnabledV2
     property string disabledTooltipText
 
     property int extraLeftPadding: 0
@@ -342,6 +343,7 @@ StackLayout {
             sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
             messageLinkSharingEnabled: root.messageLinkSharingEnabled
             threadsFeatureEnabled: root.threadsFeatureEnabled
+            threadsFeatureEnabledV2: root.threadsFeatureEnabledV2
             disabledTooltipText: root.disabledTooltipText
             paymentRequestFeatureEnabled: root.paymentRequestFeatureEnabled
             extraLeftPadding: root.extraLeftPadding

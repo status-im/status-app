@@ -349,6 +349,7 @@ StatusSectionLoader {
             messageLinkSharingEnabled:      Qt.binding(() => root.featureFlagsStore.messageLinkSharingEnabled
                                                      && root.advancedStore.copyMessageLinksEnabled),
             threadsFeatureEnabled:          Qt.binding(() => root.featureFlagsStore.threadsEnabled),
+            threadsFeatureEnabledV2:        Qt.binding(() => root.featureFlagsStore.threadsEnabledV2),
             paymentRequestFeatureEnabled:   Qt.binding(() => root.featureFlagsStore.paymentRequestEnabled),
             extraLeftPadding:               Qt.binding(() => root.isPortraitMode ? SQUtils.Utils.swipeIndicatorWidth : 0),
             mutualContactsModel:            Qt.binding(() => root.contactsAdaptor.mutualContacts),

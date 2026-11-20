@@ -134,6 +134,7 @@ Item {
     property bool sendViaPersonalChatEnabled
     property bool messageLinkSharingEnabled
     property bool threadsFeatureEnabled
+    property bool threadsFeatureEnabledV2
     property string disabledTooltipText
     property bool paymentRequestFeatureEnabled
 
@@ -845,6 +846,7 @@ Item {
                 active: !!d.newThreadParentMessageId
                 visible: active
                 sourceComponent: NewThreadPanel {
+                    threadsEnabledV2: root.threadsFeatureEnabledV2
                     parentMessageText: threadParent.item?.unparsedText ?? ""
                     initialText: d.threadDraft?.text ?? ""
                     initialThreadName: d.threadDraft?.name ?? ""
@@ -937,6 +939,7 @@ Item {
                     sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
                     messageLinkSharingEnabled: root.messageLinkSharingEnabled
                     threadsFeatureEnabled: root.threadsFeatureEnabled
+                    threadsFeatureEnabledV2: root.threadsFeatureEnabledV2
                     disabledTooltipText: root.disabledTooltipText
                     paymentRequestFeatureEnabled: root.paymentRequestFeatureEnabled
                     joined: root.joined
@@ -1111,6 +1114,7 @@ Item {
             sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
             messageLinkSharingEnabled: root.messageLinkSharingEnabled
             threadsFeatureEnabled: root.threadsFeatureEnabled
+            threadsFeatureEnabledV2: root.threadsFeatureEnabledV2
             disabledTooltipText: root.disabledTooltipText
             paymentRequestFeatureEnabled: root.paymentRequestFeatureEnabled
             extraLeftPadding: root.extraLeftPadding
