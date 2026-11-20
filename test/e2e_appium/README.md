@@ -1,6 +1,6 @@
 # E2E Testing Framework
 
-Automated end-to-end testing for Status Desktop using Appium and LambdaTest.
+Automated end-to-end testing for the Status mobile app using Appium, on BrowserStack or a local device.
 
 ## Quick Start
 
@@ -10,15 +10,8 @@ cd test/e2e_appium
 pip install -r requirements.txt
 ```
 
-### 2. Configure LambdaTest (GitHub Secrets)
-Repository administrators need to set:
-- `LT_USERNAME` - Your LambdaTest username
-- `LT_ACCESS_KEY` - Your LambdaTest access key
-
-### 3. Run Tests via GitHub Actions
-1. Build APK using `android-build.yml` workflow (architecture: `x86_64`)
-2. Run tests using `e2e-appium-android.yml` workflow
-3. Use artifact name: `Status-x86_64`
+### 2. Run on BrowserStack from GitHub Actions
+See [GitHub Actions](#github-actions) below.
 
 ## A headless status-backend as a chat participant
 
@@ -84,35 +77,137 @@ export LOCAL_APP_PATH="/path/to/Status.apk"
 pytest -m onboarding --env=local -v
 ```
 
-## GitHub Actions Workflows
+## GitHub Actions
 
-### Build APK Workflow
-- **File**: `android-build.yml`
-- **Architecture**: `x86_64` (required for LambdaTest)
-- **Output**: `Status-x86_64` artifact
+`.github/workflows/e2e-android.yml` runs the lane on BrowserStack with a
+status-backend peer. It is advisory and QA-owned: do not make its check
+required, because a run in a repository without BrowserStack secrets ends as
+skipped (its summary says NOT RUN).
 
-### E2E Testing Workflow
-- **File**: `e2e-appium-android.yml`
-- **APK source**: GitHub artifact (default)
-- **Test target**: `onboarding` (default)
-- **Device**: Galaxy Tab S8 (default)
+**By hand:** Actions > E2E Android > Run workflow, with a `bs://` app id that a
+user in the account's BrowserStack group uploaded. Pick a branch whose
+`test/e2e_appium` matches the APK: an app id can be up to 30 days older or
+newer than the branch, and the summary warns when the APK was not built from
+the tested commit.
 
-## Workflow Input Options
+**From a workflow that built an APK:**
 
-### APK Sources
-- **GitHub artifacts**: `Status-x86_64` (recommended)
-- **Direct URLs**: `https://example.com/app.apk`
-- **LambdaTest IDs**: `lt://APP123456789`
+```yaml
+e2e:
+  needs: apk
+  permissions:
+    contents: read
+    packages: read
+  # A new push to the same pull request cancels its older e2e run.
+  concurrency:
+    group: e2e-android-pr-${{ github.event.pull_request.number || github.run_id }}
+    cancel-in-progress: true
+  uses: ./.github/workflows/e2e-android.yml
+  with: { apk-artifact: <artifact with one APK>, account: auto }
+  secrets:
+    BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
+    BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+    BROWSERSTACK_USERNAME_2: ${{ secrets.BROWSERSTACK_USERNAME_2 }}
+    BROWSERSTACK_ACCESS_KEY_2: ${{ secrets.BROWSERSTACK_ACCESS_KEY_2 }}
+```
 
-### Device Options
-- **default**: Galaxy Tab S8 (Android 14)
-- **pixel_tablet**: Google Pixel Tablet
-- **galaxy_tab_a**: Samsung Galaxy Tab A
+Pass the four secrets by name. `secrets: inherit` also works, but it hands
+every secret of the repository to the called workflow.
 
-### Test Targets
-- **onboarding**: Complete user onboarding flow
-- **smoke**: Quick critical functionality tests
-- **critical**: Essential features that must pass
+The called jobs need `contents: read` and `packages: read`. A called workflow
+cannot get more than its caller has, so a caller with narrower permissions
+fails at startup.
+
+On a pull request, build the APK from the PR head
+(`github.event.pull_request.head.sha`). The tests are checked out from that
+commit, not from the merge commit.
+
+The APK must be built with `STATUSQ_TESTMODE=true`, or the e2e hooks are
+compiled out. Release APKs cannot run the suite.
+
+**On pull requests, opt in with a label.** The PR workflow that builds the APK
+runs this one only when the PR has the `e2e-android` label:
+
+```yaml
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+
+concurrency:
+  # A run for any other label gets a group of its own, so it cancels nothing.
+  group: ${{ github.event.action == 'labeled' && github.event.label.name != 'e2e-android' && github.run_id || format('android-{0}', github.ref) }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    # Any label sends a labeled event. Only this one needs a new build.
+    if: github.event.action != 'labeled' || github.event.label.name == 'e2e-android'
+    # builds the APK and uploads it as the artifact "apk"
+  e2e:
+    needs: apk
+    if: contains(github.event.pull_request.labels.*.name, 'e2e-android')
+    permissions:
+      contents: read
+      packages: read
+    uses: ./.github/workflows/e2e-android.yml
+    with: { apk-artifact: apk, account: auto }
+    secrets:
+      BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
+      BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+      BROWSERSTACK_USERNAME_2: ${{ secrets.BROWSERSTACK_USERNAME_2 }}
+      BROWSERSTACK_ACCESS_KEY_2: ${{ secrets.BROWSERSTACK_ACCESS_KEY_2 }}
+```
+
+- Without the label, the e2e job is skipped and nothing reaches BrowserStack.
+- Other labels skip every job and do not cancel a build in progress.
+- Adding the label reruns the PR workflow, so the tests run against an APK
+  built from that PR. Every later push runs them again until the label is
+  removed.
+- PRs from forks get no secrets, so their run ends as NOT RUN.
+- In a stack of PRs, put the label on the top PR only. It contains the
+  changes of the PRs below it, and every labelled PR in the stack queues its
+  own run after a rebase.
+- Odd pull requests run on account 1 and even ones on account 2. Runs on
+  the same account wait in a queue, one at a time.
+- If the PR workflow sets `cancel-in-progress: true`, a push cancels the e2e
+  run in progress along with the rest of that workflow. Its leftover
+  BrowserStack sessions are still stopped.
+
+**Inputs:** `selection` (`gate` or `smoke`), or `tests` (node ids under
+`tests/`), or `markers` (an expression of marker names from `pytest.ini`);
+`device` (Android ids from `config/environments/browserstack.yaml`); `workers`
+(`auto` is 4 for the gate, which leaves one of the account's 5 sessions spare,
+and 2 when multi-phone tests can be selected); `account` (`1`, `2` or `auto`).
+
+**Accounts:** each BrowserStack account has its own 5 sessions, and an app
+exists only on the account that uploaded it. A run with `app-id` must name
+that account. With `apk-artifact` the run uploads the APK itself, so
+`account: auto` can choose: odd pull requests on account 1, even ones on
+account 2. `auto` uses the other account when the chosen one has no secrets,
+and account 1 when there is no pull request number.
+
+**Queueing:** one run per BrowserStack account per repository at a time. The
+others wait in line (`queue: max`, up to 100) and none is cancelled by the
+queue. GitHub starts them in the order they began to wait, but does not
+guarantee that order. A calling workflow's own `cancel-in-progress` can still
+cancel a run. Queues are per repository, so runs from two repositories on the
+same account do not see each other.
+
+**Secrets:** `BROWSERSTACK_USERNAME` and `BROWSERSTACK_ACCESS_KEY` for account
+1, and the same names with `_2` for account 2. The wallet seed is not passed,
+so `smoke` skips the wallet send test and the summary lists it as skipped.
+
+**Peer image:** `.github/workflows/e2e-peer-image.yml` publishes
+`ghcr.io/<owner>/status-app-e2e-peer:<status-go commit>` from the default
+branch. An e2e run pulls it, or builds it (about 7 to 10 minutes) when the
+vendored status-go has no published image yet or GHCR cannot be reached. A
+built image is handed to the e2e job as an artifact kept for 4 days.
+
+**Results:** the job summary names the APK, its upload date, the tested
+commit and how far it is behind its base branch, every failed test with its
+message, every test that passed only on a rerun and every skipped test with
+its reason. Each failure is an error annotation. Reports, logs and screenshots are in the `e2e-android-reports-*`
+artifact for 14 days.
 
 ## Onboarding Fixture
 
@@ -136,11 +231,12 @@ def test_with_custom_onboarding(self, onboarded_user):
 
 ## Environment Configuration
 
-### For LambdaTest (Cloud)
+### For BrowserStack
 ```bash
-# Set in GitHub repository secrets
-LT_USERNAME=your_username
-LT_ACCESS_KEY=your_access_key
+export BROWSERSTACK_USERNAME=...
+export BROWSERSTACK_ACCESS_KEY=...
+export BROWSERSTACK_APP_ID=bs://...
+pytest -m gate --env=browserstack
 ```
 
 ### For Local Testing
@@ -151,14 +247,11 @@ export CURRENT_TEST_ENVIRONMENT="local"
 
 ## Troubleshooting
 
-**APK Build Issues:**
-- Verify x86_64 architecture selected in android-build.yml
-- Check build workflow completed successfully
-
-**Test Execution Issues:**
-- Verify LambdaTest credentials in repository secrets
-- Check APK artifact name matches exactly: `Status-x86_64`
-- Review workflow logs for detailed error messages
+**BrowserStack runs:**
+- "not in BrowserStack account N's group": the app was deleted after 30 days or uploaded to another group. Upload it again.
+- Many "message not visible" or login failures at once: check the summary's APK warning; the tests probably do not match the APK.
+- "Re-run failed jobs" fails to download the peer image: the artifact expired after 4 days. Re-run all jobs.
+- "incomplete" in the summary heading: the test step was cancelled. "error" with no failed tests: the step timed out, or pytest exited with an error outside the tests.
 
 **Local Testing Issues:**
 - Ensure Appium server running: `appium`

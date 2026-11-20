@@ -109,7 +109,6 @@ execution:
   concurrency:
     max_sessions: 5
     per_device_limit: 2
-  retry_failed_tests: 1
   queue_throttle:
     enabled: true
     poll_interval: 20

@@ -1,3 +1,4 @@
+import os
 from typing import Any, Dict, List, Optional
 
 from appium.webdriver.webdriver import WebDriver
@@ -46,8 +47,13 @@ class SessionManager:
 
     def _select_device(self) -> DeviceConfig:
         device: DeviceConfig
+        # Same order as config.settings.select_device, so a run's TEST_DEVICE_ID
+        # also reaches sessions created without a device, such as the peer-chat pool.
+        run_device_id = os.getenv("TEST_DEVICE_ID", "").strip()
         if self._explicit_device_id:
             device = self.env_config.get_device(self._explicit_device_id)
+        elif run_device_id:
+            device = self.env_config.get_device(run_device_id)
         elif self._device_tags:
             matches = self.env_config.find_devices_by_tags(self._device_tags)
             if not matches:
