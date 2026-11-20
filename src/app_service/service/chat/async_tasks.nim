@@ -119,6 +119,7 @@ const asyncSendMessageTask: Task = proc(argEncoded: string) {.gcsafe, nimcall.} 
     arg.finish(%* {
       "response": response,
       "chatId": arg.chatId,
+      "threadId": arg.threadId,
       "sendToken": arg.sendToken,
       "error": "",
     })
@@ -126,6 +127,7 @@ const asyncSendMessageTask: Task = proc(argEncoded: string) {.gcsafe, nimcall.} 
     arg.finish(%* {
       "error": e.msg,
       "chatId": arg.chatId,
+      "threadId": arg.threadId,
       "sendToken": arg.sendToken,
     })
 
@@ -182,6 +184,7 @@ const asyncSendImagesTask: Task = proc(argEncoded: string) {.gcsafe, nimcall.} =
     arg.finish(%* {
       "response": response,
       "chatId": arg.chatId,
+      "threadId": arg.threadId,
       "sendToken": arg.sendToken,
       "error": "",
     })
@@ -189,6 +192,7 @@ const asyncSendImagesTask: Task = proc(argEncoded: string) {.gcsafe, nimcall.} =
     arg.finish(%* {
       "error": e.msg,
       "chatId": arg.chatId,
+      "threadId": arg.threadId,
       "sendToken": arg.sendToken,
     })
   finally:

@@ -87,19 +87,19 @@ proc init*(self: Controller) =
 
   self.events.on(SIGNAL_SENDING_STARTED) do(e: Args):
     let args = SendingStartedArgs(e)
-    if self.chatId != args.chatId:
+    if self.chatId != args.chatId or self.threadId != args.threadId:
       return
     self.delegate.onSendingStarted(args.sendToken, args.text, args.replyTo, args.contentType)
 
   self.events.on(SIGNAL_SENDING_FINISHED) do(e: Args):
     let args = SendingFinishedArgs(e)
-    if self.chatId != args.chatId:
+    if self.chatId != args.chatId or self.threadId != args.threadId:
       return
     self.delegate.onSendingFinished(args.sendToken)
 
   self.events.on(SIGNAL_SENDING_FAILED) do(e:Args):
     let args = MessageSendingFailure(e)
-    if self.chatId != args.chatId:
+    if self.chatId != args.chatId or self.threadId != args.threadId:
       return
     self.delegate.onSendingMessageError(args.error)
 
@@ -323,7 +323,7 @@ proc hasThreadForParentMessage*(self: Controller, parentMessageId: string): bool
   return self.messageService.chatHasThreadForParentMessage(self.chatId, parentMessageId)
 
 proc pendingSends*(self: Controller): seq[SendingStartedArgs] =
-  return self.chatService.pendingSendsForChat(self.chatId)
+  return self.chatService.pendingSendsForChat(self.chatId, self.threadId)
 
 proc getThreadForParentMessage*(self: Controller, parentMessageId: string): ThreadDto =
   return self.messageService.getThreadForParentMessage(self.chatId, parentMessageId)

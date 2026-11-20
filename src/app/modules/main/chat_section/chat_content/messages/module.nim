@@ -373,6 +373,7 @@ method onSendingStarted*(self: Module, sendToken, text, replyTo: string, content
     id: pendingMessageId(sendToken),
     chatId: chatDto.id,
     localChatId: chatDto.id,
+    threadId: self.controller.getMyThreadId(),
     communityId: chatDto.communityId,
     `from`: singletonInstance.userProfile.getPubKey(),
     text: text,

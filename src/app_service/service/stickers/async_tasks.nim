@@ -106,4 +106,5 @@ const asyncSendStickerTask: Task = proc(argEncoded: string) {.gcsafe, nimcall.} 
     arg.finish(%* {
       "error": e.msg,
       "chatId": arg.chatId,
+      "threadId": arg.threadId,
     })

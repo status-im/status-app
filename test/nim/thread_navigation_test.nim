@@ -38,6 +38,18 @@ type
     deletions: seq[string]
     summaries: seq[ThreadDto]
 
+  SendDelegate = ref object of messages_interface.AccessInterface
+    started, finished, errors: seq[string]
+
+method onSendingStarted(self: SendDelegate, sendToken, text, replyTo: string, contentType: int) =
+  self.started.add(sendToken)
+
+method onSendingFinished(self: SendDelegate, sendToken: string) =
+  self.finished.add(sendToken)
+
+method onSendingMessageError(self: SendDelegate, error: string) =
+  self.errors.add(error)
+
 method updateThreadDetails(self: ThreadDetailsDelegate) =
   self.names.add(self.controller.getThread().name)
 
@@ -57,6 +69,47 @@ method openThreadAsChat(self: MockDelegate, threadId, threadName, parentMessageI
     hasUnreadMessages: hasUnreadMessages, notificationsCount: notificationsCount))
 
 suite "thread navigation":
+  test "only the destination thread receives or replays its pending send":
+    let events = createEventEmitter()
+    let chats = chat_service.newService(events, nil, nil)
+    let channel = SendDelegate()
+    let threadA = SendDelegate()
+    let threadB = SendDelegate()
+    let channelController = controller.newController(channel, events, "section", "chat",
+      true, nil, nil, chats, nil, nil, nil)
+    let controllerA = controller.newController(threadA, events, "section", "chat",
+      true, nil, nil, chats, nil, nil, nil, threadId = "thread-a")
+    let controllerB = controller.newController(threadB, events, "section", "chat",
+      true, nil, nil, chats, nil, nil, nil, threadId = "thread-b")
+    channelController.init()
+    controllerA.init()
+    controllerB.init()
+    defer:
+      channelController.delete()
+      controllerA.delete()
+      controllerB.delete()
+
+    let send = chat_service.SendingStartedArgs(chatId: "chat", threadId: "thread-a",
+      sendToken: "reply", text: "Thread reply")
+    chats.announceSending(send)
+    check channel.started.len == 0
+    check threadA.started == @["reply"]
+    check threadB.started.len == 0
+    check channelController.pendingSends().len == 0
+    check controllerA.pendingSends() == @[send]
+    check controllerB.pendingSends().len == 0
+
+    chats.onAsyncSendMessageDone($(%* {
+      "chatId": "chat", "threadId": "thread-a", "sendToken": "reply", "error": "Offline"
+    }))
+    check controllerA.pendingSends().len == 0
+    check threadA.finished == @["reply"]
+    check threadA.errors == @["Offline"]
+    check channel.finished.len == 0
+    check channel.errors.len == 0
+    check threadB.finished.len == 0
+    check threadB.errors.len == 0
+
   test "thread-only signals carry archive transitions without losing summaries":
     let events = createEventEmitter()
     let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
