@@ -13,6 +13,7 @@ privateAccess(input_view.View)
 type Delegate = ref object of input_interface.AccessInterface
   sends: seq[(string, int, string)]
   completions: seq[(string, string)]
+  composerCompletions: int
 
 method sendChatMessage(self: Delegate, msg: string, replyTo: string, contentType: int,
     linkPreviews: seq[LinkPreview], paymentRequests: seq[PaymentRequest], startNewThread: bool,
@@ -25,6 +26,9 @@ method sendChatMessage(self: Delegate, msg: string, replyTo: string, contentType
 
 method onTextMessageSent(self: Delegate, requestId, error: string) =
   self.completions.add((requestId, error))
+
+method onComposerSendFinished(self: Delegate) =
+  inc self.composerCompletions
 
 suite "isolated text sends":
   test "text slot preserves the parent composer and rejects blank or uncorrelated sends":
@@ -71,3 +75,36 @@ suite "isolated text sends":
     check completions[0].chatId == "chat"
     check completions[0].sendToken == "request"
     check completions[0].error == "Persistence failed"
+
+  test "overlapping channel and thread sends only release their own composer":
+    let events = createEventEmitter()
+    let service = chat_service.newService(events, nil, nil)
+    let channel = Delegate()
+    let thread = Delegate()
+    let channelController = input_controller.Controller(delegate: channel, chatId: "chat",
+      events: initUniqueUUIDEventEmitter(events), composerSendTokens: toHashSet(["channel-send"]))
+    let threadController = input_controller.Controller(delegate: thread, chatId: "chat",
+      events: initUniqueUUIDEventEmitter(events), composerSendTokens: toHashSet(["thread-send"]),
+      textSendTokens: toHashSet(["independent"]))
+    channelController.init()
+    threadController.init()
+    defer:
+      channelController.delete()
+      threadController.delete()
+
+    events.emit(chat_service.SIGNAL_SENDING_FINISHED,
+      chat_service.SendingFinishedArgs(chatId: "chat", threadId: "thread", sendToken: "independent"))
+    check thread.completions == @[("independent", "")]
+    check channel.composerCompletions == 0
+    check thread.composerCompletions == 0
+
+    service.onAsyncSendMessageDone($(%* {
+      "chatId": "chat", "threadId": "thread", "sendToken": "thread-send", "error": "Offline"
+    }))
+    check thread.composerCompletions == 1
+    check channel.composerCompletions == 0
+
+    events.emit(chat_service.SIGNAL_SENDING_FINISHED,
+      chat_service.SendingFinishedArgs(chatId: "chat", sendToken: "channel-send"))
+    check channel.composerCompletions == 1
+    check thread.composerCompletions == 1

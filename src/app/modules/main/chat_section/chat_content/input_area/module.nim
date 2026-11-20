@@ -153,8 +153,5 @@ method setUrls*(self: Module, urls: seq[string]) =
 method getContactDetails*(self: Module, contactId: string): ContactDetails =
   return self.controller.getContactDetails(contactId)
 
-method onSendingMessageSuccess*(self: Module) =
-  self.view.emitSendingMessageSuccess()
-
-method onSendingMessageFailure*(self: Module) =
-  self.view.emitSendingMessageFailure()
+method onComposerSendFinished*(self: Module) =
+  self.view.setSendingInProgress(false)
