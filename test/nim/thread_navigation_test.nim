@@ -109,14 +109,14 @@ suite "thread navigation":
       if args.message.id == "root":
         let summary = messages.getThreadForParentMessage("chat", "root")
         check summary.threadId == "root"
-        check summary.messagesCount == 2
+        check summary.messagesCount == 1
         check summary.lastMessage.text == "First reply"
         seen = true
     discard chats.processMessengerResponse(RpcResponse[JsonNode](result: %* {
       "chats": [{"id": "chat"}],
       "messages": [{"id": "root", "chatId": "chat"}],
       "threads": [{"chatId": "chat", "threadId": "root", "parentMessageId": "root",
-        "messagesCount": 2, "lastMessage": {"text": "First reply"}}]
+        "messagesCount": 1, "lastMessage": {"text": "First reply"}}]
     }))
     check seen
 
@@ -137,11 +137,13 @@ suite "thread navigation":
     require first >= 0
     require second >= 0
     check module.view.model().items[first].hasThread
+    check module.view.model().items[first].unparsedText == "First reply"
     check module.view.model().items[first].threadSummary.title == "Title"
+    check module.view.model().items[first].threadSummary.messagesCount == 1
     check module.view.model().items[first].threadSummary.lastMessageText == "First reply"
     check module.view.model().items[first].threadSummary.threadId == ""
     check module.view.model().items[second].threadSummary.title == "Second reply"
-    check module.view.model().items[second].contentType == ContentType.Message
+    check module.view.model().items[second].contentType == ContentType.Emoji
     module.onSendingFinished("one")
     check module.view.model().findIndexForMessageId("pending-one") == -1
     check module.view.model().findIndexForMessageId("pending-two") >= 0
@@ -167,16 +169,18 @@ suite "thread navigation":
       "chatId": "chat", "threadId": "", "sendToken": "one",
       "response": {"result": {
         "chats": [{"id": "chat"}],
-        "messages": [{"id": "root", "chatId": "chat", "text": "Title"},
-                     {"id": "reply", "chatId": "chat", "threadId": "root", "text": "First reply"}],
+        "messages": [{"id": "root", "chatId": "chat", "text": "First reply"}],
         "threads": [{"chatId": "chat", "threadId": "root", "parentMessageId": "root",
-          "name": "Title", "messagesCount": 2, "lastMessage": {"from": "alice", "text": "First reply"}}]
+          "name": "Title", "messagesCount": 1, "lastMessage": {"from": "alice", "text": "First reply"}}]
       }}
     }))
     check module.view.model().findIndexForMessageId("pending-one") == -1
     let root = module.view.model().findIndexForMessageId("root")
     require root >= 0
     check module.view.model().items[root].hasThread
+    check module.view.model().items[root].unparsedText == "First reply"
+    check module.view.model().items[root].threadSummary.title == "Title"
+    check module.view.model().items[root].threadSummary.messagesCount == 1
     check module.view.model().items[root].threadSummary.lastMessageText == "First reply"
     check module.view.model().findIndexForMessageId("reply") == -1
 
@@ -432,6 +436,28 @@ suite "thread navigation":
 
     for id in ["loaded-reply", "added-reply"]:
       check((module.view.model().findIndexForMessageId(id) >= 0) == not THREADS_ENABLED)
+
+  test "thread view displays the root as a standalone message":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    let contacts = contact_service.newService(events, nil, nil, nil)
+    let chats = chat_service.newService(events, nil, contacts)
+    let communities = community_service.newService(events, nil, chats, nil, service)
+    let module = messages_module.newModule(MockDelegate(), events, "section", "chat",
+      true, contacts, communities, chats, service, nil, nil, threadId = "root")
+    defer: module.delete()
+
+    module.newMessagesLoaded(@[MessageDto(id: "root", threadId: "root", text: "Initial message", clock: 1)], @[])
+    let root = module.view.model().findIndexForMessageId("root")
+    require root >= 0
+    check module.view.model().items[root].unparsedText == "Initial message"
+    check module.view.model().items[root].responseToMessageWithId == ""
+
+    module.messagesAdded(@[MessageDto(id: "reply", threadId: "root", text: "Reply",
+      responseTo: "root", clock: 2)])
+    let reply = module.view.model().findIndexForMessageId("reply")
+    require reply >= 0
+    check module.view.model().items[reply].responseToMessageWithId == "root"
 
   test "info thread snapshots settle empty lists and incremental updates preserve other rows":
     let events = createEventEmitter()
