@@ -22,6 +22,12 @@ QtObject {
     readonly property string openThreadId: chatCommunitySectionModule?.openThreadId ?? ""
     readonly property string openThreadName: chatCommunitySectionModule?.openThreadName ?? ""
     readonly property string openThreadParentChatId: chatCommunitySectionModule?.openThreadParentChatId ?? ""
+    readonly property int shownPanel: chatCommunitySectionModule?.viewState?.shownPanel ?? 0
+
+    function setShownPanel(panel) {
+        if (chatCommunitySectionModule?.viewState)
+            chatCommunitySectionModule.viewState.shownPanel = panel
+    }
 
     // Surface read by the chat views. Derived like the real store so the
     // injected content module's permissions (canPost, admin role) gate the

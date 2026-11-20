@@ -2344,10 +2344,6 @@ method onShareImagesSendFinished*[T](self: Module[T], chatId: string, sendToken:
     return
   self.dispatchNextShareImageSend()
 
-method onDeactivateChatLoader*[T](self: Module[T], sectionId: string, chatId: string) =
-  if (sectionId.len > 0 and self.chatSectionModules.contains(sectionId)):
-    self.chatSectionModules[sectionId].onDeactivateChatLoader(chatId)
-
 method windowActivated*[T](self: Module[T]) =
   self.controller.slowdownArchivesImport()
 
