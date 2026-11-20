@@ -251,14 +251,6 @@ Control {
                         anchors.verticalCenter: parent.verticalCenter
 
                         ChatIcon {
-                            id: threadButton
-                            icon.name: "thread"
-                            icon.width: 24
-                            icon.height: 24
-                            tooltipText: qsTr("Start a new thread")
-                        }
-
-                        ChatIcon {
                             id: cameraButton
 
                             icon.name: "chat/camera"
@@ -285,6 +277,14 @@ Control {
 
                             icon.name: "chat/mention"
                             tooltipText: qsTr("Mention")
+                        }
+
+                        ChatIcon {
+                            id: threadButton
+                            icon.name: "thread"
+                            icon.width: 24
+                            icon.height: 24
+                            tooltipText: qsTr("Start a new thread")
                         }
 
                         ChatIcon {
