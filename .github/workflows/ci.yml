@@ -141,8 +141,9 @@ jobs:
           env: |
             QML_DISABLE_DISK_CACHE=true
             QT_QPA_PLATFORM=offscreen
-      # Cache keys. ccache is saved once a day, Go's build cache once per
-      # status-go revision, OpenSSL once per revision of its submodule.
+      # Cache keys. ccache is saved once a day, and again when a file of the
+      # job's CCACHE_KEY_FILES changes its compiler flags; Go's build cache once
+      # per status-go revision, OpenSSL once per revision of its submodule.
       - &cache-keys
         name: Cache keys
         id: keys
@@ -151,6 +152,10 @@ jobs:
             echo "day=$(date -u +%F)"
             echo "status-go=$(git rev-parse HEAD:vendor/status-go)"
             echo "openssl=$(git rev-parse HEAD:mobile/vendors/openssl)"
+            if [ -n "${CCACHE_KEY_FILES:-}" ]; then
+              hashes=$(git hash-object -- $CCACHE_KEY_FILES)
+              echo "ccache-config=-$(echo "$hashes" | git hash-object --stdin | cut -c1-12)"
+            fi
           } >> "$GITHUB_OUTPUT"
       # A pull request restores what master saved, and saves only when there was
       # nothing to restore, into a cache that no other pull request sees.
@@ -159,7 +164,7 @@ jobs:
         id: ccache
         with:
           path: .ci-cache/ccache
-          key: ccache-${{ github.job }}-${{ steps.keys.outputs.day }}
+          key: ccache-${{ github.job }}-${{ steps.keys.outputs.day }}${{ steps.keys.outputs.ccache-config }}
           restore-keys: ccache-${{ github.job }}-
       # The compiler and packages nimble.lock pins, kept per lock (and image: a
       # compiler nimble built in one may not run in another). nimble.paths is not
@@ -213,7 +218,7 @@ jobs:
           (github.event_name != 'pull_request' || steps.ccache.outputs.cache-matched-key == '') }}
         with:
           path: .ci-cache/ccache
-          key: ccache-${{ github.job }}-${{ steps.keys.outputs.day }}
+          key: ccache-${{ github.job }}-${{ steps.keys.outputs.day }}${{ steps.keys.outputs.ccache-config }}
 
   nim-tests:
     name: nim-tests
@@ -444,6 +449,9 @@ jobs:
       # Goes into the build number.
       CHANGE_ID: ${{ github.event.pull_request.number }}
       FLAG_BUY_ENABLED: 1
+      CCACHE_KEY_FILES: >-
+        mobile/wrapperApp/Status.pro mobile/scripts/buildApp.sh
+        mobile/scripts/commonCmakeConfig.sh .github/actions/macos-toolchain/action.yml
     steps:
       - *checkout
       - name: Fetch submodules
