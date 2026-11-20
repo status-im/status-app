@@ -86,6 +86,19 @@ Item {
             compare(title.font.weight, Font.DemiBold)
         }
 
+        function test_previewShowsMentionDisplayName() {
+            const key = "0x04" + "a".repeat(128)
+            controlUnderTest.lastMessage = { sender: { name: "Bob" }, text: "Hello @" + key + "!" }
+            controlUnderTest.lastMessageMentionsMap = { [key]: "Alice" }
+
+            const preview = findChild(controlUnderTest, "threadCardMessagePreview")
+            compare(preview.text, "Hello @Alice!")
+            compare(preview.textFormat, Text.PlainText)
+
+            controlUnderTest.lastMessageMentionsMap = { [key]: "Alice Smith" }
+            compare(preview.text, "Hello @Alice Smith!")
+        }
+
         function test_titleDisplaysMarkupLiterally() {
             const name = "<b>Bold</b> & <a href='https://example.com'>link</a>"
             controlUnderTest.title = name
