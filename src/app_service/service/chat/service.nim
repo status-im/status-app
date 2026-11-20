@@ -53,6 +53,7 @@ type
   # Every send, text or image, is closed when its task ends, success or failure.
   SendingStartedArgs* = ref object of Args
     chatId*: string
+    threadId*: string
     sendToken*: string
     text*: string
     replyTo*: string
@@ -60,6 +61,7 @@ type
 
   SendingFinishedArgs* = ref object of Args
     chatId*: string
+    threadId*: string
     sendToken*: string
     error*: string
 
@@ -69,6 +71,7 @@ type
 
   MessageSendingFailure* = ref object of Args
     chatId*: string
+    threadId*: string
     error*: string
 
   ChatThreadsUpdatedArgs* = ref object of Args
@@ -545,15 +548,16 @@ QtObject:
     self.pendingSends[args.sendToken] = args
     self.events.emit(SIGNAL_SENDING_STARTED, args)
 
-  proc pendingSendsForChat*(self: Service, chatId: string): seq[SendingStartedArgs] =
+  proc pendingSendsForChat*(self: Service, chatId, threadId: string): seq[SendingStartedArgs] =
     result = @[]
     for args in self.pendingSends.values:
-      if args.chatId == chatId:
+      if args.chatId == chatId and args.threadId == threadId:
         result.add(args)
 
-  proc finishSending(self: Service, chatId, sendToken: string, error: string = "") =
+  proc finishSending(self: Service, chatId, threadId, sendToken: string, error: string = "") =
     self.pendingSends.del(sendToken)
-    self.events.emit(SIGNAL_SENDING_FINISHED, SendingFinishedArgs(chatId: chatId, sendToken: sendToken, error: error))
+    self.events.emit(SIGNAL_SENDING_FINISHED,
+      SendingFinishedArgs(chatId: chatId, threadId: threadId, sendToken: sendToken, error: error))
 
   proc asyncSendImages*(self: Service,
                    chatId: string,
@@ -599,12 +603,13 @@ QtObject:
         releasePreparedAttachments(toRelease, getPreparedAttachmentsDir())
         when defined(android) or defined(ios):
           releaseCachedShareFiles(toRelease)
-      self.events.emit(SIGNAL_SENDING_FAILED, MessageSendingFailure(chatId: chatId, error: e.msg))
-      self.finishSending(chatId, token)
+      self.events.emit(SIGNAL_SENDING_FAILED, MessageSendingFailure(chatId: chatId, threadId: threadId, error: e.msg))
+      self.finishSending(chatId, threadId, token, e.msg)
 
 
   proc onAsyncSendImagesDone*(self: Service, rpcResponseJson: string) {.slot.} =
     var rpcResponseObj: JsonNode = newJObject()
+    var sendError = ""
     try:
       rpcResponseObj = rpcResponseJson.parseJson
 
@@ -619,9 +624,12 @@ QtObject:
         raise newException(CatchableError, "no chat or message returned")
     except Exception as e:
       error "Error sending images", msg = e.msg
-      self.events.emit(SIGNAL_SENDING_FAILED, MessageSendingFailure(chatId: rpcResponseObj{"chatId"}.getStr, error: e.msg))
+      sendError = e.msg
+      self.events.emit(SIGNAL_SENDING_FAILED, MessageSendingFailure(chatId: rpcResponseObj{"chatId"}.getStr,
+        threadId: rpcResponseObj{"threadId"}.getStr, error: sendError))
     finally:
-      self.finishSending(rpcResponseObj{"chatId"}.getStr, rpcResponseObj{"sendToken"}.getStr)
+      self.finishSending(rpcResponseObj{"chatId"}.getStr, rpcResponseObj{"threadId"}.getStr,
+        rpcResponseObj{"sendToken"}.getStr, sendError)
 
   proc asyncSendChatMessage*(self: Service,
       chatId: string,
@@ -642,9 +650,9 @@ QtObject:
       let processedMsg = message_common.replaceMentionsWithPubKeys(allKnownContacts, msg)
 
       let (standardLinkPreviews, statusLinkPreviews) = extractLinkPreviewsLists(linkPreviews)
-      # A payment request may ride on an empty message; nothing to echo then.
-      if processedMsg.strip() != "":
-        self.announceSending(SendingStartedArgs(chatId: chatId, sendToken: token, text: processedMsg,
+      # For a new thread, the first reply's destination is assigned by status-go.
+      if not startNewThread and processedMsg.strip() != "":
+        self.announceSending(SendingStartedArgs(chatId: chatId, threadId: threadId, sendToken: token, text: processedMsg,
           replyTo: replyTo, contentType: contentType))
 
       let arg = AsyncSendMessageTaskArg(
@@ -669,8 +677,8 @@ QtObject:
       self.threadpool.start(arg)
     except Exception as e:
       error "Error sending message", msg = e.msg
-      self.events.emit(SIGNAL_SENDING_FAILED, MessageSendingFailure(chatId: chatId, error: e.msg))
-      self.finishSending(chatId, token, e.msg)
+      self.events.emit(SIGNAL_SENDING_FAILED, MessageSendingFailure(chatId: chatId, threadId: threadId, error: e.msg))
+      self.finishSending(chatId, threadId, token, e.msg)
 
   proc onAsyncSendMessageDone*(self: Service, rpcResponseJson: string) {.slot.} =
     var rpcResponseObj: JsonNode = newJObject()
@@ -695,9 +703,11 @@ QtObject:
     except Exception as e:
       error "Error sending message", msg = e.msg
       sendError = e.msg
-      self.events.emit(SIGNAL_SENDING_FAILED, MessageSendingFailure(chatId: rpcResponseObj{"chatId"}.getStr, error: e.msg))
+      self.events.emit(SIGNAL_SENDING_FAILED, MessageSendingFailure(chatId: rpcResponseObj{"chatId"}.getStr,
+        threadId: rpcResponseObj{"threadId"}.getStr, error: sendError))
     finally:
-      self.finishSending(rpcResponseObj{"chatId"}.getStr, rpcResponseObj{"sendToken"}.getStr, sendError)
+      self.finishSending(rpcResponseObj{"chatId"}.getStr, rpcResponseObj{"threadId"}.getStr,
+        rpcResponseObj{"sendToken"}.getStr, sendError)
 
   proc muteChat*(self: Service, chatId: string, interval: int) =
     try:

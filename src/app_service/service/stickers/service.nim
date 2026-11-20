@@ -363,7 +363,8 @@ QtObject:
     except Exception as e:
       error "Error sending sticker", msg = e.msg
       self.events.emit(SIGNAL_SENDING_FAILED,
-        MessageSendingFailure(chatId: rpcResponseObj["chatId"].getStr, error: e.msg))
+        MessageSendingFailure(chatId: rpcResponseObj["chatId"].getStr,
+          threadId: rpcResponseObj{"threadId"}.getStr, error: e.msg))
 
   proc removeRecentStickers*(self: Service, packId: string) =
     self.recentStickers.keepItIf(it.packId != packId)
