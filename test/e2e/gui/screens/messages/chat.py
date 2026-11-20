@@ -50,9 +50,15 @@ class ChatView(QObject):
         self._recent_messages_button = QObject(messaging_names.layout_recentMessagesButton_AnchorButton)
         self._payment_request_card = QObject(dict(messaging_names.paymentRequestCard))
 
+    @allure.step('Scroll chat to recent messages')
+    def _scroll_to_recent_messages(self) -> None:
+        if self._recent_messages_button.is_visible:
+            self._recent_messages_button.object.click()
+            self._recent_messages_button.wait_until_hidden()
+
     def _iter_message_objects(self, index: typing.Optional[int], scroll_to_recent: bool = True):
         if scroll_to_recent:
-            self._recent_messages_button.click_if_visible()
+            self._scroll_to_recent_messages()
 
         messages = sorted(
             (
@@ -497,9 +503,15 @@ class ChatMessagesView(QObject):
 
     @allure.step('Choose leave group option')
     def leave_group(self):
-        self.open_more_options()
-        self._leave_group_item.wait_until_appears().click()
-        return LeaveGroupPopup().wait_until_appears()
+        last_error: typing.Optional[BaseException] = None
+        for _ in range(2):
+            try:
+                self.open_more_options()
+                self._leave_group_item.wait_until_appears().click()
+                return LeaveGroupPopup().wait_until_appears()
+            except TimeoutError as err:
+                last_error = err
+        raise last_error  # type: ignore[misc]
 
     @allure.step('Open payment request modal')
     def open_payment_request_modal(self) -> PaymentRequestPopup:
