@@ -58,6 +58,8 @@ type
     text*: string
     replyTo*: string
     contentType*: int
+    startNewThread*: bool
+    newThreadName*: string
 
   SendingFinishedArgs* = ref object of Args
     chatId*: string
@@ -416,8 +418,8 @@ QtObject:
   proc processMessengerResponse*(self: Service, response: RpcResponse[JsonNode]): (seq[ChatDto], seq[MessageDto]) =
     result = self.parseChatResponse(response)
     var (chats, messages) = result
-    self.signalChatsAndMessagesUpdates(chats, messages)
     self.signalThreadUpdates(response)
+    self.signalChatsAndMessagesUpdates(chats, messages)
 
   proc processGroupChatResponse*(self: Service, response: RpcResponse[JsonNode]) =
     self.handleSectionUnreadCountsResponse(response.result)
@@ -650,10 +652,9 @@ QtObject:
       let processedMsg = message_common.replaceMentionsWithPubKeys(allKnownContacts, msg)
 
       let (standardLinkPreviews, statusLinkPreviews) = extractLinkPreviewsLists(linkPreviews)
-      # For a new thread, the first reply's destination is assigned by status-go.
-      if not startNewThread and processedMsg.strip() != "":
+      if processedMsg.strip() != "":
         self.announceSending(SendingStartedArgs(chatId: chatId, threadId: threadId, sendToken: token, text: processedMsg,
-          replyTo: replyTo, contentType: contentType))
+          replyTo: replyTo, contentType: contentType, startNewThread: startNewThread, newThreadName: newThreadName))
 
       let arg = AsyncSendMessageTaskArg(
         tptr: asyncSendMessageTask,
