@@ -80,6 +80,23 @@ Item {
     TestCase {
         name: "MessageViewThreadContextMenu"
         when: windowShown
+        function test_pendingThreadCardCannotBeOpened() {
+            const view = createTemporaryObject(viewComponent, root, {
+                messageId: "pending-send",
+                messageOutgoingStatus: Constants.messageOutgoingStatus.sending,
+                threadId: ""
+            })
+            verify(!!view)
+            tryCompare(view, "status", Loader.Ready)
+            let card
+            tryVerify(() => { card = findChild(view, "messageThreadSummary"); return !!card && card.height > 0 })
+            compare(card.enabled, false)
+            view.openMessageContextMenu(null, Qt.point(0, 0))
+            verify(!findChild(view, "MessageContextMenuView"))
+            view.messageId = "confirmed"
+            tryCompare(card, "enabled", true)
+        }
+
         function test_rightClickOpensThreadMenuAndDeletesTheSummaryThread() {
             moduleMock.deletedThreadId = ""
             const view = createTemporaryObject(viewComponent, root)

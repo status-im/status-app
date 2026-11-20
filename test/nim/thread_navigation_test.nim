@@ -18,6 +18,8 @@ import app_service/service/community/service as community_service
 import app_service/service/message/message_cursor
 import app_service/service/message/dto/message
 import app_service/service/message/dto/thread
+import app_service/common/types
+import backend/response_type
 
 privateAccess(messages_module.Module)
 privateAccess(message_service.Service)
@@ -40,9 +42,13 @@ type
 
   SendDelegate = ref object of messages_interface.AccessInterface
     started, finished, errors: seq[string]
+    newThreadNames: seq[string]
 
-method onSendingStarted(self: SendDelegate, sendToken, text, replyTo: string, contentType: int) =
+method onSendingStarted(self: SendDelegate, sendToken, text, replyTo: string, contentType: int,
+    startNewThread: bool, newThreadName: string) =
   self.started.add(sendToken)
+  if startNewThread:
+    self.newThreadNames.add(newThreadName)
 
 method onSendingFinished(self: SendDelegate, sendToken: string) =
   self.finished.add(sendToken)
@@ -69,6 +75,120 @@ method openThreadAsChat(self: MockDelegate, threadId, threadName, parentMessageI
     hasUnreadMessages: hasUnreadMessages, notificationsCount: notificationsCount))
 
 suite "thread navigation":
+  test "new thread pending sends reach only the parent and preserve the title on replay":
+    let events = createEventEmitter()
+    let chats = chat_service.newService(events, nil, nil)
+    let parent = SendDelegate()
+    let thread = SendDelegate()
+    let parentController = controller.newController(parent, events, "section", "chat",
+      true, nil, nil, chats, nil, nil, nil)
+    let threadController = controller.newController(thread, events, "section", "chat",
+      true, nil, nil, chats, nil, nil, nil, threadId = "another-thread")
+    parentController.init()
+    threadController.init()
+    defer:
+      parentController.delete()
+      threadController.delete()
+    chats.announceSending(chat_service.SendingStartedArgs(chatId: "chat", sendToken: "token",
+      text: "First reply", startNewThread: true, newThreadName: "Title"))
+    check parent.started == @["token"]
+    check parent.newThreadNames == @["Title"]
+    check thread.started.len == 0
+    require parentController.pendingSends().len == 1
+    check parentController.pendingSends()[0].newThreadName == "Title"
+    check parentController.pendingSends()[0].startNewThread
+
+  test "send response caches the summary before publishing its root message":
+    let events = createEventEmitter()
+    let chats = chat_service.newService(events, nil, nil)
+    let messages = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    messages.init()
+    var seen = false
+    events.on(chat_service.SIGNAL_SENDING_SUCCESS) do(e: Args):
+      let args = chat_service.MessageSendingSuccess(e)
+      if args.message.id == "root":
+        let summary = messages.getThreadForParentMessage("chat", "root")
+        check summary.threadId == "root"
+        check summary.messagesCount == 2
+        check summary.lastMessage.text == "First reply"
+        seen = true
+    discard chats.processMessengerResponse(RpcResponse[JsonNode](result: %* {
+      "chats": [{"id": "chat"}],
+      "messages": [{"id": "root", "chatId": "chat"}],
+      "threads": [{"chatId": "chat", "threadId": "root", "parentMessageId": "root",
+        "messagesCount": 2, "lastMessage": {"text": "First reply"}}]
+    }))
+    check seen
+
+  test "pending thread cards are isolated and removed on completion":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    let contacts = contact_service.newService(events, nil, nil, nil)
+    let chats = chat_service.newService(events, nil, contacts)
+    let communities = community_service.newService(events, nil, chats, nil, service)
+    let module = messages_module.newModule(MockDelegate(), events, "section", "chat",
+      true, contacts, communities, chats, service, nil, nil)
+    defer: module.delete()
+
+    module.onSendingStarted("one", "First reply", "", 1, true, "Title")
+    module.onSendingStarted("two", "Second reply", "", 4, true, "")
+    let first = module.view.model().findIndexForMessageId("pending-one")
+    let second = module.view.model().findIndexForMessageId("pending-two")
+    require first >= 0
+    require second >= 0
+    check module.view.model().items[first].hasThread
+    check module.view.model().items[first].threadSummary.title == "Title"
+    check module.view.model().items[first].threadSummary.lastMessageText == "First reply"
+    check module.view.model().items[first].threadSummary.threadId == ""
+    check module.view.model().items[second].threadSummary.title == "Second reply"
+    check module.view.model().items[second].contentType == ContentType.Message
+    module.onSendingFinished("one")
+    check module.view.model().findIndexForMessageId("pending-one") == -1
+    check module.view.model().findIndexForMessageId("pending-two") >= 0
+    module.onSendingFinished("two")
+    check module.view.model().findIndexForMessageId("pending-two") == -1
+
+  test "new thread send reconciles the pending card and removes failed sends":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    let contacts = contact_service.newService(events, nil, nil, nil)
+    let chats = chat_service.newService(events, nil, contacts)
+    let communities = community_service.newService(events, nil, chats, nil, service)
+    let module = messages_module.newModule(MockDelegate(), events, "section", "chat",
+      true, contacts, communities, chats, service, nil, nil)
+    service.init()
+    module.controller.init()
+    defer: module.delete()
+
+    chats.announceSending(chat_service.SendingStartedArgs(chatId: "chat", sendToken: "one",
+      text: "First reply", startNewThread: true, newThreadName: "Title"))
+    require module.view.model().findIndexForMessageId("pending-one") >= 0
+    chats.onAsyncSendMessageDone($(%* {
+      "chatId": "chat", "threadId": "", "sendToken": "one",
+      "response": {"result": {
+        "chats": [{"id": "chat"}],
+        "messages": [{"id": "root", "chatId": "chat", "text": "Title"},
+                     {"id": "reply", "chatId": "chat", "threadId": "root", "text": "First reply"}],
+        "threads": [{"chatId": "chat", "threadId": "root", "parentMessageId": "root",
+          "name": "Title", "messagesCount": 2, "lastMessage": {"from": "alice", "text": "First reply"}}]
+      }}
+    }))
+    check module.view.model().findIndexForMessageId("pending-one") == -1
+    let root = module.view.model().findIndexForMessageId("root")
+    require root >= 0
+    check module.view.model().items[root].hasThread
+    check module.view.model().items[root].threadSummary.lastMessageText == "First reply"
+    check module.view.model().findIndexForMessageId("reply") == -1
+
+    chats.announceSending(chat_service.SendingStartedArgs(chatId: "chat", sendToken: "two",
+      text: "Failed reply", startNewThread: true))
+    require module.view.model().findIndexForMessageId("pending-two") >= 0
+    chats.onAsyncSendMessageDone($(%* {
+      "chatId": "chat", "threadId": "", "sendToken": "two", "error": "Offline"
+    }))
+    check module.view.model().findIndexForMessageId("pending-two") == -1
+    check module.view.model().findIndexForMessageId("root") >= 0
+
   test "only the destination thread receives or replays its pending send":
     let events = createEventEmitter()
     let chats = chat_service.newService(events, nil, nil)

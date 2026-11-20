@@ -317,7 +317,7 @@ Loader {
     }
 
     function openMessageContextMenu(delegate, point, selectedText = "", options = ({})) {
-        if (isViewMemberMessagesePopup || placeholderMessage || !root.joined)
+        if (isViewMemberMessagesePopup || placeholderMessage || d.pendingThread || !root.joined)
             return
 
         if (root.isChatBlocked && !d.addReactionAllowed)
@@ -680,6 +680,9 @@ Loader {
 
         // messageContextMenuComponent lifetime trackers
         property var contextMenu: null
+        readonly property bool pendingThread: root.hasThread
+                                              && root.messageOutgoingStatus === Constants.messageOutgoingStatus.sending
+                                              && root.messageId.startsWith("pending-")
         property bool contextMenuClosesOnHoverExit: false
         property bool contextMenuOpenedFromHover: false
         property bool contextMenuHovered: false
@@ -1040,6 +1043,7 @@ Loader {
                 readonly property bool hideQuickActions: {
                     return root.isChatBlocked ||
                                   root.placeholderMessage ||
+                                  d.pendingThread ||
                                   root.isInPinnedPopup ||
                                   root.editModeOn ||
                                       !root.joined
@@ -1089,7 +1093,7 @@ Loader {
                               (delegate.hideQuickActions && !d.addReactionAllowed) ||
                               d.hoverSuppressed
 
-                disableEmojis: !d.addReactionAllowed
+                disableEmojis: d.pendingThread || !d.addReactionAllowed
                 hideMessage: d.hideMessage
                 linkAddressAndEnsName: root.sendViaPersonalChatEnabled
                 disabledTooltipText: root.disabledTooltipText
@@ -1351,6 +1355,7 @@ Loader {
                     ThreadCard {
                         id: threadCard
                         objectName: "messageThreadSummary"
+                        enabled: !d.pendingThread
 
                         width: Math.min(maximumWidth, parent.width)
                         threadId: root.threadId || root.messageId
