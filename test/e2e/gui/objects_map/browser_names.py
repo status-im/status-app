@@ -12,3 +12,8 @@ browserAddressField = {
     "type": "StatusTextField",
     "visible": True,
 }
+browserToolbar = {
+    "container": browserLayout,
+    "type": "BrowserLandscapeToolbar",
+    "visible": True,
+}
