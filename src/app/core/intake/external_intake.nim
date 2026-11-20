@@ -48,6 +48,24 @@ type
 
 const StatusExternalLinkHost = "status.app"
 
+proc isThreadDeepLink*(url: string): bool =
+  ## A thread query extends an existing parent route. Recognize empty or malformed
+  ## values too, so navigation can report the error instead of opening the parent.
+  var path: string
+  for prefix in ["https://status.app/", "http://status.app/", "status-app://"]:
+    if url.startsWith(prefix):
+      path = url[prefix.len .. ^1]
+      break
+  if not (path.startsWith("cc/") or path.startsWith("p/") or path.startsWith("g/")):
+    return false
+  try:
+    for pair in parseUri(url).query.split('&'):
+      let key = pair.split('=', maxsplit = 1)[0]
+      if decodeUrl(key) == "thread-id":
+        return true
+  except ValueError:
+    return false
+
 proc isStatusWebUrl*(url: string): bool =
   ## True for web URLs on status.app or a subdomain — links Status itself
   ## handles (and the in-app browser can render). An external hand-off of such

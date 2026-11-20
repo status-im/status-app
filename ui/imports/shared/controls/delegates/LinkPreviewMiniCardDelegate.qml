@@ -49,6 +49,7 @@ LinkPreviewMiniCard {
     linkData {
         title: standardPreview ? standardPreview.title : ""
         description: standardPreview ? standardPreview.description : ""
+        threadAccessible: root.previewType === Constants.LinkPreviewType.StatusThread && standardPreview ? standardPreview.threadAccessible === true : false
         domain: standardPreview ? standardPreview.hostname : "" //TODO: Use domainName when available
         thumbnail: standardPreviewThumbnail ? (standardPreviewThumbnail.url || standardPreviewThumbnail.dataUri) || "" : ""
         image: "" //TODO: usefavicon when available

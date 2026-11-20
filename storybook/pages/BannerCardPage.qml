@@ -19,10 +19,10 @@ SplitView {
             image: Assets.png("wallet/wallet-green")
             closeEnabled: closeEnabled.checked
             onClicked: {
-                print("BannerCard clicked")
+                console.info("BannerCard clicked")
             }
             onClose: {
-                print("BannerCard closed")
+                console.info("BannerCard closed")
             }
         }
     }
@@ -41,6 +41,7 @@ SplitView {
                 text: "Title"
             }
             TextField {
+                Layout.fillWidth: true
                 id: titleField
                 text: "Ways to buy crypto"
             }
@@ -48,6 +49,7 @@ SplitView {
                 text: "Sub title"
             }
             TextField {
+                Layout.fillWidth: true
                 id: subTitleField
                 text: "Via card or bank transfer"
             }
@@ -57,3 +59,6 @@ SplitView {
         }
     }
 }
+
+// category: Components
+// status: good

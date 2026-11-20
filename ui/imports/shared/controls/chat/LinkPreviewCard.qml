@@ -41,6 +41,7 @@ CalloutCard {
     contentItem: ColumnLayout {
         Loader {
             id: bannerImageLoader
+            objectName: "linkPreviewBanner"
             Layout.fillWidth: true
             Layout.leftMargin: d.bannerImageMargins
             Layout.rightMargin: d.bannerImageMargins
@@ -89,6 +90,7 @@ CalloutCard {
                 Layout.minimumHeight: 18
                 StatusSmartIdenticon {
                     id: logo
+                    objectName: "linkPreviewIcon"
                     Layout.alignment: Qt.AlignTop
                     Layout.preferredWidth: 28
                     Layout.preferredHeight: 28
@@ -124,6 +126,7 @@ CalloutCard {
             }
             StatusBaseText {
                 id: description
+                objectName: "linkPreviewDescription"
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 font.pixelSize: Theme.tertiaryTextFontSize
@@ -137,6 +140,21 @@ CalloutCard {
                 Layout.fillWidth: true
                 visible: active
                 sourceComponent: FooterText {
+                    objectName: "linkPreviewFooter"
+                    text: {
+                        if (root.type === Constants.LinkPreviewType.StatusThread) {
+                            if (!root.linkData.threadAccessible)
+                                return qsTr("Thread in Unknown")
+                            if (root.linkData.isDirectThread)
+                                return qsTr("Thread in direct message")
+                            if (root.linkData.isGroupThread)
+                                return qsTr("Thread in group chat")
+                            if (root.linkData.parentName)
+                                return qsTr("Thread in %1").arg(root.linkData.parentName)
+                        }
+                        return root.linkData.domain
+                    }
+                    textFormat: Text.PlainText
                 }
             }
         }
@@ -231,19 +249,24 @@ CalloutCard {
         },
         State {
             name: "linkPreview"
-            when: root.type === Constants.LinkPreviewType.Standard
+            when: root.type === Constants.LinkPreviewType.Standard || root.type === Constants.LinkPreviewType.StatusThread
+            PropertyChanges {
+                target: root
+                implicitHeight: root.type === Constants.LinkPreviewType.StatusThread
+                                ? Math.max(d.bannerImageSource ? 290 : 120, root.contentItem.implicitHeight) : 290
+            }
             PropertyChanges { 
                 target: logo
-                visible: !!root.linkData.image
+                visible: root.type === Constants.LinkPreviewType.StatusThread || !!root.linkData.image
                 name: root.linkData.domain
-                asset.name: root.linkData.image
-                asset.isImage: !!root.linkData.image
-                asset.color: Theme.palette.baseColor2
+                asset.name: root.type === Constants.LinkPreviewType.StatusThread ? "thread" : root.linkData.image
+                asset.isImage: root.type !== Constants.LinkPreviewType.StatusThread && !!root.linkData.image
+                asset.color: root.type === Constants.LinkPreviewType.StatusThread ? Theme.palette.primaryColor1 : Theme.palette.baseColor2
             }
-            PropertyChanges { target: bannerImageLoader; visible: true }
-            PropertyChanges { target: title; text: root.linkData.title }
-            PropertyChanges { target: description; text: root.linkData.description }
-            PropertyChanges { target: d; bannerImageSource: root.linkData.thumbnail }
+            PropertyChanges { target: bannerImageLoader; visible: !!d.bannerImageSource }
+            PropertyChanges { target: title; text: root.type === Constants.LinkPreviewType.StatusThread && !root.linkData.threadAccessible ? qsTr("Unknown thread name") : root.linkData.title; textFormat: root.type === Constants.LinkPreviewType.StatusThread ? Text.PlainText : Text.AutoText }
+            PropertyChanges { target: description; text: root.type === Constants.LinkPreviewType.StatusThread && !root.linkData.threadAccessible ? qsTr("Unknown") : root.linkData.description; textFormat: root.type === Constants.LinkPreviewType.StatusThread ? Text.PlainText : Text.AutoText }
+            PropertyChanges { target: d; bannerImageSource: root.type === Constants.LinkPreviewType.StatusThread && !root.linkData.threadAccessible ? "" : root.linkData.thumbnail }
         },
         State {
             name: "community"

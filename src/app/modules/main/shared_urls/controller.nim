@@ -43,3 +43,9 @@ proc parseMessageUrl*(self: Controller, url: string): MessageUrlDataDto =
 
 proc parseSharedUrl*(self: Controller, url: string): UrlDataDto =
   return self.sharedUrlsService.parseSharedUrl(url)
+
+proc createThreadUrl*(self: Controller, chatId: string, threadId: string): string =
+  return self.sharedUrlsService.createThreadUrl(chatId, threadId)
+
+proc parseThreadUrl*(self: Controller, url: string): ThreadUrlDataDto =
+  return self.sharedUrlsService.parseThreadUrl(url)
