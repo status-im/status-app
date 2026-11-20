@@ -1,240 +1,35 @@
-pragma ComponentBehavior: Bound
-
 import QtQuick
-import QtQuick.Layouts
 
-import StatusQ.Core
-import StatusQ.Core.Theme
-import StatusQ.Core.Utils
-import StatusQ.Components
-import StatusQ.Controls
+import StatusQ
 
-import "./private/statusMessage"
+/*!
+   \qmltype StatusMessageHeader
+   \inherits MessageHeaderItem
+   \inqmlmodule StatusQ.Components
+   \brief A message header: sender name, verification, details, timestamp and delivery status.
 
-Item {
+   One native item renders the whole header. Give it the view's shared
+   StatusMessageHeaderServices (which also carries the view's appearance) and
+   one complete \c messageHeaderData snapshot per message:
+
+   \qml
+       StatusMessageHeader {
+           width: parent.width
+           services: headerServices
+           headerData: ({ senderId: sender.id, displayName: sender.displayName,
+                          timestamp: message.timestamp, isContact: sender.isContact })
+       }
+   \endqml
+
+   Signals: \c clicked(sender) for the name, with the header as the anchor,
+   and \c resendClicked().
+*/
+MessageHeaderItem {
     id: root
 
-    property StatusMessageSenderDetails sender: StatusMessageSenderDetails { }
+    // Marks the inherited property as required; it declares nothing new.
+    required services
 
-    property alias displayNameLabel: primaryDisplayName
-    property double timestamp: 0
-
-    property string tertiaryDetail: sender.id
-    property string resendError: ""
-    property bool isContact: sender.isContact
-    property int trustIndicator: sender.trustIndicator
-    property bool amISender: false
-    property bool displayNameClickable: true
-    property string messageOriginInfo: ""
-    property bool showFullTimestamp
-    property int outgoingStatus: StatusMessage.OutgoingStatus.Unknown
-    property bool showOutgoingStatusLabel: false
-    property bool isMobile
-
-    signal clicked(var sender)
-    signal resendClicked()
-
-    implicitHeight: layout.implicitHeight
-    implicitWidth: layout.implicitWidth
-
-    QtObject {
-        id: d
-
-        readonly property bool expired: root.outgoingStatus === StatusMessage.OutgoingStatus.Expired
-        readonly property bool failedToSend: root.resendError != ""
-        readonly property color outgoingStatusColor: expired ? Theme.palette.warningColor1 : Theme.palette.baseColor1
-    }
-
-    RowLayout {
-        id: layout
-        spacing: 4
-        width: parent.width
-
-        // Plain Text on purpose: a TextEdit's selection/input machinery is
-        // far heavier to create and the name is not selectable content.
-        Text {
-            id: primaryDisplayName
-            objectName: "StatusMessageHeader_DisplayName"
-            verticalAlignment: Text.AlignVCenter
-            Layout.fillWidth: true
-            Layout.maximumWidth: Math.ceil(implicitWidth)
-            Layout.bottomMargin: 2 // offset for the underline to stay vertically centered
-            font.weight: Font.Medium
-            font.underline: root.displayNameClickable && hhandler.hovered
-            font.family: Fonts.baseFont.family
-            font.pixelSize: Theme.primaryTextFontSize
-            wrapMode: Text.WordWrap
-            color: Theme.palette.primaryColor1
-            text: root.amISender ? qsTr("You") : root.sender.displayName
-            // A display name comes from another user: render it literally rather than
-            // letting AutoText's heuristic turn markup in it into rich text.
-            textFormat: Text.PlainText
-
-            HoverHandler {
-                id: hhandler
-                cursorShape: root.displayNameClickable ? Qt.PointingHandCursor : undefined
-            }
-            TapHandler {
-                enabled: root.displayNameClickable
-                onSingleTapped: root.clicked(primaryDisplayName)
-            }
-        }
-
-        Loader {
-            id: messageOriginInfoLoader
-            active: root.messageOriginInfo
-            visible: active
-            sourceComponent: StatusBaseText {
-                verticalAlignment: Text.AlignVCenter
-                color: Theme.palette.baseColor1
-                font.pixelSize: Theme.tertiaryTextFontSize
-                text: root.messageOriginInfo
-            }
-        }
-
-        Loader {
-            id: verificationIconsLoader
-            active: !root.amISender
-            visible: active
-            sourceComponent: StatusContactVerificationIcons {
-                isContact: root.isContact
-                trustIndicator: root.trustIndicator
-            }
-        }
-
-        Loader {
-            id: secondaryDisplayNameLoader
-            active: !root.amISender && !!root.sender.secondaryName
-            visible: active
-            sourceComponent: StatusBaseText {
-                verticalAlignment: Text.AlignVCenter
-                color: Theme.palette.baseColor1
-                font.pixelSize: Theme.tertiaryTextFontSize
-                text: `(${root.sender.secondaryName})`
-            }
-        }
-
-        Loader {
-            id: dotLoader
-            sourceComponent: dotComponent
-            active: secondaryDisplayNameLoader.active && tertiaryDetailTextLoader.active
-            visible: active
-        }
-
-        Loader {
-            id: tertiaryDetailTextLoader
-            active: !root.amISender && root.messageOriginInfo === "" && !!root.tertiaryDetail
-            visible: active
-            sourceComponent: StatusBaseText {
-                verticalAlignment: Text.AlignVCenter
-                font.pixelSize: Theme.tertiaryTextFontSize
-                elide: Text.ElideMiddle
-                color: Theme.palette.baseColor1
-                text: Utils.elideText(root.tertiaryDetail, 3, 6)
-            }
-        }
-
-        Loader {
-            id: secondDotLoader
-            sourceComponent: dotComponent
-            active: verificationIconsLoader.active || secondaryDisplayNameLoader.active || root.amISender || tertiaryDetailTextLoader.active
-            visible: active
-        }
-
-        StatusTimeStampLabel {
-            Layout.alignment: Qt.AlignVCenter
-            id: timestampText
-            verticalAlignment: Text.AlignVCenter
-            timestamp: root.timestamp
-            showFullTimestamp: root.showFullTimestamp
-        }
-
-        Component {
-            id: dotComponent
-            StatusBaseText {
-                verticalAlignment: Text.AlignVCenter
-                font.pixelSize: Theme.tertiaryTextFontSize
-                color: Theme.palette.baseColor1
-                text: "•"
-            }
-        }
-
-        Loader {
-            id: deliveryStatusLoader
-            Layout.alignment: Qt.AlignVCenter
-            active: root.amISender && root.outgoingStatus !== StatusMessage.OutgoingStatus.Unknown
-            visible: active
-            sourceComponent: RowLayout {
-                spacing: 0
-                StatusIcon {
-                    Layout.preferredHeight: 16
-                    Layout.preferredWidth: 16
-                    color: d.outgoingStatusColor
-                    icon: {
-                        if (d.failedToSend)
-                            return "tiny/tiny-exclamation"
-                        switch (root.outgoingStatus) {
-                        case StatusMessage.OutgoingStatus.Delivered:
-                            return "tiny/message/delivered"
-                        case StatusMessage.OutgoingStatus.Sent:
-                            return "tiny/message/sent"
-                        case StatusMessage.OutgoingStatus.Sending:
-                            return "tiny/pending"
-                        case StatusMessage.OutgoingStatus.Expired:
-                            return "tiny/tiny-exclamation"
-                        default:
-                            return ""
-                        }
-                    }
-                }
-                Loader {
-                    active: root.showOutgoingStatusLabel ||
-                            (root.isMobile && (d.expired || d.failedToSend)) // always show the Resend on mobile
-                    visible: active
-                    Layout.alignment: Qt.AlignVCenter
-                    sourceComponent: StatusBaseText {
-                        verticalAlignment: Text.AlignVCenter
-                        color: d.outgoingStatusColor
-                        font.pixelSize: Theme.tertiaryTextFontSize
-                        text: {
-                            if (root.resendError != "")
-                                return qsTr("Failed to resend: %1").arg(root.resendError)
-                            switch (root.outgoingStatus) {
-                            case StatusMessage.OutgoingStatus.Delivered:
-                                return qsTr("Delivered")
-                            case StatusMessage.OutgoingStatus.Sent:
-                                return qsTr("Sent")
-                            case StatusMessage.OutgoingStatus.Sending:
-                                return qsTr("Sending")
-                            case StatusMessage.OutgoingStatus.Expired:
-                                return qsTr("Sending failed")
-                            default:
-                                return ""
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        Loader {
-            id: resendButtonLoader
-            Layout.alignment: Qt.AlignVCenter
-            active: (root.showOutgoingStatusLabel || root.isMobile) && d.expired
-            visible: active
-            sourceComponent: StatusButton {
-                verticalPadding: 2
-                horizontalPadding: 6
-                size: StatusBaseButton.Size.Small
-                type: StatusBaseButton.Type.Warning
-                font.pixelSize: Theme.tertiaryTextFontSize
-                text: qsTr("Resend")
-                onClicked: root.resendClicked()
-            }
-        }
-
-        Item {
-            Layout.fillWidth: true
-        }
-    }
+    readonly property alias timestamp: root.headerData.timestamp
+    readonly property alias amISender: root.headerData.amISender
 }

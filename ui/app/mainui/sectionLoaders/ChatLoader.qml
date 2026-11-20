@@ -49,6 +49,7 @@ StatusSectionLoader {
     property DelegatePool rowPool: null
     required property ChatTextAppearance textAppearance
     required property ChatTextAppearance previewAppearance
+    required property MessageHeaderServices messageHeaderServices
 
     // Inputs
     required property bool createChatViewOpened
@@ -285,6 +286,7 @@ StatusSectionLoader {
             rowPool:                        Qt.binding(() => root.rowPool),
             textAppearance:                 Qt.binding(() => root.textAppearance),
             previewAppearance:              Qt.binding(() => root.previewAppearance),
+            messageHeaderServices:          Qt.binding(() => root.messageHeaderServices),
         })
     }
 
