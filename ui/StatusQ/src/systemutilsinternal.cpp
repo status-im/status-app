@@ -21,6 +21,7 @@
 #include <QDebug>
 #include <QMetaObject>
 #include <QPointer>
+#include <QQmlEngine>
 #include <atomic>
 #include <mutex>
 #include <QQuickWindow>
@@ -30,6 +31,7 @@
 #include <QJniObject>
 #include <QJniEnvironment>
 #include <QtCore/qnativeinterface.h>
+#include <malloc.h>
 #endif
 
 #ifdef Q_OS_IOS
@@ -70,6 +72,7 @@ static void handleIOSFilePickerRejected();
 extern "C" {
 static void jni_nativeShakeDetected(JNIEnv*, jclass);
 static void jni_nativeDensityChanged(JNIEnv*, jclass, jfloat density);
+static void jni_nativeMemoryPressure(JNIEnv*, jclass, jboolean critical);
 static void jni_nativeKeyboardHeightChanged(JNIEnv*, jclass, jint height);
 }
 #endif
@@ -84,8 +87,22 @@ SystemUtilsInternal::SystemUtilsInternal(QObject *parent)
 
     QObject::connect(filter, &QuitFilter::quit, this, &SystemUtilsInternal::quit);
 
+    // Connected once the event loop runs, after Qt.application connected:
+    // slots run in connection order.
+    QMetaObject::invokeMethod(this, [this] {
+        connect(qGuiApp, &QGuiApplication::applicationStateChanged, this,
+                [this, wasInBackground = false](Qt::ApplicationState state) mutable {
+            const bool inBackground = state == Qt::ApplicationSuspended
+                                      || state == Qt::ApplicationHidden;
+            if (inBackground && !wasInBackground)
+                emit enteringBackground();
+            wasInBackground = inBackground;
+        });
+    }, Qt::QueuedConnection);
+
 #ifdef Q_OS_ANDROID
-    // Register native methods for density listener and start listening
+    // Register native methods for the density and memory pressure listeners,
+    // and start the density listener
     static std::once_flag densityRegOnce;
     std::call_once(densityRegOnce, []{
         QJniEnvironment env;
@@ -100,6 +117,20 @@ SystemUtilsInternal::SystemUtilsInternal(QObject *parent)
             env->DeleteLocalRef(clazz);
             if (rc != 0) {
                 qWarning() << "[Android Density] RegisterNatives failed:" << rc;
+            }
+        }
+
+        clazz = env->FindClass("app/status/mobile/MemoryPressureListener");
+        if (clazz) {
+            const JNINativeMethod methods[] = {
+                { const_cast<char*>("nativeOnMemoryPressure"),
+                  const_cast<char*>("(Z)V"),
+                  reinterpret_cast<void*>(jni_nativeMemoryPressure) },
+            };
+            jint rc = env->RegisterNatives(clazz, methods, jint(std::size(methods)));
+            env->DeleteLocalRef(clazz);
+            if (rc != 0) {
+                qWarning() << "[Android MemoryPressure] RegisterNatives failed:" << rc;
             }
         }
 
@@ -159,6 +190,23 @@ SystemUtilsInternal::~SystemUtilsInternal()
 
 QString SystemUtilsInternal::qtRuntimeVersion() const {
     return qVersion();
+}
+
+void SystemUtilsInternal::releaseMemory(QObject *context)
+{
+    // what was dropped is only scheduled for deletion until now
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    if (auto engine = context ? qmlEngine(context) : nullptr) {
+        engine->trimComponentCache();
+        engine->collectGarbage();
+    }
+#ifdef Q_OS_ANDROID
+#ifndef M_PURGE_ALL
+#define M_PURGE_ALL (-104)
+#endif
+    if (mallopt(M_PURGE_ALL, 0) != 1)
+        mallopt(M_PURGE, 0);
+#endif
 }
 
 bool SystemUtilsInternal::fileExists(const QString &path) const
@@ -1064,6 +1112,14 @@ static void jni_nativeDensityChanged(JNIEnv*, jclass, jfloat density)
         qInfo() << "[Android Density] SystemUtilsInternal: nativeDprChanged signal emitted with" << density;
 #endif
         emit self->nativeDprChanged(static_cast<qreal>(density));
+    }, Qt::QueuedConnection);
+}
+
+static void jni_nativeMemoryPressure(JNIEnv*, jclass, jboolean critical)
+{
+    QMetaObject::invokeMethod(qApp, [critical]() {
+        if (auto self = s_systemUtilsInternal.load())
+            emit self->memoryPressure(critical);
     }, Qt::QueuedConnection);
 }
 
