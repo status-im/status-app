@@ -3,6 +3,7 @@ import QtQuick
 
 import StatusQ.Core
 import StatusQ.Core.Utils as SQUtils
+import StatusQ.Internal
 
 import utils
 
@@ -35,11 +36,17 @@ StatusSectionLoader {
     property bool appInBackground: Qt.application.state === Qt.ApplicationSuspended
                                    || Qt.application.state === Qt.ApplicationHidden
 
+    /// The Backend brings a dropped Browser back as it was: history and audible
+    /// Tabs (a Keep-alive reason). Without it the layout stays from the first
+    /// visit on.
+    property bool dropSupported: BrowserBackendCapabilities.stateRestoreSupported
+                                 && BrowserBackendCapabilities.playingAudioSupported
+
     /// The layout was unloaded: the owner may give the memory back.
     signal uiReleased()
 
-    /// Whether the layout should exist. Mobile gives it back when inactive
-    /// (BrowserDropPolicy); desktop keeps it from the first visit on.
+    /// Whether the layout should exist. With dropSupported it is given back
+    /// when inactive (BrowserDropPolicy), else kept from the first visit on.
     readonly property bool keepLoaded: dropPolicy.keepLoaded
 
     /// Opens `url` in a new Tab, now or as soon as the layout is there (it may
@@ -64,7 +71,7 @@ StatusSectionLoader {
     BrowserDropPolicy {
         id: dropPolicy
 
-        enabled: SQUtils.Utils.isMobile
+        enabled: root.dropSupported
 
         shown: root.sectionEnabled && root.sectionCurrent && !root.appInBackground
         current: root.sectionEnabled && root.sectionCurrent

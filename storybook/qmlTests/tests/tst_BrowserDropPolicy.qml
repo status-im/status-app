@@ -103,7 +103,7 @@ Item {
             verify(policy.keepLoaded)
         }
 
-        // Desktop keeps the layout from the first show on: no timer, no pressure.
+        // Without drop support the layout stays from the first show on: no timer, no pressure.
         function test_aDisabledPolicyNeverDrops() {
             const policy = makePolicy({ enabled: false, dropGrace: 10, dropDelay: 10 })
             verify(!policy.keepLoaded, "nothing before the first show")

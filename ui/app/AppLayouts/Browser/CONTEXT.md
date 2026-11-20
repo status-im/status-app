@@ -37,7 +37,9 @@ screen, while the user loses nothing they can see: the Tabs, their order, the
 active Tab and each Tab's back/forward history stay, and a dropped page loads
 again when its Tab is next shown. Happens a while after the browser leaves the
 screen, sooner when the system is short of memory, and at once when no Tab
-shows a page. Only the active Tab loads on return.
+shows a page. Only the active Tab loads on return. Only on a Backend that
+hands history over and reports audible media; elsewhere the browser stays once
+opened.
 _Avoid_: unload, suspend, discard, hibernate.
 
 ### Keep-alive reason
