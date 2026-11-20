@@ -53,7 +53,7 @@ def test_join_leave_profile_showcase_community(multiple_instances):
             switch_to_aut(aut_invitee, main_screen)
             messages_view = main_screen.left_panel.open_messages_screen()
             skip_message_backup_popup_if_visible()
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: owner.name in messages_view.left_panel.get_chats_names,
                 configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
             ), f'Chat with {owner.name} not in list'
@@ -63,7 +63,7 @@ def test_join_leave_profile_showcase_community(multiple_instances):
             assert community.name in welcome_popup.title
             assert community.introduction == welcome_popup.intro
             welcome_popup.join().authenticate(invitee.password)
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: not community_screen.left_panel.is_join_community_visible,
                 configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
             ), 'Join community button not hidden'
@@ -96,7 +96,7 @@ def test_join_leave_profile_showcase_community(multiple_instances):
             confirmation.confirm_action()
 
         with step('Invitee: community no longer in left panel'):
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: not main_screen.left_panel.communities(),
                 configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
             ), 'Communities list should be empty after leave'

@@ -24,13 +24,13 @@ class SendContactRequest(QObject):
 
     def _object_exists(self, real_name, timeout_msec: int = 100) -> bool:
         try:
-            return driver.waitForObjectExists(real_name, timeout_msec) is not None
+            return driver.wait_exists(real_name, timeout_msec) is not None
         except (LookupError, RuntimeError, AttributeError):
             return False
 
     def _send_button_enabled(self) -> bool:
         try:
-            return driver.waitForObjectExists(self._send_button.real_name, 100).enabled
+            return driver.wait_exists(self._send_button.real_name, 100).enabled
         except (LookupError, RuntimeError, AttributeError):
             return False
 
@@ -41,7 +41,7 @@ class SendContactRequest(QObject):
         self._chat_key_text_edit.click()
         self._chat_key_text_edit.clear()
         self._chat_key_paste_button.click()
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self._object_exists(names.sendContactRequestModal_ChatKey_ValidationIcon),
             _MESSAGING_TIMEOUT_MSEC,
         ), 'Chat key validation did not complete after paste'
@@ -58,13 +58,13 @@ class SendContactRequest(QObject):
         return False
 
     def _overlay_contains_text(self, text: str) -> bool:
-        overlay = driver.waitForObjectExists(names.statusDesktop_mainWindow_overlay, 200)
+        overlay = driver.wait_exists(names.statusDesktop_mainWindow_overlay, 200)
         return self._tree_contains_text(overlay, text)
 
     @allure.step('Send contact request')
     def send(self, chat_key: str, message: str):
         self._fill_form(chat_key, message)
-        assert driver.waitFor(
+        assert driver.wait_until(
             self._send_button_enabled,
             _MESSAGING_TIMEOUT_MSEC,
         ), 'Send Contact Request button stayed disabled after filling fields'
@@ -82,14 +82,14 @@ class SendContactRequest(QObject):
             except (LookupError, RuntimeError, AttributeError):
                 return False
 
-        assert driver.waitFor(
+        assert driver.wait_until(
             resend_is_blocked,
             _MESSAGING_TIMEOUT_MSEC,
         ), f'Send Contact Request should stay disabled with {error_message!r} shown'
 
     @allure.step('Close contact request modal')
     def close(self):
-        driver.type(self.object, '<Escape>')
+        driver.type_text(self.object, '<Escape>')
         self.wait_until_hidden()
 
 

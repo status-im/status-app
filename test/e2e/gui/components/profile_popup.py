@@ -48,7 +48,7 @@ class ProfilePopup(QObject):
     def cropped_profile_image(self):
         self._profile_image.image.update_view()
         self._profile_image.image.crop(
-            driver.UiTypes.ScreenRectangle(
+            driver.Rect(
                 15, 15, self._profile_image.image.width - 30, self._profile_image.image.height - 30
             ))
         return self._profile_image.image
@@ -74,7 +74,7 @@ class ProfilePopup(QObject):
 
     @allure.step('Verify: user image contains text')
     def is_user_image_contains(self, text: str):
-        crop = driver.UiTypes.ScreenRectangle(
+        crop = driver.Rect(
             15, 15, self._profile_image.image.width - 30, self._profile_image.image.height - 30
         )
         return self.profile_image.has_text(text, constants.tesseract.text_on_profile_image, crop=crop)
@@ -98,7 +98,7 @@ class ProfilePopup(QObject):
     def communities_names_on_cards(self):
         self.profile_showcase_tab_communities.click()
         return [str(item.name) for item in
-                driver.findAllObjects(self.profile_community_card.real_name)]
+                driver.find_all(self.profile_community_card.real_name)]
 
 
 class ProfilePopupFromMembers(ProfilePopup):

@@ -34,7 +34,7 @@ class SignTransactionPopup(QObject):
 
     @allure.step('Wait until sign button is enabled')
     def wait_until_sign_enabled(self, timeout_msec: int = configs.timeouts.ROUTES_TIMEOUT_MSEC):
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self._sign_transaction_button.is_enabled,
             timeout_msec,
         ), 'Sign transaction button stayed disabled'

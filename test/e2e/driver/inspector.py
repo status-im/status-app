@@ -1,7 +1,6 @@
-"""Client for the Qt inspector plugin loaded into the application under test.
+"""Connection to the inspector plugin loaded into the app.
 
-Wire format: one JSON object per line, ``{"id", "command", "params"}``, and one
-JSON line back.
+Wire format: one JSON object per line, ``{"id", "command", "params"}``, and one JSON line back.
 """
 
 import itertools
@@ -9,13 +8,13 @@ import json
 import socket
 
 
-class InspectorError(Exception):
+class InspectorError(RuntimeError):
     """The plugin answered with an error, or the connection closed."""
 
 
 class Inspector:
-    def __init__(self, port, timeout=30.0):
-        self._socket = socket.create_connection(("127.0.0.1", port), timeout=timeout)
+    def __init__(self, port, timeout_sec=30.0):
+        self._socket = socket.create_connection(("127.0.0.1", port), timeout=timeout_sec)
         self._file = self._socket.makefile("rwb")
         self._ids = itertools.count(1)
 
@@ -37,9 +36,6 @@ class Inspector:
 
     def evaluate(self, expression, object_id):
         return self.send("evaluate", expression=expression, objectId=object_id)["result"]
-
-    def geometry(self, object_id):
-        return self.send("geometry", objectId=object_id)
 
     def close(self):
         self._socket.close()

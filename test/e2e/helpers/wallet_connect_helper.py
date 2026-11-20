@@ -196,7 +196,7 @@ class WalletConnectDapp:
                 return True
             return False
 
-        reached = driver.waitFor(_phase_reached, timeout_msec)
+        reached = driver.wait_until(_phase_reached, timeout_msec)
         if process_error:
             raise AssertionError(process_error)
         assert reached, (

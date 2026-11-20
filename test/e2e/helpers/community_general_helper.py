@@ -31,7 +31,7 @@ def _open_general_channel(main_window, community_name: str):
 def join_community_from_invite(main_window, inviter_name: str, password: str, community_name: str):
     messages_view = main_window.left_panel.open_messages_screen()
     skip_message_backup_popup_if_visible()
-    assert driver.waitFor(
+    assert driver.wait_until(
         lambda: inviter_name in messages_view.left_panel.get_chats_names,
         configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
     ), f'Chat with {inviter_name} not in list'
@@ -39,7 +39,7 @@ def join_community_from_invite(main_window, inviter_name: str, password: str, co
     community_screen = chat.click_community_invite_message()
     community_screen.left_panel.wait_for_name(community_name, configs.timeouts.APP_LOAD_TIMEOUT_MSEC)
     community_screen.left_panel.open_welcome_community_popup().join().authenticate(password)
-    assert driver.waitFor(
+    assert driver.wait_until(
         lambda: not community_screen.left_panel.is_join_community_visible,
         configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
     ), 'Join community button not hidden'
@@ -109,7 +109,7 @@ def setup_community_general_channel(
             if message_text:
                 member_chat.find_message_by_text(message_text)
             else:
-                assert driver.waitFor(
+                assert driver.wait_until(
                     lambda: _incoming_album_arrived(member_chat),
                     configs.timeouts.MESSAGING_TIMEOUT_SEC * 1000,
                 ), 'Member did not receive the community image album'

@@ -1,4 +1,4 @@
-from objectmaphelper import *
+import re
 from gui.objects_map.names import statusDesktop_mainWindow, statusDesktop_mainWindow_overlay, contextMenu_PopupItem
 
 mainWindow_ProfileLayout = {"container": statusDesktop_mainWindow, "objectName": "profileStatusSectionLayout", "type": "ProfileLayout", "visible": True}
@@ -80,8 +80,8 @@ settingsContentBaseScrollView_savedAddressesItem_StatusListItem = {"container": 
 settingsContentBaseScrollView_StatusListItem = {"container": settingsContentBase_ScrollView, "type": "StatusListItem", "unnamed": 1, "visible": True}
 settings_Wallet_NetworksView_TestNet_Toggle = {"container": statusDesktop_mainWindow, "objectName": "testnetModeSwitch", "type": "StatusSwitch"}
 settings_Wallet_SavedAddresses_AddAddressButton = {"container": statusDesktop_mainWindow, "objectName": "addNewSavedAddressButton", "type": "StatusButton", "visible": True}
-settings_Wallet_SavedAddress_ItemDelegate ={"container": settingsContentBase_ScrollView, "objectName": RegularExpression("savedAddressView_Delegate*"), "type": "SavedAddressesDelegate", "visible": True}
-savedAddressItemKebabButton = {"container": statusDesktop_mainWindow, "objectName": RegularExpression("savedAddressView_Delegate_menuButton*"), "type": "StatusRoundButton", "visible": True}
+settings_Wallet_SavedAddress_ItemDelegate ={"container": settingsContentBase_ScrollView, "objectName": re.compile("savedAddressView_Delegate*"), "type": "SavedAddressesDelegate", "visible": True}
+savedAddressItemKebabButton = {"container": statusDesktop_mainWindow, "objectName": re.compile("savedAddressView_Delegate_menuButton*"), "type": "StatusRoundButton", "visible": True}
 settingsContentBaseScrollView_accountsList_StatusListView = {"container": settingsContentBase_ScrollView, "id": "accountsList", "type": "StatusListView", "unnamed": 1, "visible": True}
 settingsContentBaseScrollView_draggableDelegate_StatusDraggableListItem = {"checkable": False, "container": settingsContentBase_ScrollView, "id": "draggableDelegate", "type": "StatusDraggableListItem", "unnamed": 1, "visible": True}
 settingsContentBaseScrollView_accountOrderView_AccountOrderView = {"container": settingsContentBase_ScrollView, "id": "accountOrderView", "type": "AccountOrderView", "unnamed": 1, "visible": True}
@@ -89,7 +89,7 @@ settingsContentBaseScrollView_StatusBaseText = {"container": settingsContentBase
 mainWindow_StatusToolBar = {"container": statusDesktop_mainWindow, "objectName": "statusToolBar", "type": "StatusToolBar", "visible": True}
 main_toolBar_back_button = {"container": mainWindow_StatusToolBar, "objectName": "toolBarBackButton", "type": "StatusFlatButton", "visible": True}
 settingsWalletAccountDelegate_Status_account = {"container": settingsContentBase_ScrollView, "objectName": "Status account", "type": "WalletAccountDelegate", "visible": True}
-settingsWalletAccountDelegate = {"container": settingsContentBase_ScrollView, "index": 0, "objectName": RegularExpression("*"), "type": "WalletAccountDelegate", "visible": True}
+settingsWalletAccountDelegate = {"container": settingsContentBase_ScrollView, "index": 0, "objectName": re.compile(".*"), "type": "WalletAccountDelegate", "visible": True}
 settingsWalletKeyPairDelegate = {"container": settingsContentBase_ScrollView, "objectName": "walletKeyPairDelegate", "type": "StatusListItem", "visible": True}
 settingsWalletKeyPairMoreButton = {"container": settingsContentBase_ScrollView, "objectName": "walletKeyPairDelegateMoreButton", "type": "StatusFlatRoundButton", "visible": True}
 settingsWalletKeypairMenuKeycardAction = {"container": statusDesktop_mainWindow_overlay, "objectName": "walletKeypairMenuKeycardAction", "type": "StatusMenuItem", "visible": True}
@@ -126,7 +126,7 @@ showcaseDelegate = {"checkable": False, "container": mainWindow_settingsContentB
 delegateActionButton = {"checkable": False, "container": mainWindow_settingsContentBaseScrollView_StatusScrollView, "type": "StatusButton", "unnamed": 1, "visible": True}
 profileTabBar_Identity_StatusTabButton = {"checkable": True, "container": mainWindow_profileTabBar_StatusTabBar, "objectName": "identityTabButton", "type": "StatusTabButton", "visible": True}
 
-# profile showcase visibility menu and actions (Squish exposes StatusMenu as objectName "StatusMenu")
+# profile showcase visibility menu and actions
 profileShowcaseNoOne = {"container": contextMenu_PopupItem, "enabled": True, "objectName": "visibilityAction_0", "type": "StatusMenuItem", "visible": True}
 profileShowcaseContacts = {"container": contextMenu_PopupItem, "enabled": True, "objectName": "visibilityAction_2", "type": "StatusMenuItem", "visible": True}
 profileShowcaseEveryone = {"container": contextMenu_PopupItem, "enabled": True, "objectName": "visibilityAction_3", "type": "StatusMenuItem", "visible": True}

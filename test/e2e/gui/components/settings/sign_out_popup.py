@@ -4,6 +4,7 @@ import time
 import allure
 
 import configs
+import driver
 from gui.elements.button import Button
 from gui.elements.object import QObject
 from gui.objects_map import settings_names
@@ -32,9 +33,11 @@ class SignOutPopup(QObject):
                 if attempt > 1:
                     time.sleep(1)
 
-                # TODO https://github.com/status-im/status-app/issues/15345
-                # mouseClick() waits for AUT response and can block up to Squish's 300s timeout
-                self._sign_out_button.native_mouse_click()
+                try:
+                    self._sign_out_button.click()
+                except driver.InspectorError as err:
+                    # The app quits on sign-out and may close the connection before it answers the click.
+                    LOG.info('Connection closed by sign-out: %s', err)
                 return
             except Exception as exc:
                 LOG.info('Sign out attempt #%s failed: %s', attempt, exc)

@@ -50,7 +50,7 @@ def test_settings_move_wallet_keypair_to_empty_keycard(keycard_simulator, main_w
     authenticate_with_password(user_account)
     account_popup.wait_until_hidden()
 
-    assert driver.waitFor(
+    assert driver.wait_until(
         lambda: keypair_name in wallet_settings.get_keypairs_names(),
         configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
     ), f'Expected key pair {keypair_name!r} in wallet settings'
@@ -63,7 +63,7 @@ def test_settings_move_wallet_keypair_to_empty_keycard(keycard_simulator, main_w
     authenticate_with_password(user_account)
     keycard_mng_popup.close_after_success(configs.timeouts.APP_LOAD_TIMEOUT_MSEC)
 
-    assert driver.waitFor(
+    assert driver.wait_until(
         lambda: KEYCARD_ON_KEYCARD_LABEL in wallet_settings.get_keypair_location(keypair_name),
         configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
     ), (

@@ -18,7 +18,7 @@ def test_scan_wallet_address_from_image(main_screen):
 
     with step('Send opens for that address'):
         send_popup = SendPopup().wait_until_appears()
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: send_popup.selected_recipient_address.lower() == address.lower(),
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         )

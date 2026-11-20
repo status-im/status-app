@@ -54,7 +54,7 @@ def test_create_edit_remove_community_channel(main_screen, channel_name, channel
         assert channel.name == new_channel_name
 
     with step('Verify edited channel details are correct in community toolbar'):
-        assert driver.waitFor(lambda: community_screen.tool_bar.channel_name == new_channel_name,
+        assert driver.wait_until(lambda: community_screen.tool_bar.channel_name == new_channel_name,
                               configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
         assert community_screen.tool_bar.channel_description == new_channel_description
         assert community_screen.tool_bar.channel_emoji == edit_emoji.glyph
@@ -105,13 +105,13 @@ def test_member_cannot_see_hidden_channel(multiple_instances, user_data_one, use
             permission_popup.create_permission()
             create_channel_popup.save_create_button.click()
             channel = community_screen.left_panel.get_channel_parameters(channel_name)
-            assert driver.waitFor(lambda: channel in community_screen.left_panel.channels,
+            assert driver.wait_until(lambda: channel in community_screen.left_panel.channels,
                                   configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
 
         with step(f'User {user_two.name}, cannot see hidden channel in the list'):
             aut_two.attach()
             main_screen.prepare()
-            assert driver.waitFor(lambda: channel not in community_screen.left_panel.channels,
+            assert driver.wait_until(lambda: channel not in community_screen.left_panel.channels,
                                   configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
 
 
@@ -145,7 +145,7 @@ def test_view_and_post_in_non_restricted_channel(multiple_instances, user_data_o
             # Without this, status-go drops incoming messages with "non-existing chat".
             switch_to_aut(aut_two, main_screen)
             community_screen = main_screen.left_panel.open_community('My awesome community')
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: channel_name in [c.name for c in community_screen.left_panel.channels],
                 configs.timeouts.MESSAGING_TIMEOUT_SEC * 1000), (
                 f'Channel {channel_name!r} did not appear for {user_two.name}'
@@ -170,7 +170,7 @@ def test_view_and_post_in_non_restricted_channel(multiple_instances, user_data_o
             messages_screen = MessagesScreen()
             messages_screen.chat.find_message_by_text(owner_message, 0)
             messages_screen.group_chat.send_message_to_group_chat(member_message)
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: any(
                     m.text is not None and member_message in remove_tags(str(m.text))
                     for m in messages_screen.chat.messages(0)
@@ -185,7 +185,7 @@ def test_view_and_post_in_non_restricted_channel(multiple_instances, user_data_o
             community_screen = main_screen.left_panel.open_community('My awesome community')
             community_screen.left_panel.select_channel(channel_name)
             messages_screen = MessagesScreen()
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: any(
                     m.text is not None and member_message in remove_tags(str(m.text))
                     for m in messages_screen.chat.messages(0)

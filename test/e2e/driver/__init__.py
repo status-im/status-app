@@ -1,29 +1,24 @@
-import squishtest  # noqa
+"""Drives the app under test through the inspector plugin loaded into it."""
 
-from . import server, context, objects_access, toplevel_window, mouse
-from .squish_api import *
+import importlib
 
-imports = {module.__name__: module for module in [
-    context,
-    objects_access,
-    mouse,
-    server,
-    toplevel_window,
-]}
+from .actions import click, move, press, release, type_text, wheel
+from .inspector import InspectorError
+from .obj import Obj, Point, Rect, bounds, children
+from .query import exists, find, find_all, wait, wait_exists, wait_until
+
+__all__ = [
+    "click", "move", "press", "release", "type_text", "wheel",
+    "InspectorError",
+    "Obj", "Point", "Rect", "bounds", "children",
+    "exists", "find", "find_all", "wait", "wait_exists", "wait_until",
+]
+
+# Imported on first use: they need the suite's configs, which the driver's unit tests do not have.
+_LAZY_SUBMODULES = {"aut", "mouse", "objects_access", "window"}
 
 
 def __getattr__(name):
-    if name == 'aut':
-        from . import aut as aut_module
-        imports['aut'] = aut_module
-        return aut_module
-    if name in imports:
-        return imports[name]
-    try:
-        return getattr(squishtest, name)
-    except AttributeError:
-        raise ImportError(f'Module "driver" has no attribute "{name}"')
-
-
-squishtest.testSettings.waitForObjectTimeout = configs.timeouts.UI_LOAD_TIMEOUT_MSEC
-squishtest.setHookSubprocesses(True)
+    if name in _LAZY_SUBMODULES:
+        return importlib.import_module(f"{__name__}.{name}")
+    raise AttributeError(f'module "driver" has no attribute "{name}"')
