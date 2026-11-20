@@ -37,7 +37,7 @@ class TokensView(QObject):
     @property
     @allure.step('Get mint token button enable state')
     def is_mint_token_button_enabled(self) -> bool:
-        return driver.waitForObjectExists(self.mint_token_button.real_name,
+        return driver.wait_exists(self.mint_token_button.real_name,
                                           configs.timeouts.UI_LOAD_TIMEOUT_MSEC).enabled
 
     @property
@@ -80,7 +80,7 @@ class TokensView(QObject):
 
     @allure.step('Click mint token')
     def click_mint_token(self) -> 'EditCommunityTokenView':
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.is_mint_token_button_enabled,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), 'Mint token button is not enabled'
@@ -104,7 +104,7 @@ class TokensOwnerTokenSettingsView(QObject):
         if not self._owner_token_section.is_visible:
             self._scroll.vertical_scroll_down(self._owner_token_section)
         owner_token_text_labels = []
-        for item in driver.findAllObjects(self._owner_token_text_object.real_name):
+        for item in driver.find_all(self._owner_token_text_object.real_name):
             owner_token_text_labels.append(item)
         return sorted(owner_token_text_labels, key=lambda item: item.y)
 
@@ -138,7 +138,7 @@ class TokensOwnerTokenSettingsView(QObject):
         if not self._token_master_token_section.is_visible:
             self._scroll.vertical_scroll_down(self._token_master_token_section)
         master_token_text_labels = []
-        for item in driver.findAllObjects(self._token_master_text_object.real_name):
+        for item in driver.find_all(self._token_master_text_object.real_name):
             master_token_text_labels.append(item)
         return sorted(master_token_text_labels, key=lambda item: item.y)
 
@@ -204,14 +204,14 @@ class EditOwnerTokenView(QObject):
     @allure.step('Get text labels')
     def get_all_text_labels(self) -> list:
         text_labels = []
-        for item in driver.findAllObjects(self._edit_owner_token_text_object.real_name):
+        for item in driver.find_all(self._edit_owner_token_text_object.real_name):
             text_labels.append(str(item.text))
         return text_labels
 
     @allure.step('Get all symbol boxes')
     def get_symbol_boxes(self):
         symbol_boxes = []
-        for item in driver.findAllObjects(self._symbol_box.real_name):
+        for item in driver.find_all(self._symbol_box.real_name):
             symbol_boxes.append(item)
         sorted(symbol_boxes, key=lambda item: item.y)
         return symbol_boxes
@@ -219,7 +219,7 @@ class EditOwnerTokenView(QObject):
     @allure.step('Get all total boxes')
     def get_total_boxes(self):
         total_boxes = []
-        for item in driver.findAllObjects(self._total_box.real_name):
+        for item in driver.find_all(self._total_box.real_name):
             total_boxes.append(item)
         sorted(total_boxes, key=lambda item: item.y)
         return total_boxes
@@ -227,7 +227,7 @@ class EditOwnerTokenView(QObject):
     @allure.step('Get all remaining boxes')
     def get_remaining_boxes(self):
         remaining_boxes = []
-        for item in driver.findAllObjects(self._remaining_box.real_name):
+        for item in driver.find_all(self._remaining_box.real_name):
             remaining_boxes.append(item)
         sorted(remaining_boxes, key=lambda item: item.y)
         return remaining_boxes
@@ -235,7 +235,7 @@ class EditOwnerTokenView(QObject):
     @allure.step('Get all destructible boxes')
     def get_destructible_boxes(self):
         destructible_boxes = []
-        for item in driver.findAllObjects(self._destructible_box.real_name):
+        for item in driver.find_all(self._destructible_box.real_name):
             destructible_boxes.append(item)
         sorted(destructible_boxes, key=lambda item: item.y)
         return destructible_boxes
@@ -243,7 +243,7 @@ class EditOwnerTokenView(QObject):
     @allure.step('Get all transferable boxes')
     def get_transferable_boxes(self):
         transferable_boxes = []
-        for item in driver.findAllObjects(self._transferable_box.real_name):
+        for item in driver.find_all(self._transferable_box.real_name):
             transferable_boxes.append(item)
         sorted(transferable_boxes, key=lambda item: item.y)
         return transferable_boxes
@@ -283,7 +283,7 @@ class EditOwnerTokenView(QObject):
             self.network_item.real_name,
             selected_label=self._selected_network_text,
         )
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: network_name in self.get_fee_title,
             configs.timeouts.FEES_TIMEOUT_MSEC,
         ), f'feeLabel {self.get_fee_title!r} does not include {network_name!r}'
@@ -291,7 +291,7 @@ class EditOwnerTokenView(QObject):
 
     @allure.step('Wait until mint fees are loaded for {1}')
     def wait_until_mint_fees_loaded(self, network_name: str):
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.get_fee_total_value != '',
             configs.timeouts.FEES_TIMEOUT_MSEC,
         ), (
@@ -322,7 +322,7 @@ class MintedTokensView(QObject):
         self.back_button = Button(communities_names.communitySettingsToolBarBackButton)
 
     def _collectibles(self):
-        return driver.findAllObjects(self.collectible.real_name)
+        return driver.find_all(self.collectible.real_name)
 
     def _collectible_titles(self):
         return {str(getattr(item, 'title', '')) for item in self._collectibles()}
@@ -338,7 +338,7 @@ class MintedTokensView(QObject):
             f'{MintOwnerTokensElements.OWNER_TOKEN_NAME.value}{community_name}',
             f'{MintOwnerTokensElements.MASTER_TOKEN_NAME.value}{community_name}',
         }
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: len(self._collectibles()) == 2 and expected_titles <= self._collectible_titles(),
             timeout_msec,
         ), (
@@ -358,7 +358,7 @@ class MintedTokensView(QObject):
                 len(self._collectibles()) == 2 and statuses == self.COMPLETED_STATUSES
             )
 
-        driver.waitFor(mint_done_or_failed, timeout_msec)
+        driver.wait_until(mint_done_or_failed, timeout_msec)
         statuses = self._collectible_statuses()
         titles = self._collectible_titles()
         if self.FAILED_STATUS in statuses:
@@ -384,12 +384,12 @@ class MintedTokensView(QObject):
                 self.back_button.click()
             return False
 
-        assert driver.waitFor(list_ready, configs.timeouts.UI_LOAD_TIMEOUT_MSEC), (
+        assert driver.wait_until(list_ready, configs.timeouts.UI_LOAD_TIMEOUT_MSEC), (
             'Minted collectibles list did not appear'
         )
 
     def _asset_by_title(self, title: str):
-        for item in driver.findAllObjects(communities_names.mintedAssetListItem):
+        for item in driver.find_all(communities_names.mintedAssetListItem):
             if str(getattr(item, 'title', '')) == title:
                 return item
         return None
@@ -405,7 +405,7 @@ class MintedTokensView(QObject):
                 raise AssertionError(f'Minting failed for {title!r}: {status}')
             return status and 'Minting' not in status
 
-        assert driver.waitFor(minted, timeout_msec), (
+        assert driver.wait_until(minted, timeout_msec), (
             f'Collectible {title!r} was not minted in {timeout_msec} ms; '
             f'titles={self._collectible_titles()}, statuses={self._collectible_statuses()}'
         )
@@ -425,7 +425,7 @@ class MintedTokensView(QObject):
                     return False
             return True
 
-        assert driver.waitFor(minted, timeout_msec), (
+        assert driver.wait_until(minted, timeout_msec), (
             f'Asset {title!r} was not minted in {timeout_msec} ms'
         )
         return self
@@ -433,7 +433,7 @@ class MintedTokensView(QObject):
     @allure.step('Open collectible {1}')
     def open_collectible(self, title: str) -> 'TokenDetailsView':
         self._ensure_collectibles_list()
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self._collectible_by_title(title) is not None,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), f'Collectible {title!r} not found in {self._collectible_titles()}'
@@ -449,7 +449,7 @@ class MintedTokensView(QObject):
 def _set_switch(switch: QObject, value: bool):
     if switch.is_checked is not value:
         switch.click()
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: switch.is_checked is value,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), f'Switch {switch.real_name} did not become {value}'
@@ -509,13 +509,13 @@ class EditCommunityTokenView(QObject):
     @allure.step('Show fees and open preview')
     def show_fees_and_preview(self, expected_fee_title: str | None = None):
         self._scroll.vertical_scroll_down(self._show_fees_switch)
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self._show_fees_switch.is_enabled,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), 'Show fees switch is not enabled'
         _set_switch(self._show_fees_switch, True)
         if expected_fee_title:
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: expected_fee_title in str(getattr(self.object, 'feeLabel', '')),
                 configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
             ), (
@@ -523,7 +523,7 @@ class EditCommunityTokenView(QObject):
                 f'does not include {expected_fee_title!r}'
             )
         self._scroll.vertical_scroll_down(self.preview_button)
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.preview_button.is_enabled,
             configs.timeouts.FEES_TIMEOUT_MSEC,
         ), 'Preview button stayed disabled'
@@ -533,7 +533,7 @@ class EditCommunityTokenView(QObject):
     @allure.step('Mint from preview and sign')
     def mint_and_sign(self, password: str):
         self._preview_scroll.vertical_scroll_down(self.mint_button)
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.mint_button.is_enabled,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), 'Mint button stayed disabled'
@@ -561,7 +561,7 @@ class TokenDetailsView(QObject):
         self.send_owner_token_button = Button(communities_names.sendOwnerTokenButton)
 
     def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.airdrop_button.is_visible or self.send_owner_token_button.is_visible,
             timeout_msec,
         ), 'Token details footer did not appear'
@@ -569,7 +569,7 @@ class TokenDetailsView(QObject):
 
     def _read_remaining_tokens(self) -> int | None:
         try:
-            boxes = driver.findAllObjects(communities_names.tokenDetailsRemainingBox)
+            boxes = driver.find_all(communities_names.tokenDetailsRemainingBox)
         except Exception:
             return None
         for box in boxes:
@@ -592,14 +592,14 @@ class TokenDetailsView(QObject):
             seen = self._read_remaining_tokens()
             return seen == expected
 
-        assert driver.waitFor(_matches, timeout_msec), (
+        assert driver.wait_until(_matches, timeout_msec), (
             f'Remaining supply is {seen}, expected {expected}'
         )
         return self
 
     @allure.step('Open airdrop from token footer')
     def open_airdrop(self) -> 'EditAirdropView':
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.airdrop_button.is_enabled,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), 'Airdrop button is not enabled'
@@ -609,9 +609,9 @@ class TokenDetailsView(QObject):
     @allure.step('Open remotely destruct popup')
     def open_remotely_destruct(self) -> 'RemotelyDestructPopup':
         button_name = self.remotely_destruct_button.real_name
-        assert driver.waitFor(
-            lambda: driver.object.exists(button_name) and bool(
-                getattr(driver.waitForObjectExists(button_name, 200), 'enabled', False)
+        assert driver.wait_until(
+            lambda: driver.exists(button_name) and bool(
+                getattr(driver.wait_exists(button_name, 200), 'enabled', False)
             ),
             180_000,
         ), 'Remotely destruct button is not enabled'
@@ -620,7 +620,7 @@ class TokenDetailsView(QObject):
 
     @allure.step('Open burn remaining tokens popup')
     def open_burn(self) -> 'BurnTokensPopup':
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.burn_button.is_enabled,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), 'Burn button is not enabled'
@@ -629,7 +629,7 @@ class TokenDetailsView(QObject):
 
     @allure.step('Open transfer ownership popup')
     def open_transfer_ownership(self) -> 'TransferOwnershipPopup':
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.send_owner_token_button.is_enabled,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), 'Send Owner token button is not enabled'
@@ -656,17 +656,17 @@ class EditAirdropView(QObject):
         self.eth_addresses_option.wait_until_appears().click()
         self.addresses_input.wait_until_appears()
         self.addresses_input.set_text_property(address)
-        driver.type(self.addresses_input.object, '<Return>')
+        driver.type_text(self.addresses_input.object, '<Return>')
         return self
 
     @allure.step('Show fees, create airdrop and sign')
     def create_and_sign(self, password: str):
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.show_fees_switch.is_enabled,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), 'Airdrop show fees switch is not enabled'
         _set_switch(self.show_fees_switch, True)
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.create_airdrop_button.is_enabled,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), 'Create airdrop button stayed disabled'
@@ -691,12 +691,12 @@ class RemotelyDestructPopup(QObject):
     def destruct_first_holder_and_sign(self, password: str):
         self.holder_checkbox.wait_until_appears(timeout_msec=configs.timeouts.WALLET_HISTORY_TX_TIMEOUT_MSEC)
         _set_switch(self.holder_checkbox, True)
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.show_fees_switch.is_enabled,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), 'Remotely destruct show fees is not enabled'
         _set_switch(self.show_fees_switch, True)
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.confirm_button.is_enabled,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), 'Remotely destruct confirm stayed disabled'
@@ -720,16 +720,16 @@ class BurnTokensPopup(QObject):
     @allure.step('Burn all remaining supply and sign')
     def burn_all_remaining_and_sign(self, password: str):
         self.all_remaining.wait_until_appears().click()
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.all_remaining.is_checked,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), 'All remaining burn option was not selected'
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.show_fees_switch.is_enabled,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), 'Burn show fees is not enabled'
         _set_switch(self.show_fees_switch, True)
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.confirm_button.is_enabled,
             configs.timeouts.ROUTES_TIMEOUT_MSEC,
         ), 'Burn confirm stayed disabled'
@@ -751,7 +751,7 @@ class TransferOwnershipPopup(QObject):
     @allure.step('Acknowledge and open SimpleSend for Owner token')
     def confirm_and_open_send(self) -> SendPopup:
         _set_switch(self.ack_checkbox, True)
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.send_button.is_enabled,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), 'Send Owner token button stayed disabled'
@@ -775,12 +775,12 @@ class FinaliseOwnershipPopup(QObject):
         self.accept_button.click()
         self.ack_checkbox.wait_until_appears()
         _set_switch(self.ack_checkbox, True)
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.show_fees_switch.is_enabled,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), 'Finalise show fees is not enabled'
         _set_switch(self.show_fees_switch, True)
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.accept_button.is_enabled,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), 'Finalise accept stayed disabled'

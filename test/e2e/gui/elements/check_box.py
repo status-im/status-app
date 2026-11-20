@@ -16,6 +16,6 @@ class CheckBox(QObject):
         checked = self.checkState != 0
         if checked is not value:
             self.click()
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: value == (self.checkState != 0), configs.timeouts.UI_LOAD_TIMEOUT_MSEC), 'Value not changed'
         LOG.info('%s: value changed to "%s"', self, value)

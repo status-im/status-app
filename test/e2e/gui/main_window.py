@@ -130,7 +130,7 @@ class MainLeftPanel(QObject):
         locator = names.statusCommunityMainNavBarListView_CommunityNavBarButton.copy()
         locator.pop('objectName', None)
         community_names = []
-        for obj in driver.findAllObjects(locator):
+        for obj in driver.find_all(locator):
             try:
                 object_name = str(obj.objectName)
             except (AttributeError, RuntimeError):

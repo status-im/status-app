@@ -1,4 +1,4 @@
-from objectmaphelper import *
+import re
 from gui.objects_map.names import statusDesktop_mainWindow, statusDesktop_mainWindow_overlay
 
 mainWindow_WalletLayout = {"container": statusDesktop_mainWindow, "objectName": "walletLayoutReal", "type": "WalletLayout", "visible": True}
@@ -18,9 +18,9 @@ mainWindow_SavedAddressesView = {"container": statusDesktop_mainWindow, "type": 
 mainWindow_SavedAddressesView_2 = {"container": statusDesktop_mainWindow, "type": "SavedAddressesView", "unnamed": 1, "visible": True}
 mainWallet_Saved_Addresses_Add_Buttton = {"container": mainWindow_SavedAddressesView, "objectName": "walletHeaderButton", "type": "StatusButton"}
 mainWallet_Saved_Addresses_List = {"container": mainWindow_SavedAddressesView, "objectName": "SavedAddressesView_savedAddresses", "type": "StatusListView"}
-savedAddressView_Delegate = {"container": mainWallet_Saved_Addresses_List, "objectName": RegularExpression("savedAddressView_Delegate*"), "type": "SavedAddressesDelegate", "visible": True}
+savedAddressView_Delegate = {"container": mainWallet_Saved_Addresses_List, "objectName": re.compile("savedAddressView_Delegate*"), "type": "SavedAddressesDelegate", "visible": True}
 send_StatusRoundButton = {"container": "", "type": "StatusRoundButton", "unnamed": 1, "visible": True}
-savedAddressView_Delegate_menuButton = {"container": mainWindow_SavedAddressesView, "objectName": RegularExpression("savedAddressView_Delegate_menuButton*"), "type": "StatusRoundButton", "visible": True}
+savedAddressView_Delegate_menuButton = {"container": mainWindow_SavedAddressesView, "objectName": re.compile("savedAddressView_Delegate_menuButton*"), "type": "StatusRoundButton", "visible": True}
 savedAddressesArea_SavedAddresses = {"container": mainWindow_SavedAddressesView, "objectName": "savedAddressesArea", "type": "SavedAddresses", "visible": True}
 savedAddresses_area = {"container": mainWindow_SavedAddressesView_2, "objectName": "savedAddressesArea", "type": "SavedAddresses", "visible": True}
 
@@ -30,7 +30,7 @@ mainWallet_Account_Name = {"container": mainWindow_RightTabView, "objectName": "
 walletHeaderNetworkFilter = {"container": mainWindow_RightTabView, "objectName": "walletHeaderNetworkFilter",
                              "type": "NetworkFilter", "visible": True}
 walletNetworkSelectorItem = {"container": statusDesktop_mainWindow_overlay,
-                             "objectName": RegularExpression("networkSelectorDelegate_*"),
+                             "objectName": re.compile("networkSelectorDelegate_*"),
                              "type": "NetworkSelectItemDelegate", "visible": True}
 wallet_dapps_combo_box = {"container": mainWindow_RightTabView, "objectName": "walletDappsComboBox", "type": "DappsComboBox", "visible": True}
 mainWindow_Send_Button = {"container": statusDesktop_mainWindow, "objectName": "walletFooterSendButton", "type": "StatusFlatButton", "visible": True}
@@ -48,15 +48,15 @@ rightSideWalletTabBar_Collectibles_StatusTabButton = {"checkable": True, "contai
 rightSideWalletTabBar_Activity_StatusTabButton = {"checkable": True, "container": rightSideWalletTabBar_StatusTabBar, "objectName": "activityTabButton", "text": "History", "type": "StatusTabButton", "visible": True}
 collectibles_view = {"container": mainWindow_RightTabView, "type": "CollectiblesView", "unnamed": 1, "visible": True}
 activity_view = {"container": mainWindow_RightTabView, "objectName": "walletAccountTransactionList", "type": "StatusListView", "visible": True}
-activity_delegate = {"container": mainWindow_RightTabView, "objectName": RegularExpression("walletActivityDelegate*"), "type": "TransactionDelegate", "visible": True}
+activity_delegate = {"container": mainWindow_RightTabView, "objectName": re.compile("walletActivityDelegate*"), "type": "TransactionDelegate", "visible": True}
 activity_history_view = {"container": mainWindow_RightTabView, "objectName": "walletAccountHistoryView", "type": "HistoryView", "visible": True}
 assets_tab_view = {"container": mainWindow_RightTabView, "type": "AssetsView", "unnamed": 1, "visible": True}
 activity_new_transactions_button = {"container": mainWindow_RightTabView, "id": "newTransactions", "type": "StatusButton", "unnamed": 1, "visible": True}
 
 """Wallet assets view"""
 assets_view = {"container": mainWindow_RightTabView, "objectName": "assetViewStatusListView", "type": "StatusListView", "visible": True}
-assets_viewTokenRowShell = {"container": mainWindow_RightTabView, "objectName": RegularExpression("AssetView_TokenRowShell_*"), "visible": True}
-assets_viewTokenItem = {"container": mainWindow_RightTabView, "objectName": RegularExpression("AssetView_TokenListItem_*"), "type": "TokenDelegate", "visible": True}
+assets_viewTokenRowShell = {"container": mainWindow_RightTabView, "objectName": re.compile("AssetView_TokenRowShell_*"), "visible": True}
+assets_viewTokenItem = {"container": mainWindow_RightTabView, "objectName": re.compile("AssetView_TokenListItem_*"), "type": "TokenDelegate", "visible": True}
 asset_details_view = {"container": mainWindow_RightTabView, "type": "AssetsDetailView", "visible": True}
 asset_details_header = {"container": mainWindow_RightTabView, "id": "tokenDetailsHeader", "type": "AssetsDetailsHeader", "unnamed": 1, "visible": True}
 asset_details_tool_bar = {"container": statusDesktop_mainWindow, "objectName": "statusToolBar", "type": "StatusToolBar", "visible": True}
@@ -72,7 +72,7 @@ arrow_icon_StatusIcon = {"container": statusDesktop_mainWindow_overlay, "objectN
 collectible_item = {"container": mainWindow_RightTabView, "objectName": "collectibleViewControl", "type": "CollectibleView", "visible": True}
 collectibles_empty_placeholder = {"container": mainWindow_RightTabView, "objectName": "collectiblesEmptyPlaceholder", "type": "ShapeRectangle", "visible": True}
 mainWindow_settingsContentBaseScrollView_StatusScrollView_general = {"container":  statusDesktop_mainWindow, "objectName": "settingsContentBaseScrollView", "type": "StatusScrollView", "visible": True}
-settingsContentBaseScrollView_manageTokensDelegate_ManageTokensDelegate = {"container": mainWindow_settingsContentBaseScrollView_StatusScrollView_general, "objectName": RegularExpression("manageTokensDelegate-*"), "type": "ManageTokensDelegate", "visible": True}
+settingsContentBaseScrollView_manageTokensDelegate_ManageTokensDelegate = {"container": mainWindow_settingsContentBaseScrollView_StatusScrollView_general, "objectName": re.compile("manageTokensDelegate-*"), "type": "ManageTokensDelegate", "visible": True}
 tabBar_Assets_StatusTabButton = {"checkable": True, "container": mainWindow_settingsContentBaseScrollView_StatusScrollView_general, "objectName": "assetsButton", "type": "StatusTabButton", "unnamed": 1, "visible": True}
 
 mainWindow_Save_and_apply_StatusButton = {"checkable": False, "container": statusDesktop_mainWindow, "objectName": "settingsDirtyToastMessageSaveButton", "text": "Save and apply", "type": "StatusButton", "visible": True}
@@ -81,11 +81,11 @@ mainWindow_Save_StatusFlatButton = {"checkable": False, "container": statusDeskt
 """Wallet account context menu"""
 
 walletAccountContextMenu = {"container": statusDesktop_mainWindow_overlay, "objectName": "AccountContextMenu", "type": "PopupItem", "visible": True}
-contextMenuItem_Delete = {"container": statusDesktop_mainWindow_overlay, "enabled": True, "objectName": RegularExpression("AccountMenu-DeleteAction*"), "type": "StatusMenuItem", "visible": True}
-contextMenuItem_Edit = {"container": statusDesktop_mainWindow_overlay, "enabled": True, "objectName": RegularExpression("AccountMenu-EditAction*"), "type": "StatusMenuItem", "visible": True}
-contextMenuItem_Copy_Address = {"container": statusDesktop_mainWindow_overlay, "enabled": True, "objectName": RegularExpression("AccountMenu-CopyAddressAction*"), "type": "StatusSuccessAction", "visible": True}
-addWatchedAddress = {"container": statusDesktop_mainWindow_overlay, "enabled": True, "objectName": RegularExpression("AccountMenu-AddWatchOnlyAccountAction*"), "type": "StatusMenuItem", "visible": True}
-addNewAccount = {"container": statusDesktop_mainWindow_overlay, "enabled": True, "objectName": RegularExpression("AccountMenu-AddNewAccountAction*"), "type": "StatusMenuItem", "visible": True}
+contextMenuItem_Delete = {"container": statusDesktop_mainWindow_overlay, "enabled": True, "objectName": re.compile("AccountMenu-DeleteAction*"), "type": "StatusMenuItem", "visible": True}
+contextMenuItem_Edit = {"container": statusDesktop_mainWindow_overlay, "enabled": True, "objectName": re.compile("AccountMenu-EditAction*"), "type": "StatusMenuItem", "visible": True}
+contextMenuItem_Copy_Address = {"container": statusDesktop_mainWindow_overlay, "enabled": True, "objectName": re.compile("AccountMenu-CopyAddressAction*"), "type": "StatusSuccessAction", "visible": True}
+addWatchedAddress = {"container": statusDesktop_mainWindow_overlay, "enabled": True, "objectName": re.compile("AccountMenu-AddWatchOnlyAccountAction*"), "type": "StatusMenuItem", "visible": True}
+addNewAccount = {"container": statusDesktop_mainWindow_overlay, "enabled": True, "objectName": re.compile("AccountMenu-AddNewAccountAction*"), "type": "StatusMenuItem", "visible": True}
 
 """Receive modal"""
 receiveModal = {"container": statusDesktop_mainWindow_overlay, "objectName": "ReceiveModal", "type": "PopupItem", "visible": True}

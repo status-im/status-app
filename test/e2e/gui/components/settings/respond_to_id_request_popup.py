@@ -28,7 +28,7 @@ class RespondToIDRequestPopup(BasePopup):
     @property
     @allure.step('Get send answer button enabled state')
     def is_send_answer_button_enabled(self) -> bool:
-        return driver.waitForObjectExists(self._send_answer_button.real_name,
+        return driver.wait_exists(self._send_answer_button.real_name,
                                           configs.timeouts.UI_LOAD_TIMEOUT_MSEC).enabled
 
     @property

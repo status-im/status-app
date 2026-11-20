@@ -24,7 +24,7 @@ def test_plus_button_manage_account_added_for_new_seed(main_screen: MainWindow, 
 
 
     with step('Verify that the account is correctly displayed in accounts list'):
-        assert driver.waitFor(lambda: wallet_account.name in [account.name for account in wallet.left_panel.accounts],
+        assert driver.wait_until(lambda: wallet_account.name in [account.name for account in wallet.left_panel.accounts],
                               10000), \
             f'Account with {wallet_account.name} is not displayed even it should be'
 

@@ -12,8 +12,13 @@ browserAddressField = {
     "type": "StatusTextField",
     "visible": True,
 }
-browserToolbar = {
+browserTabView = {
     "container": browserLayout,
-    "type": "BrowserLandscapeToolbar",
+    "type": "BrowserTabView",
+    "visible": True,
+}
+browserNewTabButton = {
+    "container": browserTabView,
+    "type": "BrowserHeaderButton",
     "visible": True,
 }

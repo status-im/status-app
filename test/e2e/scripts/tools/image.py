@@ -54,7 +54,7 @@ class Image:
     @allure.step('Grab image view from object')
     def update_view(self):
         LOG.debug(f'Image view was grab from: {self.object_name}')
-        rect = driver.object.globalBounds(driver.waitForObject(self.object_name))
+        rect = driver.bounds(driver.wait(self.object_name))
         img = ImageGrab.grab(
             bbox=(rect.x, rect.y, rect.x + rect.width, rect.y + rect.height),
             xdisplay=configs.system.DISPLAY if get_platform() == "Linux" else None
@@ -104,7 +104,7 @@ class Image:
         return result
 
     @allure.step('Crop image')
-    def crop(self, rect: driver.UiTypes.ScreenRectangle):
+    def crop(self, rect: driver.Rect):
         assert rect.x + rect.width < self.width
         assert rect.y + rect.height < self.height
         self._view = self.view[rect.y: (rect.y + rect.height), rect.x: (rect.x + rect.width)]
@@ -116,7 +116,7 @@ class Image:
         return text
 
     @allure.step('Verify: Image contains text: {1}')
-    def has_text(self, text: str, criteria: str, crop: driver.UiTypes.ScreenRectangle = None) -> bool:
+    def has_text(self, text: str, criteria: str, crop: driver.Rect = None) -> bool:
         self.update_view()
         if crop:
             self.crop(crop)
@@ -139,7 +139,7 @@ class Image:
         return False
 
     @allure.step('Search color on image')
-    def has_color(self, color: constants.Color, denoise: int = 10, crop: driver.UiTypes.ScreenRectangle = None) -> bool:
+    def has_color(self, color: constants.Color, denoise: int = 10, crop: driver.Rect = None) -> bool:
         self.update_view()
         if crop:
             self.crop(crop)
@@ -163,7 +163,7 @@ class Image:
             color: constants.Color,
             denoise: int = 10,
             apply: bool = False
-    ) -> typing.List[driver.UiTypes.ScreenRectangle]:
+    ) -> typing.List[driver.Rect]:
         if not self.is_grayscale:
             view = cv2.cvtColor(self.view, cv2.COLOR_BGR2HSV)
         else:
@@ -190,7 +190,7 @@ class Image:
             # To remove small artifacts, less than denoise variable value
             if w * h < denoise:
                 continue
-            contours.append(driver.UiTypes.ScreenRectangle(x, y, w, h))
+            contours.append(driver.Rect(x, y, w, h))
 
         if apply:
             self._view = cv2.bitwise_and(self.view, self.view, mask=mask)

@@ -25,6 +25,6 @@ def test_plus_button_manage_generated_account_custom_derivation_path(main_screen
 
 
     with step('Verify that the account is correctly displayed in accounts list'):
-        assert driver.waitFor(lambda: wallet_account.name in [account.name for account in wallet.left_panel.accounts],
+        assert driver.wait_until(lambda: wallet_account.name in [account.name for account in wallet.left_panel.accounts],
                               10000), \
             f'Account with {wallet_account.name} is not displayed even it should be'

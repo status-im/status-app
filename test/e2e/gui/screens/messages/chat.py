@@ -62,7 +62,7 @@ class ChatView(QObject):
 
         messages = sorted(
             (
-                item for item in driver.findAllObjects(self._message_list_item.real_name)
+                item for item in driver.find_all(self._message_list_item.real_name)
                 if getattr(item, 'isMessage', True)
             ),
             key=_message_row,
@@ -126,7 +126,7 @@ class ChatView(QObject):
                 return False
 
         timeout_msec = configs.timeouts.MESSAGING_TIMEOUT_SEC * 1000
-        if not driver.waitFor(message_found, timeout_msec):
+        if not driver.wait_until(message_found, timeout_msec):
             raise LookupError(
                 f'Message not found within {timeout_msec} ms: {message_text!r}; '
                 f'last error was {last_error!r}'
@@ -218,7 +218,7 @@ class ChatView(QObject):
                 return True
             return False
 
-        assert driver.waitFor(reached, timeout_msec), (
+        assert driver.wait_until(reached, timeout_msec), (
             f'Outgoing message was not marked {label} within {timeout_msec} ms'
             + (f': {message_text!r}' if message_text is not None else '')
             + f'; last seen: {last_seen}'
@@ -264,7 +264,7 @@ class ChatView(QObject):
                 return False
 
         state = 'pinned' if expected else 'unpinned'
-        if not driver.waitFor(state_matches, timeout_msec):
+        if not driver.wait_until(state_matches, timeout_msec):
             raise TimeoutError(
                 f'Message {message_text!r} did not become {state} within {timeout_msec} ms; '
                 f'last error was {last_error!r}'
@@ -333,7 +333,7 @@ class ChatView(QObject):
             message = self._find_invitation_message(community, index)
             return message is not None
 
-        if not driver.waitFor(invitation_found, timeout_msec):
+        if not driver.wait_until(invitation_found, timeout_msec):
             label = community or 'Community invitation'
             raise LookupError(f'{label} was not found within {timeout_msec} ms')
         return message
@@ -367,7 +367,7 @@ class ChatView(QObject):
                     return True
             return False
 
-        assert driver.waitFor(sticker_visible, timeout_msec), 'Sticker message not found in chat'
+        assert driver.wait_until(sticker_visible, timeout_msec), 'Sticker message not found in chat'
         return found[0]
 
 
@@ -389,7 +389,7 @@ class CreateChatView(QObject):
     @allure.step('Select contact in the list')
     def select_contact(self, contact: str):
         try:
-            driver.waitFor(
+            driver.wait_until(
                 lambda: contact in self.contact_names,
                 configs.timeouts.UI_LOAD_TIMEOUT_MSEC
             )
@@ -418,7 +418,7 @@ def _wait_visible_object_text(element: QObject, timeout_msec: int) -> str:
         except Exception:
             return False
 
-    if not driver.waitFor(ready, timeout_msec):
+    if not driver.wait_until(ready, timeout_msec):
         return ''
     return str(element.object.text)
 
@@ -475,7 +475,7 @@ class ChatMessagesView(QObject):
     @property
     @allure.step('Get gray text from message area')
     def gray_text_from_message_area(self) -> str:
-        placeholder = driver.waitForObjectExists(
+        placeholder = driver.wait_exists(
             self._message_input_area.real_name,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ).placeholderText
@@ -484,7 +484,7 @@ class ChatMessagesView(QObject):
     @property
     @allure.step('Get enabled state of message area')
     def is_message_area_enabled(self) -> bool:
-        return bool(driver.waitForObjectExists(
+        return bool(driver.wait_exists(
             self._message_input_area.real_name,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ).enabled)
@@ -532,10 +532,10 @@ class ChatMessagesView(QObject):
         self._message_field.wait_until_appears()
         self._message_field.click()
         self._message_field.clear(verify=False)
-        driver.type(self._message_field.object, '@')
+        driver.type_text(self._message_field.object, '@')
         self._mention_suggestions.wait_until_appears()
         filter_text = MentionSuggestionsPopup.mention_filter_text(display_name)
-        driver.type(self._message_field.object, filter_text)
+        driver.type_text(self._message_field.object, filter_text)
         self._mention_suggestions.select(display_name)
         self.confirm_sending_message()
 
@@ -547,14 +547,14 @@ class ChatMessagesView(QObject):
 
     @allure.step('Wait until spell check reports issues')
     def wait_for_spell_issues(self):
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self._message_field.has_spell_issues(),
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), 'Spell check did not report any issues'
 
     @allure.step('Wait until spell check reports no issues')
     def wait_for_no_spell_issues(self):
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self._message_field.has_no_spell_issues(),
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), 'Spell check still reports issues'
@@ -569,7 +569,7 @@ class ChatMessagesView(QObject):
 
     @allure.step('Confirm sending message')
     def confirm_sending_message(self):
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self._send_message_button.is_enabled,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), 'Send button stayed disabled after composing message'
@@ -654,7 +654,7 @@ class ChatMessagesView(QObject):
 
     @allure.step('Confirm sending message')
     def send_message(self):
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self._send_message_button.is_enabled,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), 'Send button stayed disabled'
@@ -736,7 +736,7 @@ class MessageQuickActions(QObject):
                 return False
 
         timeout_msec = configs.timeouts.UI_LOAD_TIMEOUT_MSEC
-        if not driver.waitFor(menu_ready, timeout_msec):
+        if not driver.wait_until(menu_ready, timeout_msec):
             raise TimeoutError(
                 f'Message context menu was not ready within {timeout_msec} ms; '
                 f'last error was {last_error!r}'
@@ -752,7 +752,7 @@ class MessageQuickActions(QObject):
         except TimeoutError:
             return self
         self._expand_button.click()
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.is_visible and self._pin_button.is_visible,
             timeout_msec,
         ), f'Message context menu did not expand within {timeout_msec} ms'
@@ -794,7 +794,7 @@ class MessageQuickActions(QObject):
         self._reply_action().wait_until_appears().click()
         assert self._reply_panel.exists
         self._message_input_area.set_text_property(text)
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self._send_message_button.is_enabled,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), 'Send button stayed disabled after reply text'

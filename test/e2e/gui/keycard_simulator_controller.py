@@ -48,13 +48,13 @@ class KeycardSimulatorController(Window):
         return self
 
     def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
-        driver.waitFor(lambda: self._start_button.exists, timeout_msec)
+        driver.wait_until(lambda: self._start_button.exists, timeout_msec)
         return self
 
     @property
     def is_reader_plugged(self) -> bool:
         try:
-            plug_obj = driver.waitForObjectExists(self._plug_reader_button.real_name, 200)
+            plug_obj = driver.wait_exists(self._plug_reader_button.real_name, 200)
             return not bool(getattr(plug_obj, 'enabled', True))
         except (LookupError, RuntimeError, AttributeError):
             return False
@@ -62,7 +62,7 @@ class KeycardSimulatorController(Window):
     @property
     def is_card_inserted(self) -> bool:
         try:
-            obj = driver.waitForObjectExists(self._remove_button.real_name, 200)
+            obj = driver.wait_exists(self._remove_button.real_name, 200)
             return bool(getattr(obj, 'enabled', False))
         except (LookupError, RuntimeError, AttributeError):
             return False
@@ -82,11 +82,11 @@ class KeycardSimulatorController(Window):
         self._plug_reader_button.wait_until_enabled(configs.timeouts.KEYCARD_SIM_START_TIMEOUT_MSEC)
         # Restart kills a leftover JVM on 9025. PING to that leftover is a false ready —
         # wait until it drops, then until the new server answers PING.
-        driver.waitFor(
+        driver.wait_until(
             lambda: not self._simulator_ping_ok(),
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         )
-        assert driver.waitFor(
+        assert driver.wait_until(
             self._simulator_ping_ok,
             configs.timeouts.KEYCARD_SIM_START_TIMEOUT_MSEC,
         ), 'Keycard simulator did not accept PING'
@@ -99,7 +99,7 @@ class KeycardSimulatorController(Window):
         self._create_empty_button.wait_until_enabled()
         self._create_empty_button.click()
         status_name = keycard_names.keycardSimCreationStatus
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: card_id in self._card_ids() or 'not created' in self._status_text(status_name),
             configs.timeouts.KEYCARD_SIM_START_TIMEOUT_MSEC,
         ), f'Keycard {card_id!r} was not created: {self._status_text(status_name)!r}'
@@ -121,7 +121,7 @@ class KeycardSimulatorController(Window):
         # Load is async and unplugs when done. Plug during Load → APDU 6985.
         status_name = keycard_names.keycardSimCreationStatus
         expected_prefix = f'Keycard "{card_id}"'
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self._status_text(status_name).startswith(expected_prefix),
             configs.timeouts.KEYCARD_SIM_START_TIMEOUT_MSEC,
         ), f'Timed out loading Keycard {card_id!r}'
@@ -138,7 +138,7 @@ class KeycardSimulatorController(Window):
         return self.background()
 
     def _status_text(self, real_name: dict) -> str:
-        obj = driver.waitForObjectExists(real_name, 200)
+        obj = driver.wait_exists(real_name, 200)
         return str(obj.text)
 
     def _click_sim_button(self, button: Button):
@@ -148,14 +148,14 @@ class KeycardSimulatorController(Window):
 
     @allure.step('Wait until keycard reader is plugged in simulator')
     def wait_until_reader_plugged(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
-        assert driver.waitFor(lambda: self.is_reader_plugged, timeout_msec), (
+        assert driver.wait_until(lambda: self.is_reader_plugged, timeout_msec), (
             'Keycard reader was not plugged in simulator'
         )
         return self
 
     @allure.step('Wait until keycard is inserted in simulator')
     def wait_until_card_inserted(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
-        assert driver.waitFor(lambda: self.is_card_inserted, timeout_msec), (
+        assert driver.wait_until(lambda: self.is_card_inserted, timeout_msec), (
             'Keycard was not inserted in simulator'
         )
         return self
@@ -181,7 +181,7 @@ class KeycardSimulatorController(Window):
         if not self.is_card_inserted:
             return self.background()
         self._click_sim_button(self._remove_button)
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: not self.is_card_inserted,
             timeout_msec,
         ), 'Keycard was not removed in simulator'
@@ -194,7 +194,7 @@ class KeycardSimulatorController(Window):
 
     @allure.step('Select keycard {card_id} in simulator')
     def select_card(self, card_id: str):
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: card_id in self._card_ids(),
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), f'Keycard {card_id!r} not found in simulator selector'
@@ -207,14 +207,14 @@ class KeycardSimulatorController(Window):
         else:
             raise LookupError(f'Keycard {card_id!r} not found in simulator selector')
 
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: combo.currentIndex >= 0 and self._selected_card_id() == card_id,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), f'Failed to select keycard {card_id!r} in simulator'
         return self.background()
 
     def _card_selector_combo(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
-        return driver.waitForObjectExists(self._card_selector.real_name, timeout_msec)
+        return driver.wait_exists(self._card_selector.real_name, timeout_msec)
 
     def _card_ids(self) -> list[str]:
         try:

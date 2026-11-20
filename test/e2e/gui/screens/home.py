@@ -72,14 +72,14 @@ class HomeScreen(QObject):
     @allure.step('Wait for grid item to appear')
     def wait_for_grid_item_by_title(self, title: str, timeout_msec: int = 10000):
         """Wait for a grid item to appear in the home grid"""
-        return driver.waitFor(
+        return driver.wait_until(
             lambda: self.has_grid_item_by_title(title), timeout_msec
         )
 
     @allure.step('Wait for grid item to be removed')
     def wait_for_grid_item_removed_by_title(self, title: str, timeout_msec: int = 10000):
         """Wait for a grid item to be removed from the home grid"""
-        return driver.waitFor(
+        return driver.wait_until(
             lambda: not self.has_grid_item_by_title(title), timeout_msec
         )
 
