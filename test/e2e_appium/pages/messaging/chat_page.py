@@ -635,11 +635,42 @@ class ChatPage(BasePage):
 
     def message_count(self) -> int:
         """Return the count of message content elements in the chat log."""
-        locator = (
-            "xpath",
-            "//*[contains(@resource-id,'StatusTextMessage_chatText')]",
+        return len(self.driver.find_elements(*self.locators.MESSAGE_BODY))
+
+    @staticmethod
+    def normalise_body(text: str | None) -> str:
+        """Message text as the tests compare it: U+FE0F removed, ends stripped.
+
+        The emoji picker sends the emoji with the presentation selector and a
+        trailing space.
+        """
+        return (text or "").replace("\ufe0f", "").strip()
+
+    def newest_message_body(self) -> str | None:
+        """Normalised text of the newest message in the chat log, or None.
+
+        The log runs bottom to top, so the newest message is the body with the
+        lowest bottom edge. Bodies the list reports with a zero rect are wholly
+        off the display and are skipped.
+        """
+        newest_bottom, newest_text = -1, None
+        for element in self.driver.find_elements(*self.locators.MESSAGE_BODY):
+            rect = element.rect
+            if rect.get("height", 0) <= 0:
+                continue
+            bottom = rect["y"] + rect["height"]
+            if bottom > newest_bottom:
+                newest_bottom = bottom
+                newest_text = element.get_attribute("content-desc")
+        return None if newest_text is None else self.normalise_body(newest_text)
+
+    def wait_for_newest_message_body(self, expected: str, timeout: int = 10) -> bool:
+        """Wait until the newest message reads ``expected`` (normalised)."""
+        return self.wait_for_condition(
+            lambda: self.newest_message_body() == expected,
+            timeout=timeout,
+            poll_interval=0.5,
         )
-        return len(self.driver.find_elements(*locator))
 
     def wait_for_message_count(self, minimum: int, timeout: int = 10) -> bool:
         """Wait until the chat has at least `minimum` messages."""
