@@ -89,7 +89,8 @@ proc init*(self: Controller) =
     let args = SendingStartedArgs(e)
     if self.chatId != args.chatId or self.threadId != args.threadId:
       return
-    self.delegate.onSendingStarted(args.sendToken, args.text, args.replyTo, args.contentType)
+    self.delegate.onSendingStarted(args.sendToken, args.text, args.replyTo, args.contentType,
+      args.startNewThread, args.newThreadName)
 
   self.events.on(SIGNAL_SENDING_FINISHED) do(e: Args):
     let args = SendingFinishedArgs(e)

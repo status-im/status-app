@@ -1,4 +1,4 @@
-import nimqml, chronicles, sequtils, uuids, sets, times, tables, system, options
+import nimqml, chronicles, sequtils, uuids, sets, times, tables, system, options, strutils
 import io_interface
 import ../io_interface as delegate_interface
 import view, controller
@@ -93,7 +93,8 @@ method load*(self: Module) =
   self.controller.init()
   # Sends announced before this chat loaded (a share landing here) are echoed now.
   for args in self.controller.pendingSends():
-    self.onSendingStarted(args.sendToken, args.text, args.replyTo, args.contentType)
+    self.onSendingStarted(args.sendToken, args.text, args.replyTo, args.contentType,
+      args.startNewThread, args.newThreadName)
   self.view.load()
 
 method isLoaded*(self: Module): bool =
@@ -368,7 +369,8 @@ proc pendingMessageId(sendToken: string): string =
 # Optimistic echo: the text message shows as "sending" from local data before
 # status-go has stored it; onSendingFinished drops it in the same call chain
 # that inserts the real one (send success), or on failure.
-method onSendingStarted*(self: Module, sendToken, text, replyTo: string, contentType: int) =
+method onSendingStarted*(self: Module, sendToken, text, replyTo: string, contentType: int,
+    startNewThread: bool, newThreadName: string) =
   let chatDto = self.controller.getChatDetails()
   let now = int64(epochTime() * 1000)
   var dto = MessageDto(
@@ -378,15 +380,28 @@ method onSendingStarted*(self: Module, sendToken, text, replyTo: string, content
     threadId: self.controller.getMyThreadId(),
     communityId: chatDto.communityId,
     `from`: singletonInstance.userProfile.getPubKey(),
-    text: text,
+    text: if startNewThread and newThreadName.strip().len > 0: newThreadName else: text,
     clock: now,
     timestamp: now,
     seen: true,
     outgoingStatus: PARSED_TEXT_OUTGOING_STATUS_SENDING,
-    responseTo: replyTo,
-    contentType: toContentType(contentType),
+    responseTo: if startNewThread: "" else: replyTo,
+    contentType: if startNewThread: ContentType.Message else: toContentType(contentType),
   )
-  self.messagesAdded(@[dto])
+  if startNewThread:
+    let items = self.createMessageItemsFromMessageDtos(@[dto])
+    if items.len > 0:
+      items[0].hasThread = true
+      items[0].threadSummary = ThreadSummary(title: dto.text, messagesCount: 2,
+        lastMessageSenderId: items[0].senderId,
+        lastMessageSenderName: items[0].senderDisplayName,
+        lastMessageSenderImage: items[0].senderIcon,
+        lastMessageSenderColorId: items[0].senderColorId,
+        lastMessageText: text, lastMessageTimestamp: now)
+      self.view.model().insertItemsBasedOnClock(items)
+      self.checkIfMessageLoadedAndScroll()
+  else:
+    self.messagesAdded(@[dto])
 
 method onSendingFinished*(self: Module, sendToken: string) =
   self.view.model().removeItem(pendingMessageId(sendToken))
