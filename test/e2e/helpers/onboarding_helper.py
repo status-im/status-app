@@ -3,7 +3,6 @@ import allure
 import configs
 import driver
 from configs.timeouts import APP_LOAD_TIMEOUT_MSEC, UI_LOAD_TIMEOUT_MSEC
-from driver.aut import AUT
 from gui.components.education_popup import EducationPopup
 from gui.components.enable_biometrics_popup import EnableBiometricsPopup
 from gui.components.splash_screen import SplashScreen
@@ -33,17 +32,10 @@ def wait_until_auto_logged_in(main_window, timeout_msec: int = APP_LOAD_TIMEOUT_
     skip_post_login_popups_if_visible()
 
 
-@allure.step('Sign out and quit from settings')
-def sign_out_and_quit(main_window):
+@allure.step('Sign out from settings')
+def sign_out(main_window):
     skip_post_login_popups_if_visible()
-    main_window.left_panel.open_settings().left_panel.open_sign_out_and_quit().sign_out_and_quit()
-
-
-@allure.step('Wait until AUT has quit')
-def wait_until_aut_quit(aut: AUT, timeout_msec: int = APP_LOAD_TIMEOUT_MSEC):
-    assert aut.ctx is not None, 'AUT context is missing'
-    assert driver.waitFor(lambda: not aut.ctx.isRunning, timeout_msec), \
-        'Application did not quit after sign out'
+    main_window.left_panel.open_settings().left_panel.open_sign_out().sign_out()
 
 
 @allure.step('Wait until user is logged in')
