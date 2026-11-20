@@ -367,6 +367,10 @@ proc getOneToOneChatNameAndImage*(self: Controller):
 proc belongsToCommunity*(self: Controller): bool =
   return self.belongsToCommunity
 
+proc restartHistory*(self: Controller) =
+  if self.threadId.len == 0:
+    self.messageService.restartChatHistory(self.chatId)
+
 proc loadMoreMessages*(self: Controller): bool =
   let limit = self.loadingMessagesPerPageFactor * MESSAGES_PER_PAGE
   # TODO is it possible to just extend the existing messages API?
