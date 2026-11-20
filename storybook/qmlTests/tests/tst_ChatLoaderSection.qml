@@ -350,11 +350,11 @@ Item {
             return total
         }
 
-        // waitForRendering waits for the next frame; when the switch has
+        // waitForRendering waits for the next frame; when the view has
         // already been rendered nothing is dirty and it times out instead.
         function waitForNextFrame(item) {
             item.Window.window.update()
-            waitForRendering(item)
+            verify(waitForRendering(item), "no frame was rendered")
         }
 
         function activeReadyLogView(loader) {
@@ -448,7 +448,7 @@ Item {
             const lv = findChild(loader, "chatLogView")
             verify(!!lv)
             tryVerify(() => lv.rowCount > 0 && !lv.busy, 10000)
-            waitForRendering(lv)
+            waitForNextFrame(lv)
 
             const created = lv.rowCount
             verify(created > 0, "some message rows must be built")
@@ -468,7 +468,7 @@ Item {
                 const loader = harness.item
                 tryVerify(() => loader.status === Loader.Ready, 120000)
                 tryVerify(() => !!findChild(loader, "ContactsColumnView_chatList"), 10000)
-                waitForRendering(loader)
+                waitForNextFrame(loader)
                 const lv = findChild(loader, "ContactsColumnView_chatList").statusChatListItems
                 const result = { ms: Date.now() - t0,
                                  rows: lv.contentItem.children.length }
