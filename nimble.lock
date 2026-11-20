@@ -24,13 +24,13 @@
       }
     },
     "nim": {
-      "version": "2.2.10",
-      "vcsRevision": "9fe2137fa2f3f66cf5a44f357d461829ac9e20c4",
+      "version": "2.2.12",
+      "vcsRevision": "d595ef18c7c4d5a3e5a8668509678e0569f78f6b",
       "url": "https://github.com/nim-lang/Nim.git",
       "downloadMethod": "git",
       "dependencies": [],
       "checksums": {
-        "sha1": "17ec440fdb89f8903db29a17898af590087d2b64"
+        "sha1": "1ce02ec327934128234547c648d5ee3612c21b50"
       }
     },
     "seaqt": {
