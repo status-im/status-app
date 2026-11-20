@@ -25,6 +25,7 @@ const DEFAULT_FLAG_PRIVACY_MODE_FEATURE_ENABLED = true
 const DEFAULT_FLAG_MESSAGE_LINK_SHARING_ENABLED = true
 const DEFAULT_FLAG_STATUS_SUPPORT_BOT_ENABLED = true
 const DEFAULT_FLAG_THREADS_ENABLED = false
+const DEFAULT_FLAG_THREADS_ENABLED_V2 = false
 
 # Compile time feature flags
 const DEFAULT_FLAG_DAPPS_ENABLED  = true
@@ -51,6 +52,7 @@ featureFlag("PRIVACY_MODE_FEATURE_ENABLED",   DEFAULT_FLAG_PRIVACY_MODE_FEATURE_
 featureFlag("MESSAGE_LINK_SHARING_ENABLED",   DEFAULT_FLAG_MESSAGE_LINK_SHARING_ENABLED)
 featureFlag("STATUS_SUPPORT_BOT_ENABLED",     DEFAULT_FLAG_STATUS_SUPPORT_BOT_ENABLED)
 featureFlag("THREADS_ENABLED",                DEFAULT_FLAG_THREADS_ENABLED)
+featureFlag("THREADS_ENABLED_V2",             DEFAULT_FLAG_THREADS_ENABLED_V2)
 
 featureFlag("DAPPS_ENABLED",                  DEFAULT_FLAG_DAPPS_ENABLED, true)
 featureFlag("BROWSER_ENABLED",                DEFAULT_FLAG_BROWSER_ENABLED, true)
@@ -122,6 +124,7 @@ QtObject:
     statusSupportBotEnabled: bool
     buyEnabled: bool
     threadsEnabled: bool
+    threadsEnabledV2: bool
     paraswapEnabled: bool
     lifiEnabled: bool
     relayEnabled: bool
@@ -144,6 +147,7 @@ QtObject:
     self.statusSupportBotEnabled = STATUS_SUPPORT_BOT_ENABLED
     self.buyEnabled = BUY_ENABLED
     self.threadsEnabled = THREADS_ENABLED
+    self.threadsEnabledV2 = THREADS_ENABLED_V2
     self.paraswapEnabled = PARASWAP_PROVIDER_ENABLED
     self.lifiEnabled = LIFI_PROVIDER_ENABLED
     self.relayEnabled = RELAY_PROVIDER_ENABLED
@@ -245,6 +249,12 @@ QtObject:
 
   proc getThreadsEnabled*(self: FeatureFlags): bool {.slot.} =
     return self.threadsEnabled
+
+  QtProperty[bool] threadsEnabledV2:
+    read = getThreadsEnabledV2
+
+  proc getThreadsEnabledV2*(self: FeatureFlags): bool {.slot.} =
+    return self.threadsEnabledV2
 
   proc getParaswapEnabled*(self: FeatureFlags): bool {.slot.} =
     return self.paraswapEnabled

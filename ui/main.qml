@@ -46,6 +46,7 @@ Window {
         statusSupportBotEnabled: featureFlags ? featureFlags.statusSupportBotEnabled : false
         buyEnabled: featureFlags ? featureFlags.buyEnabled : false
         threadsEnabled: featureFlags ? featureFlags.threadsEnabled : false
+        threadsEnabledV2: featureFlags ? featureFlags.threadsEnabledV2 : false
         paraswapEnabled: featureFlags ? featureFlags.paraswapEnabled : false
         lifiEnabled: featureFlags ? featureFlags.lifiEnabled : false
         relayEnabled: featureFlags ? featureFlags.relayEnabled : false

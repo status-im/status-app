@@ -4,6 +4,8 @@ import StatusQ.Core.Utils as SQUtils
 
 import AppLayouts.Chat.stores
 
+import utils
+
 ThreadContextMenu {
     id: root
 
@@ -17,7 +19,7 @@ ThreadContextMenu {
 
     isMobile: SQUtils.Utils.isMobile
     followed: d.followed
-    muted: false
+    muted: messageStore.threadMuted
     pinned: false
     pinEnabled: false
     threadLinkToCopyShare: ""
@@ -57,6 +59,8 @@ ThreadContextMenu {
     onUnfollowRequested: messageStore.setThreadFollowedById(root.threadId, false)
     onDeleteRequested: messageStore.deleteThreadById(root.threadId)
     onEditNameRequested: root.renameThreadRequested(root.threadId, root.threadName, root.parentChatId)
+    onMuteRequested: interval => messageStore.setThreadMuted(interval)
+    onUnmuteRequested: messageStore.setThreadMuted(Constants.MutingVariations.Unmuted)
 
     QtObject {
         id: d

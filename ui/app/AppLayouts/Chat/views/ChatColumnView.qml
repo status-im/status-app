@@ -72,6 +72,7 @@ Item {
     property bool sendViaPersonalChatEnabled
     property bool messageLinkSharingEnabled
     property bool threadsFeatureEnabled
+    property bool threadsFeatureEnabledV2
     property string disabledTooltipText
     property bool paymentRequestFeatureEnabled
     property bool joined
@@ -780,6 +781,7 @@ Item {
                     }
 
                     threadsEnabled: root.threadsFeatureEnabled
+                    threadsEnabledV2: root.threadsFeatureEnabledV2
                     isThread: d.activeMessagesStore.threadId !== ""
                     chatName: root.parentModule?.activeItem?.name || ""
 

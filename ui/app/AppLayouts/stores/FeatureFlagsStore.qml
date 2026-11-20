@@ -16,6 +16,7 @@ QtObject {
     property bool statusSupportBotEnabled
     property bool buyEnabled
     property bool threadsEnabled
+    property bool threadsEnabledV2
     property bool paraswapEnabled
     property bool lifiEnabled
     property bool relayEnabled

@@ -17,6 +17,7 @@ ColumnLayout {
     // The owner supplies the parent content and async state; this panel edits the draft.
     required property Component parentMessageContent
     required property string parentMessageText
+    property bool threadsEnabledV2
     property var usersModel
     property string initialText
     property string initialThreadName
@@ -64,6 +65,7 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.margins: Theme.halfPadding
         threadsEnabled: true
+        threadsEnabledV2: root.threadsEnabledV2
         startNewThread: root.initialStartNewThread
         preserveInputOnSend: true
         initialThreadName: root.initialThreadName
