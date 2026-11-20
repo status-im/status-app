@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Universal
 
 import StatusQ.Core
 import StatusQ.Core.Theme
