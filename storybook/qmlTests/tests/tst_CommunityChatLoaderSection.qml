@@ -901,14 +901,26 @@ Item {
             verify(loader.keepLoaded)
         }
 
-        function test_memoryPressureDropsTheCurrentCommunityInTheBackground() {
+        function test_goingToTheBackgroundDropsACommunityTheUserLeft() {
+            const loader = wiredLoader({ dropWhenNotShown: true, dropDelay: 60000 })
+            showSection(loader)
+            loader.sectionCurrent = false
+
+            loader.appInFront = false
+
+            tryVerify(() => !loader.item)
+        }
+
+        // pressure handled on the way back, before the app is in front
+        function test_memoryPressureInTheBackgroundKeepsTheCurrentCommunity() {
             const loader = wiredLoader({ dropWhenNotShown: true })
             showSection(loader)
             loader.appInFront = false
 
             SystemUtils.memoryPressure(true)
 
-            tryVerify(() => !loader.item)
+            verify(loader.keepLoaded)
+            verify(!!loader.item)
         }
 
         function test_aBackgroundTrimDropsOnlyACommunityTheUserLeft() {

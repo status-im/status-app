@@ -86,22 +86,27 @@ StatusSectionLoader {
     signal openAppSearchRequested(string chatId, string threadId)
     signal supportBotChatRequested()
 
+    LoggingCategory {
+        id: dropLog
+        name: "status.community.drop"
+        defaultLogLevel: LoggingCategory.Warning
+    }
+
     SectionDropPolicy {
         id: dropPolicy
         objectName: "dropPolicy"
 
         shown: root.sectionCurrent && root.appInFront
         current: root.sectionCurrent
+        inBackground: !root.appInFront
 
-        onKeepLoadedChanged: console.info("[Community] Drop:", root.sectionId,
-                                          keepLoaded ? "kept" : "dropped")
+        onKeepLoadedChanged: console.info(dropLog, root.sectionId, keepLoaded ? "kept" : "dropped")
     }
 
     Connections {
         target: SystemUtils
         function onMemoryPressure(critical) { dropPolicy.memoryPressure(critical) }
     }
-
 
     // Back-navigation contract for AppMain's back chain. The chrome is
     // interactive while the section item still incubates, so the loader must
