@@ -22,5 +22,11 @@ Item {
             // This suite runs on the desktop (WebEngine) Backend.
             compare(BrowserBackendCapabilities.pdfViewerSupported, true)
         }
+    
+        // The WebEngine adapter brings no dropped Browser back.
+        function test_stateRestoreAndPlayingAudioAreFalseOnWebEngine() {
+            compare(BrowserBackendCapabilities.stateRestoreSupported, false)
+            compare(BrowserBackendCapabilities.playingAudioSupported, false)
+        }
     }
 }

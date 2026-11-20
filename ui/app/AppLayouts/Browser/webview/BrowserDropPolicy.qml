@@ -28,7 +28,7 @@ QtObject {
     property int dropDelay: 5 * 60 * 1000
     property int dropGrace: 3000
 
-    /// Off: no Drop at all, the layout stays from the first show on (desktop).
+    /// Off: no Drop at all, the layout stays from the first show on.
     property bool enabled: true
 
     /// Whether the Browser layout should exist.

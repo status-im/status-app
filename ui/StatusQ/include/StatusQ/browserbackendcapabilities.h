@@ -13,6 +13,8 @@ class BrowserBackendCapabilities : public QObject
     Q_PROPERTY(bool proprietaryCodecsSupported READ proprietaryCodecsSupported CONSTANT)
     Q_PROPERTY(bool mediaPlayerPageRequired READ mediaPlayerPageRequired CONSTANT)
     Q_PROPERTY(bool pdfViewerSupported READ pdfViewerSupported CONSTANT)
+    Q_PROPERTY(bool stateRestoreSupported READ stateRestoreSupported CONSTANT)
+    Q_PROPERTY(bool playingAudioSupported READ playingAudioSupported CONSTANT)
 
 public:
     explicit BrowserBackendCapabilities(QObject *parent = nullptr);
@@ -33,8 +35,16 @@ public:
     // natively; the system Android WebView cannot render it at all.
     static bool isPdfViewerSupported();
 
+    // Can a Web View's back/forward history be saved and handed to a new one?
+    static bool isStateRestoreSupported();
+
+    // Does a Web View report whether its page is playing audio?
+    static bool isPlayingAudioSupported();
+
     bool inPageMediaPlaybackSupported() const { return isInPageMediaPlaybackSupported(); }
     bool proprietaryCodecsSupported() const { return isProprietaryCodecsSupported(); }
     bool mediaPlayerPageRequired() const { return isMediaPlayerPageRequired(); }
     bool pdfViewerSupported() const { return isPdfViewerSupported(); }
+    bool stateRestoreSupported() const { return isStateRestoreSupported(); }
+    bool playingAudioSupported() const { return isPlayingAudioSupported(); }
 };

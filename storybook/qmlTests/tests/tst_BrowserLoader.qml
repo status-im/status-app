@@ -4,8 +4,10 @@ import QtTest
 import AppLayouts.stores as AppStores
 
 import mainui.sectionLoaders
+import StatusQ.Core
 
-// Desktop keeps the Browser layout from the first visit on, also once the
+// Without a Backend that brings a dropped Browser back as it was (desktop,
+// iOS for now), the layout stays from the first visit on, also once the
 // Browser is turned off in settings (its Tabs live in the layout).
 Item {
     id: root
@@ -37,7 +39,7 @@ Item {
     }
 
     TestCase {
-        name: "BrowserLoaderDesktop"
+        name: "BrowserLoader"
         when: windowShown
 
         function test_nothingLoadsBeforeTheFirstVisit() {
@@ -67,6 +69,35 @@ Item {
 
             loader.sectionEnabled = true
             compare(loader.item, layout)
+        }
+    
+        function test_theHostBackendCannotBringADroppedBrowserBack() {
+            const loader = createTemporaryObject(loaderComp, root)
+
+            verify(!loader.dropSupported)
+        }
+
+        function test_withoutDropSupportPressureKeepsTheLayout() {
+            const loader = createTemporaryObject(loaderComp, root, { dropSupported: false,
+                                                                      sectionCurrent: true })
+            tryVerify(() => !!loader.item)
+
+            loader.sectionCurrent = false
+            SystemUtils.memoryPressure(true)
+
+            verify(loader.active)
+        }
+
+        function test_withDropSupportPressureDropsTheLayout() {
+            const loader = createTemporaryObject(loaderComp, root, { dropSupported: true,
+                                                                      sectionCurrent: true })
+            tryVerify(() => !!loader.item)
+
+            loader.sectionCurrent = false
+            SystemUtils.memoryPressure(true)
+
+            verify(!loader.active)
+            verify(!loader.item)
         }
     }
 }
