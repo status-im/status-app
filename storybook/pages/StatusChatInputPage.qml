@@ -277,15 +277,18 @@ SplitView {
                 }
 
                 Label {
+                    enabled: ctrlThreadsEnabled.checked && ctrlIsThread.checked
                     text: "(in #"
                 }
                 TextField {
+                    enabled: ctrlThreadsEnabled.checked && ctrlIsThread.checked
                     Layout.preferredWidth: 150
                     id: ctrlChannelName
                     placeholderText: "channel name"
                     text: "general"
                 }
                 Label {
+                    enabled: ctrlThreadsEnabled.checked && ctrlIsThread.checked
                     text: "channel)"
                 }
             }
