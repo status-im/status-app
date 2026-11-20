@@ -158,7 +158,8 @@ QtObject {
             function sendReply() {
                 phase = "sending"
                 // Keep the draft until the correlated persistence result arrives.
-                if (!inputModule.sendTextMessage(text, contentType, requestId) && phase === "sending") {
+                const replyTo = asThread ? parentMessageId : ""
+                if (!inputModule.sendTextMessage(text, contentType, requestId, replyTo) && phase === "sending") {
                     fail(qsTr("Couldn't send message. Try again."))
                 }
             }
