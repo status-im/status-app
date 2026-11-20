@@ -228,6 +228,8 @@ pipeline {
         QMAKE_EXTRA_CONFIG = "fastlane"
         BUILD_VARIANT = "${utils.isReleaseBuild() ? 'release' : 'pr'}"
         FLAG_BUY_ENABLED = "${utils.isReleaseBuild() ? 0 : 1}"
+        /* Enable test mode (hooks for e2e) for PR/nightly builds, but NOT for releases */
+        STATUSQ_TESTMODE = "${!utils.isReleaseBuild()}"
         /* Swap */
         FLAG_SWAP_ENABLED = 1
         FLAG_RELAY_ENABLED = 1
