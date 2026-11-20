@@ -1,10 +1,9 @@
 import logging
 import time
 
-import object
-import squish
-
 import configs
+from . import query
+from .obj import bounds, children
 
 LOG = logging.getLogger(__name__)
 
@@ -38,14 +37,14 @@ def emoji_text(value) -> str:
 
 
 def walk_children(parent, depth: int = 1000):
-    for child in object.children(parent):
+    for child in children(parent):
         yield child
         if depth:
             yield from walk_children(child, depth - 1)
 
 
 def find_descendant_by_object_name(parent, object_name: str, max_depth: int = 1000):
-    """Walk QML tree from parent; Squish often fails waitForObject({container: parentRef, objectName: ...})."""
+    """Walk the QML tree from parent, for an object that a locator with ``container: parent`` misses."""
     if parent is None or not object_name:
         return None
     for child in walk_children(parent, max_depth):
@@ -74,8 +73,8 @@ def is_descendant_of(ancestor, item) -> bool:
 def find_notification_button_on_card(card, object_name: str, max_depth: int = 1000):
     """Find StatusButton by objectName on a specific NotificationCard.
 
-    ``object.children`` from a QQuick ``Control`` often does not include ``contentItem`` children,
-    so tree-walk from the card misses Accept/Decline. Fallback: ``findAllObjects`` + ancestor or bounds.
+    ``children`` of a QQuick ``Control`` often does not include ``contentItem`` children,
+    so tree-walk from the card misses Accept/Decline. Fallback: ``find_all`` + ancestor or bounds.
     """
     if card is None or not object_name:
         return None
@@ -89,7 +88,7 @@ def find_notification_button_on_card(card, object_name: str, max_depth: int = 10
         )
         return found
 
-    all_named = list(squish.findAllObjects({'objectName': object_name}))
+    all_named = query.find_all({'objectName': object_name})
     for btn in all_named:
         if not item_is_visible(btn):
             continue
@@ -103,7 +102,7 @@ def find_notification_button_on_card(card, object_name: str, max_depth: int = 10
             return btn
 
     try:
-        outer = object.globalBounds(card)
+        outer = bounds(card)
     except (RuntimeError, LookupError, AttributeError):
         outer = None
     if outer is None or outer.width <= 0 or outer.height <= 0:
@@ -113,7 +112,7 @@ def find_notification_button_on_card(card, object_name: str, max_depth: int = 10
         if not item_is_visible(btn):
             continue
         try:
-            inner = object.globalBounds(btn)
+            inner = bounds(btn)
         except (RuntimeError, LookupError, AttributeError):
             continue
         cx = inner.x + inner.width / 2
@@ -165,7 +164,7 @@ def wait_for_template(
         real_name_template: dict, value: str, attr_name: str, timeout_sec: int = configs.timeouts.UI_LOAD_TIMEOUT_SEC):
     started_at = time.monotonic()
     while True:
-        for obj in squish.findAllObjects(real_name_template):
+        for obj in query.find_all(real_name_template):
             values = []
             if hasattr(obj, attr_name):
                 current_value = str(getattr(obj, attr_name))

@@ -3,7 +3,6 @@ import time
 import typing
 
 import allure
-import object as squish_object
 
 import configs.timeouts
 import driver
@@ -56,7 +55,7 @@ class ActivityCenter(QObject):
     @property
     @allure.step('Get contact items')
     def contact_items(self) -> typing.List[ContactRequest]:
-        return [ContactRequest(item) for item in driver.findAllObjects(self.activity_center_notification_card.real_name)]
+        return [ContactRequest(item) for item in driver.find_all(self.activity_center_notification_card.real_name)]
 
     @allure.step('Click activity center button')
     def click_activity_center_button(self, text: str):
@@ -103,16 +102,16 @@ class ActivityCenter(QObject):
     def _scroll_notification_into_view(self, card_ref) -> None:
         """ListView may clip the row; clicks outside the viewport often do nothing."""
         try:
-            slide = driver.waitForObject(
+            slide = driver.wait(
                 activity_center_names.activityCenterSlideContainer,
                 configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
             )
-            driver.waitFor(lambda: slide._fullyOpen, configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
-            list_obj = driver.waitForObject(
+            driver.wait_until(lambda: slide._fullyOpen, configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
+            list_obj = driver.wait(
                 activity_center_names.activityCenterListView,
                 configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
             )
-            lrect = squish_object.globalBounds(list_obj)
+            lrect = driver.bounds(list_obj)
         except Exception as e:
             LOG.info('_scroll_notification_into_view: skip (%s)', e)
             return
@@ -122,7 +121,7 @@ class ActivityCenter(QObject):
         top, bot = lrect.y + margin, lrect.y + lrect.height - margin
         for _ in range(28):
             try:
-                crect = squish_object.globalBounds(card_ref)
+                crect = driver.bounds(card_ref)
             except Exception:
                 return
             cy = crect.y + crect.height / 2

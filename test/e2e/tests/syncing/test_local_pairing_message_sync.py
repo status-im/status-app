@@ -43,7 +43,7 @@ def test_local_pairing_with_message_sync(multiple_instances, user_data, user_acc
 
             messages_screen = main_window.left_panel.open_messages_screen()
             skip_message_backup_popup_if_visible()
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: contact_name in messages_screen.left_panel.get_chats_names,
                 configs.timeouts.UI_LOAD_TIMEOUT_MSEC), f'Chat with {contact_name} not found'
             chat = messages_screen.left_panel.click_chat_by_name(contact_name)
@@ -82,7 +82,7 @@ def test_local_pairing_with_message_sync(multiple_instances, user_data, user_acc
             with step(f'Confirm pairing on primary instance {aut_primary.aut_id}'):
                 switch_to_aut(aut_primary, main_window)
                 sync_device_found = SyncResultView()
-                assert driver.waitFor(
+                assert driver.wait_until(
                     lambda: 'Device synced!' in sync_device_found.device_synced_notifications,
                     23000)
                 sync_device_found.done_button.click()
@@ -91,12 +91,12 @@ def test_local_pairing_with_message_sync(multiple_instances, user_data, user_acc
                 switch_to_aut(aut_paired, main_window)
                 messages_screen = main_window.left_panel.open_messages_screen()
                 skip_message_backup_popup_if_visible()
-                assert driver.waitFor(
+                assert driver.wait_until(
                     lambda: contact_name in messages_screen.left_panel.get_chats_names,
                     MESSAGE_SYNC_TIMEOUT_MSEC), f'Chat with {contact_name} not synced to paired device'
 
                 chat = messages_screen.left_panel.click_chat_by_name(contact_name)
-                assert driver.waitFor(
+                assert driver.wait_until(
                     lambda: set(get_visible_message_texts(chat)) == set(primary_messages),
                     MESSAGE_SYNC_TIMEOUT_MSEC), (
                     f'Messages on paired device do not match primary.\n'

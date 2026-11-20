@@ -71,7 +71,7 @@ class KeycardSettingsView(QObject):
     def wait_until_certificate_warning_hidden(
             self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
     ):
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self._details_title.is_visible and not self._certificate_warning.is_visible,
             timeout_msec,
         ), 'Keycard certificate warning is still visible'
@@ -104,7 +104,7 @@ class KeycardSettingsView(QObject):
             *,
             wait_for_key_pair_item: bool = True,
     ):
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.details_title == expected_title,
             timeout_msec,
         ), f'Expected Keycard details title {expected_title!r}, got {self.details_title!r}'
@@ -113,7 +113,7 @@ class KeycardSettingsView(QObject):
         if not wait_for_key_pair_item:
             return self
         self._key_pair_info.wait_until_appears(timeout_msec)
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: constants.KEYCARD_ON_KEYCARD_LABEL in self.key_pair_location,
             timeout_msec,
         ), f'Expected On Keycard label, got {self.key_pair_location!r}'
@@ -145,14 +145,14 @@ class KeycardSettingsView(QObject):
             self,
             timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
     ):
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.details_title == constants.KEYCARD_STORES_KEY_PAIR_TITLE,
             timeout_msec,
         ), (
             f'Expected Keycard details title {constants.KEYCARD_STORES_KEY_PAIR_TITLE!r}, '
             f'got {self.details_title!r}'
         )
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.details_info == constants.KEYCARD_KEYPAIR_NOT_ADDED_MESSAGE,
             timeout_msec,
         ), (
@@ -191,7 +191,7 @@ class KeycardSettingsView(QObject):
             timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
     ):
         self.wait_until_details_appears(constants.KEYCARD_BLOCKED_TITLE, timeout_msec)
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.details_info == constants.KEYCARD_BLOCKED_PIN_MESSAGE,
             timeout_msec,
         ), (

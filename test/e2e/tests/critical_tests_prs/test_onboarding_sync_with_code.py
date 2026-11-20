@@ -76,7 +76,7 @@ def test_sync_devices_during_onboarding_change_settings_unpair(multiple_instance
             aut_one.attach()
             main_window.prepare()
             sync_device_found = SyncResultView()
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: 'Device synced!' in sync_device_found.device_synced_notifications, 23000)
             assert user.name in sync_device_found.device_synced_notifications
             sync_device_found.done_button.click()
@@ -87,7 +87,7 @@ def test_sync_devices_during_onboarding_change_settings_unpair(multiple_instance
             time.sleep(2)  # allowing messages settings page to fully appear
             messaging_settings.switch_allow_contact_requests_toggle(False)
             time.sleep(2)  # wait for animation of the toggle to finish
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: not messaging_settings.allow_contact_requests_toggle.is_checked,
                 3000), f'Toggle did not change to OFF. Current state: {messaging_settings.allow_contact_requests_toggle.is_checked}'
 
@@ -95,7 +95,7 @@ def test_sync_devices_during_onboarding_change_settings_unpair(multiple_instance
             aut_two.attach()
             main_window.prepare()
             msg_stngs = main_window.left_panel.open_settings().left_panel.open_messaging_settings()
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: not msg_stngs.allow_contact_requests_toggle.is_checked, 15000), \
                 f'Toggle changes are not synced'
 
@@ -116,6 +116,6 @@ def test_sync_devices_during_onboarding_change_settings_unpair(multiple_instance
             main_window.prepare()
             home = main_window.left_panel.open_home_screen()
             msg_stngs = home.open_messaging_settings_from_grid()
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: not msg_stngs.allow_contact_requests_toggle.is_checked, 15000), \
                 f'Toggle state should remain unchecked becase devices are not paired'

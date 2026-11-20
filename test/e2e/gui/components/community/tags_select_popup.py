@@ -25,7 +25,7 @@ class TagsSelectPopup(StatusStackModal):
         return self
 
     def _iter_tags(self):
-        return driver.findAllObjects(self._tag_template.real_name)
+        return driver.find_all(self._tag_template.real_name)
 
     def _filtered_tag(self, name: str, selected: typing.List[str]):
         match = None
@@ -44,7 +44,7 @@ class TagsSelectPopup(StatusStackModal):
 
     def _confirm_enabled(self) -> bool:
         try:
-            return bool(driver.waitForObjectExists(self._confirm_button.real_name, 200).enabled)
+            return bool(driver.wait_exists(self._confirm_button.real_name, 200).enabled)
         except (LookupError, RuntimeError):
             return False
 
@@ -53,13 +53,13 @@ class TagsSelectPopup(StatusStackModal):
         selected = []
         for name in values:
             self._search_field.search(name)
-            if not driver.waitFor(
+            if not driver.wait_until(
                     lambda: self._filtered_tag(name, selected) is not None,
                     configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
                 raise LookupError(f'Tag {name!r} not found after search')
-            # clicked() hits StatusMouseArea; mouseClick on the tag object misses it
+            # clicked() hits StatusMouseArea; driver.click on the tag object misses it
             self._filtered_tag(name, selected).clicked()
-            if not driver.waitFor(self._confirm_enabled, configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
+            if not driver.wait_until(self._confirm_enabled, configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
                 raise LookupError(f'Clicking tag {name!r} did not select it')
             selected.append(name)
 

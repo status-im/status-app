@@ -24,12 +24,12 @@ class PinnedMessagesPanel(QObject):
             timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
     ):
         def listed() -> bool:
-            for obj in driver.findAllObjects(self._message_view.real_name):
+            for obj in driver.find_all(self._message_view.real_name):
                 if message_text in plain_text_from_message_object(obj):
                     return True
             return False
 
-        if not driver.waitFor(listed, timeout_msec):
+        if not driver.wait_until(listed, timeout_msec):
             raise TimeoutError(
                 f'Pinned message {message_text!r} was not listed within {timeout_msec} ms'
             )

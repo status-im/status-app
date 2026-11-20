@@ -96,7 +96,7 @@ def test_sign_community_join_shared_addresses_on_keycard(multiple_instances):
 
             messages_view = main_screen.left_panel.open_messages_screen()
             skip_message_backup_popup_if_visible()
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: owner.name in messages_view.left_panel.get_chats_names,
                 configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
             ), f'Chat with {owner.name} not in list'
@@ -106,7 +106,7 @@ def test_sign_community_join_shared_addresses_on_keycard(multiple_instances):
             assert community.name in welcome_popup.title
             assert community.introduction == welcome_popup.intro
             welcome_popup.join_with_keycard(DEFAULT_PIN)
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: not community_screen.left_panel.is_join_community_visible,
                 configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
             ), 'Join community button not hidden'
@@ -114,11 +114,11 @@ def test_sign_community_join_shared_addresses_on_keycard(multiple_instances):
         with step(f'{owner.name} sees {invitee.name} in community members list'):
             switch_to_aut(aut_owner, main_screen)
             community_screen = main_screen.left_panel.open_community(community.name)
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: invitee.name in community_screen.right_panel.members,
                 configs.timeouts.LOADING_LIST_TIMEOUT_MSEC,
             ), f'{invitee.name} should appear in community members after Keycard join'
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: '2' in community_screen.left_panel.members,
                 configs.timeouts.LOADING_LIST_TIMEOUT_MSEC,
             ), 'Community should show 2 members (owner + invitee)'

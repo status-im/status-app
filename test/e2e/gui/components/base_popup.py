@@ -18,5 +18,5 @@ class BasePopup(QObject):
 
     @allure.step('Close')
     def close(self):
-        driver.type(self.object, '<Escape>')
+        driver.type_text(self.object, '<Escape>')
         self.wait_until_hidden()

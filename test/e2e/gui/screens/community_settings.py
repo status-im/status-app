@@ -104,7 +104,7 @@ class OverviewView(QObject):
 
     @allure.step('Open finalise ownership popup from overview')
     def open_finalise_ownership(self) -> FinaliseOwnershipPopup:
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: 'Finalise' in self.primary_button.text,
             configs.timeouts.WALLET_HISTORY_TX_TIMEOUT_MSEC,
         ), f'Finalise ownership button not shown, got {self.primary_button.text!r}'
@@ -230,7 +230,7 @@ class EditCommunityView(QObject):
     @allure.step('Get community tags')
     def tags(self):
         self._scroll.vertical_scroll_down(self._choose_tag_button)
-        return [str(tag.title) for tag in driver.fiandAllObjects(self._tag_item.real_name)]
+        return [str(tag.title) for tag in driver.find_all(self._tag_item.real_name)]
 
     @tags.setter
     @allure.step('Set community tags')
@@ -294,12 +294,12 @@ class PendingRequestsTabView(QObject):
     @property
     @allure.step('Get community members names')
     def members_names(self) -> typing.List[str]:
-        return [str(member.userName) for member in driver.findAllObjects(self.member_list_item.real_name)]
+        return [str(member.userName) for member in driver.find_all(self.member_list_item.real_name)]
 
     @allure.step('Get community member objects')
     def get_member_objects(self) -> typing.List:
         member_objects = []
-        for item in driver.findAllObjects(self.member_list_item.real_name):
+        for item in driver.find_all(self.member_list_item.real_name):
             member_objects.append(item)
         return member_objects
 
@@ -323,13 +323,12 @@ class PendingRequestsTabView(QObject):
         for _ in range(attempts):
             try:
                 member = self.get_member_object(member_name)
-                QObject(real_name=driver.objectMap.realName(member)).hover()
+                QObject(real_name=member).hover()
                 time.sleep(0.5)  # wait for Accept button to appear on hover
-                member_container = driver.objectMap.realName(member)
+                member_container = member
                 self.accept_member_button.real_name['container'] = member_container
                 self.accept_member_button.wait_until_appears()
                 self.accept_member_button.hover()
-                # Use click() instead of native_mouse_click - object-relative click is more reliable on CI
                 self.accept_member_button.click()
                 return self
             except Exception:
@@ -341,9 +340,9 @@ class PendingRequestsTabView(QObject):
         for _ in range(attempts):
             try:
                 member = self.get_member_object(member_name)
-                QObject(real_name=driver.objectMap.realName(member)).hover()
+                QObject(real_name=member).hover()
                 time.sleep(0.5)  # wait for Reject button to appear on hover
-                member_container = driver.objectMap.realName(member)
+                member_container = member
                 self.reject_member_button.real_name['container'] = member_container
                 self.reject_member_button.wait_until_appears()
                 self.reject_member_button.hover()
@@ -370,7 +369,7 @@ class MembersView(QObject):
     @allure.step('Get community members names')
     def members_names(self) -> typing.List[str]:
         names = []
-        for member in driver.findAllObjects(self.member_list_item.real_name):
+        for member in driver.find_all(self.member_list_item.real_name):
             try:
                 name = getattr(member, 'userName', None) or getattr(member, 'title', None)
                 if name is not None:
@@ -381,7 +380,7 @@ class MembersView(QObject):
 
     @allure.step('Get community member objects')
     def get_member_objects(self) -> typing.List:
-        return list(driver.findAllObjects(self.member_list_item.real_name))
+        return list(driver.find_all(self.member_list_item.real_name))
 
     @allure.step('Find community member by name')
     def get_member_object(self, member_name: str):
@@ -423,9 +422,8 @@ class MembersView(QObject):
         for _ in range(attempts):
             try:
                 member = self.get_member_object(member_name)
-                QObject(real_name=driver.objectMap.realName(member)).hover()
+                QObject(real_name=member).hover()
                 self.kick_member_button.hover()
-                # Use click() instead of native_mouse_click - object-relative click is more reliable on CI
                 self.kick_member_button.click()
                 return KickBanMemberPopup().wait_until_appears()
             except Exception:
@@ -437,9 +435,9 @@ class MembersView(QObject):
         for _ in range(attempts):
             try:
                 member = self.get_member_object(member_name)
-                QObject(real_name=driver.objectMap.realName(member)).hover()
+                QObject(real_name=member).hover()
                 time.sleep(0.5)  # Wait for Ban button to appear on hover (like decline_pending_request)
-                member_container = driver.objectMap.realName(member)
+                member_container = member
                 self.ban_member_button.real_name['container'] = member_container
                 self.ban_member_button.wait_until_appears()
                 self.ban_member_button.hover()
@@ -454,9 +452,8 @@ class MembersView(QObject):
         for _ in range(attempts):
             try:
                 member = self.get_member_object(member_name)
-                QObject(real_name=driver.objectMap.realName(member)).hover()
+                QObject(real_name=member).hover()
                 self.unban_member_button.hover()
-                # Use click() instead of native_mouse_click - object-relative click is more reliable on CI
                 self.unban_member_button.click()
                 return self
             except Exception:
@@ -610,7 +607,7 @@ class PermissionsSettingsView(QObject):
     @allure.step('Get titles of Who holds tags')
     def get_who_holds_tags_titles(self, attempt: int = 2) -> typing.List[str]:
         try:
-            return [str(tag.title) for tag in driver.findAllObjects(self._who_holds_tag.real_name)]
+            return [str(tag.title) for tag in driver.find_all(self._who_holds_tag.real_name)]
         except AttributeError as er:
             if attempt:
                 time.sleep(1)
@@ -621,7 +618,7 @@ class PermissionsSettingsView(QObject):
     @allure.step('Get titles of Is Allowed tags')
     def get_is_allowed_tags_titles(self, attempt: int = 2) -> typing.List[str]:
         try:
-            return [str(tag.title) for tag in driver.findAllObjects(self._is_allowed_tag.real_name)]
+            return [str(tag.title) for tag in driver.find_all(self._is_allowed_tag.real_name)]
         except AttributeError as er:
             if attempt:
                 time.sleep(1)
@@ -632,7 +629,7 @@ class PermissionsSettingsView(QObject):
     @allure.step('Get title of inCommunity tag')
     def get_in_community_in_channel_tags_titles(self, attempt: int = 2) -> typing.List[str]:
         try:
-            return [str(tag.title) for tag in driver.findAllObjects(self._in_community_in_channel_tag.real_name)]
+            return [str(tag.title) for tag in driver.find_all(self._in_community_in_channel_tag.real_name)]
         except AttributeError as er:
             if attempt:
                 time.sleep(1)
