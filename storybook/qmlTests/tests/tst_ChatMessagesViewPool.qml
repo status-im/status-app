@@ -43,7 +43,7 @@ Item {
     // Longest a single frame may take before the test moves on without it.
     readonly property int frameMs: 100
 
-    ChatStores.RootStore { id: rootStoreMock }
+    ChatStores.RootStore { id: rootStoreMock; name: "Alice" }
     AppStateDriver { id: appState }
 
     ListModel { id: messagesA }
@@ -401,6 +401,25 @@ Item {
         }
 
         // ---- rows from the pool ----------------------------------------------
+
+        function test_threadCardResolvesMentionFromLatestReply() {
+            const key = "0x04" + "a".repeat(128)
+            messagesA.set(0, {
+                hasThread: true,
+                threadTitle: "Thread",
+                threadLastMessageText: "Hello @" + key + "!"
+            })
+
+            prewarmedPool()
+            const view = openView({ threadsFeatureEnabled: true, myPublicKey: key })
+            let preview
+            tryVerify(() => {
+                const row = rowItems(view).find(r => r.content.messageId === "a-0")
+                preview = row && findChild(row.content, "threadCardMessagePreview")
+                return !!preview
+            })
+            compare(preview.text, "Hello @Alice!")
+        }
 
         function test_rowsComeFromThePool() {
             prewarmedPool()

@@ -6,6 +6,7 @@ import QtQuick.Layouts
 
 import QtModelsToolkit
 
+import StatusQ
 import StatusQ.Components
 import StatusQ.Controls
 import StatusQ.Core
@@ -72,6 +73,7 @@ Control {
        Only used when threadState is ThreadCard.State.Active.
     */
     property var lastMessage: ({})
+    property var lastMessageMentionsMap: ({})
 
     /*!
        Deleted thread message data. Accepts a JS object or QtObject with:
@@ -117,7 +119,14 @@ Control {
         readonly property int avatarStackWidth: avatarStackCount > 0 ? avatarOuterSize + (avatarStackCount - 1) * avatarStep : 0
         readonly property var bodyMessage: deleted ? (root.deletedMessage || {}) : (root.lastMessage || {})
         readonly property var bodySender: bodyMessage.sender || {}
-        readonly property string bodyMessageText: deleted ? qsTr("deleted this thread") : (bodyMessage.text || "")
+        readonly property string bodyMessageText: {
+            if (deleted)
+                return qsTr("deleted this thread")
+
+            const text = bodyMessage.text || ""
+            const mentions = root.lastMessageMentionsMap
+            return Object.keys(mentions).length ? MarkdownUtils.plainText(text, mentions) : text
+        }
         readonly property string bodyPreviewText: bodyMessageText.replace(/\s+/g, " ").trim()
         readonly property double bodyTimestamp: bodyMessage.timestamp || 0
         readonly property string formattedBodyTimestamp: bodyTimestamp > 0

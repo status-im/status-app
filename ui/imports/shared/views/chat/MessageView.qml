@@ -186,6 +186,7 @@ Loader {
     property string threadLastMessageSenderImage: ""
     property int threadLastMessageSenderColorId: 0
     property string threadLastMessageText: ""
+    property var threadLastMessageMentionsMap: ({})
     property double threadLastMessageTimestamp: 0
     property string disabledTooltipText
 
@@ -1375,6 +1376,7 @@ Loader {
                         notificationCount: root.threadNotificationCount
                         participantsPreviewModel: root.threadParticipantsModel
                         participantsCount: root.threadParticipantsCount
+                        lastMessageMentionsMap: root.threadLastMessageMentionsMap
                         lastMessage: ({
                             sender: {
                                 name: root.threadLastMessageSenderName,

@@ -619,11 +619,13 @@ Item {
     }
 
     Loader {
-        id: threadDraftMentions
-        active: !!d.newThreadParentMessageId
+        id: threadMentions
+        active: !!d.newThreadParentMessageId || rightPanelLoader.item?.currentTab === ChatInfoPanel.Threads
         sourceComponent: MentionResolver {
             sourceModel: names.model
             nameRole: "preferredDisplayName"
+            selfPubKey: root.myPublicKey
+            selfName: root.rootStore?.name ?? ""
             aliasProvider: pubKey => root.rootStore.generateAlias(pubKey)
             MentionNamesAdaptor {
                 id: names
@@ -660,6 +662,7 @@ Item {
             threadsEnabled: root.threadsFeatureEnabled && !(root.chatContentModule?.messagesModule.threadId ?? "")
             threadsModel: currentTab === ChatInfoPanel.Threads && threadsEnabled
                           ? root.chatContentModule?.messagesModule.threadsModel ?? null : null
+            threadMentionResolver: threadMentions.item
             threadsLoading: root.chatContentModule?.messagesModule.threadsLoading ?? false
             threadsError: root.chatContentModule?.messagesModule.threadsError ?? false
             membersContent: membersPanelComponent
@@ -851,7 +854,7 @@ Item {
                     initialText: d.threadDraft?.text ?? ""
                     initialThreadName: d.threadDraft?.name ?? ""
                     initialStartNewThread: d.threadDraft?.asThread ?? true
-                    initialMentionsMap: threadDraftMentions.item?.resolveFor(d.threadDraft?.text ?? "", "") ?? ({})
+                    initialMentionsMap: threadMentions.item?.resolveFor(d.threadDraft?.text ?? "", "") ?? ({})
                     pending: d.threadDraft?.pending ?? false
                     error: d.threadDraftError || d.threadDraft?.error || ""
                     usersModel: root.usersModel
@@ -863,7 +866,7 @@ Item {
                             chatId: d.newThreadParentChatId
                             messageId: d.newThreadParentMessageId
                             unparsedText: threadParent.item?.unparsedText ?? ""
-                            mentionsMap: threadDraftMentions.item?.resolveFor(unparsedText, threadParent.item?.mentionedNames ?? "") ?? ({})
+                            mentionsMap: threadMentions.item?.resolveFor(unparsedText, threadParent.item?.mentionedNames ?? "") ?? ({})
                             senderId: threadParent.item?.senderId ?? ""
                             senderDisplayName: threadParent.item?.senderDisplayName ?? ""
                             senderIcon: threadParent.item?.senderIcon ?? ""

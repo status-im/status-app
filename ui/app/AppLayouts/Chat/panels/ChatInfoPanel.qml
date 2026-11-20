@@ -22,6 +22,7 @@ ColumnLayout {
     property bool membersAvailable: true
     property bool threadsEnabled: true
     property var threadsModel
+    property var threadMentionResolver: null
     property var sectionModule
     property bool threadsLoading
     property bool threadsError
@@ -204,6 +205,7 @@ ColumnLayout {
                 notificationCount: model.notificationCount
                 participantsCount: model.participantsCount
                 participantsPreviewModel: model.participantsModel
+                lastMessageMentionsMap: root.threadMentionResolver?.resolveFor(model.lastMessageText) ?? ({})
                 lastMessage: ({
                     sender: {
                         name: model.lastMessageSenderName,
