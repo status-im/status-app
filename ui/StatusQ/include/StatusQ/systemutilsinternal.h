@@ -112,8 +112,10 @@ signals:
     void imageSaveToGalleryFailed();
     void nativeDprChanged(qreal value);
 
-    // Android: the system is short of memory (onTrimMemory, UI_HIDDEN aside).
-    void memoryPressure();
+    // Android: critical - the system is short of memory (onLowMemory, and
+    // onTrimMemory below API 34); else the app went to the background
+    // (onTrimMemory BACKGROUND), which asks for what is not needed back.
+    void memoryPressure(bool critical);
 
 private:
     int m_androidKeyboardHeight = 0;

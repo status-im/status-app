@@ -28,27 +28,40 @@ public final class MemoryPressureListener {
 
             @Override
             public void onLowMemory() {
-                notifyMemoryPressure();
+                notifyMemoryPressure(true);
             }
 
-            // UI_HIDDEN only says the UI went to the background.
+            // BACKGROUND only says the app went to the background (since API
+            // 34 it is all that is sent, besides UI_HIDDEN, which is ignored);
+            // the other levels are real pressure, sent before API 34.
             @Override
             public void onTrimMemory(int level) {
-                if (level >= TRIM_MEMORY_RUNNING_LOW && level != TRIM_MEMORY_UI_HIDDEN) {
+                switch (level) {
+                case TRIM_MEMORY_BACKGROUND:
+                    Log.i(TAG, "onTrimMemory: background");
+                    notifyMemoryPressure(false);
+                    break;
+                case TRIM_MEMORY_RUNNING_LOW:
+                case TRIM_MEMORY_RUNNING_CRITICAL:
+                case TRIM_MEMORY_MODERATE:
+                case TRIM_MEMORY_COMPLETE:
                     Log.i(TAG, "onTrimMemory: memory pressure, level " + level);
-                    notifyMemoryPressure();
+                    notifyMemoryPressure(true);
+                    break;
+                default:
+                    break;
                 }
             }
         });
     }
 
-    private static void notifyMemoryPressure() {
+    private static void notifyMemoryPressure(boolean critical) {
         try {
-            nativeOnMemoryPressure();
+            nativeOnMemoryPressure(critical);
         } catch (UnsatisfiedLinkError e) {
             Log.w(TAG, "nativeOnMemoryPressure not yet registered", e);
         }
     }
 
-    private static native void nativeOnMemoryPressure();
+    private static native void nativeOnMemoryPressure(boolean critical);
 }

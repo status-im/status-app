@@ -1,14 +1,19 @@
 import QtQuick
 
-/// When a section gives its UI back (a Drop). While the section is not
-/// shown, its UI is dropped after dropDelay, or at once on memory
-/// pressure. A held section keeps its UI: the due drop is announced as
-/// dropHeld() instead, and the delay starts over once the hold ends.
+/// When a section gives its UI back (a Drop). A section the user left (not
+/// current) is dropped after dropDelay. On memory pressure every section not
+/// on screen is dropped at once, the current one too when the app is in the
+/// background; a background trim (no pressure, the app merely went to the
+/// background) drops only the sections the user left. A held section keeps
+/// its UI: the due drop is announced as dropHeld() instead, and the delay
+/// starts over once the hold ends.
 QtObject {
     id: root
 
     /// On screen: the section is current and the app is in front.
     required property bool shown
+    /// The section is the current one, whether the app is in front or not.
+    property bool current: shown
     /// Something in the UI must outlive a drop.
     property bool held: false
 
@@ -23,25 +28,23 @@ QtObject {
     /// The UI is about to go: the last moment to read its state.
     signal dropping()
 
-    function memoryPressure() {
-        if (!root.shown && !d.dropped)
-            d.drop()
+    /// critical: real pressure, which spares only what is on screen; else a
+    /// background trim, which spares the current section too.
+    function memoryPressure(critical) {
+        if (d.dropped || root.shown || (!critical && root.current))
+            return
+        d.drop()
     }
 
-    onShownChanged: {
-        if (root.shown) {
-            d.timer.stop()
-            d.dropped = false
-            return
-        }
-        d.timer.restart()
-    }
+    onShownChanged: d.update()
+    onCurrentChanged: d.update()
 
     onHeldChanged: {
-        if (!root.held && !root.shown && !d.dropped)
+        if (!root.held && !root.current && !d.dropped)
             d.timer.restart()
     }
 
+    // A QtObject takes no children: the private state is a property.
     readonly property QtObject d: QtObject {
         // Nothing is loaded before the section is first shown.
         property bool dropped: true
@@ -49,6 +52,17 @@ QtObject {
         readonly property Timer timer: Timer {
             interval: root.dropDelay
             onTriggered: d.drop()
+        }
+
+        function update() {
+            if (root.shown)
+                d.dropped = false
+            if (root.current) {
+                d.timer.stop()
+                return
+            }
+            if (!d.dropped && !d.timer.running)
+                d.timer.restart()
         }
 
         function drop() {

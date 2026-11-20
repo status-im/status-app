@@ -49,43 +49,77 @@ Item {
             compare(policy.droppings, 1, "announced before it goes")
         }
 
-        function test_comingBackBeforeTheDelayKeepsEverything() {
-            const policy = makePolicy({ shown: true, dropDelay: 100 })
-
-            policy.shown = false
-            policy.shown = true
-            wait(200) // longer than dropDelay: nothing may fire
-
-            verify(policy.keepLoaded)
-            compare(policy.droppings, 0)
-        }
-
-        function test_neverWhileShown() {
-            const policy = makePolicy({ shown: true })
-
-            policy.memoryPressure()
-            wait(100)
-
-            verify(policy.keepLoaded)
-            compare(policy.droppings, 0)
-        }
-
-        function test_memoryPressureDropsAtOnceWhileNotShown() {
+        function test_comingBackBeforeTheDelayStopsIt() {
             const policy = makePolicy({ shown: true, dropDelay: 60000 })
 
             policy.shown = false
-            policy.memoryPressure()
+            verify(policy.d.timer.running)
+            policy.shown = true
+
+            verify(!policy.d.timer.running)
+            verify(policy.keepLoaded)
+        }
+
+        // The app in the background with this section current: it is what
+        // the user comes back to.
+        function test_theCurrentSectionNeverDropsOnTheDelay() {
+            const policy = makePolicy({ shown: true, current: true })
+
+            policy.shown = false
+
+            verify(!policy.d.timer.running)
+            verify(policy.keepLoaded)
+        }
+
+        function test_leavingTheCurrentSectionStartsTheDelay() {
+            const policy = makePolicy({ shown: true, current: true, dropDelay: 60000 })
+            policy.shown = false
+
+            policy.current = false
+
+            verify(policy.d.timer.running)
+        }
+
+        function test_neverWhileShown() {
+            const policy = makePolicy({ shown: true, current: true })
+
+            policy.memoryPressure(true)
+            policy.memoryPressure(false)
+
+            verify(policy.keepLoaded)
+            compare(policy.droppings, 0)
+        }
+
+        function test_pressureDropsAnySectionNotOnScreen() {
+            const policy = makePolicy({ shown: true, current: true, dropDelay: 60000 })
+            policy.shown = false
+
+            policy.memoryPressure(true)
 
             verify(!policy.keepLoaded)
             compare(policy.droppings, 1)
         }
 
-        function test_memoryPressureAfterTheDropIsIgnored() {
+        // Being in the background is no pressure: only the sections the user
+        // left go.
+        function test_aBackgroundTrimSparesTheCurrentSection() {
+            const policy = makePolicy({ shown: true, current: true, dropDelay: 60000 })
+            policy.shown = false
+
+            policy.memoryPressure(false)
+            verify(policy.keepLoaded)
+
+            policy.current = false
+            policy.memoryPressure(false)
+            verify(!policy.keepLoaded)
+        }
+
+        function test_pressureAfterTheDropIsIgnored() {
             const policy = makePolicy({ shown: true, dropDelay: 60000 })
             policy.shown = false
-            policy.memoryPressure()
+            policy.memoryPressure(true)
 
-            policy.memoryPressure()
+            policy.memoryPressure(true)
 
             compare(policy.droppings, 1)
         }
@@ -94,7 +128,7 @@ Item {
             const policy = makePolicy({ shown: true, held: true, dropDelay: 60000 })
 
             policy.shown = false
-            policy.memoryPressure()
+            policy.memoryPressure(true)
 
             verify(policy.keepLoaded)
             compare(policy.heldDrops, 1)
@@ -104,19 +138,20 @@ Item {
         function test_theHoldEndingRestartsTheDelay() {
             const policy = makePolicy({ shown: true, held: true, dropDelay: 60000 })
             policy.shown = false
-            policy.memoryPressure()
-            policy.dropDelay = 50
+            policy.memoryPressure(true)
+            verify(!policy.d.timer.running)
 
             policy.held = false
-            verify(policy.keepLoaded, "the delay starts over")
 
-            tryVerify(() => !policy.keepLoaded)
+            verify(policy.keepLoaded, "the delay starts over")
+            verify(policy.d.timer.running)
         }
 
         function test_showingAgainBringsTheUiBack() {
-            const policy = makePolicy({ shown: true })
+            const policy = makePolicy({ shown: true, dropDelay: 60000 })
             policy.shown = false
-            tryVerify(() => !policy.keepLoaded)
+            policy.memoryPressure(true)
+            verify(!policy.keepLoaded)
 
             policy.shown = true
 
