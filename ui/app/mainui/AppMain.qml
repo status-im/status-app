@@ -2584,6 +2584,7 @@ Item {
 
                             active: appMain.mainReady && keepLoaded
                             sectionCurrent: sectionId === appMain.rootStore.activeSectionId
+                            appInFront: !memoryRelease.appInBackground
                             onUiReleased: memoryRelease.request()
 
                             userUID: d.myPublicKey
