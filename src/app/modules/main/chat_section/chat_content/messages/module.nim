@@ -384,7 +384,7 @@ method onSendingStarted*(self: Module, sendToken, text, replyTo: string, content
     seen: true,
     outgoingStatus: PARSED_TEXT_OUTGOING_STATUS_SENDING,
     responseTo: if startNewThread: "" else: replyTo,
-    contentType: if startNewThread: ContentType.Message else: toContentType(contentType),
+    contentType: toContentType(contentType),
   )
   if startNewThread:
     let items = self.createMessageItemsFromMessageDtos(@[dto])
@@ -392,7 +392,7 @@ method onSendingStarted*(self: Module, sendToken, text, replyTo: string, content
       items[0].hasThread = true
       items[0].threadSummary = ThreadSummary(
         title: if newThreadName.strip().len > 0: newThreadName else: text,
-        messagesCount: 2,
+        messagesCount: 1,
         lastMessageSenderId: items[0].senderId,
         lastMessageSenderName: items[0].senderDisplayName,
         lastMessageSenderImage: items[0].senderIcon,
