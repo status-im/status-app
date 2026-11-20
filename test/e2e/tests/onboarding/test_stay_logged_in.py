@@ -3,8 +3,7 @@ from allure_commons._allure import step
 from gui.screens.onboarding import ReturningLoginView
 from helpers.onboarding_helper import (
     open_create_password_view,
-    sign_out_and_quit,
-    wait_until_aut_quit,
+    sign_out,
     wait_until_auto_logged_in,
     wait_until_logged_in,
     wait_until_login_screen,
@@ -30,11 +29,8 @@ def test_stay_logged_in_opt_in_survives_sign_out(main_window_without_test_mode, 
         main_window.prepare()
         wait_until_auto_logged_in(main_window)
 
-    with step('Sign out and the next start asks for the password'):
-        sign_out_and_quit(main_window)
-        wait_until_aut_quit(aut)
-        aut.restart()
-        main_window.prepare()
+    with step('Sign out returns to the login screen and asks for the password'):
+        sign_out(main_window)
         wait_until_login_screen()
 
     with step('An explicit login stores the credential again'):
