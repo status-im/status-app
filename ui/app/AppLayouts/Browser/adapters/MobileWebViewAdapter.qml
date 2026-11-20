@@ -15,6 +15,7 @@ AbstractWebView {
     readonly property alias loadProgress: backend.loadProgress
     readonly property alias htmlPageLoaded: backend.loaded
     readonly property alias zoomFactor: backend.zoomFactor
+    readonly property alias playingAudio: backend.playingAudio
 
     ListModel {
         id: historyModel
@@ -107,6 +108,24 @@ AbstractWebView {
 
     function loadUrl(newUrl) {
         backend.loadUrl(newUrl)
+    }
+
+    /// Opaque back/forward history, valid only in this app process.
+    function saveState() {
+        return backend.saveState()
+    }
+
+    function terminateRenderer() {
+        backend.terminateRenderer()
+    }
+
+    /// Call before the first load: replaces it with the restored history.
+    /// fallbackUrl loads only if the history cannot be restored; set after
+    /// the restore, it is recorded, not loaded (the native view is not up yet).
+    function restoreState(state, fallbackUrl) {
+        backend.restoreState(state)
+        if (fallbackUrl && fallbackUrl.toString())
+            backend.url = fallbackUrl
     }
 
     /// A plain load hands WebKit one file; subresources need the grant (§8).

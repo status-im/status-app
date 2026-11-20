@@ -4,6 +4,7 @@ BrowserFavoritesContext 1.0 BrowserFavoritesContext.qml
 BrowserDialogsContext 1.0 BrowserDialogsContext.qml
 BrowserDownloadOpenContext 1.0 BrowserDownloadOpenContext.qml
 BrowserDownloadsContext 1.0 BrowserDownloadsContext.qml
+BrowserDropPolicy 1.0 BrowserDropPolicy.qml
 DownloadFormatUtils 1.0 DownloadFormatUtils.js
 SnapshotPersister 1.0 SnapshotPersister.qml
 BrowserSessionUtils 1.0 BrowserSessionUtils.js

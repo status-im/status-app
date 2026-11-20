@@ -57,6 +57,35 @@ StatusSectionLayout {
     required property var connectorController
 
     property bool isDebugEnabled: false
+
+    /// Outlives this layout (owned by the section loader); see
+    /// BrowserSavedSessionContext.sessionCache.
+    property var sessionCache: null
+
+    /// For the section's BrowserDropPolicy.
+    readonly property bool hasLivePage: webViewContext.hasLivePage
+    readonly property bool keepAlive: webViewContext.hasKeepAliveReason
+
+    /// Drop (CONTEXT) every idle Web View; the Tabs stay.
+    function dropIdleTabs() {
+        webViewContext.dropIdleViews()
+    }
+
+    /// Keep the Tabs in sessionCache for the next layout.
+    function captureSession() {
+        savedSessionContext.captureToCache()
+    }
+
+    /// The layout goes with nothing kept alive: no renderer has to stay.
+    function terminateRenderers() {
+        webViewContext.terminateRenderers()
+    }
+
+    /// Back on screen: a dropped current Tab loads again.
+    function resumeCurrentTab() {
+        webViewContext.ensureCurrentWebViewLoaded()
+    }
+
     signal sendToRecipientRequested(string address)
 
     function openUrlInNewTab(url, initialTitle, activate=false) {
@@ -450,6 +479,8 @@ StatusSectionLayout {
         webViewContext: webViewContext
         tabs: tabs
         defaultProfileParams: browserConfig.defaultProfileParams
+        otrProfileParams: browserConfig.otrProfileParams
+        sessionCache: root.sessionCache
         determineRealURL: (u) => root.browserRootStore.determineRealURL(u)
         preferencesStore: root.browserPreferencesStore
         currentWebView: _internal.currentWebView

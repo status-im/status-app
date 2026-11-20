@@ -34,6 +34,11 @@ AbstractWebView {
 
     readonly property QtObject d: QtObject {
         property bool crashed: false
+        // Back/forward history to rebuild on the next load (see drop()).
+        property var pendingState: null
+        // The last committed page, and the last url that became a Download.
+        property url pageUrl: ""
+        property string downloadUrl: ""
     }
 
     function _handleRenderProcessTerminated(status) {
@@ -64,8 +69,18 @@ AbstractWebView {
     property bool htmlPageLoaded: false
     // A committed page load ends "pristine" for good — from here the Tab shows a
     // page of its own, so no Download may close it.
-    onHtmlPageLoadedChanged: if (htmlPageLoaded) root.pristinePopup = false
+    onHtmlPageLoadedChanged: {
+        if (!htmlPageLoaded)
+            return
+        root.pristinePopup = false
+        d.pageUrl = root.url
+    }
+
+    /// What the Tab comes back to: its url, unless that url turned into a
+    /// Download (no page to show), then the page it still shows, if any.
+    readonly property url sessionUrl: root.url.toString() === d.downloadUrl ? d.pageUrl : root.url
     readonly property bool loading: loader.item ? loader.item.loading : false
+    readonly property bool playingAudio: loader.item ? !!loader.item.playingAudio : false
     readonly property bool canGoBack: loader.item ? loader.item.canGoBack : false
     readonly property bool canGoForward: loader.item ? loader.item.canGoForward : false
     readonly property real loadProgress: loader.item ? loader.item.loadProgress : 0
@@ -107,6 +122,43 @@ AbstractWebView {
         if (!SQUtils.Utils.isMobile)
             props.profileManager = Qt.binding(() => root.profileManager)
         loader.setSource(root.adapterPath, props)
+    }
+
+    /// Back/forward history to rebuild when the Backend next loads, instead of
+    /// a plain load of `url`. Ignored by Backends that cannot restore it.
+    function setPendingState(state) {
+        d.pendingState = state || null
+    }
+
+    /// The newest back/forward history: the live Backend's, else a pending one.
+    function saveState() {
+        if (loader.item && typeof loader.item.saveState === "function") {
+            const state = loader.item.saveState()
+            if (state && (state.byteLength ?? state.length) > 0)
+                return state
+        }
+        return d.pendingState
+    }
+
+    /// Drop (CONTEXT: Drop): destroy the Backend, keep the Tab. The next
+    /// ensureLoaded() brings the page back with its history.
+    function drop() {
+        if (!loader.item)
+            return
+        d.pendingState = root.saveState()
+        loader.item.detachView()
+        loader.source = ""
+        // Loading a Download url again would download it again.
+        if (root.url.toString() !== root.sessionUrl.toString())
+            root.url = root.sessionUrl
+        root.htmlPageLoaded = false
+        d.crashed = false
+    }
+
+    /// Ends the renderer behind this Tab's Backend, shared by its profile.
+    function terminateRenderer() {
+        if (loader.item && typeof loader.item.terminateRenderer === "function")
+            loader.item.terminateRenderer()
     }
 
     function loadUrl(u) {
@@ -190,7 +242,12 @@ AbstractWebView {
         id: loader
         anchors.fill: parent
         onLoaded: {
-            if (root.url.toString()) loader.item.url = root.url
+            // A restore loads its own current entry; the url only backs it up.
+            if (d.pendingState && typeof loader.item.restoreState === "function")
+                loader.item.restoreState(d.pendingState, root.url)
+            else if (root.url.toString())
+                loader.item.url = root.url
+            d.pendingState = null
             root.syncFromAdapterItem()
         }
 
@@ -208,7 +265,10 @@ AbstractWebView {
         }
         function onLinkHovered(hoveredUrl)             { root.linkHovered(hoveredUrl) }
         function onWindowCloseRequested()              { root.windowCloseRequested() }
-        function onDownloadRequested(download, token)  { root.downloadRequested(download, token) }
+        function onDownloadRequested(download, token)  {
+            d.downloadUrl = download?.url?.toString() ?? ""
+            root.downloadRequested(download, token)
+        }
         function onLinkLongPressed(linkUrl, imageUrl, position) {
             root.linkLongPressed(linkUrl, imageUrl, position)
         }

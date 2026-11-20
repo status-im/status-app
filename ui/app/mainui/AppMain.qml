@@ -1220,7 +1220,7 @@ Item {
                 return
             }
             globalConns.onAppSectionBySectionTypeChanged(Constants.appSection.browser)
-            Qt.callLater(() => browserLayoutContainer.item.openUrlInNewTab(link))
+            Qt.callLater(() => browserLayoutContainer.openUrlInNewTab(link))
             Global.linkOpenedExternally(link)
         }
 
@@ -1235,12 +1235,7 @@ Item {
                 return
             }
             globalConns.onAppSectionBySectionTypeChanged(Constants.appSection.browser)
-            Qt.callLater(() => {
-                // BrowserPrivacyWall (privacy mode) has no openUrlInNewTab()
-                const browser = browserLayoutContainer.item
-                if (browser && browser.openUrlInNewTab)
-                    browser.openUrlInNewTab(link)
-            })
+            Qt.callLater(() => browserLayoutContainer.openUrlInNewTab(link))
         }
 
         function tryOpenNavigationEducationPopup() {
@@ -2448,13 +2443,10 @@ Item {
                     BrowserLoader {
                         id: browserLayoutContainer
 
-                        // Do not unload section data from the memory once activated
-                        active: false
-                        Binding on active {
-                            when: d.isBrowserEnabled && appView.currentIndex === Constants.appViewStackIndex.browser
-                            value: true
-                            restoreMode: Binding.RestoreNone
-                        }
+                        sectionEnabled: d.isBrowserEnabled
+                        sectionCurrent: appView.currentIndex === Constants.appViewStackIndex.browser
+                        appInBackground: memoryRelease.appInBackground
+                        onUiReleased: memoryRelease.request()
 
                         userUID: d.myPublicKey
                         sectionName: "browser"

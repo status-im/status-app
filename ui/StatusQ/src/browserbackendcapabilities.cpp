@@ -61,3 +61,23 @@ bool BrowserBackendCapabilities::isPdfViewerSupported()
     return true;
 #endif
 }
+
+bool BrowserBackendCapabilities::isStateRestoreSupported()
+{
+#if defined(STATUSQ_MOBILE_BACKEND)
+    return MobileWebViewCapabilities::isStateRestoreSupported();
+#else
+    // The WebEngine adapter hands no history over.
+    return false;
+#endif
+}
+
+bool BrowserBackendCapabilities::isPlayingAudioSupported()
+{
+#if defined(STATUSQ_MOBILE_BACKEND)
+    return MobileWebViewCapabilities::isPlayingAudioSupported();
+#else
+    // The WebEngine adapter does not report audible pages.
+    return false;
+#endif
+}

@@ -20,6 +20,11 @@ QtObject {
     property var accounts: []
     property bool _initialConnectionDone: false
     property var _ownRequestIds: ({})
+    property int _gatedRequests: 0
+
+    // A request of this page awaits the user (connect, sign, send): the
+    // connector asked for their approval and the answer has not come back.
+    readonly property bool hasPendingRequests: _gatedRequests > 0
 
     // SIGNALS
     // Notify to re-read all properties
@@ -68,7 +73,7 @@ QtObject {
         }
 
         connectorController.connectorCallRPC(requestId, JSON.stringify(rpcRequest))
-        _ownRequestIds[requestId] = true
+        _ownRequestIds[requestId] = { method: method, gated: false }
 
         // Return immediately - response comes via connectorCallRPCResult signal
         return JSON.stringify({
@@ -147,6 +152,30 @@ QtObject {
     }
 
     // HELPER FUNCTIONS
+    // The connector asks the user about one of our in-flight requests: the
+    // oldest one of that method from this origin (and client, when given).
+    function _markGated(dappJson, method) {
+        let info
+        try {
+            info = JSON.parse(dappJson)
+        } catch (e) {
+            return
+        }
+        if (!info.url || Utils.normalizeOrigin(info.url) !== Utils.normalizeOrigin(dappOrigin))
+            return
+        if (info.clientId && info.clientId !== clientId)
+            return
+        const gatedMethod = info.method || method
+        for (const id in _ownRequestIds) {
+            const pending = _ownRequestIds[id]
+            if (!pending.gated && pending.method === gatedMethod) {
+                pending.gated = true
+                _gatedRequests++
+                return
+            }
+        }
+    }
+
     function shouldProcessSignal(event) {
         // Filter by origin
         if (event.url && Utils.normalizeOrigin(event.url) !== Utils.normalizeOrigin(dappOrigin)) {
@@ -202,11 +231,26 @@ QtObject {
             }
         }
 
+        function onConnectRequested(requestId, dappJson) {
+            _markGated(dappJson, "eth_requestAccounts")
+        }
+
+        function onSendTransaction(requestId, dappJson) {
+            _markGated(dappJson, "eth_sendTransaction")
+        }
+
+        function onSign(requestId, dappJson) {
+            _markGated(dappJson, "")
+        }
+
         function onConnectorCallRPCResult(requestId, payload) {
-            if (!_ownRequestIds[requestId])
+            const pending = _ownRequestIds[requestId]
+            if (!pending)
                 return
 
             delete _ownRequestIds[requestId]
+            if (pending.gated)
+                _gatedRequests--
 
             // Emit to Eip1193ProviderAdapter → ethereum_wrapper.js
             requestCompletedEvent({
