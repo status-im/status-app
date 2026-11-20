@@ -70,7 +70,7 @@ static void handleIOSFilePickerRejected();
 extern "C" {
 static void jni_nativeShakeDetected(JNIEnv*, jclass);
 static void jni_nativeDensityChanged(JNIEnv*, jclass, jfloat density);
-static void jni_nativeMemoryPressure(JNIEnv*, jclass);
+static void jni_nativeMemoryPressure(JNIEnv*, jclass, jboolean critical);
 static void jni_nativeKeyboardHeightChanged(JNIEnv*, jclass, jint height);
 }
 #endif
@@ -109,7 +109,7 @@ SystemUtilsInternal::SystemUtilsInternal(QObject *parent)
         if (clazz) {
             const JNINativeMethod methods[] = {
                 { const_cast<char*>("nativeOnMemoryPressure"),
-                  const_cast<char*>("()V"),
+                  const_cast<char*>("(Z)V"),
                   reinterpret_cast<void*>(jni_nativeMemoryPressure) },
             };
             jint rc = env->RegisterNatives(clazz, methods, jint(std::size(methods)));
@@ -1083,11 +1083,11 @@ static void jni_nativeDensityChanged(JNIEnv*, jclass, jfloat density)
     }, Qt::QueuedConnection);
 }
 
-static void jni_nativeMemoryPressure(JNIEnv*, jclass)
+static void jni_nativeMemoryPressure(JNIEnv*, jclass, jboolean critical)
 {
-    QMetaObject::invokeMethod(qApp, []() {
+    QMetaObject::invokeMethod(qApp, [critical]() {
         if (auto self = s_systemUtilsInternal.load())
-            emit self->memoryPressure();
+            emit self->memoryPressure(critical);
     }, Qt::QueuedConnection);
 }
 
