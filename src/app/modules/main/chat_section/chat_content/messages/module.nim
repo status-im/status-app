@@ -378,7 +378,7 @@ method onSendingStarted*(self: Module, sendToken, text, replyTo: string, content
     threadId: self.controller.getMyThreadId(),
     communityId: chatDto.communityId,
     `from`: singletonInstance.userProfile.getPubKey(),
-    text: if startNewThread and newThreadName.strip().len > 0: newThreadName else: text,
+    text: text,
     clock: now,
     timestamp: now,
     seen: true,
@@ -390,7 +390,9 @@ method onSendingStarted*(self: Module, sendToken, text, replyTo: string, content
     let items = self.createMessageItemsFromMessageDtos(@[dto])
     if items.len > 0:
       items[0].hasThread = true
-      items[0].threadSummary = ThreadSummary(title: dto.text, messagesCount: 2,
+      items[0].threadSummary = ThreadSummary(
+        title: if newThreadName.strip().len > 0: newThreadName else: text,
+        messagesCount: 2,
         lastMessageSenderId: items[0].senderId,
         lastMessageSenderName: items[0].senderDisplayName,
         lastMessageSenderImage: items[0].senderIcon,
