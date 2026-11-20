@@ -31,20 +31,21 @@ public final class MemoryPressureListener {
                 notifyMemoryPressure(true);
             }
 
-            // BACKGROUND only says the app went to the background (since API
-            // 34 it is all that is sent, besides UI_HIDDEN, which is ignored);
-            // the other levels are real pressure, sent before API 34.
+            // Only the RUNNING_ levels (sent before API 34, in the foreground)
+            // are real pressure. BACKGROUND (since API 34 all that is sent,
+            // besides the ignored UI_HIDDEN), MODERATE and COMPLETE come while
+            // the app is in the background.
             @Override
             public void onTrimMemory(int level) {
                 switch (level) {
                 case TRIM_MEMORY_BACKGROUND:
-                    Log.i(TAG, "onTrimMemory: background");
+                case TRIM_MEMORY_MODERATE:
+                case TRIM_MEMORY_COMPLETE:
+                    Log.i(TAG, "onTrimMemory: background, level " + level);
                     notifyMemoryPressure(false);
                     break;
                 case TRIM_MEMORY_RUNNING_LOW:
                 case TRIM_MEMORY_RUNNING_CRITICAL:
-                case TRIM_MEMORY_MODERATE:
-                case TRIM_MEMORY_COMPLETE:
                     Log.i(TAG, "onTrimMemory: memory pressure, level " + level);
                     notifyMemoryPressure(true);
                     break;
