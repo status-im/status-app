@@ -1,5 +1,6 @@
 import QtQuick
 
+import StatusQ
 import StatusQ.Core
 
 QtObject {
@@ -13,6 +14,9 @@ QtObject {
     property string unparsedText: ""
     // pubKey -> display name, used to resolve mentions in `unparsedText`.
     property var mentionsMap: ({})
+    readonly property list<chatTextSegment> textSegments: MarkdownUtils.toChatTextSegments(unparsedText, mentionsMap)
+    // URL -> StatusInlineLinkText metadata, resolved by the application.
+    property var inlineLinks: ({})
     property string messageContent: ""
     // Format of an image messageContent ("gif", "webp", "jpeg", "png"), when known
     property string messageContentFormat: ""

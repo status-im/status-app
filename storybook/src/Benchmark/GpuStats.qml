@@ -12,7 +12,7 @@ import QtQml
 QtObject {
     id: root
 
-    property bool fileReadable: true
+    property bool fileReadable: Qt.platform.os === "linux"
 
     // one fd per DRM client: a client's fds all report the same numbers
     property var drmFds: null

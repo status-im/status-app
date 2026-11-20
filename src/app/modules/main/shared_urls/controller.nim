@@ -1,13 +1,13 @@
 import ./io_interface
 
-import ../../../core/signals/types
 import ../../../core/eventemitter
+import ../../../core/unique_event_emitter
 import ../../../../app_service/service/shared_urls/service as urls_service
 
 type
   Controller* = ref object of RootObj
     delegate: io_interface.AccessInterface
-    events: EventEmitter
+    events: UniqueUUIDEventEmitter
     sharedUrlsService: urls_service.Service
 
 proc newController*(
@@ -17,11 +17,15 @@ proc newController*(
     ): Controller =
   result = Controller()
   result.delegate = delegate
-  result.events = events
+  result.events = initUniqueUUIDEventEmitter(events)
   result.sharedUrlsService = sharedUrlsService
 
 proc delete*(self: Controller) =
-  discard
+  self.events.disconnect()
+
+proc init*(self: Controller) =
+  self.events.on(SIGNAL_PROFILE_URLS_RESOLVED) do(args: Args):
+    self.delegate.profileUrlsResolved(ProfileUrlsResolvedArgs(args).profilesJson)
 
 proc parseCommunitySharedUrl*(self: Controller, url: string): CommunityUrlDataDto =
   let data = self.sharedUrlsService.parseSharedUrl(url)
@@ -34,6 +38,12 @@ proc parseCommunityChannelSharedUrl*(self: Controller, url: string): CommunityCh
 proc parseContactSharedUrl*(self: Controller, url: string): ContactUrlDataDto =
   let data = self.sharedUrlsService.parseSharedUrl(url)
   return data.contact
+
+proc resolveProfileUrls*(self: Controller, urlsJson: string): string =
+  self.sharedUrlsService.resolveProfileUrls(urlsJson)
+
+proc releaseProfileUrls*(self: Controller, urlsJson: string) =
+  self.sharedUrlsService.releaseProfileUrls(urlsJson)
 
 proc createMessageUrl*(self: Controller, chatId: string, messageId: string): string =
   return self.sharedUrlsService.createMessageUrl(chatId, messageId)
