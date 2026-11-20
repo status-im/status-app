@@ -697,6 +697,8 @@ Item {
             item.mentionsMap = Qt.binding(() => mentionResolver.resolveFor(
                                               item.unparsedText + " " + item.quotedMessageUnparsedText,
                                               item.mentionedNames))
+            item.threadLastMessageMentionsMap = Qt.binding(() =>
+                mentionResolver.resolveFor(item.threadLastMessageText))
             item.objectName = "chatMessageViewDelegate"
 
             binder.bind(messageWindow.model, row)
@@ -738,6 +740,7 @@ Item {
                 item[name] = item[name]
 
             item.mentionsMap = ({})
+            item.threadLastMessageMentionsMap = ({})
             item.width = item.width
 
             if (d.pooledItems.has(item)) {
