@@ -131,8 +131,5 @@ method setUrls*(self: AccessInterface, urls: seq[string]) {.base.} =
 method getContactDetails*(self: AccessInterface, contactId: string): ContactDetails {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onSendingMessageSuccess*(self: AccessInterface) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
-method onSendingMessageFailure*(self: AccessInterface) {.base.} =
+method onComposerSendFinished*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")

@@ -182,12 +182,6 @@ QtObject:
     self.sendingInProgress = value
     self.sendingInProgressChanged()
 
-  proc emitSendingMessageSuccess*(self: View) =
-    self.setSendingInProgress(false)
-
-  proc emitSendingMessageFailure*(self: View) =
-    self.setSendingInProgress(false)
-
   proc delete*(self: View) =
     self.QObject.delete
 
