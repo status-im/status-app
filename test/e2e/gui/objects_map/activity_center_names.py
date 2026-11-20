@@ -18,5 +18,6 @@ notificationCardHeader = {'container': activityCenterNotificationCard,'type': 'N
 activityCenterContactRequestMoreButton = {"container": activityCenterListLoader, "objectName": "moreBtn", "type": "StatusFlatRoundButton", "visible": True}
 activityCenterContactRequestHeader = {"container": activityCenterNotificationCard, "type": "NotificationHeaderRow", "unnamed": 1, "visible": True}
 activityCenterScrollView = {"container": statusDesktop_mainWindow, "type": "StatusScrollView", "unnamed": 1, "visible": True}
-activityCenterGroupButton = {"container": activityCenterScrollView, "objectName": "activityCenterGroupButton", "type": "StatusFlatButton", "visible": True}
+activityCenterGroupButton = {"container": activityCenterPanel, "objectName": "activityCenterGroupButton", "type": "StatusFlatButton", "visible": True}
+activityCenterRepliesButton = {"container": activityCenterPanel, "objectName": "activityCenterRepliesButton", "type": "StatusFlatButton", "visible": True}
 activityCenterNavigationButton = {"container": activityCenterPanel, "type": "StatusNavigationButton", "visible": True}

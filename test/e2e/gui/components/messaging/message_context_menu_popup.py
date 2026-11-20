@@ -3,6 +3,7 @@ import allure
 
 import configs
 import driver
+from gui.elements.button import Button
 from gui.elements.object import QObject
 from gui.objects_map import messaging_names
 
@@ -13,12 +14,23 @@ class MessageContextMenuPopup(QObject):
     def __init__(self):
         super().__init__(messaging_names.messageContextView)
         self._emoji_reaction = QObject(messaging_names.o_EmojiReaction)
+        self._copy_menu_item = Button(messaging_names.chatMessageViewDelegate_messageContextMenuCopyMenuItem)
 
     @allure.step('Dismiss message context menu if visible')
     def dismiss_if_visible(self, hover_target: QObject, timeout_msec: int = _DISMISS_TIMEOUT_MSEC):
         if not self.is_visible:
             return self
         hover_target.hover()
+        driver.waitFor(lambda: not self.is_visible, timeout_msec)
+        if self.is_visible:
+            self.close_via_copy(timeout_msec)
+        return self
+
+    @allure.step('Close message context menu')
+    def close_via_copy(self, timeout_msec: int = _DISMISS_TIMEOUT_MSEC):
+        if not self.is_visible:
+            return self
+        self._copy_menu_item.wait_until_appears(timeout_msec).click()
         driver.waitFor(lambda: not self.is_visible, timeout_msec)
         return self
 
