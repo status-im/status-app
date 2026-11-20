@@ -153,7 +153,8 @@ jobs:
             echo "status-go=$(git rev-parse HEAD:vendor/status-go)"
             echo "openssl=$(git rev-parse HEAD:mobile/vendors/openssl)"
             if [ -n "${CCACHE_KEY_FILES:-}" ]; then
-              echo "ccache-config=-$(cat $CCACHE_KEY_FILES | git hash-object --stdin | cut -c1-12)"
+              hashes=$(git hash-object -- $CCACHE_KEY_FILES)
+              echo "ccache-config=-$(echo "$hashes" | git hash-object --stdin | cut -c1-12)"
             fi
           } >> "$GITHUB_OUTPUT"
       # A pull request restores what master saved, and saves only when there was
