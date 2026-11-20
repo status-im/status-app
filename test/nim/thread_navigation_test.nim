@@ -1,5 +1,8 @@
 import std/[importutils, json, tables, sets, unittest]
 import nimqml
+from seaqt/qcoreapplication import QCoreApplication, create
+
+let application = QCoreApplication.create()
 
 import app/core/eventemitter
 import app/core/signals/types
@@ -637,6 +640,38 @@ suite "thread navigation":
 
 
 suite "inline metadata read bridge":
+  test "deleted thread links become unavailable without losing their cached tombstone":
+    singletonInstance.userProfile.setFixedData("", "", "me", false, false)
+    let events = createEventEmitter()
+    let chats = chat_service.Service()
+    chats.chats["chat"] = ChatDto(id: "chat", active: true,
+      chatType: ChatType.PrivateGroupChat, members: @[ChatMember(id: "me")])
+    let messages = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    messages.init()
+    let delegate = ThreadDetailsDelegate()
+    delegate.controller = controller.newController(delegate, events, "section", "current", false,
+      nil, nil, chats, messages, nil, nil)
+    delegate.controller.init()
+    defer: delegate.controller.delete()
+    for summariesLoaded in [false, true]:
+      messages.chatThreadSummariesLoadedChats.excl("chat")
+      messages.chatThreadSummariesLoadingChats.excl("chat")
+      if summariesLoaded: messages.chatThreadSummariesLoadedChats.incl("chat")
+      else: messages.chatThreadSummariesLoadingChats.incl("chat")
+      messages.chatThreadsByParentIdByChat["chat"] = {
+        "parent": ThreadDto(chatId: "chat", threadId: "thread", parentMessageId: "parent", name: "Plans")
+      }.toTable
+      check not delegate.controller.getInlineThreadDetails("chat", "thread", "")["contentUnavailable"].getBool
+      delegate.inlineChanges.setLen(0)
+      events.emit(chat_service.SIGNAL_CHAT_THREADS_UPDATED, chat_service.ChatThreadsUpdatedArgs(threads: @[
+        ThreadDto(chatId: "chat", threadId: "thread", parentMessageId: "parent", deleted: true)]))
+      require delegate.inlineChanges.len == 1
+      check delegate.inlineChanges[0]["chats"] == %*["chat"]
+      let data = delegate.controller.getInlineThreadDetails("chat", "thread", "")
+      check data["contentUnavailable"].getBool
+      check not data["noAccess"].getBool
+      check messages.getThreadById("chat", "thread").deleted
+
   test "cached thread details respect group membership and channel visibility":
     singletonInstance.userProfile.setFixedData("", "", "me", false, false)
     let events = createEventEmitter()
@@ -661,3 +696,7 @@ suite "inline metadata read bridge":
       let data = reader.getInlineThreadDetails("chat", "thread", "")
       check data["noAccess"].getBool == not row.readable
       check data["threadName"].getStr == (if row.readable: "Plans" else: "")
+      check not data["contentUnavailable"].getBool
+      let missing = reader.getInlineThreadDetails("chat", "missing", "")
+      check missing["noAccess"].getBool == not row.readable
+      check missing["contentUnavailable"].getBool == row.readable

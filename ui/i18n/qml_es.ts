@@ -5709,6 +5709,29 @@ Recuerda tu contraseña y no la compartas con nadie.</translation>
     </message>
 </context>
 <context>
+    <name>DeepLinkErrorDialog</name>
+    <message>
+        <source>No access</source>
+        <translation>Sin acceso</translation>
+    </message>
+    <message>
+        <source>Content unavailable</source>
+        <translation>Contenido no disponible</translation>
+    </message>
+    <message>
+        <source>Got it</source>
+        <translation>Entendido</translation>
+    </message>
+    <message>
+        <source>You don&apos;t have permission to open this link. Get access to view it.</source>
+        <translation>No tienes permiso para abrir este enlace. Obtén acceso para verlo.</translation>
+    </message>
+    <message>
+        <source>The content couldn&apos;t be retrieved or may have been deleted.</source>
+        <translation>No se ha podido recuperar el contenido o puede que se haya eliminado.</translation>
+    </message>
+</context>
+<context>
     <name>DefaultDAppExplorerView</name>
     <message>
         <source>Blockchain explorer in the address bar</source>
@@ -9268,6 +9291,14 @@ app: %2</translation>
     <message>
         <source>No access</source>
         <translation>Sin acceso</translation>
+    </message>
+    <message>
+        <source># no access</source>
+        <translation># sin acceso</translation>
+    </message>
+    <message>
+        <source>Content unavailable</source>
+        <translation>Contenido no disponible</translation>
     </message>
     <message>
         <source>Unknown community</source>

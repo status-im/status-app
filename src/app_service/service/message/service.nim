@@ -244,7 +244,7 @@ QtObject:
     tokenService: token_service.Service
     walletAccountService: wallet_account_service.Service
     networkService: network_service.Service
-    inlineMessageThreads: OrderedTable[string, tuple[chatId, threadId: string, retryAt: Option[MonoTime]]]
+    inlineMessageThreads: OrderedTable[string, tuple[chatId, threadId: string, retryAt: Option[MonoTime], unavailable: bool]]
     inlineMessageRetryTimer: QTimer
     inlineMessageRequests: Table[UUID, tuple[key, chatId, messageId: string, superseded: bool]]
     inlineMessageWaitingChats: HashSet[string]
@@ -377,6 +377,7 @@ QtObject:
     self.chatThreadListsLoadingChats.excl(chatId)
     self.chatThreadSummariesLoadedChats.excl(chatId)
     self.chatThreadSummariesLoadingChats.excl(chatId)
+    self.inlineMessageThreads.del(chatId & ":")
     self.chatThreadSummariesPendingUpdates.del(chatId)
     self.chatThreadListsPendingUpdates.del(chatId)
     self.chatThreadsRevision[chatId] = self.chatThreadsRevision.getOrDefault(chatId) + 1
@@ -597,6 +598,10 @@ QtObject:
         threads.add(thread)
       self.events.emit(SIGNAL_CHAT_THREADS_FOR_CHATS_LOADED,
         ChatThreadsForChatsLoadedArgs(threads: threads, completedChatIds: @[chatId], summariesLoaded: true))
+      return
+    # Empty message IDs reserve a cache entry for per-chat summary retries.
+    let retryAt = self.inlineMessageThreads.getOrDefault(chatId & ":").retryAt
+    if not forceReload and retryAt.isSome and getMonoTime() < retryAt.get:
       return
     self.chatThreadSummariesLoadingChats.incl(chatId)
     self.threadpool.startLocalRead(AsyncFetchChatThreadsForChatsTaskArg(
@@ -992,7 +997,8 @@ QtObject:
     let delayMs = max(1'i64, (nextRetry.get - getMonoTime()).inMilliseconds + 1)
     self.inlineMessageRetryTimer.start(delayMs.cint)
 
-  proc cacheInlineMessage(self: Service, key, chatId, threadId: string, retryAt: Option[MonoTime] = none(MonoTime)) =
+  proc cacheInlineMessage(self: Service, key, chatId, threadId: string, retryAt: Option[MonoTime] = none(MonoTime),
+      unavailable = false) =
     var retryChanged = retryAt.isSome or self.inlineMessageThreads.getOrDefault(key).retryAt.isSome
     self.inlineMessageThreads.del(key)
     if self.inlineMessageThreads.len >= InlineLinkCacheLimit:
@@ -1002,7 +1008,7 @@ QtObject:
         break
       retryChanged = retryChanged or self.inlineMessageThreads[oldest].retryAt.isSome
       self.inlineMessageThreads.del(oldest)
-    self.inlineMessageThreads[key] = (chatId, threadId, retryAt)
+    self.inlineMessageThreads[key] = (chatId, threadId, retryAt, unavailable)
     if retryChanged: self.armInlineMessageRetry()
 
   proc updateInlineMessageThreads(self: Service, chatId: string, messages: seq[MessageDto]) =
@@ -1019,11 +1025,23 @@ QtObject:
         self.inlineMessageRequests[requestId].superseded = true
       if self.inlineMessageThreads.hasKey(key) or pending.len > 0:
         let cached = self.inlineMessageThreads.getOrDefault(key)
-        if not self.inlineMessageThreads.hasKey(key) or cached.retryAt.isSome or cached.threadId != message.threadId:
-          self.cacheInlineMessage(key, chatId, message.threadId)
+        if not self.inlineMessageThreads.hasKey(key) or cached.retryAt.isSome or cached.threadId != message.threadId or
+            cached.unavailable != (message.deleted or message.deletedForMe):
+          self.cacheInlineMessage(key, chatId, message.threadId, unavailable = message.deleted or message.deletedForMe)
           changed = true
     if changed:
       self.events.emit(SIGNAL_INLINE_MESSAGE_DATA_CHANGED, ChatArgs(chatId: chatId))
+
+  proc inlineMessageUnavailable*(self: Service, chatId, messageId: string): bool =
+    # An unset cache entry is still pending, not unavailable.
+    let cached = self.inlineMessageThreads.getOrDefault(chatId & ":" & messageId)
+    return cached.unavailable or cached.retryAt.isSome
+
+  proc inlineThreadUnavailable*(self: Service, chatId, threadId: string): bool =
+    let thread = self.getThreadById(chatId, threadId)
+    return thread.deleted or
+      ((chatId in self.chatThreadSummariesLoadedChats or self.inlineMessageUnavailable(chatId, "")) and
+        thread.threadId.len == 0)
 
   proc init*(self: Service) =
     self.events.on(SIGNAL_MESSAGES_LOADED) do(e: Args):
@@ -1035,6 +1053,14 @@ QtObject:
     self.events.on(SIGNAL_MESSAGE_EDITED) do(e: Args):
       let args = MessageEditedArgs(e)
       self.updateInlineMessageThreads(args.chatId, @[args.message])
+
+    self.events.on(SIGNAL_MESSAGE_REMOVED) do(e: Args):
+      let args = MessageRemovedArgs(e)
+      self.updateInlineMessageThreads(args.chatId, @[MessageDto(id: args.messageId, deleted: true)])
+    self.events.on(SIGNAL_MESSAGES_DELETED) do(e: Args):
+      let args = MessagesDeletedArgs(e)
+      for chatId, messageIds in args.deletedMessages:
+        self.updateInlineMessageThreads(chatId, messageIds.mapIt(MessageDto(id: it, deleted: true)))
 
     self.events.on(chat_service.SIGNAL_CHAT_THREADS_UPDATED) do(e: Args):
       let args = chat_service.ChatThreadsUpdatedArgs(e)
@@ -1327,6 +1353,8 @@ QtObject:
           self.chatThreadSummariesLoadingChats.excl(chatId)
           self.chatThreadSummariesPendingUpdates.del(chatId)
           self.chatThreadSummariesLoadedChats.incl(chatId)
+          self.inlineMessageThreads.del(chatId & ":")
+          self.armInlineMessageRetry()
         else:
           self.chatThreadListsLoadingChats.excl(chatId)
           self.chatThreadListsPendingUpdates.del(chatId)
@@ -1338,6 +1366,8 @@ QtObject:
       for chatId in chatIds:
         if includeSummaries:
           self.chatThreadSummariesLoadingChats.excl(chatId)
+          self.chatThreadSummariesLoadedChats.excl(chatId)
+          self.cacheInlineMessage(chatId & ":", chatId, "", some(getMonoTime() + InlineLookupRetryDelay))
           self.chatThreadSummariesPendingUpdates.del(chatId)
         else:
           self.chatThreadListsLoadingChats.excl(chatId)
@@ -1762,7 +1792,8 @@ QtObject:
     if not target.superseded:
       let valid = data.error.len == 0 and data.message.localChatId == target.chatId and data.message.id == target.messageId
       if valid:
-        self.cacheInlineMessage(target.key, target.chatId, data.message.threadId)
+        self.cacheInlineMessage(target.key, target.chatId, data.message.threadId,
+          unavailable = data.message.deleted or data.message.deletedForMe)
       else:
         self.cacheInlineMessage(target.key, target.chatId, "", some(getMonoTime() + InlineLookupRetryDelay))
     if not target.superseded or not self.inlineMessageThreads.hasKey(target.key):
@@ -1817,7 +1848,7 @@ QtObject:
     if self.inlineMessageThreads.hasKey(key):
       let cached = self.inlineMessageThreads[key]
       if cached.retryAt.isNone:
-        self.cacheInlineMessage(key, chatId, cached.threadId)
+        self.cacheInlineMessage(key, chatId, cached.threadId, unavailable = cached.unavailable)
         return cached.threadId
       if now < cached.retryAt.get:
         return ""
