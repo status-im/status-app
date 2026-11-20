@@ -65,11 +65,11 @@ class ProfileSettingsView(QObject):
         self.showcase_popup_close_if_present()
         links = {}
         for link_name in walk_children(
-                driver.waitForObjectExists(self._links_list.real_name, configs.timeouts.UI_LOAD_TIMEOUT_MSEC)):
+                driver.wait_exists(self._links_list.real_name, configs.timeouts.UI_LOAD_TIMEOUT_MSEC)):
             if getattr(link_name, 'id', '') == 'draggableDelegate':
                 for link_value in walk_children(link_name):
                     if getattr(link_value, 'id', '') == 'textMouseArea':
-                        links[str(link_name.title)] = str(driver.object.parent(link_value).text)
+                        links[str(link_name.title)] = str(link_value.parent.text)
         return links
 
     @allure.step('Close Showcase profile popup if it is there')
@@ -135,7 +135,7 @@ class ProfileSettingsView(QObject):
 
         titles = [
             str(delegate.title)
-            for delegate in driver.findAllObjects(self.profile_showcase_delegate.real_name)
+            for delegate in driver.find_all(self.profile_showcase_delegate.real_name)
             if getattr(delegate, 'showcaseVisibility', -1) == visibility
         ]
 
@@ -144,7 +144,7 @@ class ProfileSettingsView(QObject):
         )
 
     def _find_showcase_delegate(self, community_name: str):
-        for delegate in driver.findAllObjects(self.profile_showcase_delegate.real_name):
+        for delegate in driver.find_all(self.profile_showcase_delegate.real_name):
             if str(getattr(delegate, 'title', '')) == community_name:
                 return delegate
         return None
@@ -162,8 +162,8 @@ class ProfileSettingsView(QObject):
             if delegate is None:
                 raise LookupError(f'Community delegate not found: {community_name!r}')
 
-            srect = driver.object.globalBounds(scroll_obj)
-            drect = driver.object.globalBounds(delegate)
+            srect = driver.bounds(scroll_obj)
+            drect = driver.bounds(delegate)
             in_viewport = row_vertically_usable_in_scroll_viewport(srect, drect)
             room_below = (srect.y + srect.height) - (drect.y + drect.height)
             if in_viewport and room_below >= menu_popup_height:
@@ -196,7 +196,7 @@ class ProfileSettingsView(QObject):
 
         last_error: typing.Optional[BaseException] = None
         for attempt in range(3):
-            driver.mouseClick(visibility_button)
+            driver.click(visibility_button)
             time.sleep(0.2)
             try:
                 return ProfileShowcaseVisibilityMenu().wait_until_appears(

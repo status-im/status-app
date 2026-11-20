@@ -46,7 +46,7 @@ class CreateNewCommunityPopup(QObject):
 
     @allure.step('Get next button enabled state')
     def is_next_button_enabled(self) -> bool:
-        return driver.waitForObjectExists(self.next_button.real_name, configs.timeouts.UI_LOAD_TIMEOUT_MSEC).enabled
+        return driver.wait_exists(self.next_button.real_name, configs.timeouts.UI_LOAD_TIMEOUT_MSEC).enabled
 
     @allure.step('Get archive support checkbox state')
     def is_archive_checkbox_checked(self) -> bool:

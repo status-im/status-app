@@ -66,7 +66,7 @@ class WelcomeCommunityPopup(QObject):
         sign_popup = SignPopup()
         while True:
             sign_popup.enter_pin(pin)
-            if not driver.waitFor(lambda: sign_popup.is_pin_visible, 5000):
+            if not driver.wait_until(lambda: sign_popup.is_pin_visible, 5000):
                 break
 
         self._submit_shared_addresses_button.click()

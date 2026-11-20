@@ -36,7 +36,7 @@ def set_text_property_on_object(obj, text: str, timeout_msec: int = None) -> Non
         except (RuntimeError, AttributeError):
             return False
 
-    assert driver.waitFor(_content_matches, timeout_msec), (
+    assert driver.wait_until(_content_matches, timeout_msec), (
         f'Text was not set on {getattr(obj, "objectName", obj)!r}; expected={expected!r} '
         f'text={getattr(obj, "text", "")!r}'
     )
@@ -52,24 +52,24 @@ class QObject:
     @allure.step('Get object {0}')
     def object(self):
         try:
-            return driver.waitForObject(self.real_name, configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
+            return driver.wait(self.real_name, configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
         except LookupError as e:
             raise Exception(
                 f"Object {self.real_name} was not found within {configs.timeouts.UI_LOAD_TIMEOUT_MSEC} ms") from e
 
     def set_text_property(self, text):
-        """Assign text without driver.type(). Verifies via plain text when available (e.g. RichText inputs)."""
+        """Assign text without driver.type_text(). Verifies via plain text when available (e.g. RichText inputs)."""
         set_text_property_on_object(self.object, text, configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
 
     @property
     @allure.step('Get object exists {0}')
     def exists(self) -> bool:
-        return driver.object.exists(self.real_name)
+        return driver.exists(self.real_name)
 
     @property
     @allure.step('Get bounds {0}')
     def bounds(self):
-        return driver.object.globalBounds(self.object)
+        return driver.bounds(self.object)
 
     @property
     @allure.step('Get "x" coordinate {0}')
@@ -122,7 +122,7 @@ class QObject:
     @allure.step('Get visible {0}')
     def is_visible(self) -> bool:
         try:
-            return driver.waitForObject(self.real_name, 200).visible
+            return driver.wait(self.real_name, 200).visible
         except (LookupError, RuntimeError, AttributeError):
             return False
 
@@ -137,53 +137,33 @@ class QObject:
             self,
             x: int = None,
             y: int = None,
-            button=None
-            # timeout=1
+            button: str = 'left'
     ):
-        driver.mouseClick(
+        driver.click(
             self.object,
             x or int(self.object.width * 0.5),
             y or int(self.object.height * 0.5),
-            button or driver.Qt.LeftButton
+            button
         )
-        LOG.info('%s: is clicked with Qt.LeftButton', self)
+        LOG.info('%s: is clicked with the %s button', self, button)
 
     @allure.step('Click {0} if visible')
     def click_if_visible(self, timeout_msec: int = 200) -> bool:
         try:
-            obj = driver.waitForObject(self.real_name, timeout_msec)
+            obj = driver.wait(self.real_name, timeout_msec)
         except LookupError:
             return False
         if not obj.visible:
             return False
-        driver.mouseClick(
-            obj,
-            int(obj.width * 0.5),
-            int(obj.height * 0.5),
-            driver.Qt.LeftButton,
-        )
-        LOG.info('%s: is clicked with Qt.LeftButton', self)
+        driver.click(obj, int(obj.width * 0.5), int(obj.height * 0.5))
+        LOG.info('%s: is clicked', self)
         return True
-
-    @allure.step('Native click {0}')
-    def native_mouse_click(
-            self,
-            x: typing.Union[int, driver.UiTypes.ScreenPoint] = None,
-            y: typing.Union[int, driver.UiTypes.ScreenPoint] = None,
-            button: driver.MouseButton = None
-    ):
-        driver.nativeMouseClick(
-            x or int(self.bounds.x + self.width // 2),
-            y or int(self.bounds.y + self.height // 2),
-            button or driver.MouseButton.LeftButton
-        )
-        LOG.info(f'{self}: native clicked')
 
     @allure.step('Hover {0}')
     def hover(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
         def _hover():
             try:
-                driver.mouseMove(self.object)
+                driver.move(self.object)
                 LOG.info('%s: mouse hovered', self)
                 return getattr(self.object, 'hovered', True)
             except RuntimeError as err:
@@ -191,21 +171,21 @@ class QObject:
                 time.sleep(1)
                 return False
 
-        assert driver.waitFor(lambda: _hover(), timeout_msec)
+        assert driver.wait_until(lambda: _hover(), timeout_msec)
         return self
 
     @allure.step('Right click on {0}')
     def right_click(
             self,
-            x: typing.Union[int, driver.UiTypes.ScreenPoint] = None,
-            y: typing.Union[int, driver.UiTypes.ScreenPoint] = None,
+            x: typing.Union[int, driver.Point] = None,
+            y: typing.Union[int, driver.Point] = None,
     ):
         self.click(
             x or int(self.width // 2),
             y or int(self.height // 2),
-            driver.Qt.RightButton
+            'right'
         )
-        LOG.info('%s: right clicked with Qt.RightButton', self)
+        LOG.info('%s: right clicked', self)
 
     @allure.step('Wait until appears {0}')
     def wait_until_appears(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC, check_interval=0.5):
@@ -226,7 +206,7 @@ class QObject:
 
     @allure.step('Wait until stable {0}')
     def wait_until_stable(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.is_visible and self.width > 0 and self.height > 0,
             timeout_msec,
         ), f'{self} geometry was not stable within {timeout_msec} ms'
@@ -240,7 +220,7 @@ class QObject:
         while time.time() - start_time < timeout_sec:
             try:
                 # Use short timeout for faster check when object disappears
-                obj = driver.waitForObjectExists(self.real_name, 100)
+                obj = driver.wait_exists(self.real_name, 100)
                 # Object exists, check if it's visible
                 if not obj.visible:
                     LOG.info('%s: is hidden', self)
@@ -262,7 +242,7 @@ class QObject:
 
     @classmethod
     def wait_for(cls, condition, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC) -> bool:
-        return driver.waitFor(lambda: condition, timeout_msec)
+        return driver.wait_until(lambda: condition, timeout_msec)
 
     @allure.step('Wait until enabled {0}')
     def wait_until_enabled(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC, check_interval=0.5):
@@ -283,5 +263,5 @@ class QObject:
 
     @allure.step('Close {0}')
     def close(self):
-        driver.type(self.object, '<Escape>')
+        driver.type_text(self.object, '<Escape>')
         self.wait_until_hidden()

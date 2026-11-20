@@ -42,7 +42,7 @@ def test_add_edit_restart_add_delete_generated_account(aut: AUT, main_screen: Ma
 
 
     with step('Verify that the account is correctly displayed in accounts list'):
-        assert driver.waitFor(lambda: name1 in [account.name for account in wallet.left_panel.accounts], 10000), \
+        assert driver.wait_until(lambda: name1 in [account.name for account in wallet.left_panel.accounts], 10000), \
             f'Account with {name1} is not found in {wallet.left_panel.accounts}'
 
     with step('Edit wallet account'):
@@ -51,7 +51,7 @@ def test_add_edit_restart_add_delete_generated_account(aut: AUT, main_screen: Ma
         account_popup.set_name(new_name).save_changes()
 
     with step('Verify that the account is correctly displayed in accounts list'):
-        assert driver.waitFor(lambda: new_name in [account.name for account in wallet.left_panel.accounts], 10000), \
+        assert driver.wait_until(lambda: new_name in [account.name for account in wallet.left_panel.accounts], 10000), \
             f'Account with {new_name} is not found in {wallet.left_panel.accounts}'
 
     with step('Restart application'):
@@ -70,7 +70,7 @@ def test_add_edit_restart_add_delete_generated_account(aut: AUT, main_screen: Ma
 
 
     with step('Verify that the account is correctly displayed in accounts list'):
-        assert driver.waitFor(lambda: name2 in [account.name for account in wallet.left_panel.accounts], 10000), \
+        assert driver.wait_until(lambda: name2 in [account.name for account in wallet.left_panel.accounts], 10000), \
             f'Account with {name2} is not displayed even it should be'
 
     with step('Delete wallet account with agreement'):
@@ -79,5 +79,5 @@ def test_add_edit_restart_add_delete_generated_account(aut: AUT, main_screen: Ma
 
 
     with step('Verify that the account is not displayed in accounts list'):
-        assert driver.waitFor(lambda: new_name not in [account.name for account in wallet.left_panel.accounts], 10000), \
+        assert driver.wait_until(lambda: new_name not in [account.name for account in wallet.left_panel.accounts], 10000), \
             f'Account with {new_name} is found in {wallet.left_panel.accounts} after removal'

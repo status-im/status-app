@@ -41,7 +41,7 @@ class ENSSearchView(QObject):
 
     @allure.step('Get all text notes from ens search view')
     def ens_text_notes(self):
-        return [str(note.text) for note in driver.findAllObjects(self._ens_text_note.real_name)]
+        return [str(note.text) for note in driver.find_all(self._ens_text_note.real_name)]
 
 
 class ENSTermsAndConditionsView(QObject):
@@ -53,7 +53,7 @@ class ENSTermsAndConditionsView(QObject):
 
     @allure.step('Get registered button enabled state')
     def is_register_button_enabled(self) -> bool:
-        return driver.waitForObjectExists(self._register_button.real_name,
+        return driver.wait_exists(self._register_button.real_name,
                                           configs.timeouts.UI_LOAD_TIMEOUT_MSEC).enabled
 
     @allure.step('Register ens username')
@@ -62,7 +62,7 @@ class ENSTermsAndConditionsView(QObject):
         for attempt in range(1, attempts + 1):
             try:
                 self.check_agree_terms_checkbox()
-                driver.waitFor(lambda: self.is_register_button_enabled(), configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
+                driver.wait_until(lambda: self.is_register_button_enabled(), configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
                 self._register_button.click()
                 popup = SendPopup().wait_until_appears()
                 return popup

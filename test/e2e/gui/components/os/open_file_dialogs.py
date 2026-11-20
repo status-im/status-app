@@ -19,7 +19,7 @@ class OpenFileDialog(Window):
 
     @allure.step('Open file')
     def open_file(self, fp: SystemPath):
-        driver.type(self._file_path_text_edit.object, "<Ctrl+A>")
-        driver.type(self._file_path_text_edit.object, str(fp))
-        driver.type(self._file_path_text_edit.object, "<Return>")
+        driver.type_text(self._file_path_text_edit.object, "<Ctrl+A>")
+        driver.type_text(self._file_path_text_edit.object, str(fp))
+        driver.type_text(self._file_path_text_edit.object, "<Return>")
         self.wait_until_hidden()

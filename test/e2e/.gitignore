@@ -13,12 +13,7 @@ tmp/
 *.DS_Store
 
 /local_run_results/
-squish.ini
 .envrc
 
 ext/allure_files/environment.properties
-
-# Squish IDE files generated when opening suite_status
-suite_status/config.xml
-suite_status/envvars
 

@@ -50,18 +50,18 @@ def _element_center_y_in_scroll_viewport(
     Qt Quick items clipped by a Flickable/ScrollView often keep ``visible == true``; relying on
     that skips scrolling and leaves targets off-screen (see ActivityCenter._scroll_notification_into_view).
 
-    Uses ``driver.object.globalBounds`` like :meth:`QObject.bounds`, but resolves the target with a short
-    ``waitForObjectExists`` so we do not call ``element.object`` (full UI timeout) on every scroll step.
+    Uses ``driver.bounds`` like :meth:`QObject.bounds`, but resolves the target with a short
+    ``wait_exists`` so we do not call ``element.object`` (full UI timeout) on every scroll step.
 
     Uses :func:`effective_vertical_viewport_margin` so narrow scroll surfaces still yield a valid band.
     """
     try:
-        elem_obj = driver.waitForObjectExists(element.real_name, 200)
+        elem_obj = driver.wait_exists(element.real_name, 200)
     except (LookupError, RuntimeError):
         return False
     try:
-        srect = driver.object.globalBounds(scroll_surface)
-        crect = driver.object.globalBounds(elem_obj)
+        srect = driver.bounds(scroll_surface)
+        crect = driver.bounds(elem_obj)
     except (RuntimeError, AttributeError):
         return False
     cy = crect.y + crect.height / 2
@@ -75,12 +75,12 @@ def _element_center_x_in_scroll_viewport(
     element: QObject, scroll_surface, margin: int = 24
 ) -> bool:
     try:
-        elem_obj = driver.waitForObjectExists(element.real_name, 200)
+        elem_obj = driver.wait_exists(element.real_name, 200)
     except (LookupError, RuntimeError):
         return False
     try:
-        srect = driver.object.globalBounds(scroll_surface)
-        crect = driver.object.globalBounds(elem_obj)
+        srect = driver.bounds(scroll_surface)
+        crect = driver.bounds(elem_obj)
     except (RuntimeError, AttributeError):
         return False
     cx = crect.x + crect.width / 2

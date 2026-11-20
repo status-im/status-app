@@ -73,7 +73,7 @@ def test_community_pins_panel_after_leave_rejoin(multiple_instances):
         with step(f'{member.name} leaves {community.name}'):
             main_screen.left_panel.open_community_context_menu(
                 community.name).open_leave_community_popup().confirm_action()
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: community.name not in main_screen.left_panel.communities(),
                 configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
             ), f'{community.name} should not be in the left panel after leave'

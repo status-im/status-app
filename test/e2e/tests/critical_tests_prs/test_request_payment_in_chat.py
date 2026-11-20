@@ -44,11 +44,11 @@ def test_request_payment_in_chat(multiple_instances):
                 messages_screen.group_chat.open_payment_request_modal().add_to_message(amount, symbol)
             )
             preview = messages_screen.group_chat.wait_for_payment_request_preview()
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: str(preview.object.symbol) == symbol,
                 configs.timeouts.ROUTES_TIMEOUT_MSEC,
             ), f'Payment request preview symbol is not {symbol}: {preview.object.symbol!r}'
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: str(preview.object.amount) == amount,
                 configs.timeouts.ROUTES_TIMEOUT_MSEC,
             ), f'Payment request preview amount is not {amount}: {preview.object.amount!r}'
@@ -69,7 +69,7 @@ def test_request_payment_in_chat(multiple_instances):
 
             send_modal = chat.open_send_modal_from_payment_request()
             assert send_modal.selected_recipient_address.lower() == receiver_address.lower()
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: send_modal.send_modal_amount_field.text == amount,
                 configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
             ), f'Send amount is not {amount}: {send_modal.send_modal_amount_field.text!r}'

@@ -21,7 +21,7 @@ def test_manage_saved_address(main_screen: MainWindow, address: str):
         wallet.left_panel.open_saved_addresses().open_add_edit_saved_address_popup().add_saved_address(name, address)
 
     with step('Verify that saved address is in the list of saved addresses'):
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: name in wallet.left_panel.open_saved_addresses().address_names,
             configs.timeouts.LOADING_LIST_TIMEOUT_MSEC), f'Address: {name} not found'
 
@@ -30,7 +30,7 @@ def test_manage_saved_address(main_screen: MainWindow, address: str):
         SavedAddressesView().right_click_edit_saved_address_popup(name).edit_saved_address(new_name)
 
     with step('Verify that saved address is in the list of saved addresses'):
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: new_name in wallet.left_panel.open_saved_addresses().address_names,
             10000), f'Address: {new_name} is not present when it should be'
 
@@ -40,6 +40,6 @@ def test_manage_saved_address(main_screen: MainWindow, address: str):
 
 
     with step('Verify that saved address with new name is not in the list of saved addresses'):
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: new_name not in wallet.left_panel.open_saved_addresses().get_saved_addresses_list(),
             10000), f'Address: {new_name} is still present'

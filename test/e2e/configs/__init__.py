@@ -3,7 +3,7 @@ import os
 
 from os import path
 from scripts.utils.system_path import SystemPath
-from . import testpath, timeouts, squish, system
+from . import testpath, timeouts, system
 from .system import get_platform
 
 LOG = logging.getLogger(__name__)
@@ -56,9 +56,7 @@ if get_platform() == "Windows" and 'Status' not in AUT_PATH:
 AUT_PATH = _resolve_aut_path(AUT_PATH)
 WALLET_SEED = os.getenv('WALLET_TEST_USER_SEED')
 
-# Application and Squish logs (all platforms).
 LOG_DIR = testpath.RESULTS
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 PYTEST_LOG = path.join(LOG_DIR, 'pytest.log')
 AUT_LOG_FILE = path.join(LOG_DIR, 'aut.log')
-SQUISH_LOG_FILE = path.join(LOG_DIR, 'squish.log')

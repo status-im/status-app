@@ -25,10 +25,10 @@ TEST_FILES: SystemPath = ROOT / 'ext' / 'test_files'
 TEST_IMAGES: SystemPath = ROOT / 'ext' / 'test_images'
 TEST_USER_DATA: SystemPath = ROOT / 'ext' / 'user_data'
 
-# Driver Directories
-SQUISH_DIR_RAW = os.getenv('SQUISH_DIR')
-assert SQUISH_DIR_RAW is not None
-SQUISH_DIR = SystemPath(SQUISH_DIR_RAW)
+# Directory that holds generic/libqmlinspector.so, the plugin the driver talks to
+INSPECTOR_PLUGINS_RAW = os.getenv('INSPECTOR_PLUGINS')
+assert INSPECTOR_PLUGINS_RAW is not None, 'Set INSPECTOR_PLUGINS, see README.md'
+INSPECTOR_PLUGINS = SystemPath(INSPECTOR_PLUGINS_RAW)
 
 # Status Application
 STATUS_DATA: SystemPath = RUN

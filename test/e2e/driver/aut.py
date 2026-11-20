@@ -2,24 +2,20 @@ import os
 
 import allure
 import logging
-import squish
 
 import configs
-import driver
 import shortuuid
 from tests import test_data
 from configs.system import get_platform
-from driver import context
-from driver.server import SquishServer
+from driver import session
 from scripts.utils import local_system
 from scripts.utils.failure_screenshot import attach_failure_screenshot
 from scripts.utils.system_path import SystemPath
-from scripts.utils.wait_for_port import wait_for_port
 import psutil
 
 LOG = logging.getLogger(__name__)
 
-def _startaut_local_extras(
+def _local_extras(
     app_path: SystemPath,
 ) -> tuple[list[str], dict[str, str]]:
     """Argv and env overrides for local repo `bin/` AUT (keycard sim dir, optional Waku fleet)."""
@@ -58,7 +54,7 @@ class AUT:
             test_mode: bool = True,
     ):
         self.path = app_path
-        self.ctx = None
+        self.session = None
         self.pid = None
         self.port = None
         self.test_mode = test_mode
@@ -67,7 +63,6 @@ class AUT:
         if user_data is not None:
             user_data.copy_to(self.app_data / 'data')
         self.options = ''
-        driver.testSettings.setWrappersForApplication(self.aut_id, ['Qt'])
 
     def __str__(self):
         return type(self).__qualname__
@@ -88,57 +83,60 @@ class AUT:
 
         self.stop()
 
-    def detach_context(self):
-        if self.ctx is None:
-            return
-        try:
-            driver.currentApplicationContext().detach()
-        except Exception as err:
-            LOG.debug('AUT context detach: %s', err)
-        self.ctx = None
+    def disconnect(self):
+        if self.session is not None:
+            self.session.close()
+            self.session = None
 
-    @allure.step('Attach Squish to Test Application')
+    @allure.step('Attach to the application')
     def attach(self):
-        LOG.info('Attaching to AUT: 127.0.0.1:%d', self.port)
-
-        try:
-            SquishServer().add_attachable_aut(self.aut_id, self.port)
-            if self.ctx is None:
-                self.ctx = context.get_context(self.aut_id)
-            driver.setApplicationContext(self.ctx)
+        """Makes this app the one that commands go to, connecting to it first if needed."""
+        if self.session is None or not self.session.is_running:
+            LOG.info('Connecting to AUT: 127.0.0.1:%d', self.port)
             timeout = configs.timeouts.PROCESS_TIMEOUT_SEC_WINDOWS if get_platform() == "Windows" else configs.timeouts.PROCESS_TIMEOUT_SEC
-            assert squish.waitFor(lambda: self.ctx.isRunning, timeout)
-        except Exception as err:
-            LOG.error('Failed to attach AUT: %s', err)
-            self.stop()
-            raise err
-        LOG.info('Successfully attached AUT!')
+            try:
+                self.session = session.connect(self.aut_id, self.port, timeout)
+            except Exception as err:
+                LOG.error('Failed to connect to AUT (process %s): %s', 'running' if psutil.pid_exists(self.pid) else 'exited', err)
+                self.stop()
+                raise err
+            LOG.info('Connected to AUT!')
+        session.activate(self.session)
         return self
 
     @allure.step('Start AUT')
-    def startaut(self):
+    def start(self):
         LOG.info('Launching AUT: %s', self.path)
-        self.port = local_system.find_free_port(configs.squish.AUT_PORT, 100)
+        self.port = local_system.find_free_port(configs.system.AUT_PORT, 100)
+        command_extras, env_overrides = _local_extras(self.path)
         command = [
-            str(configs.testpath.SQUISH_DIR / 'bin/startaut'),
-            '--verbose',
-            f'--port={self.port}',
             str(self.path),
             f'--datadir={self.app_data}',
+            *command_extras,
+            f'--LOG_LEVEL={configs.testpath.LOG_LEVEL}',
+            '--api-logging',
         ]
-        command_extras, env_overrides = _startaut_local_extras(self.path)
-        command.extend(command_extras)
-        child_env = os.environ.copy()
-        child_env.update(env_overrides)
+        plugin_root = str(configs.testpath.INSPECTOR_PLUGINS)
+        plugin = os.path.join(plugin_root, 'generic', 'libqmlinspector.dylib')
+        if not os.path.isfile(plugin):
+            plugin = os.path.join(plugin_root, 'generic', 'libqmlinspector.so')
+        if not os.path.isfile(plugin):
+            raise RuntimeError(
+                f'Inspector plugin not found under {plugin_root}/generic. '
+                'Set INSPECTOR_PLUGINS to the directory that contains generic/.'
+            )
+        LOG.info('Inspector plugin: %s', plugin)
+        child_env = {
+            **os.environ,
+            **env_overrides,
+            'QT_PLUGIN_PATH': os.pathsep.join(filter(None, [plugin_root, os.environ.get('QT_PLUGIN_PATH')])),
+            'QT_QPA_GENERIC_PLUGINS': f'qmlinspector:{self.port}',
+            # The plugin's own switch, not STATUS_RUNTIME_TEST_MODE: some tests start the app with test mode off.
+            'QML_INSPECTOR_ALLOW': '1',
+        }
         if not self.test_mode:
             child_env['STATUS_RUNTIME_TEST_MODE'] = '0'
-        command.extend(
-            [
-                f'--LOG_LEVEL={configs.testpath.LOG_LEVEL}',
-                '--api-logging',
-            ]
-        )
-        LOG.info('AUT startaut argv (%d parts): %s', len(command), command)
+        LOG.info('AUT argv (%d parts): %s', len(command), command)
         try:
             with open(configs.AUT_LOG_FILE, "ab") as log:
                 self.pid = local_system.execute(command, stderr=log, stdout=log, env=child_env)
@@ -152,7 +150,7 @@ class AUT:
     @allure.step('Close application')
     def stop(self):
         LOG.info('Stopping AUT: %s', self.path)
-        self.detach_context()
+        self.disconnect()
         if not self.pid:
             return
 
@@ -179,37 +177,9 @@ class AUT:
 
     @allure.step("Start and attach AUT")
     def launch(self) -> 'AUT':
-        self.startaut()
-        self.wait()
+        self.start()
         self.attach()
         return self
-
-    @allure.step('Waiting for port')
-    def wait(self, timeout: int = None, retries: int = None):
-        # Increase timeout/retries on Windows CI due to slower startup
-        if timeout is None:
-            timeout = 2 if get_platform() == "Windows" else 1
-        if retries is None:
-            retries = 20 if get_platform() == "Windows" else 10
-        
-        LOG.info('Waiting for AUT port 127.0.0.1:%d... (timeout=%ds, retries=%d)', self.port, timeout, retries)
-        try:
-            wait_for_port('127.0.0.1', self.port, timeout, retries)
-        except TimeoutError as err:
-            LOG.error('Wait for AUT port timed out: %s', err)
-            # Check if process is still running
-            if self.pid and psutil:
-                try:
-                    proc = psutil.Process(self.pid)
-                    if proc.is_running():
-                        LOG.warning('AUT process %d is still running but port is not available', self.pid)
-                    else:
-                        LOG.warning('AUT process %d has exited', self.pid)
-                except (psutil.NoSuchProcess, psutil.AccessDenied):
-                    pass
-            self.stop()
-            raise err
-        LOG.info('AUT port available!')
 
     @allure.step('Restart application')
     def restart(self):

@@ -1,6 +1,7 @@
-import lookup
-from inspector_client import InspectorError
-from objectmaphelper import RegularExpression, Wildcard
+import re
+
+from driver import lookup
+from driver.inspector import InspectorError
 
 
 class FakeInspector:
@@ -34,8 +35,8 @@ class FakeInspector:
         return next(o for o in self.objects if o["id"] == object_id)
 
 
-def ids(inspector, entry):
-    return [match["id"] for match in lookup.find(inspector, entry)]
+def ids(inspector, locator):
+    return [match["id"] for match in lookup.find(inspector, locator)]
 
 
 def test_a_type_matches_the_generated_qml_class():
@@ -63,13 +64,13 @@ def test_a_pattern_matches_anywhere_in_the_name():
         {"id": "1", "type": "Item", "objectName": "chatListItem_7"},
         {"id": "2", "type": "Item", "objectName": "other"},
     ])
-    assert ids(inspector, {"objectName": RegularExpression("ListItem")}) == ["1"]
-    assert ids(inspector, {"objectName": Wildcard("chat*_7")}) == ["1"]
+    assert ids(inspector, {"objectName": re.compile("ListItem")}) == ["1"]
+    assert ids(inspector, {"objectName": re.compile("chat.*_7")}) == ["1"]
 
 
-def test_a_star_as_a_regular_expression_matches_every_name():
-    inspector = FakeInspector([{"id": "1", "type": "Item", "objectName": "a"}])
-    assert ids(inspector, {"objectName": RegularExpression("*")}) == ["1"]
+def test_name_is_the_same_as_object_name():
+    inspector = FakeInspector([{"id": "1", "type": "Item", "objectName": "mainWindow"}])
+    assert ids(inspector, {"name": "mainWindow"}) == ["1"]
 
 
 def test_other_keys_are_compared_with_properties():
@@ -104,7 +105,8 @@ def test_occurrence_counts_from_one():
     assert ids(inspector, {"type": "Item", "occurrence": 4}) == []
 
 
-def test_explain_names_the_rule_that_removed_the_candidates():
+def test_the_trace_names_the_rule_that_removed_the_candidates():
     inspector = FakeInspector([{"id": "1", "type": "Item", "objectName": "row", "props": {"visible": False}}])
-    text = lookup.explain(inspector, {"objectName": "row", "type": "Item", "visible": True})
-    assert "1 by name -> 1 after type Item -> 0 after visible=True" in text
+    trace = []
+    lookup.find(inspector, {"objectName": "row", "type": "Item", "visible": True}, trace=trace)
+    assert "1 by name -> 1 after type Item -> 0 after visible=True" in trace[0]

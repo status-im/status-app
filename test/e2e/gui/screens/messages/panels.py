@@ -31,7 +31,7 @@ class LeftPanel(QObject):
     def get_chats_names(self) -> typing.List[str]:
         self._chat_list_item.real_name.pop('objectName', None)
         chats_list = []
-        for item in driver.findAllObjects(self._chat_list_item.real_name):
+        for item in driver.find_all(self._chat_list_item.real_name):
             name = str(getattr(item, 'objectName', ''))
             if name:
                 chats_list.append(name)
@@ -93,16 +93,16 @@ class ToolBar(QObject):
 
     @allure.step('Remove member by clicking close icon on member tag')
     def click_contact_close_icon(self, member):
-        for item in driver.findAllObjects(self.contact_tag.real_name):
+        for item in driver.find_all(self.contact_tag.real_name):
             if str(getattr(item, 'text', '')) == str(member):
                 for child in walk_children(item):
                     if getattr(child, 'objectName', '') == 'close-icon':
-                        driver.mouseClick(child)
+                        driver.click(child)
                         break
 
     @allure.step('Open pinned messages panel')
     def open_pinned_messages_panel(self):
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.pinned_message_tooltip.is_visible,
             configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
         ), 'Pinned messages banner was not shown'
@@ -119,4 +119,4 @@ class Members(QObject):
     @property
     @allure.step('Get group members')
     def members(self) -> typing.List[str]:
-        return [str(member.userName) for member in driver.findAllObjects(self._member_item.real_name)]
+        return [str(member.userName) for member in driver.find_all(self._member_item.real_name)]
