@@ -11,17 +11,16 @@ privateAccess(input_controller.Controller)
 privateAccess(input_view.View)
 
 type Delegate = ref object of input_interface.AccessInterface
-  sends: seq[(string, int, string)]
+  sends: seq[tuple[msg, replyTo: string, contentType: int, sendToken: string]]
   completions: seq[(string, string)]
 
 method sendChatMessage(self: Delegate, msg: string, replyTo: string, contentType: int,
     linkPreviews: seq[LinkPreview], paymentRequests: seq[PaymentRequest], startNewThread: bool,
     newThreadName: string, sendToken: string = "") =
-  check replyTo == ""
   check linkPreviews.len == 0
   check paymentRequests.len == 0
   check not startNewThread
-  self.sends.add((msg, contentType, sendToken))
+  self.sends.add((msg, replyTo, contentType, sendToken))
 
 method onTextMessageSent(self: Delegate, requestId, error: string) =
   self.completions.add((requestId, error))
@@ -32,10 +31,11 @@ suite "isolated text sends":
     let view = input_view.newView(delegate)
     defer: view.delete()
     view.preservedProperties.setText("Unsent parent draft")
-    check not view.sendTextMessage(" \n ", 1, "request")
-    check not view.sendTextMessage("Reply", 1, "")
-    check view.sendTextMessage("Reply", 1, "request")
-    check delegate.sends == @[("Reply", 1, "request")]
+    check not view.sendTextMessage(" \n ", 1, "request", "parent")
+    check not view.sendTextMessage("Reply", 1, "", "parent")
+    check view.sendTextMessage("Reply", 1, "request", "parent")
+    check view.sendTextMessage("Message", 1, "plain-request", "")
+    check delegate.sends == @[("Reply", "parent", 1, "request"), ("Message", "", 1, "plain-request")]
     check view.preservedProperties.getText() == "Unsent parent draft"
 
   test "only the matching request completes and duplicate results are ignored":
