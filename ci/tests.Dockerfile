@@ -39,6 +39,6 @@ USER jenkins
 
 LABEL maintainer="marko@status.im"
 LABEL source="https://github.com/status-im/status-app"
-LABEL description="Build image for the Status Desktop e2e tests with Squish and Qt."
+LABEL description="Build image for the Status Desktop e2e tests with Qt."
 
 ENTRYPOINT [""]
