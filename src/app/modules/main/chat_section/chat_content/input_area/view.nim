@@ -66,11 +66,11 @@ QtObject:
 
   proc textMessageSent*(self: View, requestId: string, error: string) {.signal.}
 
-  proc sendTextMessage*(self: View, msg: string, contentType: int, requestId: string): bool {.slot.} =
+  proc sendTextMessage*(self: View, msg: string, contentType: int, requestId: string, replyTo: string): bool {.slot.} =
     if msg.strip().len == 0 or requestId.len == 0:
       return false
     # Independent of the composer's text, payments, attachments and previews.
-    self.delegate.sendChatMessage(msg, "", contentType, @[], @[], false, "", requestId)
+    self.delegate.sendChatMessage(msg, replyTo, contentType, @[], @[], false, "", requestId)
     return true
 
   proc getThreadId(self: View): string {.slot.} =

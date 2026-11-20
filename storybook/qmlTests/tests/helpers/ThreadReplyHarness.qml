@@ -77,8 +77,8 @@ Item {
             }
             readonly property QtObject inputAreaModule: QtObject {
                 signal textMessageSent(string requestId, string error)
-                function sendTextMessage(text, contentType, requestId) {
-                    root.sends = root.sends.concat({threadId: content.threadId, text, replyTo: "", contentType, startNewThread: false, requestId})
+                function sendTextMessage(text, contentType, requestId, replyTo = "") {
+                    root.sends = root.sends.concat({threadId: content.threadId, text, replyTo, contentType, startNewThread: false, requestId})
                     if (root.acceptSend && root.completeSends)
                         textMessageSent(requestId, "")
                     return root.acceptSend

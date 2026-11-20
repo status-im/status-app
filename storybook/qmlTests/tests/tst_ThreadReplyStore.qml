@@ -35,6 +35,7 @@ Item {
             compare(h.sends.length, 1)
             compare(h.sends[0].text, "First reply")
             compare(h.sends[0].threadId, "parent")
+            compare(h.sends[0].replyTo, "parent")
             compare(h.sends[0].startNewThread, false)
             compare(spy.count, 1)
             compare(spy.signalArguments[0][0], token)
@@ -102,6 +103,7 @@ Item {
             tryVerify(() => h.sends.length === 2)
             compare(h.sends.length, 2)
             compare(h.sends[1].text, h.sends[0].text)
+            compare(h.sends[1].replyTo, "parent")
             verify(h.sends[1].requestId !== h.sends[0].requestId)
             compare(h.parentMessages.requests, ["parent"])
         }
@@ -218,6 +220,7 @@ Item {
             const token = h.store.submit(h.section, h.parentMessages, "chat", "parent", "Plain reply", "", 1, false)
             tryVerify(() => h.sends.length === 1)
             compare(h.sends[0].threadId, "chat")
+            compare(h.sends[0].replyTo, "")
             compare(h.parentMessages.requests.length, 0)
             verify(state(h).pending)
             compare(state(h).asThread, false)
