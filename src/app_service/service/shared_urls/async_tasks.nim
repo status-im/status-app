@@ -7,7 +7,12 @@ proc resolveProfileUrlsTask(encoded: string) {.gcsafe, nimcall.} =
   var profiles = newJObject()
   for url in arg.urls:
     try:
-      let response = shared_urls.parseSharedUrl(url)
+      var canonicalUrl = url
+      for prefix in ["status-app://", "http://status.app/"]:
+        if url.startsWith(prefix):
+          canonicalUrl = "https://status.app/" & url[prefix.len .. ^1]
+          break
+      let response = shared_urls.parseSharedUrl(canonicalUrl)
       var contact = response.result.toUrlDataDto().contact
       if isCompressedPubKey(contact.publicKey):
         contact.publicKey = status_accounts.decompressPk(contact.publicKey).result

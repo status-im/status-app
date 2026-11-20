@@ -9240,6 +9240,29 @@ app: %2</source>
     </message>
 </context>
 <context>
+    <name>InlineLinkResolver</name>
+    <message>
+        <source>Unknown channel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown thread name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No access</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown community</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Unknown chat</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>InlineSelectorPanel</name>
     <message>
         <source>No results found</source>

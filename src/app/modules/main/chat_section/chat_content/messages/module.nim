@@ -1,4 +1,4 @@
-import nimqml, chronicles, sequtils, uuids, sets, times, tables, system, options
+import nimqml, chronicles, sequtils, uuids, sets, times, tables, system, options, json
 import io_interface
 import ../io_interface as delegate_interface
 import view, controller
@@ -52,6 +52,12 @@ type
     threadEditRequestId: string
     threadDeleteRequestId: string
     threadCanView: Option[bool]
+
+method getInlineThreadDetails*(self: Module, chatId, threadId, messageId: string): string =
+  return $self.controller.getInlineThreadDetails(chatId, threadId, messageId)
+
+method inlineLinkDataChanged*(self: Module, changes: string) =
+  self.view.emitInlineLinkDataChanged(changes)
 
 proc newModule*(delegate: delegate_interface.AccessInterface, events: EventEmitter, sectionId: string, chatId: string,
     belongsToCommunity: bool, contactService: contact_service.Service, communityService: community_service.Service,

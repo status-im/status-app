@@ -10,6 +10,8 @@ QtObject {
     property var messageModule
     property var messagesModel
     property var chatSectionModule
+    readonly property var inlineCommunitiesModel: typeof communitiesModule !== "undefined" ? communitiesModule.model : null
+    property var sharedUrlParser: typeof sharedUrlsModule !== "undefined" ? sharedUrlsModule : null
 
     readonly property bool loadingHistoryMessagesInProgress: root.chatSectionModule? root.chatSectionModule.loadingHistoryMessagesInProgress : false
     readonly property int newMessagesCount: messagesModel ? messagesModel.newMessagesCount : 0
@@ -104,6 +106,8 @@ QtObject {
     }
 
     onMessageModuleChanged: {
+        root.inlineParsedLinks?.clear()
+        ++root.inlineLinkRevision
         if(!messageModule)
             return
         root.messagesModel = messageModule.model
@@ -319,6 +323,89 @@ QtObject {
     }
 
     readonly property QtObject profileUrlResolver: typeof sharedUrlsModule === "undefined" ? null : sharedUrlsModule
+
+    property var inlineParsedLinks: new Map()
+    onSharedUrlParserChanged: root.inlineParsedLinks?.clear()
+    property int inlineLinkRevision: 0
+    signal inlineLinkDataChanged(var changes)
+    property var pendingInlineChanges: ({chats: {}, communities: {}})
+    readonly property Connections inlineLinkConnections: Connections {
+        target: root.messageModule ?? null
+        function onInlineLinkDataChanged(payload) {
+            const changes = JSON.parse(payload)
+            for (const id of changes.chats) if (id) root.pendingInlineChanges.chats[id] = true
+            for (const id of changes.communities) if (id) root.pendingInlineChanges.communities[id] = true
+            Qt.callLater(root.flushInlineChanges)
+        }
+    }
+    function flushInlineChanges() {
+        const changes = root.pendingInlineChanges
+        root.pendingInlineChanges = {chats: {}, communities: {}}
+        root.inlineLinkDataChanged(changes)
+    }
+
+    function parseInlineLink(url) {
+        if (root.inlineParsedLinks.has(url))
+            return root.inlineParsedLinks.get(url)
+        try {
+            const canonical = Utils.canonicalStatusUrl(url)
+            const prefix = Constants.externalStatusLinkWithHttps + "/"
+            if (!canonical.startsWith(prefix))
+                return null
+            const path = canonical.slice(prefix.length)
+            let data
+            if (/^(cc|g|p)\//.test(path) && /^[^#]*[?&]thread-id=/.test(canonical)) {
+                data = JSON.parse(root.sharedUrlParser.parseThreadUrl(url))
+                if (!data.chatId || !data.threadId) return null
+                data.kind = "thread"
+                if (data.communityId) {
+                    const parent = JSON.parse(root.sharedUrlParser.parseSharedUrl(canonical.replace(/\?[^#]*/, "")))
+                    data.communityName = parent.community?.displayName || ""
+                    data.chatName = parent.channel?.displayName || ""
+                }
+            } else if (path.startsWith("m/")) {
+                data = JSON.parse(root.sharedUrlParser.parseMessageUrl(url))
+                if (!data.chatId || !data.messageId) return null
+                data.kind = "message"
+            } else if (/^(c[\/#]|cc\/)/.test(path)) {
+                const shared = JSON.parse(root.sharedUrlParser.parseSharedUrl(canonical))
+                if (!shared.community?.communityId) return null
+                data = {kind: shared.channel?.uuid ? "channel" : "community",
+                    communityId: shared.community.communityId, communityName: shared.community.displayName,
+                    chatId: shared.channel?.uuid ? shared.community.communityId + shared.channel.uuid : "",
+                    chatName: shared.channel?.displayName || ""}
+            } else {
+                return null
+            }
+            const target = Object.freeze(Object.assign({url}, data))
+            if (root.inlineParsedLinks.size >= 256)
+                root.inlineParsedLinks.delete(root.inlineParsedLinks.keys().next().value)
+            root.inlineParsedLinks.set(url, target)
+            return target
+        } catch (error) {
+            return null
+        }
+    }
+
+    function chatModelForInlineLink(communityId) {
+        if (typeof mainModule === "undefined")
+            return null
+        if (!communityId)
+            return mainModule.getChatSectionModule().model
+        mainModule.prepareCommunitySectionModuleForCommunityId(communityId)
+        return mainModule.getCommunitySectionModule()?.model ?? null
+    }
+
+    function resolveInlineLink(target) {
+        if (!target)
+            return null
+        const data = Object.assign({}, target)
+        if (target.chatId && root.messageModule) {
+            Object.assign(data, JSON.parse(root.messageModule.getInlineThreadDetails(target.chatId,
+                                                                                   target.threadId || "", target.messageId || "")))
+        }
+        return data
+    }
 
     function createThread(parentMessageId) {
         if (!messageModule)

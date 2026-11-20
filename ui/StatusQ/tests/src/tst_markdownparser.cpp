@@ -376,6 +376,18 @@ Document [0,8)
             << QString::fromUtf8("[\U0001F600](https://target.im/\U0001F469\u200D\U0001F4BB)") << 1;
         QTest::newRow("excluded-code")
             << "`[a](https://code.im)` [b](https://target.im)" << 1;
+        QTest::newRow("internal-deep-link")
+            << "Before status-app://m/group?message-id=message after" << 1;
+        QTest::newRow("internal-thread-link")
+            << "Before status-app://p/?thread-id=thread after" << 1;
+        QTest::newRow("internal-community-link")
+            << "Before status-app://c#community after" << 1;
+        QTest::newRow("internal-authored-link")
+            << "[Plans](status-app://g/?a2=group&thread-id=thread)" << 1;
+        QTest::newRow("internal-code-link")
+            << "`status-app://m/group?message-id=message`" << 0;
+        QTest::newRow("unsupported-scheme")
+            << "custom://m/group?message-id=message" << 0;
     }
 
     void explicitLinkUrlScan()
