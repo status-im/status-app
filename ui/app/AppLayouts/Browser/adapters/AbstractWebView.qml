@@ -37,8 +37,12 @@ Item {
     // True while at least one data-clearing operation is in flight (see CONTEXT: Clearing).
     property bool clearing: false
 
-    // Desktop only: mobile Backends host no separate render process.
+    // The render process died and the page is gone until reloaded.
     property bool crashed: false
+
+    // The Backend brings a View back by itself after losing its renderer while
+    // hidden, or to a system kill: only a crash on screen is the user's to see.
+    property bool revivesAfterRendererLoss: false
 
     // === Capability Flags ===
     required property bool supportsZoom
@@ -96,6 +100,14 @@ Item {
         DownloadCancelled = 3,
         DownloadInterrupted = 4,
         DownloadPaused = 5
+    }
+
+    // === Render Process Termination Status (WebEngine-shaped numbering) ===
+    enum RenderProcessTerminationStatus {
+        NormalTerminationStatus = 0,
+        AbnormalTerminationStatus = 1,
+        CrashedTerminationStatus = 2,
+        KilledTerminationStatus = 3
     }
 
     // === JavaScript Dialog Types (constants for cross-platform compatibility) ===
