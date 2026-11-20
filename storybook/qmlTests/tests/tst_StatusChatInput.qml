@@ -712,6 +712,7 @@ Item {
             const threadName = "coolThread"
             const chatName = "general"
             controlUnderTest.threadsEnabled = true
+            controlUnderTest.threadsEnabledV2 = true
             controlUnderTest.isThread = true
             controlUnderTest.threadName = threadName
             controlUnderTest.chatName = chatName
