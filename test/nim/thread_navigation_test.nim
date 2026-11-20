@@ -140,6 +140,7 @@ suite "thread navigation":
     require first >= 0
     require second >= 0
     check module.view.model().items[first].hasThread
+    check module.view.model().items[first].unparsedText == "First reply"
     check module.view.model().items[first].threadSummary.title == "Title"
     check module.view.model().items[first].threadSummary.lastMessageText == "First reply"
     check module.view.model().items[first].threadSummary.threadId == ""
@@ -170,7 +171,7 @@ suite "thread navigation":
       "chatId": "chat", "threadId": "", "sendToken": "one",
       "response": {"result": {
         "chats": [{"id": "chat"}],
-        "messages": [{"id": "root", "chatId": "chat", "text": "Title"},
+        "messages": [{"id": "root", "chatId": "chat", "text": "First reply"},
                      {"id": "reply", "chatId": "chat", "threadId": "root", "text": "First reply"}],
         "threads": [{"chatId": "chat", "threadId": "root", "parentMessageId": "root",
           "name": "Title", "messagesCount": 2, "lastMessage": {"from": "alice", "text": "First reply"}}]
@@ -180,6 +181,8 @@ suite "thread navigation":
     let root = module.view.model().findIndexForMessageId("root")
     require root >= 0
     check module.view.model().items[root].hasThread
+    check module.view.model().items[root].unparsedText == "First reply"
+    check module.view.model().items[root].threadSummary.title == "Title"
     check module.view.model().items[root].threadSummary.lastMessageText == "First reply"
     check module.view.model().findIndexForMessageId("reply") == -1
 
