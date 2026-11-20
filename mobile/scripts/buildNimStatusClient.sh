@@ -31,10 +31,10 @@ else
 fi
 
 if [[ "$OS" == "ios" ]]; then
-    PLATFORM_SPECIFIC=(--app:staticlib -d:ios --os:ios
+    PLATFORM_SPECIFIC=(--app:staticlib -d:ios --os:ios -d:nimqmlUseWidgets=false
         "-d:qrscanCmakeFlags=-DCMAKE_OSX_SYSROOT=${SDK:?} -DCMAKE_OSX_DEPLOYMENT_TARGET=${IOS_TARGET:?} -DCMAKE_C_COMPILER=$(xcrun -f clang) -DCMAKE_CXX_COMPILER=$(xcrun -f clang++)")
 else
-    PLATFORM_SPECIFIC=(--app:lib --os:android -d:android -d:androidNDK -d:lto -d:chronicles_sinks=textlines[logcat],textlines[file,nocolors] \
+    PLATFORM_SPECIFIC=(--app:lib --os:android -d:android -d:androidNDK -d:lto -d:nimqmlUseWidgets=false -d:chronicles_sinks=textlines[logcat],textlines[file,nocolors] \
         --passL="-L$LIB_DIR" --passL="-lstatus_stub" --passL="-lStatusQ$LIB_SUFFIX" --passL="-lqrcodegen" --passL="-lssl_3" --passL="-lcrypto_3" --passL="-lstatus-keycard-qt" -d:taskpool \
         --passL="-Wl,--pack-dyn-relocs=android+relr" --passL="-Wl,--use-android-relr-tags" \
         --passL="-Wl,--version-script=$SCRIPT_DIR/android/libnim.map" \

@@ -1,0 +1,9 @@
+# Regexes on QML module names kept out of the static iOS link by filter_qml_imports.py.
+
+# Controls styles the app never uses: it runs on the platform default (iOS), the
+# Universal style some components import and their Basic fallback
+# (qmlimportscanner follows every optional style import)
+^QtQuick\.Controls\.(Material|Imagine|Fusion|FluentWinUI3|macOS|Windows)(\.|$)
+
+# StatusTrayIcon is desktop-only; the module links QtWidgets
+^Qt\.labs\.platform$
