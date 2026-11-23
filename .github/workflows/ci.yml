@@ -335,7 +335,6 @@ jobs:
     timeout-minutes: 90
     continue-on-error: true
     permissions:
-      contents: write
       packages: read
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -391,9 +390,8 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
       - name: Allure report
+        id: allure
         if: ${{ !cancelled() }}
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           if [ ! -d test/e2e/allure-results ] || [ -z "$(ls -A test/e2e/allure-results)" ]; then
             echo "No allure results."
@@ -405,23 +403,20 @@ jobs:
             https://github.com/allure-framework/allure2/releases/download/2.46.2/allure-2.46.2.tgz
           tar -xzf "$RUNNER_TEMP/allure.tgz" -C "$RUNNER_TEMP"
           "$RUNNER_TEMP/allure-2.46.2/bin/allure" generate test/e2e/allure-results \
-            -o "$RUNNER_TEMP/allure-report" --clean
-          git -c "http.extraheader=AUTHORIZATION: bearer ${GH_TOKEN}" \
-            clone --depth 1 --branch gh-pages \
-            "https://github.com/${GITHUB_REPOSITORY}.git" "$RUNNER_TEMP/pages"
-          dest="docs/e2e/${GITHUB_RUN_ID}"
-          rm -rf "$RUNNER_TEMP/pages/$dest"
-          mkdir -p "$RUNNER_TEMP/pages/$dest"
-          cp -a "$RUNNER_TEMP/allure-report/." "$RUNNER_TEMP/pages/$dest/"
-          git -C "$RUNNER_TEMP/pages" add "$dest"
-          git -C "$RUNNER_TEMP/pages" \
-            -c user.name='github-actions[bot]' \
-            -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
-            commit -m "e2e allure report ${GITHUB_RUN_ID}"
-          git -C "$RUNNER_TEMP/pages" -c "http.extraheader=AUTHORIZATION: bearer ${GH_TOKEN}" \
-            push origin gh-pages
-          url="https://status-im.github.io/status-app/e2e/${GITHUB_RUN_ID}/"
-          echo "Allure report (available after Pages rebuilds): $url" | tee -a "$GITHUB_STEP_SUMMARY"
+            -o "$RUNNER_TEMP/allure-report" --clean --single-file
+          echo "report=$RUNNER_TEMP/allure-report/index.html" >> "$GITHUB_OUTPUT"
+      - name: Upload Allure report
+        id: allure-artifact
+        if: ${{ !cancelled() && steps.allure.outputs.report != '' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: e2e-allure
+          path: ${{ steps.allure.outputs.report }}
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Allure report link
+        if: ${{ !cancelled() && steps.allure-artifact.outputs.artifact-url != '' }}
+        run: echo "Allure report ${{ steps.allure-artifact.outputs.artifact-url }}" >> "$GITHUB_STEP_SUMMARY"
 
   android:
     name: android
