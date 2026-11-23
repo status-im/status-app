@@ -100,7 +100,7 @@ Item {
             const loginScreen = onboardingLayout.stack.loginScreen
             if (loginScreen) {
                 if (onboardingLayout.stack.currentItem !== loginScreen)
-                    onboardingLayout.stack.pop(loginScreen)
+                    onboardingLayout.stack.pop(loginScreen, StackView.Immediate)
             } else {
                 onboardingLayout.unwindToLoginScreen()
             }

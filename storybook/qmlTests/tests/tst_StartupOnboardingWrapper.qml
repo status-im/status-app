@@ -237,6 +237,10 @@ Item {
 
             wrapper.onboardingStore.accountLoginError("login failed", true)
 
+            // back in place at once, no slide-in transition
+            compare(layout.stack.currentItem, layout.stack.loginScreen)
+            verify(!layout.stack.busy)
+
             // Back on a login screen that SHOWS the error (red border via validationError)
             tryVerify(() => {
                 const screen = layout.stack.loginScreen
