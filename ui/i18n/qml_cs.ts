@@ -5716,21 +5716,6 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
     </message>
 </context>
 <context>
-    <name>DeactivateNetworkPopup</name>
-    <message>
-        <source>Disable %1 network</source>
-        <translation>Zakázet síť %1</translation>
-    </message>
-    <message>
-        <source>Balances stored on this network will not be visible in the Wallet. Your funds will be safe and you can always enable the network again.</source>
-        <translation>Zůstatky uložené v této síti nebudou v Peněžence viditelné. Vaše prostředky budou v bezpečí a síť můžete kdykoli znovu povolit.</translation>
-    </message>
-    <message>
-        <source>Disable %1</source>
-        <translation>Zakázat %1</translation>
-    </message>
-</context>
-<context>
     <name>DefaultDAppExplorerView</name>
     <message>
         <source>None</source>

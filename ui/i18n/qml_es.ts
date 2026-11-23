@@ -5694,21 +5694,6 @@ Recuerda tu contraseña y no la compartas con nadie.</translation>
     </message>
 </context>
 <context>
-    <name>DeactivateNetworkPopup</name>
-    <message>
-        <source>Disable %1 network</source>
-        <translation>Deshabilitar red %1</translation>
-    </message>
-    <message>
-        <source>Balances stored on this network will not be visible in the Wallet. Your funds will be safe and you can always enable the network again.</source>
-        <translation>Los saldos almacenados en esta red no serán visibles en la Billetera. Tus fondos estarán seguros y siempre puedes habilitar la red nuevamente.</translation>
-    </message>
-    <message>
-        <source>Disable %1</source>
-        <translation>Deshabilitar %1</translation>
-    </message>
-</context>
-<context>
     <name>DefaultDAppExplorerView</name>
     <message>
         <source>Blockchain explorer in the address bar</source>

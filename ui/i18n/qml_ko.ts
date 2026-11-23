@@ -5671,21 +5671,6 @@ Remember your password and don&apos;t share it with anyone.</source>
     </message>
 </context>
 <context>
-    <name>DeactivateNetworkPopup</name>
-    <message>
-        <source>Disable %1 network</source>
-        <translation>%1 네트워크 비활성화</translation>
-    </message>
-    <message>
-        <source>Balances stored on this network will not be visible in the Wallet. Your funds will be safe and you can always enable the network again.</source>
-        <translation>이 네트워크에 보관된 잔액은 Wallet에서 보이지 않습니다. 자금은 안전하며, 언제든지 네트워크를 다시 활성화할 수 있습니다.</translation>
-    </message>
-    <message>
-        <source>Disable %1</source>
-        <translation>%1 비활성화</translation>
-    </message>
-</context>
-<context>
     <name>DefaultDAppExplorerView</name>
     <message>
         <source>None</source>
