@@ -24,7 +24,7 @@ trap 'docker compose -p "$fleet" -f "$repo/docker-compose.waku.yml" down --remov
 
 docker run --rm --network=host --cap-add=SYS_ADMIN --security-opt=apparmor:unconfined \
   --user "$(id -u):$(id -g)" --entrypoint "" \
-  -e EXECUTOR_NUMBER -e E2E_LOOKUP_LOG \
+  -e EXECUTOR_NUMBER -e E2E_LOOKUP_LOG -e WALLET_TEST_USER_SEED \
   -v "$state/passwd:/etc/passwd:ro" -v "$state:/state" \
   -v "$repo:/work" -v "$app_dir:/app:ro" -v "$plugins:/plugins:ro" \
   -e AUT_PATH="/app/$(basename "$APP")" \
