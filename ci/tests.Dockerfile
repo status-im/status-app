@@ -1,4 +1,7 @@
-FROM harbor.status.im/status-im/status-desktop-build:20261021-qt6.11.0
+# Tag ci/build-image.sh gives ci/Dockerfile. The GitHub Actions job passes the
+# current one; this default is for Jenkins and a plain docker build.
+ARG BASE=ghcr.io/status-im/status-app-build:desktop-a41dc8662b7d
+FROM ${BASE}
 
 USER root
 
