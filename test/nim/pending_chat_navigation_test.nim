@@ -83,3 +83,13 @@ suite "selecting a chat as it is added":
 
   test "a requested chat is selected":
     check activatesWhenAdded(requested = true, sectionBuild = false, chatCount = 3)
+
+  test "a thread target outlives the build's chats being added":
+    var pending = ChatNavigation(chatId: "saved", threadId: "thread-1", messageId: "reply-1")
+    check not activatesWhenAdded(requested = false, sectionBuild = true, chatCount = 1)
+
+    let navigation = pending.resolveInitialNavigation(["general", "saved"], "general")
+
+    check navigation.chatId == "saved"
+    check navigation.threadId == "thread-1"
+    check navigation.messageId == "reply-1"
