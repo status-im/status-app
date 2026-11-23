@@ -502,6 +502,7 @@ class EditCommunityTokenView(QObject):
         self._symbol_edit.set_text_property(symbol)
         self._scroll.vertical_scroll_down(self._unlimited_supply_switch)
         _set_switch(self._unlimited_supply_switch, False)
+        self._scroll.vertical_scroll_down(self._supply_edit)
         self._supply_edit.wait_until_appears()
         self._supply_edit.set_text_property(supply)
         return self
