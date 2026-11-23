@@ -73,7 +73,7 @@ QtObject {
     property CurrenciesStore currencyStore
     property NetworkConnectionStore networkConnectionStore
 
-    property var contactsModel: contactsStore.contactsModel
+    property var contactsModel: contactsStore?.contactsModel ?? null
 
     // Unique instance for all the chat / channel related low-level UI components
     readonly property UsersStore usersStore: UsersStore {

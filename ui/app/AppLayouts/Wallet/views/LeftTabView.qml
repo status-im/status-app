@@ -97,14 +97,15 @@ Rectangle {
             onDeleteAccountClicked: {
                 if (!account)
                     return
-                removeAccountConfirmation.accountType = account.walletType
-                removeAccountConfirmation.accountName = account.name
-                removeAccountConfirmation.accountAddress = account.address
-                removeAccountConfirmation.accountDerivationPath = account.path
-                removeAccountConfirmation.emoji = account.emoji
-                removeAccountConfirmation.colorId = account.colorId
-                removeAccountConfirmation.migratedToColdWallet = account.migratedToColdWallet
-                removeAccountConfirmation.active = true
+                removeAccountConfirmation.open(root, {
+                    accountType: account.walletType,
+                    accountName: account.name,
+                    accountAddress: account.address,
+                    accountDerivationPath: account.path,
+                    emoji: account.emoji,
+                    colorId: account.colorId,
+                    migratedToColdWallet: account.migratedToColdWallet
+                })
             }
 
             onHideFromTotalBalanceClicked: function (hideFromTotalBalance) {
@@ -115,60 +116,16 @@ Rectangle {
         }
     }
 
-    Loader {
+    SQUtils.DeferredComponent {
         id: removeAccountConfirmation
-        active: false
 
-        property string accountType
-        property string accountKeyUid
-        property string accountName
-        property string accountAddress
-        property string accountDerivationPath
-        property string emoji
-        property string colorId
-        property bool migratedToColdWallet
-
-        sourceComponent: RemoveAccountConfirmationPopup {
-            accountType: removeAccountConfirmation.accountType
-            accountName: removeAccountConfirmation.accountName
-            accountAddress: removeAccountConfirmation.accountAddress
-            accountDerivationPath: removeAccountConfirmation.accountDerivationPath
-            emoji: removeAccountConfirmation.emoji
-            color: Utils.getColorForId(Theme.palette, removeAccountConfirmation.colorId)
-
-            function doDeletion(password) {
-                close()
-                root.accountDeletionRequested(removeAccountConfirmation.accountAddress, password)
-            }
-
-            onClosed: {
-                removeAccountConfirmation.active = false
-            }
-
-            onRemoveAccount: {
-                if (removeAccountConfirmation.accountType === Constants.watchWalletType
-                        || removeAccountConfirmation.migratedToColdWallet) {
-                    doDeletion("")
-                    return
-                }
-                root.userAuthenticationRequested(d.removeAccountIdentifier)
-            }
-
-            Connections {
-                target: RootStore
-                enabled: removeAccountConfirmation.active
-
-                function onLoggedInUserAuthenticated(requestedBy: string, password: string, pin: string, keyUid: string, keycardUid: string) {
-                    if (d.removeAccountIdentifier !== requestedBy || password === "") {
-                        return
-                    }
-                    doDeletion(password)
-                }
-            }
-        }
-
-        onLoaded: {
-            removeAccountConfirmation.item.open()
+        source: Qt.resolvedUrl("RemoveAccountConfirmationPopupInstance.qml")
+        single: true
+        destroyOnClose: true
+        properties: ({ authenticationRequestId: d.removeAccountIdentifier })
+        onCreated: popup => {
+            popup.authenticationRequested.connect(() => root.userAuthenticationRequested(d.removeAccountIdentifier))
+            popup.deletionRequested.connect(password => root.accountDeletionRequested(popup.accountAddress, password))
         }
     }
 

@@ -1,10 +1,10 @@
 import QtQuick
 import QtQuick.Controls
 
-import shared.status
 import shared.stores
 
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils as SQUtils
 
 QtObject {
     id: root
@@ -19,63 +19,39 @@ QtObject {
         id: _d
         property var cbOnGifSelected: function () {} // It stores callback for gifSelected
         property var cbOnClose: function () {} // It stores callback for popup closed
-        property var popupParent: null // Gifs button object type
         property bool closeAfterSelection: true
-        property var relativeX: undefined
     }
 
     function openGifs(params, cbOnGifSelected, cbOnClose)
     {
         _d.cbOnGifSelected = cbOnGifSelected
         _d.cbOnClose = cbOnClose
-        _d.popupParent = params.popupParent
         _d.closeAfterSelection = params.closeAfterSelection
-        _d.relativeX = params.relativeX
 
-        let gifPopupInst = gifPopupComponent.createObject(_d.popupParent)
-        gifPopupInst.open()
+        gifPopupComponent.open(params.popupParent, {
+            directParent: params.popupParent,
+            preferredRelativeX: params.relativeX
+        })
     }
 
-    readonly property Component gifPopupComponent: Component {
-        StatusGifPopup {
-            id: popup
-
-            width: 360
-            height: 440
-
-            directParent: _d.popupParent
-            relativeX: _d.relativeX !== undefined ? _d.relativeX : directParent.width - popup.width - Theme.halfPadding
-            relativeY: -popup.height - Theme.halfPadding
-
-            gifUnfurlingEnabled: root.gifUnfurlingEnabled
-            thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
-
-            loading: root.gifStore.gifLoading
-            gifColumnA: root.gifStore.gifColumnA
-            gifColumnB: root.gifStore.gifColumnB
-            gifColumnC: root.gifStore.gifColumnC
-
-            isFavorite: root.gifStore.isFavorite
-            addToRecentsGif: root.gifStore.addToRecentsGif
-            searchGifsRequest: root.gifStore.searchGifs
-            getTrendingsGifs: root.gifStore.getTrendingsGifs
-            getFavoritesGifs: root.gifStore.getFavoritesGifs
-            getRecentsGifs: root.gifStore.getRecentsGifs
-            toggleFavoriteGif: root.gifStore.toggleFavoriteGif
-            setGifUnfurlingEnabled: root.gifStore.setGifUnfurlingEnabled
-
-            onGifSelected: url => {
+    readonly property SQUtils.DeferredComponent gifPopupComponent: SQUtils.DeferredComponent {
+        source: Qt.resolvedUrl("StatusGifPopupInstance.qml")
+        destroyOnClose: true
+        properties: ({
+            gifStore: root.gifStore,
+            gifUnfurlingEnabled: Qt.binding(() => root.gifUnfurlingEnabled),
+            thirdpartyServicesEnabled: Qt.binding(() => root.thirdpartyServicesEnabled)
+        })
+        onCreated: popup => {
+            popup.gifSelected.connect(url => {
                 _d.cbOnGifSelected(url)
 
                 if (_d.closeAfterSelection) {
-                    close()
+                    popup.close()
                 }
-            }
-            onEnableThirdpartyServicesRequested: root.enableThirdpartyServicesRequested()
-            onClosed: {
-                _d.cbOnClose()
-                destroy()
-            }
+            })
+            popup.enableThirdpartyServicesRequested.connect(root.enableThirdpartyServicesRequested)
+            popup.closed.connect(() => _d.cbOnClose())
         }
     }
 }

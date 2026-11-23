@@ -9,8 +9,6 @@ import StatusQ.Core.Theme
 
 import utils
 import shared.controls
-import shared.popups.addaccount
-import shared.popups.keypairimport
 
 import shared.stores as SharedStores
 import shared.stores.send
@@ -117,19 +115,19 @@ Item {
         }
 
         function onDisplayKeypairImportPopup() {
-            keypairImport.active = true
+            keypairImport.open(root, { keypairImportModule: Qt.binding(() => RootStore.keypairImportModule) })
         }
 
         function onDestroyKeypairImportPopup() {
-            keypairImport.active = false
+            keypairImport.destroyInstance()
         }
 
         function onDisplayAddAccountPopup() {
-            addAccount.active = true
+            addAccount.open(root, { addAccountModule: walletSection.addAccountModule })
         }
 
         function onDestroyAddAccountPopup() {
-            addAccount.active = false
+            addAccount.destroyInstance()
         }
     }
 
@@ -220,21 +218,28 @@ Item {
 
         // The center StackView is behind a Loader now, so a navigation request
         // can arrive before it exists. Hold it and replay on load.
-        property Component pendingStackComponent: null
+        property var pendingStackComponent: null
         property int pendingTabIndex: -1
 
         readonly property StackView rightPanelStack: centerPanelLoader.item as StackView
 
         function replaceRightPanel(cmp) {
             if (rightPanelStack)
-                rightPanelStack.replace(cmp)
+                replaceInStack(cmp)
             else
                 pendingStackComponent = cmp
         }
 
+        function replaceInStack(cmp) {
+            if (typeof cmp.adopt === "function")
+                cmp.adopt(rightPanelStack.replace(cmp.component(), cmp.properties))
+            else
+                rightPanelStack.replace(cmp)
+        }
+
         function flushPendingStackOps() {
             if (pendingStackComponent) {
-                rightPanelStack.replace(pendingStackComponent)
+                replaceInStack(pendingStackComponent)
                 pendingStackComponent = null
             }
             if (pendingTabIndex >= 0) {
@@ -322,18 +327,15 @@ Item {
         }
     }
 
-    Component {
+    StatusQUtils.DeferredComponent {
         id: cmpSavedAddresses
 
-        SavedAddressesView {
-            rootStore: RootStore
-            networkConnectionStore: root.networkConnectionStore
+        source: Qt.resolvedUrl("SavedAddressesViewInstance.qml")
+        properties: ({
+            rootStore: RootStore,
+            networkConnectionStore: root.networkConnectionStore,
             networksStore: root.networksStore
-
-            onSendToAddressRequested: {
-                Global.sendToRecipientRequested(address)
-            }
-        }
+        })
     }
 
     Component {
@@ -538,30 +540,20 @@ Item {
         onLaunchBuyCryptoModal: d.launchBuyCryptoModal()
     }
 
-    Loader {
+    StatusQUtils.DeferredComponent {
         id: addAccount
-        active: false
 
-        sourceComponent: AddAccountPopup {
-            isKeycardEnabled: root.isKeycardEnabled
-            store.addAccountModule: walletSection.addAccountModule
-        }
-
-        onLoaded: {
-            addAccount.item.open()
-        }
+        source: Qt.resolvedUrl("AddAccountPopupInstance.qml")
+        single: true
+        properties: ({
+            isKeycardEnabled: Qt.binding(() => root.isKeycardEnabled)
+        })
     }
 
-    Loader {
+    StatusQUtils.DeferredComponent {
         id: keypairImport
-        active: false
 
-        sourceComponent: KeypairImportPopup {
-            store.keypairImportModule: RootStore.keypairImportModule
-        }
-
-        onLoaded: {
-            keypairImport.item.open()
-        }
+        source: Qt.resolvedUrl("KeypairImportPopupInstance.qml")
+        single: true
     }
 }

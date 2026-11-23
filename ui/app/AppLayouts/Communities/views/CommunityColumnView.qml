@@ -530,68 +530,45 @@ Item {
         }
     }
 
-    Component {
+    SQUtils.DeferredComponent {
         id: createChannelPopup
-        CreateChannelPopup {
-            communitiesStore: root.communitiesStore
-            tokensStore: root.walletAssetsStore.walletTokensStore
-            assetsModel: root.store.assetsModel
-            assetsLoading: root.store.tokenListLoading
-            acquireTokenList: root.store.acquireTokenList
-            releaseTokenList: root.store.releaseTokenList
-            collectiblesModel: root.store.collectiblesModel
-            ensCommunityPermissionsEnabled: root.ensCommunityPermissionsEnabled
-            permissionsModel: {
-                root.prepareTokenModelForCommunityChatRequested(communityData.id, chatId)
+
+        source: Qt.resolvedUrl("CreateChannelPopupInstance.qml")
+        destroyOnClose: true
+        properties: ({
+            store: root.store,
+            communitiesStore: root.communitiesStore,
+            tokensStore: root.walletAssetsStore.walletTokensStore,
+            ensCommunityPermissionsEnabled: Qt.binding(() => root.ensCommunityPermissionsEnabled),
+            permissionsModel: root.spectatedPermissionsModel,
+            activeCommunity: Qt.binding(() => root.communityData)
+        })
+
+        onCreated: popup => {
+            popup.permissionsModel = Qt.binding(() => {
+                root.prepareTokenModelForCommunityChatRequested(root.communityData.id, popup.chatId)
                 return root.spectatedPermissionsModel
-            }
-            channelsModel: root.store.chatCommunitySectionModule.model
-            activeCommunity: root.communityData
-
-            property int channelPosition: -1
-            property var deleteChatConfirmationDialog
-
-            onCreateCommunityChannel: function (chName, chDescription, chEmoji, chColor,
-                                                chCategoryId, viewOnlyCanAddReaction, hideIfPermissionsNotMet) {
-                root.store.createCommunityChannel(chName, chDescription, chEmoji, chColor,
-                                                  chCategoryId, viewOnlyCanAddReaction, hideIfPermissionsNotMet)
-                chatId = root.store.currentChatContentModule().chatDetails.id
-            }
-            onEditCommunityChannel: {
-                root.store.editCommunityChannel(chatId,
-                                                chName,
-                                                chDescription,
-                                                chEmoji,
-                                                chColor,
-                                                chCategoryId,
-                                                channelPosition,
-                                                viewOnlyCanAddReaction,
-                                                hideIfPermissionsNotMet);
-            }
-
-            onAddPermissions: function (permissions) {
+            })
+            popup.addPermissions.connect(permissions => {
                 permissions.forEach(p => root.createPermissionRequested(p.holdingsListModel,
                                                                         p.permissionType,
                                                                         p.isPrivate,
                                                                         p.channelsListModel))
-            }
-            onRemovePermissions: function (permissions) {
+            })
+            popup.removePermissions.connect(permissions => {
                 permissions.forEach(p => root.removePermissionRequested(p.id))
-            }
-            onEditPermissions: function (permissions) {
+            })
+            popup.editPermissions.connect(permissions => {
                 permissions.forEach(p => root.editPermissionRequested(p.id,
                                                                       p.holdingsListModel,
                                                                       p.permissionType,
                                                                       p.channelsListModel,
                                                                       p.isPrivate))
-            }
-            onDeleteCommunityChannel: {
-                Global.openPopup(deleteChatConfirmationDialog);
-                close()
-            }
-            onClosed: {
-                destroy()
-            }
+            })
+            popup.deleteCommunityChannel.connect(() => {
+                Global.openPopup(popup.deleteChatConfirmationDialog)
+                popup.close()
+            })
         }
     }
 

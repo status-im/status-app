@@ -187,17 +187,55 @@ StackLayout {
         readonly property int accessType: sectionItem.requiresTokenPermissionToJoin ? Constants.communityChatOnRequestAccess
                                                                                     : Constants.communityChatPublicAccess
 
-        sourceComponent: {
+        // the views shown instead of the chat to non-members are rare; they are loaded by URL
+        // the one Loader that switches between deferred types at runtime, so not a DeferredLoader
+        readonly property url gateView: {
             if (sectionItem.isCommunity() && !sectionItem.amIMember) {
                 if (!!sectionItemModel && sectionItemModel.amIBanned) {
-                    return communityBanComponent
+                    return Qt.resolvedUrl("BannedMemberCommunityViewInstance.qml")
                 } else if (sectionItem.isWaitingOnNewCommunityOwnerToConfirmRequestToRejoin) {
-                    return controlNodeOfflineComponent
+                    return Qt.resolvedUrl("ControlNodeOfflineCommunityViewInstance.qml")
                 } else if (sectionItem.requiresTokenPermissionToJoin) {
-                    return joinCommunityViewComponent
+                    return Qt.resolvedUrl("JoinCommunityViewInstance.qml")
                 }
             }
-            return chatViewComponent
+            return ""
+        }
+
+        function gateViewProperties() {
+            const properties = {
+                sectionLayout: root.sectionLayout,
+                sectionItemModel: Qt.binding(() => root.sectionItemModel),
+                rootStore: root.rootStore,
+                leftPanelWidthOverride: Qt.binding(() => root.leftPanelWidthOverride)
+            }
+            if (gateView !== Qt.resolvedUrl("JoinCommunityViewInstance.qml"))
+                return properties
+            return Object.assign(properties, {
+                communityPermissionsStore: Qt.binding(() => root.communityPermissionsStore),
+                communityAccessStore: Qt.binding(() => root.communityAccessStore),
+                tokensStore: root.tokensStore,
+                isInvitationPending: Qt.binding(() => root.isInvitationPending),
+                accessType: Qt.binding(() => mainViewLoader.accessType)
+            })
+        }
+
+        function load() {
+            if (gateView.toString() !== "")
+                setSource(gateView, gateViewProperties())
+            else
+                sourceComponent = chatViewComponent
+        }
+
+        property bool completed: false
+
+        onGateViewChanged: {
+            if (completed)
+                load()
+        }
+        Component.onCompleted: {
+            completed = true
+            load()
         }
     }
 
@@ -258,50 +296,6 @@ StackLayout {
             pendingSettingsSubsection = subsectionItem
             root.currentIndex = d.settingsPageIndex // go to settings
             applyPendingCommunitySettingsSubsection()
-        }
-    }
-
-    Component {
-        id: joinCommunityViewComponent
-        JoinCommunityView {
-            id: joinCommunityView
-            readonly property string communityId: sectionItemModel.id
-            userUID: root.sectionLayout.userUID
-            sectionName: root.sectionLayout.sectionName + "_joinCommunityView"
-            name: sectionItemModel.name
-            introMessage: sectionItemModel.introMessage
-            communityDesc: sectionItemModel.description
-            color: sectionItemModel.color
-            image: sectionItemModel.image
-            membersCount: sectionItemModel.joinedMembersCount
-            accessType: mainViewLoader.accessType
-            joinCommunity: true
-            amISectionAdmin: sectionItemModel.memberRole === Constants.memberRole.owner ||
-                             sectionItemModel.memberRole === Constants.memberRole.admin ||
-                             sectionItemModel.memberRole === Constants.memberRole.tokenMaster
-            communityItemsModel: root.rootStore.communityItemsModel
-            requirementsMet: root.communityPermissionsStore.allTokenRequirementsMet
-            requirementsCheckPending: root.communityAccessStore.communityPermissionsCheckOngoing
-            requiresRequest: !sectionItemModel.amIMember
-            communityHoldingsModel: root.communityPermissionsStore.becomeMemberPermissionsModel
-            viewOnlyHoldingsModel: root.communityPermissionsStore.viewOnlyPermissionsModel
-            viewAndPostHoldingsModel: root.communityPermissionsStore.viewAndPostPermissionsModel
-            assetsModel: root.rootStore.assetsModel
-            collectiblesModel: root.rootStore.collectiblesModel
-            getTokenByKeyOrGroupKeyFromAllTokens: root.tokensStore.getTokenByKeyOrGroupKeyFromAllTokens
-            requestToJoinState: root.rootStore.chatCommunitySectionModule.requestToJoinState
-            onRequestToJoinClicked: {
-                Global.communityIntroPopupRequested(joinCommunityView.communityId, sectionItemModel.name,
-                                                    sectionItemModel.introMessage, sectionItemModel.image,
-                                                    root.isInvitationPending)
-            }
-            onInvitationPendingClicked: {
-                Global.communityIntroPopupRequested(joinCommunityView.communityId, sectionItemModel.name, sectionItemModel.introMessage,
-                                                    sectionItemModel.image, root.isInvitationPending)
-            }
-
-            // Layout
-            leftPanelWidthOverride: root.leftPanelWidthOverride
         }
     }
 
@@ -523,43 +517,5 @@ StackLayout {
 
         onBackToCommunityClicked: root.currentIndex = 0
         onLoaded: d.applyPendingCommunitySettingsSubsection()
-    }
-
-    Component {
-        id: controlNodeOfflineComponent
-        ControlNodeOfflineCommunityView {
-            id: controlNodeOfflineView
-
-            userUID: root.sectionLayout.userUID
-            sectionName: root.sectionLayout.sectionName + "_controlNode"
-            name: root.sectionItemModel.name
-            communityDesc: root.sectionItemModel.description
-            color: root.sectionItemModel.color
-            image: root.sectionItemModel.image
-            membersCount: sectionItemModel.joinedMembersCount
-            communityItemsModel: root.rootStore.communityItemsModel
-
-            // Layout
-            leftPanelWidthOverride: root.leftPanelWidthOverride
-        }
-    }
-
-    Component {
-        id: communityBanComponent
-        BannedMemberCommunityView {
-            id: communityBanView
-            readonly property var communityData: sectionItemModel
-            userUID: root.sectionLayout.userUID
-            sectionName: root.sectionLayout.sectionName + "_bannedMembers"
-            name: root.sectionItemModel.name
-            communityDesc: root.sectionItemModel.description
-            color: root.sectionItemModel.color
-            image: root.sectionItemModel.image
-            membersCount: sectionItemModel.joinedMembersCount
-            communityItemsModel: root.rootStore.communityItemsModel
-
-            // Layout
-            leftPanelWidthOverride: root.leftPanelWidthOverride
-        }
     }
 }

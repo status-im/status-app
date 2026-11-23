@@ -591,105 +591,40 @@ RightTabBaseView {
                     }
                 }
 
-                Component {
+                SQUtils.DeferredComponent {
                     id: collectiblesView
-                    CollectiblesView {
-                        id: collView
-                        function refreshSortSettings() {
-                            settings.category = settingsCategoryName
-                            walletSettings.sync()
-                            settings.sync()
-                            if (walletSettings.collectiblesViewCustomOrderApplyTimestamp > settings.sortOrderUpdateTimestamp && customOrderAvailable) {
-                                sortByValue(SortOrderComboBox.TokenOrderCustom)
-                                setSortOrder(Qt.AscendingOrder) // same as SortOrderComboBox.onActivated for Custom order
-                            } else {
-                                sortByValue(settings.currentSortValue)
-                                setSortOrder(settings.currentSortOrder)
-                            }
-                        }
 
-                        function saveSortSettings() {
-                            settings.currentSortValue = getSortValue()
-                            settings.currentSortOrder = getSortOrder()
-                            settings.sortOrderUpdateTimestamp = new Date().getTime()
-                            settings.sync()
-                        }
-
-                        readonly property string settingsCategoryName: "CollectiblesViewSortSettings-" + (addressFilters.indexOf(':') > -1 ? "all" : addressFilters)
-                        onSettingsCategoryNameChanged: {
-                            saveSortSettings()
-                            refreshSortSettings()
-                        }
-
-                        Component.onCompleted: refreshSortSettings()
-                        Component.onDestruction: saveSortSettings()
-
-                        Connections {
-                            target: walletSettings
-                            function onCollectiblesViewCustomOrderApplyTimestampChanged() {
-                                collView.refreshSortSettings()
-                            }
-                        }
-
-                        readonly property var settings: Settings { /* https://bugreports.qt.io/browse/QTBUG-135039 */
-                            id: settings
-                            property int currentSortValue: SortOrderComboBox.TokenOrderDateAdded
-                            property real sortOrderUpdateTimestamp: 0
-                            property alias selectedFilterGroupIds: collView.selectedFilterGroupIds
-                            property int currentSortOrder: Qt.DescendingOrder
-                        }
-
-                        ownedAccountsModel: RootStore.nonWatchAccounts
-                        controller: RootStore.collectiblesStore.collectiblesController
-                        activeNetworks: root.networksStore.activeNetworks
-                        networkFilters: root.networksStore.networkFilters
-                        addressFilters: RootStore.addressFilters
-                        unsupportedChainIds: root.networkConnectionStore.unsupportedCollectibleChains
-                        sendEnabled: root.networkConnectionStore.walletReadyForTransactionsEnabled && !RootStore.overview.isWatchOnlyAccount && RootStore.overview.canSend
-                        filterVisible: filterButton.checked
-                        customOrderAvailable: controller.hasSettings
+                    source: Qt.resolvedUrl("CollectiblesViewInstance.qml")
+                    properties: ({
+                        networksStore: root.networksStore,
+                        networkConnectionStore: root.networkConnectionStore,
+                        walletSettings: walletSettings,
+                        detailedCollectibleActivityController: d.detailedCollectibleActivityController,
+                        filterVisible: Qt.binding(() => filterButton.checked),
                         bannerComponent: buyReceiveBannerComponent
-                        onCollectibleClicked: function (chainId, contractAddress, tokenId, uid, tokenType, communityId) {
-                            RootStore.collectiblesStore.getDetailedCollectible(chainId, contractAddress, tokenId)
-                            RootStore.setCurrentViewedHolding(uid, tokenType, communityId)
-                            d.detailedCollectibleActivityController.resetFilter()
-                            d.detailedCollectibleActivityController.setFilterAddressesJson(JSON.stringify(RootStore.addressFilters.split(":")))
-                            d.detailedCollectibleActivityController.setFilterChainsJson(JSON.stringify([chainId]), false)
-                            d.detailedCollectibleActivityController.setFilterCollectibles(JSON.stringify([uid]))
-                            d.detailedCollectibleActivityController.updateFilter()
-
-                            stack.currentIndex = 1
-                        }
-                        onSendRequested: function (collectionUid, tokenType, fromAddress) {
-                            const collectible = SQUtils.ModelUtils.getByKey(controller.sourceModel, "collectionUid", collectionUid)
-                            if (!!collectible &&
-                                    (collectible.soulbound ||
-                                     collectible.communityPrivilegesLevel === Constants.TokenPrivilegesLevel.Owner)) {
-                                return
-                            }
-
-                            root.sendTokenRequested(fromAddress, collectionUid, tokenType)
-                        }
-                        onReceiveRequested: (key) => root.launchShareAddressModal()
-                        onSwitchToCommunityRequested: (communityId) => Global.switchToCommunity(communityId)
-                        onManageTokensRequested: Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.wallet,
-                                                                                      Constants.walletSettingsSubsection.manageCollectibles)
-                        isError: RootStore.collectiblesStore.areCollectiblesError
+                    })
+                    onCreated: view => {
+                        view.showDetailRequested.connect(() => stack.currentIndex = 1)
+                        view.sendTokenRequested.connect(root.sendTokenRequested)
+                        view.receiveRequested.connect(root.launchShareAddressModal)
                     }
                 }
-                Component {
+                SQUtils.DeferredComponent {
                     id: historyView
-                    HistoryView {
-                        objectName: "walletAccountHistoryView"
-                        overview: RootStore.overview
-                        activityStore: RootStore
-                        communitiesStore: root.communitiesStore
-                        currencyStore: root.sharedRootStore.currencyStore
-                        networksStore: root.networksStore
-                        showAllAccounts: RootStore.showAllAccounts
-                        filterVisible: false  // TODO #16761: Re-enable filter for activity when implemented
+
+                    module: "shared.views"
+                    typeName: "HistoryView"
+                    properties: ({
+                        objectName: "walletAccountHistoryView",
+                        overview: Qt.binding(() => RootStore.overview),
+                        activityStore: RootStore,
+                        communitiesStore: root.communitiesStore,
+                        currencyStore: root.sharedRootStore.currencyStore,
+                        networksStore: root.networksStore,
+                        showAllAccounts: Qt.binding(() => RootStore.showAllAccounts),
+                        filterVisible: false,  // TODO #16761: Re-enable filter for activity when implemented
                         bannerComponent: buyReceiveBannerComponent
-                    }
+                    })
                 }
             }
         }
@@ -697,7 +632,7 @@ RightTabBaseView {
         // unloaded on the way out, so a section load never pays for a view the
         // user has not opened. The reset that used to hang off `visible` now
         // hangs off `active`: an unloaded view never sees a visibility change.
-        Loader {
+        SQUtils.DeferredLoader {
             id: collectibleDetailLoader
             objectName: "collectibleDetailLoader"
 
@@ -711,20 +646,17 @@ RightTabBaseView {
                 }
             }
 
-            sourceComponent: CollectibleDetailView {
-                objectName: "collectibleDetailView"
-
-                collectible: RootStore.collectiblesStore.detailedCollectible
-                isCollectibleLoading: RootStore.collectiblesStore.isDetailedCollectibleLoading
-                activityModel: d.detailedCollectibleActivityController.model
-                addressFilters: RootStore.addressFilters
-                rootStore: root.sharedRootStore
-                walletRootStore: RootStore
-                communitiesStore: root.communitiesStore
+            url: Qt.resolvedUrl("CollectibleDetailViewInstance.qml")
+            properties: ({
+                objectName: "collectibleDetailView",
+                activityModel: d.detailedCollectibleActivityController.model,
+                rootStore: root.sharedRootStore,
+                walletRootStore: RootStore,
+                communitiesStore: root.communitiesStore,
                 networksStore: root.networksStore
-            }
+            })
         }
-        Loader {
+        SQUtils.DeferredLoader {
             id: assetDetailLoader
             objectName: "assetDetailLoader"
 
@@ -736,19 +668,17 @@ RightTabBaseView {
                     RootStore.resetCurrentViewedHolding(Constants.TokenType.ERC20)
             }
 
-            sourceComponent: AssetsDetailView {
-                objectName: "assetDetailView"
-
-                tokenGroup: d.assetDetailTokenGroup ?? ({})
-
-                tokensStore: RootStore.tokensStore
-                allNetworksModel: root.networksStore.activeNetworks
-                address: RootStore.overview.mixedcaseAddress
-                currencyStore: RootStore.currencyStore
-                networkFilters: root.networksStore.networkFilters
-
+            url: Qt.resolvedUrl("AssetsDetailView.qml")
+            properties: ({
+                objectName: "assetDetailView",
+                tokenGroup: Qt.binding(() => d.assetDetailTokenGroup ?? ({})),
+                tokensStore: RootStore.tokensStore,
+                allNetworksModel: root.networksStore.activeNetworks,
+                address: Qt.binding(() => RootStore.overview.mixedcaseAddress),
+                currencyStore: RootStore.currencyStore,
+                networkFilters: Qt.binding(() => root.networksStore.networkFilters),
                 networkConnectionStore: root.networkConnectionStore
-            }
+            })
         }
     }
 }

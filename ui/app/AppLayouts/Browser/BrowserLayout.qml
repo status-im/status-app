@@ -195,7 +195,7 @@ StatusSectionLayout {
             _internal.scrolledUp = true
         }
 
-        property Component jsDialogComponent: JSDialogWindow {}
+        property Component jsDialogComponent: Qt.createComponent("popups/JSDialogWindow.qml")
 
         readonly property bool currentTabSupportsFindInPage: currentWebView?.supportsFindInPage ?? false
         readonly property bool hasNativeFindPanel: currentWebView?.hasNativeFindPanel ?? false
@@ -265,7 +265,7 @@ StatusSectionLayout {
         }
 
         function openDownloadsOverview() {
-            onOpenTabsBookmarksOverviewRequested(TabsBookmarksOverviewModal.Mode.Downloads)
+            onOpenTabsBookmarksOverviewRequested(TabsBookmarksOverviewMode.Mode.Downloads)
         }
 
         function openSupportedFormats() {
@@ -431,10 +431,10 @@ StatusSectionLayout {
         downloadRequestHandler: (download, hostView, token) =>
             downloadsContext.handleDownloadRequest(download, hostView, token)
         linkLongPressHandler: (linkUrl, imageUrl, position, hostView) =>
-            linkContextMenuInst.openAt(linkUrl, imageUrl, position, webStackView, hostView)
+            linkContextMenu.createObject(root).openAt(linkUrl, imageUrl, position, webStackView, hostView)
         sslErrorHandler: (error) => {
                              error.defer()
-                             sslDialog.enqueue(error)
+                             sslDialog.createObject(root).enqueue(error)
                          }
         jsDialogHandler: (request) => dialogsContext.openJsDialog(request)
         findTextFinishedHandler: function(result) {
@@ -542,13 +542,13 @@ StatusSectionLayout {
                     dialogsContext.openWalletMenu(browserWalletMenu)
                 }
                 function onRequestAllOpenTabsView() {
-                    _internal.onOpenTabsBookmarksOverviewRequested(TabsBookmarksOverviewModal.Mode.OpenTabs)
+                    _internal.onOpenTabsBookmarksOverviewRequested(TabsBookmarksOverviewMode.Mode.OpenTabs)
                 }
                 function onOpenSettingMenu(target, pos) {
                     if (root.isMobile)
-                        mobileSettingsMenu.open()
+                        mobileSettingsMenu.open(root)
                     else
-                        settingsMenu.popup(target, pos)
+                        settingsMenu.createObject(root).popup(target, pos)
                 }
                 function onRequestSearch() {
                     browserToolbarLoader.activateAddressBar()
@@ -771,246 +771,160 @@ StatusSectionLayout {
         }
     }
 
-    Component  {
+    SQUtils.DeferredComponent {
         id: browserWalletMenu
-        BrowserWalletMenu {
-            parent: root.invertedLayout ? mobileAddressBar : browserToolbarLoader
-            x: parent.width - width - Theme.halfPadding
-            y: parent.height + 4
 
-            incognitoMode: _internal.currentTabIncognito
-            accounts: root.browserWalletStore.accounts
-            currentAccount: root.browserWalletStore.dappBrowserAccount
-            activityStore: root.browserActivityStore
-            currencyStore: root.currencyStore
+        source: Qt.resolvedUrl("BrowserWalletMenuInstance.qml")
+        properties: ({
+            anchorItem: Qt.binding(() => root.invertedLayout ? mobileAddressBar : browserToolbarLoader),
+            incognitoMode: Qt.binding(() => _internal.currentTabIncognito),
+            browserWalletStore: root.browserWalletStore,
+            webViewContext: webViewContext,
+            activityStore: root.browserActivityStore,
+            currencyStore: root.currencyStore,
             networksStore: root.networksStore
+        })
 
-            onSendTriggered: (address) => root.sendToRecipientRequested(address)
-            onAccountChanged: (newAddress) => webViewContext.changeAccountForCurrentDapp(newAddress)
-            onReload: {
-                for (let i = 0; i < tabs.count; ++i){
-                    webViewContext.getWebView(i).reload();
-                }
-            }
-
-            onAccountSwitchRequested: address => root.browserWalletStore.switchAccountByAddress(address)
-            onFilterAddressesChangeRequested: addressesJson => root.browserActivityStore.activityController.setFilterAddressesJson(addressesJson)
-
-            Connections {
-                target: root.browserActivityStore.transactionActivityStatus
-                enabled: visible
-                function onIsFilterDirtyChanged() {
-                    root.browserActivityStore.updateTransactionFilterIfDirty()
-                }
-                function onFilterChainsChanged() {
-                    root.browserActivityStore.currentActivityFiltersStore.updateCollectiblesModel()
-                    root.browserActivityStore.currentActivityFiltersStore.updateRecipientsModel()
-                }
-            }
-        }
+        onCreated: menu => menu.sendTriggered.connect(root.sendToRecipientRequested)
     }
 
-    BrowserSettingsMenu {
+    SQUtils.DeferredComponent {
         id: settingsMenu
 
-        parent: browserToolbarLoader
-        modal: true
-        dim: false
-
-        incognitoMode: _internal.currentTabIncognito
-        zoomFactor: _internal.currentWebView?.zoomFactor ?? 1
-        browserSettings: localAccountSettings
-        clearingBrowsingData: _internal.currentWebView?.clearing ?? false
-        clearSiteDataSupported: _internal.currentWebView?.clearSiteDataSupported ?? true
-        onForceReload: webViewContext.forceReloadCurrent()
-        onClearSiteData: webViewContext.clearSiteDataCurrent()
-        onClearBrowsingData: root.clearBrowsingDataOnCurrentTab()
-        onAddNewTab: _internal.addNewEmptyTab()
-        onOpenDownloads: _internal.openDownloadsOverview()
-        onOpenSupportedFormats: _internal.openSupportedFormats()
-        onGoIncognito: (checked) => root.applyIncognitoMode(checked)
-        onZoomIn: webViewContext.changeZoomCurrent(0.1)
-        onZoomOut: webViewContext.changeZoomCurrent(-0.1)
-        onResetZoomFactor: webViewContext.resetZoomCurrent()
-        onLaunchFindBar: _internal.showFindBar()
-        onLaunchBrowserSettings: {
-            Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.browserSettings);
+        source: Qt.resolvedUrl("BrowserSettingsMenuInstance.qml")
+        single: true
+        properties: ({
+            parent: browserToolbarLoader,
+            modal: true,
+            dim: false,
+            browserSettings: localAccountSettings,
+            webViewContext: webViewContext
+        })
+        onCreated: menu => {
+            menu.clearBrowsingData.connect(root.clearBrowsingDataOnCurrentTab)
+            menu.addNewTab.connect(_internal.addNewEmptyTab)
+            menu.openDownloads.connect(_internal.openDownloadsOverview)
+            menu.openSupportedFormats.connect(_internal.openSupportedFormats)
+            menu.goIncognito.connect(root.applyIncognitoMode)
+            menu.launchFindBar.connect(_internal.showFindBar)
+            menu.launchBrowserSettings.connect(() => Global.changeAppSectionBySectionType(Constants.appSection.profile,
+                                                                                          Constants.settingsSubsection.browserSettings))
         }
     }
 
-    MobileSettingsMenu {
+    SQUtils.DeferredComponent {
         id: mobileSettingsMenu
 
-        supportsIncognito: _internal.currentWebView?.supportsIncognito ?? false
-        incognitoMode: _internal.currentTabIncognito
-
-        supportsZoom: _internal.currentWebView?.supportsZoom ?? false
-        zoomFactor: _internal.currentWebView?.zoomFactor ?? 1
-        onZoomIn: webViewContext.changeZoomCurrent(0.1)
-        onZoomOut: webViewContext.changeZoomCurrent(-0.1)
-        onResetZoomFactor: webViewContext.resetZoomCurrent()
-
-        supportsFind: _internal.currentTabSupportsFindInPage
-        onLaunchFindBar: _internal.showFindBar()
-
-        clearSiteDataSupported: _internal.currentWebView?.clearSiteDataSupported ?? false
-        clearing: _internal.currentWebView?.clearing ?? false
-        onForceReload: webViewContext.forceReloadCurrent()
-        onClearSiteData: webViewContext.clearSiteDataCurrent()
-        onClearBrowsingData: root.clearBrowsingDataOnCurrentTab()
-
-        onGoIncognito: checked => root.applyIncognitoMode(checked)
-        onSupportedFormatsRequested: _internal.openSupportedFormats()
-        onSettingsRequested: Global.changeAppSectionBySectionType(Constants.appSection.profile, Constants.settingsSubsection.browserSettings)
+        source: Qt.resolvedUrl("MobileSettingsMenuInstance.qml")
+        single: true
+        destroyOnClose: true
+        properties: ({ webViewContext: webViewContext })
+        onCreated: menu => {
+            menu.launchFindBar.connect(_internal.showFindBar)
+            menu.clearBrowsingData.connect(root.clearBrowsingDataOnCurrentTab)
+            menu.goIncognito.connect(root.applyIncognitoMode)
+            menu.supportedFormatsRequested.connect(_internal.openSupportedFormats)
+            menu.settingsRequested.connect(() => Global.changeAppSectionBySectionType(Constants.appSection.profile,
+                                                                                      Constants.settingsSubsection.browserSettings))
+        }
     }
 
-    Component {
+    SQUtils.DeferredComponent {
         id: supportedFormatsModal
-        SupportedFormatsModal {
-            sections: formatSupportContext.sections
-            engineChecked: formatSupportContext.engineChecked
-            destroyOnClose: true
-        }
+
+        module: "AppLayouts.Browser.popups"
+        typeName: "SupportedFormatsModal"
+        destroyOnClose: true
+        properties: ({
+            sections: Qt.binding(() => formatSupportContext.sections),
+            engineChecked: Qt.binding(() => formatSupportContext.engineChecked)
+        })
     }
 
-    Component {
+    SQUtils.DeferredComponent {
         id: tabsBookmarksOverviewComp
-        TabsBookmarksOverviewModal {
-            id: overviewModal
 
-            getTitleFn: function(tabIndex) {
-                const webView = webViewContext.getWebView(tabIndex)
-                return savedSessionContext.displayTitle(webView, false)
-            }
-            getFaviconFn: function(tabIndex) {
-                const webView = webViewContext.getWebView(tabIndex)
-                if (!webView)
-                    return Assets.svg("globe")
+        source: Qt.resolvedUrl("TabsBookmarksOverviewModalInstance.qml")
+        properties: ({
+            bookmarksStore: root.bookmarksStore,
+            browserRootStore: root.browserRootStore,
+            browserPreferencesStore: root.browserPreferencesStore,
+            webViewContext: webViewContext,
+            savedSessionContext: savedSessionContext
+        })
 
-                const icon = savedSessionContext.displayIcon(webView)
-                return root.browserRootStore.determineRealURL(icon || Assets.svg("globe"))
-            }
-            getWebViewScreenshot: function (tabIndex, targetImage) {
-                const webView = webViewContext.getWebView(tabIndex)
-                if (!webView)
-                    return ""
-
-                function grabImage() {
-                    savedSessionContext.snapshotPersister.grabSnapshot(webView, result => {
-                        if (result && result.url)
-                            targetImage.source = result.url
-                    })
-                }
-
-                function grabImageWhenLoaded() {
-                    if (webView.htmlPageLoaded)
-                        grabImage()
-                }
-
-                const isCurrentTab = tabIndex === currentTabIndex
-                if (!isCurrentTab) {
-                    const cached = browserPreferencesStore.getSnapshot(webView.uid)
-                    if (cached) {
-                        targetImage.source = cached
-                        return ""
-                    }
-                }
-
-                if (webView.htmlPageLoaded)
-                    grabImage()
-                else
-                    webView.htmlPageLoadedChanged.connect(grabImageWhenLoaded)
-            }
-            bookmarksModel: root.bookmarksStore.bookmarksModel
-
-            onActivateTabRequested: tabIndex => tabs.activateTab(tabIndex)
-            onAddTabRequested: _internal.addNewEmptyTab()
-            onAddBookmarkRequested: _internal.openFavoriteModal()
-            onEditBookmarkRequested: (url, name) => _internal.openFavoriteModal(true, url, name)
-            onDeleteBookmarkRequested: url => root.bookmarksStore.deleteBookmark(url)
-            onBookmarkClicked: url => root.openUrlInNewTab(url)
-
-            onDownloadClicked: function (record) {
+        onCreated: overviewModal => {
+            overviewModal.activateTabRequested.connect(tabs.activateTab)
+            overviewModal.addTabRequested.connect(_internal.addNewEmptyTab)
+            overviewModal.addBookmarkRequested.connect(() => _internal.openFavoriteModal())
+            overviewModal.editBookmarkRequested.connect((url, name) => _internal.openFavoriteModal(true, url, name))
+            overviewModal.bookmarkClicked.connect(root.openUrlInNewTab)
+            overviewModal.downloadClicked.connect(record => {
                 if (downloadsContext.openDownloadFromList(record))
-                    close()
-            }
+                    overviewModal.close()
+            })
             // The menu needs its host: navigating actions close the overview.
-            onDownloadOptionsClicked: (record, anchor) =>
-                downloadRecordMenuInst.openAt(record, anchor, { hostPopup: overviewModal })
-            onDownloadsScrolled: downloadRecordMenuInst.close()
+            overviewModal.downloadOptionsClicked.connect((record, anchor) =>
+                downloadRecordMenu.createObject(root).openAt(record, anchor, { hostPopup: overviewModal }))
+            overviewModal.downloadsScrolled.connect(() => downloadRecordMenu.instance?.close())
         }
     }
 
-    Component {
+    SQUtils.DeferredComponent {
         id: addFavoriteModal
-        AddFavoriteModal {
-            incognitoMode: _internal.currentTabIncognito
-            onAddBookmarkRequested: (url, name) => root.bookmarksStore.addBookmark(url, name)
-            onEditBookmarkRequested: (oldUrl, newUrl, newName) => root.bookmarksStore.updateBookmark(oldUrl, newUrl, newName)
-            onDeleteBookmarkRequested: url => root.bookmarksStore.deleteBookmark(url)
-            destroyOnClose: true
-        }
+
+        source: Qt.resolvedUrl("AddFavoriteModalInstance.qml")
+        destroyOnClose: true
+        properties: ({
+            incognitoMode: Qt.binding(() => _internal.currentTabIncognito),
+            bookmarksStore: root.bookmarksStore
+        })
     }
 
-    StatusMessageDialog {
+    SQUtils.DeferredComponent {
         id: sslDialog
 
-        property var certErrors: []
-        icon: StatusMessageDialog.StandardIcon.Warning
-        standardButtons: Dialog.No | Dialog.Yes
-        title: qsTr("Server's certificate not trusted")
-        text: qsTr("Do you wish to continue?")
-        detailedText: qsTr("If you wish so, you may continue with an unverified certificate. Accepting an unverified certificate means you may not be connected with the host you tried to connect to.\nDo you wish to override the security check and continue?")
-        onAccepted: {
-            certErrors.shift().acceptCertificate();
-            presentError();
-        }
-        onRejected: {
-            certErrors.shift().rejectCertificate();
-            presentError();
-        }
-        function enqueue(error){
-            certErrors.push(error);
-            presentError();
-        }
-        function presentError(){
-            visible = certErrors.length > 0
-        }
+        source: Qt.resolvedUrl("CertificateErrorDialogInstance.qml")
+        single: true
     }
 
-    BrowserLinkContextMenu {
-        id: linkContextMenuInst
+    SQUtils.DeferredComponent {
+        id: linkContextMenu
 
-        canShareLink: root.downloadsStore.canShareUrlString(linkUrl)
-
-        onOpenInNewTabRequested: targetUrl => root.openUrlInNewTab(targetUrl)
-        onShareUrlRequested: targetUrl => root.downloadsStore.shareUrlString(targetUrl)
-        onDownloadRequested: function (targetUrl) {
-            // downloadUrl (not navigation): renderable media would play in the tab
-            // instead of saving; the Backend path always raises downloadRequested.
-            const view = hostView || _internal.currentWebView
-            if (view && view.downloadUrl)
-                view.downloadUrl(targetUrl, "")
+        source: Qt.resolvedUrl("BrowserLinkContextMenuInstance.qml")
+        single: true
+        properties: ({ downloadsStore: root.downloadsStore })
+        onCreated: menu => {
+            menu.openInNewTabRequested.connect(root.openUrlInNewTab)
+            menu.downloadRequested.connect(targetUrl => {
+                // downloadUrl (not navigation): renderable media would play in the tab
+                // instead of saving; the Backend path always raises downloadRequested.
+                const view = menu.hostView || _internal.currentWebView
+                if (view && view.downloadUrl)
+                    view.downloadUrl(targetUrl, "")
+            })
         }
     }
 
     /// The one Download Record menu, shared by Downloads List and Pill strip.
     /// Open sites call `openAt(record, anchor, options)` —
     /// `capabilities` is a binding, so it can never go stale.
-    DownloadRecordMenu {
-        id: downloadRecordMenuInst
+    SQUtils.DeferredComponent {
+        id: downloadRecordMenu
 
-        capabilities: downloadsContext.capabilitiesFor(
-                          record, { showDismiss: forStrip, showDownloadsEntry: forStrip })
-
-        onDismissRequested: root.downloadsStore.dismissRecordFromStrip(record)
-        onDownloadsRequested: _internal.openDownloadsOverview()
-        onShowInFolderRequested: root.downloadsStore.openDirectoryForRecord(record)
-        onShareFileRequested: downloadsContext.shareFileRecord(record)
-        onShareUrlRequested: downloadsContext.shareUrlRecord(record)
-        onOpenInBrowserRequested: downloadsContext.openInBrowserRecord(record)
-        onRetryRequested: downloadsContext.retryRecord(record)
-        // stripVisible observes strip-model emptiness — no visibility sync call.
+        source: Qt.resolvedUrl("DownloadRecordMenuInstance.qml")
+        single: true
+        properties: ({ downloadsStore: root.downloadsStore })
+        onCreated: menu => {
+            menu.capabilities = Qt.binding(() => downloadsContext.capabilitiesFor(
+                                               menu.record, { showDismiss: menu.forStrip, showDownloadsEntry: menu.forStrip }))
+            menu.downloadsRequested.connect(_internal.openDownloadsOverview)
+            menu.shareFileRequested.connect(() => downloadsContext.shareFileRecord(menu.record))
+            menu.shareUrlRequested.connect(() => downloadsContext.shareUrlRecord(menu.record))
+            menu.openInBrowserRequested.connect(() => downloadsContext.openInBrowserRecord(menu.record))
+            menu.retryRequested.connect(() => downloadsContext.retryRecord(menu.record))
+            // stripVisible observes strip-model emptiness — no visibility sync call.
+        }
     }
 
     Component {
@@ -1045,8 +959,8 @@ StatusSectionLayout {
                 downloadsContext.handlePillClicked(record)
             }
             onOptionsClicked: (record, anchor) =>
-                downloadRecordMenuInst.openAt(record, anchor, { forStrip: true })
-            onScrolled: downloadRecordMenuInst.close()
+                downloadRecordMenu.createObject(root).openAt(record, anchor, { forStrip: true })
+            onScrolled: downloadRecordMenu.instance?.close()
             onClose: {
                 // Hide strip only — in-progress pills stay in the session model.
                 // Reappears when the next download starts (handleDownloadRequest

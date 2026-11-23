@@ -21,12 +21,7 @@ import AppLayouts.Browser.panels
 StatusDialog {
     id: root
 
-    enum Mode {
-        OpenTabs,
-        Bookmarks,
-        Downloads
-    }
-    property int initialMode: TabsBookmarksOverviewModal.Mode.OpenTabs
+    property int initialMode: TabsBookmarksOverviewMode.Mode.OpenTabs
 
     //< [{title: "", url: ""}, {...}]
     required property var tabsModel
@@ -67,9 +62,9 @@ StatusDialog {
         id: d
 
         readonly property string titleText: {
-            if (mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.Bookmarks)
+            if (mainTabBar.currentIndex === TabsBookmarksOverviewMode.Mode.Bookmarks)
                 return qsTr("Bookmarks")
-            if (mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.Downloads)
+            if (mainTabBar.currentIndex === TabsBookmarksOverviewMode.Mode.Downloads)
                 return qsTr("Downloads")
             return qsTr("Open tabs")
         }
@@ -100,7 +95,7 @@ StatusDialog {
             filters: SQUtils.SearchFilter {
                 roleName: "title"
                 searchPhrase: d.searchQuery
-                enabled: searchField.visible && mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.OpenTabs
+                enabled: searchField.visible && mainTabBar.currentIndex === TabsBookmarksOverviewMode.Mode.OpenTabs
             }
         }
 
@@ -111,7 +106,7 @@ StatusDialog {
                 SQUtils.SearchFilter {
                     roleName: "name"
                     searchPhrase: d.searchQuery
-                    enabled: searchField.visible && mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.Bookmarks
+                    enabled: searchField.visible && mainTabBar.currentIndex === TabsBookmarksOverviewMode.Mode.Bookmarks
                 },
                 ValueFilter {
                     roleName: "url"
@@ -133,9 +128,9 @@ StatusDialog {
             onVisibleChanged: clear()
 
             placeholderText: {
-                if (mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.OpenTabs)
+                if (mainTabBar.currentIndex === TabsBookmarksOverviewMode.Mode.OpenTabs)
                     return qsTr("Search in open tabs")
-                if (mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.Bookmarks)
+                if (mainTabBar.currentIndex === TabsBookmarksOverviewMode.Mode.Bookmarks)
                     return qsTr("Search in bookmarks")
                 return qsTr("Search in downloads")
             }
@@ -362,10 +357,10 @@ StatusDialog {
                 icon.name: "add"
                 icon.width: d.iconSize
                 icon.height: d.iconSize
-                enabled: mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.OpenTabs || mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.Bookmarks
+                enabled: mainTabBar.currentIndex === TabsBookmarksOverviewMode.Mode.OpenTabs || mainTabBar.currentIndex === TabsBookmarksOverviewMode.Mode.Bookmarks
                 tooltip.text: qsTr("Add")
                 onClicked: {
-                    if (mainTabBar.currentIndex === TabsBookmarksOverviewModal.Mode.Bookmarks)
+                    if (mainTabBar.currentIndex === TabsBookmarksOverviewMode.Mode.Bookmarks)
                         root.addBookmarkRequested()
                     else
                         root.addTabRequested()
