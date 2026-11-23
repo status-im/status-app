@@ -83,7 +83,7 @@ Item {
             compare(badge.visible, false)
             controlUnderTest.muted = false
             compare(title.color, Theme.palette.directColor1)
-            compare(title.font.weight, Font.Bold)
+            compare(title.font.weight, Font.DemiBold)
         }
 
         function test_titleDisplaysMarkupLiterally() {
