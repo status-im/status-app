@@ -50,6 +50,9 @@ method onThreadDeleteFinished(self: ThreadDetailsDelegate, requestId, error: str
 method onChatThreadsLoaded(self: ThreadDetailsDelegate, threads: seq[ThreadDto], listLoaded: bool = false) =
   self.summaries = threads
 
+method messagesDidLoad(self: MockDelegate) =
+  discard
+
 method openThreadAsChat(self: MockDelegate, threadId, threadName, parentMessageId: string,
     setActive: bool = true, hasUnreadMessages: bool = false, notificationsCount: int = 0) =
   self.opened.add(OpenedThread(threadId: threadId, name: threadName,
@@ -605,3 +608,91 @@ suite "thread navigation":
     check delegates[1].deletions == @["request"]
     check delegates[2].deletions.len == 0
     check delegates[3].deletions.len == 0
+
+suite "chat history before the messages module loads":
+  proc chatModule(events: EventEmitter, service: message_service.Service): messages_module.Module =
+    let contacts = contact_service.newService(events, nil, nil, nil)
+    let chats = chat_service.newService(events, nil, contacts)
+    let communities = community_service.newService(events, nil, chats, nil, service)
+    messages_module.newModule(MockDelegate(), events, "section-id", "chat-id",
+      true, contacts, communities, chats, service, nil, nil)
+
+  # A section build can select a chat, and fetch its newest page, before the
+  # chat's module listens: the page never reaches the model.
+  test "a page fetched before the module listened is fetched again":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    service.msgCursor["chat-id"] = initMessageCursor("cursor-2", false, false)
+    let module = chatModule(events, service)
+    defer: module.delete()
+
+    module.load()
+
+    check(not service.msgCursor.hasKey("chat-id"))
+
+  test "a page still in flight reaches the module that loads meanwhile":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    service.msgCursor["chat-id"] = initMessageCursor("cursor-1", true, false)
+    let module = chatModule(events, service)
+    defer: module.delete()
+
+    module.load()
+
+    check(service.msgCursor["chat-id"].isPending())
+
+suite "threads and the chat history restart":
+  proc contentModule(events: EventEmitter, service: message_service.Service,
+      threadId: string): messages_module.Module =
+    let contacts = contact_service.newService(events, nil, nil, nil)
+    let chats = chat_service.newService(events, nil, contacts)
+    let communities = community_service.newService(events, nil, chats, nil, service)
+    messages_module.newModule(MockDelegate(), events, "section-id", "chat-id",
+      true, contacts, communities, chats, service, nil, nil, threadId = threadId)
+
+  test "a thread that loads leaves its parent chat's history alone":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    service.msgCursor["chat-id"] = initMessageCursor("chat-cursor", false, false)
+    service.threadMsgCursor["chat-id:thread-id"] = initMessageCursor("", true, false)
+    let thread = contentModule(events, service, "thread-id")
+    defer: thread.delete()
+
+    thread.load()
+
+    check(service.msgCursor["chat-id"].getValue() == "chat-cursor")
+    check(service.threadMsgCursor["chat-id:thread-id"].isPending())
+
+  test "a parent chat that loads leaves its threads' history alone":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    service.threadMsgCursor["chat-id:thread-id"] = initMessageCursor("thread-cursor", false, false)
+    let parent = contentModule(events, service, "")
+    defer: parent.delete()
+
+    parent.load()
+
+    check(service.threadMsgCursor["chat-id:thread-id"].getValue() == "thread-cursor")
+
+  test "replies received before a thread loads come with its first page":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    service.threadMsgCursor["chat-id:thread-id"] = initMessageCursor("", true, false)
+    let thread = contentModule(events, service, "thread-id")
+    defer: thread.delete()
+    let reply = MessageDto(id: "reply-1", threadId: "thread-id", localChatId: "chat-id", clock: 5)
+
+    events.emit(SIGNAL_NEW_MESSAGE_RECEIVED, MessagesArgs(chatId: "chat-id",
+      threadId: "thread-id", messages: @[reply]))
+    check(thread.view.model().findIndexForMessageId("reply-1") == -1)
+
+    thread.load()
+    service.onAsyncLoadMoreMessagesForThread($(%* {
+      "chatId": "chat-id",
+      "threadId": "thread-id",
+      "messages": [{"id": "reply-1", "threadId": "thread-id", "localChatId": "chat-id", "clock": 5}],
+      "messagesCursor": "",
+      "reactions": []
+    }))
+
+    check(thread.view.model().findIndexForMessageId("reply-1") >= 0)

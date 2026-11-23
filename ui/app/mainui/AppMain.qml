@@ -150,7 +150,7 @@ Item {
 
     Loader {
         id: rootChatStoreLoader
-        active: appMain.mainReady
+        active: appMain.mainReady && !!appMain.contactsStore
 
         sourceComponent: ChatStores.RootStore {
             contactsStore: appMain.contactsStore
@@ -158,6 +158,7 @@ Item {
             communityTokensStore: appMain.communityTokensStore
             openCreateChat: createChatView.opened
             networkConnectionStore: appMain.networkConnectionStore
+            isChatSectionModule: true
         }
     }
 

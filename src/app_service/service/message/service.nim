@@ -471,6 +471,13 @@ QtObject:
       self.msgCursor.del(chatId)
     self.pinnedMsgCursor.del(chatId)
 
+  # A page fetched while no messages module listened for the chat never reached
+  # a model: the module that loads next starts again from the newest page. A
+  # page still in flight reaches it, so its request stays.
+  proc restartChatHistory*(self: Service, chatId: string) =
+    if self.msgCursor.hasKey(chatId) and not self.msgCursor[chatId].isPending():
+      self.msgCursor.del(chatId)
+
   proc resetAllMessageCursors*(self: Service) =
     self.msgCursor = initTable[string, MessageCursor]()
     self.threadMsgCursor = initTable[string, MessageCursor]()
