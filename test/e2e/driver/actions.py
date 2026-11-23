@@ -70,7 +70,6 @@ _IN_PAGE_TRANSITION = """(function (item) {
 
 
 def _wait_until_page_settled(obj, tries=40):
-    """A StackView takes no input while it moves pages, so a click during the move is lost."""
     for _ in range(tries):
         try:
             if not obj._inspector.evaluate(_IN_PAGE_TRANSITION, obj._id):

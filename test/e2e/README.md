@@ -51,15 +51,31 @@ can run QML code in the app. Run only on a machine where you trust all users.
 
 ## Run on the host
 
+From `test/e2e`, one setup script installs CPython 3.14 (via `uv` if needed), builds the plugin,
+creates `.venv`, installs `requirements.txt`, records `INSPECTOR_PLUGINS`, and ensures `.env` (from
+`.env.example`) with `E2E_LOCAL_WAKU_FLEET` and `WALLET_TEST_USER_SEED`. Activate or the venv's
+`.pth` files load `.env` into the environment for pytest:
+
+| Platform | Command |
+|----------|---------|
+| macOS (Apple Silicon) | `./scripts/setup-macos.sh` |
+| Linux | `./scripts/setup-linux.sh` |
+| Windows | `powershell -File scripts/setup-windows.ps1` |
+
+Optional argument: plugins directory (`generic/`). Defaults to the plugin just built. `QT_PREFIX` and
+`PLUGIN_SRC` override Qt and plugin sources. Missing tools: macOS — Xcode CLT and CMake; Linux —
+Docker; Windows — VS 2022 (C++), CMake, git.
+
+With Docker running, setup also runs the local Waku fleet (`docker compose -p status-app … up -d` and
+`scan_waku_fleet.py`). Set `E2E_SKIP_WAKU_FLEET=1` to skip; `E2E_WAKU_COMPOSE_PROJECT` overrides the
+compose project name.
+
 ```bash
-cd test/e2e
-./scripts/setup-venv.sh /tmp/qmlinspector/plugins
 source .venv/bin/activate
 pytest -m critical
 ```
 
-`setup-venv.sh` creates `.venv` from a native Python, installs `requirements.txt` and records
-`INSPECTOR_PLUGINS` in the venv. The argument is the directory with `generic/`.
+On Windows the activate command is `.\.venv\Scripts\Activate.ps1`.
 
 Tests with two instances (communities, syncing) need the [local Waku fleet](#local-waku-fleet-optional)
 and `E2E_LOCAL_WAKU_FLEET=1`, as in CI.
@@ -74,23 +90,9 @@ A local `bin/nim_status_client` does not carry its Qt and Status libraries. Add 
 export LD_LIBRARY_PATH="$QT_LIBDIR:$ROOT/vendor/status-go/build:$ROOT/vendor/status-go/build/bin:$ROOT/vendor/status-keycard-qt/build/linux:$ROOT/bin/StatusQ:$ROOT/ui/StatusQ/build/Qt6.11.0/lib"
 ```
 
-On macOS, `build-plugin.sh` builds a Linux plugin. Use the macOS script instead. With no
-`QT_PREFIX` it installs Qt 6.11.0, the Qt of the CI `.app`, and points the plugin at
-`Contents/Frameworks` in that bundle:
-
-```bash
-test/e2e/scripts/inspector/build-plugin-macos.sh /tmp/qmlinspector
-test/e2e/scripts/setup-venv.sh /tmp/qmlinspector/plugins
-```
-
-For a local `bin/StatusDev.app` from `make run`, build against the Qt that `qmake` reports:
-
-```bash
-QT_PREFIX="$(qmake -query QT_INSTALL_PREFIX)" \
-  test/e2e/scripts/inspector/build-plugin-macos.sh /tmp/qmlinspector
-```
-
-`AUT_PATH` may be the `.app` bundle. The suite launches `Contents/MacOS/nim_status_client`.
+For a local macOS app built with `make run`, set `QT_PREFIX` to the Qt that `qmake` reports before
+`./scripts/setup-macos.sh`. `AUT_PATH` may be the `.app` bundle. The suite launches
+`Contents/MacOS/nim_status_client`.
 
 ---
 
@@ -145,16 +147,17 @@ Requires **Node.js 20.19–20.x or 22+** (`NODE_BIN` if not on `PATH`) and netwo
 
 ## Local Waku fleet (optional)
 
-Local **logos-delivery** instead of `status.prod`. **Docker** must be running (`docker ps`). `run-in-docker.sh` does this for you.
+Local **logos-delivery** instead of `status.prod`. **Docker** must be running (`docker ps`). Setup and
+`run-in-docker.sh` start a fleet for you.
 
-From **repo root**:
+From **repo root** (manual):
 
 ```bash
-docker compose -f ./docker-compose.waku.yml up --build --remove-orphans
-python3 test/e2e/scripts/scan_waku_fleet.py --project <compose-project>
+docker compose -p status-app -f ./docker-compose.waku.yml up -d --build --remove-orphans
+python3 test/e2e/scripts/scan_waku_fleet.py --project status-app
 ```
 
-The second command writes `assets/local-waku-fleets-config.json`. Then, from `test/e2e`:
+That writes `assets/local-waku-fleets-config.json`. Then, from `test/e2e`:
 
 ```bash
 export E2E_LOCAL_WAKU_FLEET=1
