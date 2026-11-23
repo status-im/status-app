@@ -1315,6 +1315,10 @@ method getCommunitySectionModule*[T](self: Module[T], communityId: string): QVar
 
   return self.chatSectionModules[communityId].getModuleAsVariant()
 
+method switchToThread*[T](self: Module[T], sectionId, chatId, threadId: string) =
+  if THREADS_ENABLED and threadId.len > 0 and sectionId in self.chatSectionModules:
+    self.controller.switchTo(sectionId, chatId, "", threadId)
+
 method switchTo*[T](self: Module[T], sectionId, chatId: string) =
   self.controller.switchTo(sectionId, chatId, "")
 

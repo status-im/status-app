@@ -416,6 +416,11 @@ QtObject:
       return
     return self.chatThreadsByParentIdByChat[chatId].getOrDefault(parentMessageId)
 
+  iterator cachedChatThreads*(self: Service, chatId: string): lent ThreadDto =
+    if self.chatThreadsByParentIdByChat.hasKey(chatId):
+      for thread in self.chatThreadsByParentIdByChat[chatId].values:
+        yield thread
+
   proc getThreadById*(self: Service, chatId: string, threadId: string): lent ThreadDto =
     if chatId.len == 0 or threadId.len == 0 or
         not self.chatThreadsByParentIdByChat.hasKey(chatId):

@@ -15,6 +15,9 @@ type
     canPost: bool
     membersCount: int
     onlineStatus: int
+    threadId*: string
+    archived*: bool
+    parentChatName*: string
 
 proc initItem*(chatId, name, color: string, colorId: int, icon, sectionId, sectionName, emoji: string, chatType: int, lastMessageUnparsedText: string, lastMessageTimestamp: int, lastOwnMessageTimestamp: int, canPost: bool, membersCount: int, onlineStatus: int): ChatSearchItem =
   result = ChatSearchItem()
@@ -33,6 +36,11 @@ proc initItem*(chatId, name, color: string, colorId: int, icon, sectionId, secti
   result.canPost = canPost
   result.membersCount = membersCount
   result.onlineStatus = onlineStatus
+
+proc initThreadItem*(parent: ChatSearchItem, threadId, name: string, archived: bool): ChatSearchItem =
+  ChatSearchItem(chatId: parent.chatId, name: name, color: parent.color, colorId: parent.colorId,
+    icon: "thread", sectionId: parent.sectionId, sectionName: parent.sectionName,
+    threadId: threadId, archived: archived, parentChatName: parent.name)
 
 proc chatId*(self: ChatSearchItem): string =
   self.chatId

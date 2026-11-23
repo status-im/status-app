@@ -302,6 +302,9 @@ method communityInfoRequestFailed*(self: AccessInterface, communityId: string, e
 method resolveENS*(self: AccessInterface, ensName: string, uuid: string, reason: string = "") {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method switchToThread*(self: AccessInterface, sectionId, chatId, threadId: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method switchTo*(self: AccessInterface, sectionId, chatId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 

@@ -22,6 +22,9 @@ type
     CanPost
     MembersCount
     OnlineStatus
+    ThreadId
+    Archived
+    ParentChatName
 
 QtObject:
   type Model* = ref object of QAbstractListModel
@@ -122,6 +125,9 @@ QtObject:
       ModelRole.CanPost.int:"canPost",
       ModelRole.MembersCount.int:"membersCount",
       ModelRole.OnlineStatus.int:"onlineStatus",
+      ModelRole.ThreadId.int:"threadId",
+      ModelRole.Archived.int:"archived",
+      ModelRole.ParentChatName.int:"parentChatName",
     }.toTable
 
   method data*(self: Model, index: QModelIndex, role: int): QVariant =
@@ -162,6 +168,12 @@ QtObject:
         result = newQVariant(item.membersCount)
       of ModelRole.OnlineStatus:
         result = newQVariant(item.onlineStatus)
+      of ModelRole.ThreadId:
+        result = newQVariant(item.threadId)
+      of ModelRole.Archived:
+        result = newQVariant(item.archived)
+      of ModelRole.ParentChatName:
+        result = newQVariant(item.parentChatName)
 
   proc updateChatItem*(self:Model, chatId, name, color, icon, emoji: string) =
     updateItemRolesAndNotify self.getItemIndexById(chatId):

@@ -3017,11 +3017,21 @@ Item {
             relativeX: appMain.width/2 - width/2
             relativeY: appMain.height/2 - height/2
             searchBoxPlaceholder: qsTr("Where do you want to go?")
-            model: rootStore.chatSearchModel
+            readonly property var appSearchModule: rootStore.appSearchStore.appSearchModule
 
-            onSelected: function (sectionId, chatId) {
-                rootStore.setActiveSectionChat(sectionId, chatId)
+            model: rootStore.chatSearchModel
+            threadModel: appMain.featureFlagsStore.threadsEnabled
+                         ? appSearchModule.switcherThreadModel : null
+
+            onAboutToShow: appSearchModule.setSwitcherOpen(true)
+            onAboutToHide: appSearchModule.setSwitcherOpen(false)
+
+            onSelected: function (sectionId, chatId, threadId) {
                 close()
+                if (threadId)
+                    rootStore.setActiveSectionThread(sectionId, chatId, threadId)
+                else
+                    rootStore.setActiveSectionChat(sectionId, chatId)
             }
         }
     }
