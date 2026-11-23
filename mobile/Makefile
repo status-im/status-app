@@ -257,8 +257,7 @@ clean: clean-statusq clean-openssl clean-qrcodegen clean-status-keycard-qt clean
 	@echo "Cleaning"
 	-@chmod -R u+w $(ROOT_DIR)/build
 	@rm -rf $(ROOT_DIR)/bin $(ROOT_DIR)/build $(ROOT_DIR)/lib
-	# Best effort for empty submodules and older status-go revisions.
-	-$(MAKE) -C ../vendor/status-go clean-libtkl SHELL=/bin/sh
+	-$(MAKE) -C ../vendor/status-go clean-libtkl SHELL=/bin/sh </dev/null
 
 .PHONY: run
 run: makedir $(TARGET)

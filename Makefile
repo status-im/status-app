@@ -546,8 +546,7 @@ status-go: $(STATUSGO)
 status-go-clean:
 	echo -e "\033[92mCleaning:\033[39m status-go"
 	rm -f $(STATUSGO) $(STATUSGO).tkl-inputs
-	# Best effort for empty submodules and older status-go revisions.
-	-$(MAKE) -C vendor/status-go clean-libtkl SHELL=/bin/sh
+	-$(MAKE) -C vendor/status-go clean-libtkl SHELL=/bin/sh </dev/null
 
 
 ##
