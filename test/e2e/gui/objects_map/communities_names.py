@@ -10,7 +10,7 @@ communityPortal_JoinCommunityButton = {"checkable": False, "container": communit
 
 # Import Community Popup
 
-importCommunityPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "ImportCommunityPopup", "type": "PopupItem", "visible": True}
+importCommunityPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": RegularExpression("^(ImportCommunityPopup|ImportCommunityPopupInstance)$"), "type": "PopupItem", "visible": True}
 importCommunityPopup_KeyInput = {"container": statusDesktop_mainWindow_overlay, "id": "keyInput", "type": "StatusTextArea", "unnamed": 1, "visible": True}
 importCommunityPopup_JoinButton = {"container": statusDesktop_mainWindow_overlay, "objectName": "joinStatusDialogFooterButton", "type": "StatusButton", "visible": True}
 
