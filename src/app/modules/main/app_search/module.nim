@@ -39,6 +39,8 @@ type
     chatsLoaded: bool
     communitiesLoaded: bool
     threadLocationChatId: string
+    switcherOpen: bool
+    switcherParents: Table[string, ChatSearchItem]
 
 proc newModule*(delegate: delegate_interface.AccessInterface, events: EventEmitter, contactsService: contact_service.Service,
   chatService: chat_service.Service, communityService: community_service.Service, messageService: message_service.Service):
@@ -188,7 +190,13 @@ method prepareThreadLocationMenuModel*(self: Module, chatId: string) =
   if THREADS_ENABLED and chatId.len > 0:
     self.controller.loadThreadLocations(chatId)
 
+proc rebuildSwitcherThreads(self: Module)
+
 method onThreadLocationsLoaded*(self: Module, threads: seq[ThreadDto], completedChatIds: seq[string]) =
+  if self.switcherOpen and (completedChatIds.anyIt(self.switcherParents.hasKey(it)) or
+      threads.anyIt(self.switcherParents.hasKey(it.chatId))):
+    self.rebuildSwitcherThreads()
+
   for thread in threads:
     if thread.deleted:
       self.view.searchResultModel().removeItems(self.controller.forgetThreadResults(thread.chatId, thread.threadId))
@@ -460,6 +468,57 @@ proc createChatSearchItem(self: Module, chat: ChatDto, personalChatSectionId, pe
     onlineStatus = onlineStatus,
   )
 
+proc rebuildSwitcherThreads(self: Module) =
+  var items: seq[ChatSearchItem]
+  for chatId, parent in self.switcherParents:
+    for thread in self.controller.cachedChatThreads(chatId):
+      if not thread.deleted and thread.threadId.len > 0:
+        items.add(initThreadItem(parent, thread.threadId, thread.name, thread.archived))
+  self.view.switcherThreadModel().setItems(items)
+
+proc refreshSwitcherParents(self: Module) =
+  if not self.switcherOpen:
+    return
+
+  let sectionId = self.delegate.getSectionId(SectionType.Chat)
+  let sectionName = self.delegate.getSectionName(sectionId)
+  var parents: Table[string, ChatSearchItem]
+  var newParentIds: seq[string]
+  for chat in self.controller.getAllChats():
+    if chat.chatType == ChatType.CommunityChat:
+      let community {.cursor.} = self.controller.getCommunityById(chat.communityId)
+      if not (community.joined or community.spectated) or not community.getCommunityChat(chat.id).canView:
+        continue
+    elif not chat.isActivePersonalChat():
+      continue
+
+    let parent = self.createChatSearchItem(chat, sectionId, sectionName)
+    if parent.isNil:
+      continue
+    parents[chat.id] = parent
+    if not self.switcherParents.hasKey(chat.id):
+      newParentIds.add(chat.id)
+
+  self.switcherParents = parents
+  self.rebuildSwitcherThreads()
+  self.controller.loadThreadLocationsForChats(newParentIds)
+
+method setSwitcherOpen*(self: Module, open: bool) =
+  let enabled = open and THREADS_ENABLED
+  if self.switcherOpen == enabled:
+    return
+  self.switcherOpen = enabled
+  if enabled:
+    self.refreshSwitcherParents()
+  else:
+    self.switcherParents.clear()
+    self.view.switcherThreadModel().setItems(@[])
+
+method onSwitcherThreadsInvalidated*(self: Module, chatId: string) =
+  if self.switcherParents.hasKey(chatId):
+    self.rebuildSwitcherThreads()
+    self.controller.loadThreadLocations(chatId)
+
 method buildChatSearchModel*(self: Module) =
   var items: seq[ChatSearchItem] = @[]
 
@@ -478,6 +537,7 @@ method onEverythingLoaded*(self: Module) =
   self.view.chatSearchModel().onEverythingLoaded()
 
 method updateChatItems*(self: Module, updatedChats: seq[ChatDto]) =
+  self.refreshSwitcherParents()
   for chat in updatedChats:
     let index = self.view.chatSearchModel().getItemIndexById(chat.id)
 
@@ -521,9 +581,11 @@ method contactUpdated*(self: Module, contactId: string) =
     canPostInOneToOne(contactDetails.dto.contactRequestState))
 
 method communityEdited*(self: Module, community: CommunityDto) =
+  self.refreshSwitcherParents()
   self.view.chatSearchModel().updateSectionNameOnChats(community.id, community.name)
 
 method chatAdded*(self: Module, chat: ChatDto) =
+  self.refreshSwitcherParents()
   let personalChatSectionId = self.delegate.getSectionId(SectionType.Chat)
   let personalChatSectionName = self.delegate.getSectionName(personalChatSectionId)
 
@@ -533,6 +595,9 @@ method chatAdded*(self: Module, chat: ChatDto) =
   self.view.chatSearchModel().addItem(item)
 
 method chatRemoved*(self: Module, chatId: string) =
+  if self.switcherParents.hasKey(chatId):
+    self.switcherParents.del(chatId)
+    self.rebuildSwitcherThreads()
   self.view.chatSearchModel().removeItemById(chatId)
 
 method updateLastOwnMessageTimestamp*(self: Module, chatId: string, lastOwnMessageTimestamp: int) =

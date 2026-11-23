@@ -8,6 +8,7 @@ import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils
 
+import QtModelsToolkit
 import SortFilterProxyModel
 import utils
 
@@ -18,16 +19,20 @@ StatusDropdown {
     implicitHeight: 300
 
     required property var model
+    property var threadModel: null
 
     property string searchBoxPlaceholder: qsTr("Search...")
 
-    signal selected(string sectionId, string chatId)
+    readonly property string searchPhrase: searchBox.text.trim()
+
+    signal selected(string sectionId, string chatId, string threadId)
 
     ColumnLayout {
         anchors.fill: parent
 
         StatusInput {
             id: searchBox
+            objectName: "switcherSearchBox"
 
             Layout.fillWidth: true
             placeholderText: root.searchBoxPlaceholder
@@ -43,7 +48,8 @@ StatusDropdown {
                 } else if (event.key === Qt.Key_Escape) {
                     root.close()
                 } else if (event.key === Qt.Key_Enter || event.key === Qt.Key_Return) {
-                    listView.currentItem.selectThisItem()
+                    if (listView.currentIndex >= 0 && listView.currentIndex < listView.count)
+                        listView.currentItem?.selectThisItem()
                 }
             }
 
@@ -52,6 +58,7 @@ StatusDropdown {
 
         StatusListView {
             id: listView
+            objectName: "switcherResults"
 
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -63,19 +70,39 @@ StatusDropdown {
             keyNavigationWraps: true
 
             model: SortFilterProxyModel {
-                sourceModel: root.model
-
-                filters: AnyOf {
-                    SearchFilter {
-                        roleName: "sectionName"
-                        searchPhrase: searchBox.text
-                    }
-                    SearchFilter {
-                        roleName: "name"
-                        searchPhrase: searchBox.text
-                    }
-                    enabled: !!searchBox.text
+                sourceModel: ConcatModel {
+                    expectedRoles: ["chatId", "sectionId", "name", "sectionName", "icon", "color",
+                                    "colorId", "emoji", "threadId", "archived", "parentChatName"]
+                    markerRoleName: ""
+                    sources: [
+                        SourceModel { model: root.model },
+                        SourceModel { model: root.threadModel }
+                    ]
                 }
+
+                filters: [
+                    ValueFilter {
+                        roleName: "archived"
+                        value: true
+                        inverted: true
+                        enabled: !root.searchPhrase
+                    },
+                    AnyOf {
+                        enabled: !!root.searchPhrase
+
+                        SearchFilter {
+                            roleName: "name"
+                            searchPhrase: root.searchPhrase
+                        }
+                        AllOf {
+                            ValueFilter { roleName: "threadId"; value: "" }
+                            SearchFilter {
+                                roleName: "sectionName"
+                                searchPhrase: root.searchPhrase
+                            }
+                        }
+                    }
+                ]
                 sorters: StringSorter {
                     roleName: "name"
                 }
@@ -85,11 +112,12 @@ StatusDropdown {
                 id: listItem
 
                 function selectThisItem() {
-                    root.selected(model.sectionId, model.chatId)
+                    root.selected(model.sectionId, model.chatId, model.threadId)
                 }
 
                 title: model ? model.name : ""
-                label: model? model.sectionName : ""
+                label: model ? (model.threadId ? model.parentChatName + " · " + model.sectionName
+                                               : model.sectionName) : ""
                 highlighted: ListView.isCurrentItem
                 width: ListView.view.width
                 sensor.hoverEnabled: false
@@ -124,6 +152,7 @@ StatusDropdown {
                 active: !listView.selectByHover
 
                 sourceComponent: StatusMouseArea {
+                    acceptedButtons: Qt.NoButton
                     hoverEnabled: true
                     onPositionChanged: listView.selectByHover = true
                 }

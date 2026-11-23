@@ -76,6 +76,9 @@ proc init*(self: Controller) =
     let args = ChatThreadsForChatsLoadedArgs(e)
     self.delegate.onThreadLocationsLoaded(args.threads, args.completedChatIds)
 
+  self.events.on(SIGNAL_CHAT_THREADS_INVALIDATED) do(e: Args):
+    self.delegate.onSwitcherThreadsInvalidated(ChatArgs(e).chatId)
+
   self.events.on(SIGNAL_CHAT_THREADS_LOADING_FAILED) do(e: Args):
     let args = ChatThreadsLoadingFailedArgs(e)
     if not args.summariesRequested:
@@ -169,6 +172,10 @@ proc invalidateSearch*(self: Controller) =
 
 proc getThreadById*(self: Controller, chatId, threadId: string): ThreadDto =
   self.messageService.getThreadById(chatId, threadId)
+
+iterator cachedChatThreads*(self: Controller, chatId: string): lent ThreadDto =
+  for thread in self.messageService.cachedChatThreads(chatId):
+    yield thread
 
 proc loadThreadLocations*(self: Controller, chatId: string) =
   self.messageService.loadChatThreadsForChatsIfNeeded(@[chatId])
