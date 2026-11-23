@@ -5692,21 +5692,6 @@ N’oubliez pas votre mot de passe et ne le partagez avec personne.</translation
     </message>
 </context>
 <context>
-    <name>DeactivateNetworkPopup</name>
-    <message>
-        <source>Disable %1 network</source>
-        <translation>Désactiver le réseau %1</translation>
-    </message>
-    <message>
-        <source>Balances stored on this network will not be visible in the Wallet. Your funds will be safe and you can always enable the network again.</source>
-        <translation>Les soldes stockées sur ce réseau ne seront plus visibles dans le portefeuille. Vos fonds resteront sécurisés et vous pourrez toujours réactiver le réseau.</translation>
-    </message>
-    <message>
-        <source>Disable %1</source>
-        <translation>Désactiver %1</translation>
-    </message>
-</context>
-<context>
     <name>DefaultDAppExplorerView</name>
     <message>
         <source>None</source>

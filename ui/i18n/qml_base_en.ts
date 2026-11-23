@@ -5682,21 +5682,6 @@ Remember your password and don&apos;t share it with anyone.</source>
     </message>
 </context>
 <context>
-    <name>DeactivateNetworkPopup</name>
-    <message>
-        <source>Disable %1 network</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Balances stored on this network will not be visible in the Wallet. Your funds will be safe and you can always enable the network again.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Disable %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>DefaultDAppExplorerView</name>
     <message>
         <source>None</source>
