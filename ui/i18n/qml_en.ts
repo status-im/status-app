@@ -781,6 +781,16 @@
     </message>
 </context>
 <context>
+    <name>ThreadHeader</name>
+    <message numerus="yes">
+        <source>Max %n character(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+</context>
+<context>
     <name>TokenListPopup</name>
     <message numerus="yes">
         <source>%n token(s)</source>
