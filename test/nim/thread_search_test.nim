@@ -25,6 +25,8 @@ import app/modules/main/chat_section/view as section_view
 import app/modules/main/chat_section/item as chat_item
 import app/modules/main/chat_section/model as section_model
 import app/modules/main/chat_section/chat_content/io_interface as content_interface
+import app/modules/main/chat_section/chat_content/messages/controller as messages_controller
+import app/modules/main/chat_section/chat_content/messages/io_interface as messages_interface
 
 privateAccess(search_controller.Controller)
 privateAccess(search_module.Module)
@@ -288,6 +290,8 @@ type
   ContentStub = ref object of content_interface.AccessInterface
     scrolledTo: seq[string]
     renamedTo: seq[string]
+  MessageUnreadStub = ref object of messages_interface.AccessInterface
+    marked: seq[string]
   SectionHarness = ref object of section_module.Module
     activated: seq[string]
     panelClosed: bool
@@ -308,6 +312,9 @@ method onThreadRenamed(self: ContentStub, newName: string) =
 
 method delete(self: ContentStub) = discard
 method onNotificationsUpdated(self: ContentStub, hasUnreadMessages: bool, notificationsCount: int) = discard
+
+method onMarkMessageAsUnread(self: MessageUnreadStub, messageId: string) =
+  self.marked.add(messageId)
 
 method setActiveItem(self: SectionHarness, itemId: string) =
   self.activated.add(itemId)
@@ -409,6 +416,75 @@ suite "thread search result navigation":
     service.threadMutePending.incl(("parent", "thread"))
     section.unmuteChat("thread")
     check(service.threadMuteQueued[("parent", "thread")] == 7)
+
+  test "marking a thread message unread updates the thread without changing its parent":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    let section = newSectionHarness(service, events)
+    defer: section.delete()
+    section.chatsLoaded = true
+    section.controller.init()
+    service.init()
+    service.onAsyncLoadChatThreadsForChats($(%* {
+      "chatIds": ["parent"], "threads": [{"chatId": "parent", "threadId": "thread",
+        "parentMessageId": "root", "name": "Thread"}]
+    }))
+    let parent = section.view.chatsModel().getItemById("parent")
+    let thread = section.view.chatsModel().getItemById("thread")
+    require(not thread.isNil)
+    var marked: MessageMarkMessageAsUnreadArgs
+    events.on(SIGNAL_MESSAGE_MARKED_AS_UNREAD) do(e: Args):
+      marked = MessageMarkMessageAsUnreadArgs(e)
+
+    service.onAsyncMarkMessageAsUnread($(%* {
+      "chatId": "parent", "threadId": "thread", "messageId": "reply",
+      "messagesCount": 0, "messagesWithMentionsCount": 0, "error": "",
+      "threads": [{"chatId": "parent", "threadId": "thread", "parentMessageId": "root",
+        "name": "Thread", "unviewedMessagesCount": 2, "unviewedMentionsCount": 1}],
+      "sectionUnreadCountsChanged": false
+    }))
+    require(not marked.isNil)
+    check marked.threadId == "thread"
+    check thread.hasUnreadMessages
+    check thread.notificationsCount == 1
+    check not parent.hasUnreadMessages
+    check section.controller.getChatDetails("parent").unviewedMessagesCount == 0
+    check service.getThreadById("parent", "thread").unviewedMessagesCount == 2
+
+  test "unread markers are routed to their conversation and a shared thread root":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    service.onAsyncLoadChatThreadsForChats($(%* {
+      "chatIds": ["parent"], "threads": [
+        {"chatId": "parent", "threadId": "thread", "parentMessageId": "root"},
+        {"chatId": "parent", "threadId": "other", "parentMessageId": "other-root"}]
+    }))
+    let parent = MessageUnreadStub()
+    let thread = MessageUnreadStub()
+    let other = MessageUnreadStub()
+    let parentController = messages_controller.newController(parent, events, "section", "parent",
+      false, nil, nil, nil, service, nil, nil)
+    let threadController = messages_controller.newController(thread, events, "section", "parent",
+      false, nil, nil, nil, service, nil, nil, "thread")
+    let otherController = messages_controller.newController(other, events, "section", "parent",
+      false, nil, nil, nil, service, nil, nil, "other")
+    parentController.init()
+    threadController.init()
+    otherController.init()
+    defer:
+      parentController.delete()
+      threadController.delete()
+      otherController.delete()
+    events.emit(SIGNAL_MESSAGE_MARKED_AS_UNREAD,
+      MessageMarkMessageAsUnreadArgs(chatId: "parent", threadId: "thread", messageId: "reply"))
+    check parent.marked.len == 0
+    check thread.marked == @["reply"]
+    check other.marked.len == 0
+    events.emit(SIGNAL_MESSAGE_MARKED_AS_UNREAD,
+      MessageMarkMessageAsUnreadArgs(chatId: "parent", messageId: "root"))
+    check parent.marked == @["root"]
+    check thread.marked == @["reply", "root"]
+    check other.marked.len == 0
 
   test "an uncached result survives a cached list and opens on an incremental update":
     if THREADS_ENABLED:
