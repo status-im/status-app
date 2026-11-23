@@ -362,7 +362,14 @@ jobs:
           ./*.AppImage --appimage-extract > /dev/null
           ls -l squashfs-root/AppRun
       - name: Test image
-        run: docker build -t status-e2e-tests -f ci/tests.Dockerfile ci
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          echo "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin \
+            || echo "No GHCR login."
+          ci/build-image.sh --pull desktop
+          docker build --build-arg "BASE=$(ci/build-image.sh --image desktop)" \
+            -t status-e2e-tests -f ci/tests.Dockerfile ci
       - name: Critical tests
         env:
           WALLET_TEST_USER_SEED: ${{ secrets.WALLET_TEST_USER_SEED }}

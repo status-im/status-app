@@ -17,7 +17,8 @@ Needs a Linux x86_64 machine with Docker and about 20 GB of disk. Run from the r
 1. Build the CI image (`ci/tests.Dockerfile`):
 
    ```bash
-   docker build -t status-e2e-tests -f ci/tests.Dockerfile ci
+   docker build --build-arg BASE="$(ci/build-image.sh --image desktop)" \
+     -t status-e2e-tests -f ci/tests.Dockerfile ci
    ```
 
 2. Build the plugin. The script downloads the plugin's source and Qt 6.11.0, the Qt of the app:
