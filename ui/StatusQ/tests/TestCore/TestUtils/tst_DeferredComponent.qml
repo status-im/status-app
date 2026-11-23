@@ -90,6 +90,129 @@ TestCase {
         object.destroy()
     }
 
+    Component {
+        id: holderComponent
+
+        QtObject {
+            property QtObject ref
+        }
+    }
+
+    function createPopupDeferred(props) {
+        return createDeferred(Object.assign({ source: Qt.resolvedUrl("DeferredPopupFixture.qml") }, props))
+    }
+
+    function test_open_creates_each_time_by_default() {
+        const deferred = createPopupDeferred({})
+        const first = deferred.open(testCase)
+        const second = deferred.open(testCase)
+        verify(!!first && !!second)
+        verify(first !== second)
+        compare(first.openCount, 1)
+        compare(second.openCount, 1)
+        compare(deferred.createdSpy.count, 2)
+        first.destroy()
+        second.destroy()
+    }
+
+    function test_open_passes_params() {
+        const deferred = createPopupDeferred({ properties: { value: 1 } })
+        const object = deferred.open(testCase, { value: 2 })
+        compare(object.value, 2)
+        object.destroy()
+    }
+
+    function test_single_reuses_instance() {
+        const deferred = createPopupDeferred({ single: true })
+        const first = deferred.open(testCase)
+        const second = deferred.open(testCase)
+        compare(second, first)
+        compare(first.openCount, 2)
+        compare(deferred.createdSpy.count, 1)
+        compare(deferred.instance, first)
+        compare(deferred.createObject(testCase), first)
+        first.destroy()
+    }
+
+    function test_destroyInstance_clears_instance_at_once() {
+        const deferred = createPopupDeferred({ single: true })
+        const holder = createTemporaryObject(holderComponent, testCase)
+        const first = deferred.open(testCase)
+        holder.ref = first
+
+        deferred.destroyInstance()
+        compare(deferred.instance, null)
+
+        const second = deferred.open(testCase)
+        verify(!!second)
+        verify(second !== first)
+        compare(deferred.instance, second)
+        compare(deferred.createdSpy.count, 2)
+        tryCompare(holder, "ref", null)
+        compare(deferred.instance, second)
+        second.destroy()
+    }
+
+    function test_destroyInstance_without_instance() {
+        const deferred = createPopupDeferred({ single: true })
+        deferred.destroyInstance()
+        compare(deferred.instance, null)
+    }
+
+    function test_destroyOnClose() {
+        const deferred = createPopupDeferred({ single: true, destroyOnClose: true })
+        const holder = createTemporaryObject(holderComponent, testCase)
+        const first = deferred.open(testCase)
+        holder.ref = first
+
+        first.close()
+        compare(deferred.instance, null)
+        tryCompare(holder, "ref", null)
+
+        const second = deferred.open(testCase)
+        verify(!!second)
+        compare(deferred.createdSpy.count, 2)
+        second.destroy()
+    }
+
+    function test_destroyOnClose_after_component_destroyed() {
+        const deferred = createDeferred({ module: "QtQuick.Controls", typeName: "Popup", destroyOnClose: true })
+        const holder = createTemporaryObject(holderComponent, testCase)
+        const popup = deferred.open(testCase)
+        holder.ref = popup
+        tryCompare(popup, "opened", true)
+
+        const deferredHolder = createTemporaryObject(holderComponent, testCase)
+        deferredHolder.ref = deferred
+        deferred.destroy()
+        tryCompare(deferredHolder, "ref", null)
+
+        failOnWarning(/.*/)
+        popup.close()
+        tryCompare(holder, "ref", null)
+    }
+
+    function test_close_keeps_object_by_default() {
+        const deferred = createPopupDeferred({ single: true })
+        const object = deferred.open(testCase)
+        object.close()
+        compare(deferred.instance, object)
+        compare(deferred.open(testCase), object)
+        object.destroy()
+    }
+
+    function test_instance_nulls_on_external_delete() {
+        const deferred = createPopupDeferred({ single: true })
+        const first = deferred.open(testCase)
+        first.destroy()
+        tryCompare(deferred, "instance", null)
+
+        const second = deferred.open(testCase)
+        verify(!!second)
+        compare(deferred.createdSpy.count, 2)
+        second.destroy()
+    }
+
     function test_error_data() {
         return [
             { tag: "source", props: { source: Qt.resolvedUrl("DoesNotExist.qml") } },

@@ -206,6 +206,7 @@
         <file>StatusQ/Core/Utils/AmountsArithmetic.qml</file>
         <file>StatusQ/Core/Utils/ClippingWrapper.qml</file>
         <file>StatusQ/Core/Utils/DeferredComponent.qml</file>
+        <file>StatusQ/Core/Utils/DeferredLoader.qml</file>
         <file>StatusQ/Core/Utils/DoubleFlickable.qml</file>
         <file>StatusQ/Core/Utils/DoubleFlickableWithFolding.qml</file>
         <file>StatusQ/Core/Utils/Emoji.qml</file>

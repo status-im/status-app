@@ -14,9 +14,12 @@ import QtQml
        id: createCommunityPopupComponent
        module: "AppLayouts.Communities.popups"
        typeName: "CreateCommunityPopup"
-       properties: ({ store: root.communitiesStore, loading: Qt.binding(() => root.loading) })
-       onCreated: popup => popup.closed.connect(popup.destroy)
+       single: true
+       destroyOnClose: true
+       properties: ({ store: root.communitiesStore })
    }
+
+   createCommunityPopupComponent.open(root, { isDiscordImport: true })
    \endqml
 
    It mirrors \c Component.createObject(), so it can be passed wherever a component
@@ -36,6 +39,15 @@ QtObject {
     // load the type in the background right after creation, so the first use does not wait
     property bool prefetch: false
 
+    // destroy every created object when it emits closed()
+    property bool destroyOnClose: false
+
+    // at most one live object: createObject() and open() return the live one if any
+    property bool single: false
+
+    // the most recently created object that is still alive
+    readonly property QtObject instance: d.instance
+
     signal created(var object)
 
     function component(mode = Component.PreferSynchronous) {
@@ -48,10 +60,17 @@ QtObject {
 
     // for objects created from component() by someone else, e.g. a StackView
     function adopt(object) {
+        d.instance = object
+        if (root.destroyOnClose) {
+            object.closed.connect(d, () => d.forget(object))
+            object.closed.connect(object, () => object.destroy())
+        }
         root.created(object)
     }
 
     function createObject(parent, params = {}) {
+        if (root.single && d.instance)
+            return d.instance
         const c = root.component()
         if (c.status !== Component.Ready)
             return null
@@ -64,6 +83,17 @@ QtObject {
         return object
     }
 
+    function open(parent, params = {}) {
+        const object = root.createObject(parent, params)
+        object?.open()
+        return object
+    }
+
+    // `instance` is null right away, the object itself is deleted later
+    function destroyInstance() {
+        d.destroyObject(d.instance)
+    }
+
     Component.onCompleted: {
         if (root.prefetch)
             Qt.callLater(() => d.prefetched = root.component(Component.Asynchronous))
@@ -73,5 +103,18 @@ QtObject {
         id: d
 
         property Component prefetched
+        property QtObject instance
+
+        function forget(object) {
+            if (d.instance === object)
+                d.instance = null
+        }
+
+        function destroyObject(object) {
+            if (!object)
+                return
+            d.forget(object)
+            object.destroy()
+        }
     }
 }
