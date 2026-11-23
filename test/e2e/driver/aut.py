@@ -137,8 +137,7 @@ class AUT:
             # The plugin's own switch, not STATUS_RUNTIME_TEST_MODE: some tests start the app with test mode off.
             'QML_INSPECTOR_ALLOW': '1',
         }
-        if not self.test_mode:
-            child_env['STATUS_RUNTIME_TEST_MODE'] = '0'
+        child_env['STATUS_RUNTIME_TEST_MODE'] = '1' if self.test_mode else '0'
         LOG.info('AUT argv (%d parts): %s', len(command), command)
         try:
             with open(configs.AUT_LOG_FILE, "ab") as log:
