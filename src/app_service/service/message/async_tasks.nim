@@ -754,12 +754,14 @@ type
     AsyncMarkMessageAsUnreadTaskArg = ref object of QObjectTaskArg
       messageId*: string
       chatId*: string
+      threadId*: string
 
 proc asyncMarkMessageAsUnreadTask(argEncoded: string) {.gcsafe, nimcall.} =
   let arg = decode[AsyncMarkMessageAsUnreadTaskArg](argEncoded)
 
   var responseJson = %*{
     "chatId": arg.chatId,
+    "threadId": arg.threadId,
     "messageId": arg.messageId,
     "messagesCount": 0,
     "messagesWithMentionsCount": 0,
@@ -772,6 +774,11 @@ proc asyncMarkMessageAsUnreadTask(argEncoded: string) {.gcsafe, nimcall.} =
     var activityCenterNotifications: JsonNode = newJObject()
     discard response.result.getProp("activityCenterNotifications", activityCenterNotifications)
     responseJson["activityCenterNotifications"] = activityCenterNotifications
+
+    var threads: JsonNode = newJArray()
+    discard response.result.getProp("threads", threads)
+    responseJson["threads"] = threads
+    responseJson["sectionUnreadCountsChanged"] = %(response.result{"sectionUnreadCountsChanged"}.getBool)
 
     var seenAndUnseenMessagesBatch: JsonNode = newJObject()
     discard response.result.getProp("seenAndUnseenMessages", seenAndUnseenMessagesBatch)
