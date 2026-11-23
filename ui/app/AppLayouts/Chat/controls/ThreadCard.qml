@@ -91,7 +91,7 @@ Control {
     signal clicked(string threadId, string originalMessageId)
     signal contextMenuRequested(point position)
 
-    padding: Theme.padding
+    padding: Theme.smallPadding
     implicitWidth: 296
     hoverEnabled: true
 
@@ -104,7 +104,7 @@ Control {
         readonly property int iconSize: 16
         readonly property int avatarSeparator: 2
         readonly property int avatarOuterSize: avatarSize + avatarSeparator * 2
-        readonly property int avatarStep: avatarSize - Math.round(Theme.halfPadding / 2) + avatarSeparator
+        readonly property int avatarStep: avatarSize - Math.round(32 / root.Theme.halfPadding) + avatarSeparator
         readonly property int visibleParticipantsLimit: 6
         readonly property int availableParticipantsCount: root.participantsPreviewModel
                                                          ? root.participantsPreviewModel.ModelCount.count
@@ -123,7 +123,7 @@ Control {
         readonly property string formattedBodyTimestamp: bodyTimestamp > 0
                                                          ? LocaleUtils.formatRelativeTimestamp(bodyTimestamp)
                                                          : ""
-        readonly property int bodyLineHeight: Theme.fontSize(18)
+        readonly property int bodyLineHeight: root.Theme.fontSize(16)
         readonly property int bodyTopMargin: Math.max(0, Math.round((avatarSize - bodyLineHeight) / 2))
         readonly property string messagesCountText: qsTr("%n message(s)", "", root.messagesCount)
     }
@@ -148,7 +148,7 @@ Control {
     }
 
     contentItem: ColumnLayout {
-        spacing: Theme.halfPadding
+        spacing: 6
 
         // Active state title row.
         RowLayout {
@@ -180,7 +180,7 @@ Control {
                 elide: Text.ElideRight
                 color: root.muted ? Theme.palette.directColor5 : Theme.palette.directColor1
                 font.pixelSize: Theme.primaryTextFontSize
-                font.weight: root.muted ? Font.Normal : Font.Bold
+                font.weight: root.muted ? Font.Normal : Font.DemiBold
             }
 
             StatusBadge {
@@ -267,7 +267,7 @@ Control {
                             text: "+" + d.remainingParticipantsCount
                             color: Theme.palette.statusBadge.foregroundColor
                             font.pixelSize: Theme.additionalTextSize
-                            font.weight: Font.Bold
+                            font.weight: Font.DemiBold
                         }
                     }
                 }
@@ -282,7 +282,7 @@ Control {
                 elide: Text.ElideRight
                 color: Theme.palette.primaryColor1
                 font.pixelSize: Theme.primaryTextFontSize
-                font.weight: Font.Bold
+                font.weight: Font.DemiBold
             }
 
         }
@@ -365,9 +365,7 @@ Control {
                     elide: Text.ElideRight
                     color: Theme.palette.directColor1
                     font.pixelSize: Theme.additionalTextSize
-                    font.weight: Font.Bold
-                    lineHeight: d.bodyLineHeight
-                    lineHeightMode: Text.FixedHeight
+                    font.weight: Font.DemiBold
                 }
 
                 StatusBaseText {
@@ -391,8 +389,6 @@ Control {
                     elide: Text.ElideRight
                     color: Theme.palette.directColor5
                     font.pixelSize: Theme.additionalTextSize
-                    lineHeight: d.bodyLineHeight
-                    lineHeightMode: Text.FixedHeight
 
                     onLineLaidOut: line => {
                         if (line.number !== 0)
@@ -414,8 +410,6 @@ Control {
                     text: d.formattedBodyTimestamp
                     color: Theme.palette.directColor5
                     horizontalAlignment: Text.AlignRight
-                    lineHeight: d.bodyLineHeight
-                    lineHeightMode: Text.FixedHeight
                     font.pixelSize: Theme.additionalTextSize
                     font.weight: Font.Normal
                 }
