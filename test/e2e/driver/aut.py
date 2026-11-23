@@ -117,10 +117,13 @@ class AUT:
             '--api-logging',
         ]
         plugin_root = str(configs.testpath.INSPECTOR_PLUGINS)
-        plugin = os.path.join(plugin_root, 'generic', 'libqmlinspector.dylib')
-        if not os.path.isfile(plugin):
-            plugin = os.path.join(plugin_root, 'generic', 'libqmlinspector.so')
-        if not os.path.isfile(plugin):
+        plugin = ''
+        for name in ('libqmlinspector.dylib', 'libqmlinspector.so', 'qmlinspector.dll'):
+            candidate = os.path.join(plugin_root, 'generic', name)
+            if os.path.isfile(candidate):
+                plugin = candidate
+                break
+        if not plugin:
             raise RuntimeError(
                 f'Inspector plugin not found under {plugin_root}/generic. '
                 'Set INSPECTOR_PLUGINS to the directory that contains generic/.'
