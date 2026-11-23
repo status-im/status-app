@@ -334,6 +334,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     continue-on-error: true
+    permissions:
+      contents: write
+      packages: read
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -387,6 +390,38 @@ jobs:
             test/e2e/allure-results/
           if-no-files-found: warn
           retention-days: 7
+      - name: Allure report
+        if: ${{ !cancelled() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ ! -d test/e2e/allure-results ] || [ -z "$(ls -A test/e2e/allure-results)" ]; then
+            echo "No allure results."
+            exit 0
+          fi
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq openjdk-17-jre-headless
+          curl -fsSL -o "$RUNNER_TEMP/allure.tgz" \
+            https://github.com/allure-framework/allure2/releases/download/2.46.2/allure-2.46.2.tgz
+          tar -xzf "$RUNNER_TEMP/allure.tgz" -C "$RUNNER_TEMP"
+          "$RUNNER_TEMP/allure-2.46.2/bin/allure" generate test/e2e/allure-results \
+            -o "$RUNNER_TEMP/allure-report" --clean
+          git -c "http.extraheader=AUTHORIZATION: bearer ${GH_TOKEN}" \
+            clone --depth 1 --branch gh-pages \
+            "https://github.com/${GITHUB_REPOSITORY}.git" "$RUNNER_TEMP/pages"
+          dest="docs/e2e/${GITHUB_RUN_ID}"
+          rm -rf "$RUNNER_TEMP/pages/$dest"
+          mkdir -p "$RUNNER_TEMP/pages/$dest"
+          cp -a "$RUNNER_TEMP/allure-report/." "$RUNNER_TEMP/pages/$dest/"
+          git -C "$RUNNER_TEMP/pages" add "$dest"
+          git -C "$RUNNER_TEMP/pages" \
+            -c user.name='github-actions[bot]' \
+            -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+            commit -m "e2e allure report ${GITHUB_RUN_ID}"
+          git -C "$RUNNER_TEMP/pages" -c "http.extraheader=AUTHORIZATION: bearer ${GH_TOKEN}" \
+            push origin gh-pages
+          url="https://status-im.github.io/status-app/e2e/${GITHUB_RUN_ID}/"
+          echo "Allure report (available after Pages rebuilds): $url" | tee -a "$GITHUB_STEP_SUMMARY"
 
   android:
     name: android
