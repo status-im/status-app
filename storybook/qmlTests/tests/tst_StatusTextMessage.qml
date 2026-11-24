@@ -318,28 +318,18 @@ Item {
             compare(field.selectable, true)
         }
 
-        function test_showMoreAndAllowShowMore() {
+        function test_longMessageShownInFull() {
             const part = createPart()
             part.messageDetails.unparsedText = Array(30).fill("line").join("\n")
             const field = part.textField
-            const loader = findChild(part, "StatusTextMessage_showMore")
-            verify(!!loader)
-            tryCompare(loader, "active", true)
-            tryVerify(() => !!loader.item && loader.height > 0)
             verify(field.implicitHeight > 200)
-            compare(field.effectiveHeight, 200)
-            const collapsedHeight = part.implicitHeight
-            mouseClick(loader.item, loader.item.width / 2, loader.item.height / 2)
-            compare(field.effectiveHeight, field.implicitHeight)
-            verify(part.implicitHeight > collapsedHeight)
-            mouseClick(loader.item, loader.item.width / 2, loader.item.height / 2)
-            compare(field.effectiveHeight, 200)
-            part.allowShowMore = false
-            compare(loader.active, false)
-            compare(field.effectiveHeight, field.implicitHeight)
+            compare(findChild(part, "StatusTextMessage_showMore"), null)
+            compare(field.height, field.implicitHeight)
             compare(part.implicitHeight, field.implicitHeight)
+            compare(field.clip, false)
+            compare(field.layer.enabled, false)
             part.messageDetails.unparsedText = "short"
-            compare(loader.active, false)
+            compare(field.height, field.implicitHeight)
             compare(part.implicitHeight, field.implicitHeight)
         }
 
@@ -398,7 +388,6 @@ Item {
             compare(spy.count, 1)
             compare(spy.signalArguments[0][0], "https://status.app")
             message.isInPinnedPopup = true
-            compare(part.allowShowMore, false)
             tryCompare(field, "width", part.width - Theme.xlPadding)
         }
     }
