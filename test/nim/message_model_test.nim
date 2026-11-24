@@ -87,12 +87,20 @@ suite "thread summary":
     check(changedRoles.len == 1)
     summary.muted = true
     model.setThreadSummary("thread-parent", summary)
-    var muteRole = -1
+    var muteRole, unreadRole = -1
     for role, name in model.roleNames():
       if name == "threadMuted": muteRole = role
+      if name == "threadHasUnreadMessages": unreadRole = role
     require(muteRole != -1)
     check(changedRoles[^1] == @[muteRole.cint])
+    require(unreadRole != -1)
+    summary.hasUnreadMessages = true
+    model.setThreadSummary("thread-parent", summary)
+    check(changedRoles[^1] == @[unreadRole.cint])
     let index = model.createIndex(0, 0, nil)
+    let unread = model.data(index, unreadRole)
+    check(unread.boolVal)
+    unread.delete()
     let muted = model.data(index, muteRole)
     check(muted.boolVal)
     muted.delete()

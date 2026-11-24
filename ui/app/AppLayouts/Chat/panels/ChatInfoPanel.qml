@@ -203,6 +203,7 @@ ColumnLayout {
                 title: model.title
                 messagesCount: model.messagesCount
                 muted: model.muted
+                hasUnreadMessages: model.hasUnreadMessages
                 notificationCount: model.notificationCount
                 participantsCount: model.participantsCount
                 participantsPreviewModel: model.participantsModel

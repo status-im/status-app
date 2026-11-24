@@ -80,7 +80,8 @@ Item {
                     key: entry.key, originalMessageId: "parent-" + entry.key,
                     archived: false,
                     title: entry.title, lastMessageTimestamp: entry.timestamp,
-                    messagesCount: 2, notificationCount: 1, muted: false, participantsCount: 0, participantsModel: participants,
+                    messagesCount: 2, notificationCount: 1, hasUnreadMessages: true, muted: false,
+                    participantsCount: 0, participantsModel: participants,
                     lastMessageSenderId: "other", lastMessageSenderName: "Alice", lastMessageSenderImage: "",
                     lastMessageSenderColorId: 0, lastMessageText: "Latest reply"
                 })
@@ -179,6 +180,12 @@ Item {
             tryCompare(findChild(card, "threadCardUnreadBadge"), "visible", true)
             threads.setProperty(1, "muted", false)
             tryCompare(card, "muted", false)
+            threads.setProperty(1, "notificationCount", 0)
+            const badge = findChild(card, "threadCardUnreadBadge")
+            tryCompare(badge, "color", Theme.palette.baseColor1)
+            compare(badge.visible, true)
+            threads.setProperty(1, "hasUnreadMessages", false)
+            tryCompare(badge, "visible", false)
         }
 
         function test_threadCardLabelsCurrentUser() {

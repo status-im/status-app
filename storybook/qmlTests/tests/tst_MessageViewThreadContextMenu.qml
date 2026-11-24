@@ -1,5 +1,6 @@
 import QtQuick
 import QtTest
+import StatusQ.Core.Theme
 import utils
 import shared.views.chat
 import AppLayouts.Chat.stores as ChatStores
@@ -100,6 +101,21 @@ Item {
             view.threadLastMessageSenderId = "self"
             tryCompare(findChild(view, "threadCardMessagePreview"), "text", qsTr("deleted this thread"))
             tryCompare(sender, "text", qsTr("You"))
+        }
+
+        function test_threadCardShowsUnreadDotUntilRead() {
+            const view = createTemporaryObject(viewComponent, root, {
+                threadFollowed: true,
+                threadHasUnreadMessages: true
+            })
+            verify(!!view)
+            let badge
+            tryVerify(() => { badge = findChild(view, "threadCardUnreadBadge"); return !!badge })
+            compare(badge.visible, true)
+            compare(badge.value, 0)
+            compare(badge.color, Theme.palette.baseColor1)
+            view.threadHasUnreadMessages = false
+            tryCompare(badge, "visible", false)
         }
 
         function test_pendingThreadCardCannotBeOpened() {
