@@ -32,6 +32,8 @@ Item {
     readonly property var history: null
     readonly property url icon: ""
     readonly property bool htmlPageLoaded: false
+    // The page plays audible media (a Keep-alive reason, see CONTEXT).
+    readonly property bool playingAudio: false
     readonly property var scrollPosition: Qt.point(0, 0)
 
     // True while at least one data-clearing operation is in flight (see CONTEXT: Clearing).

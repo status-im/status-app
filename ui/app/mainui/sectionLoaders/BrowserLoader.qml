@@ -1,7 +1,9 @@
 import QtQml
 import QtQuick
 
+import StatusQ.Core
 import StatusQ.Core.Utils as SQUtils
+import StatusQ.Internal
 
 import utils
 
@@ -12,6 +14,7 @@ import AppLayouts.stores as AppStores
 import AppLayouts.Profile.stores as ProfileStores
 import AppLayouts.Browser.stores as BrowserStores
 import AppLayouts.Wallet.stores as WalletStores
+import AppLayouts.Browser.webview
 
 StatusSectionLoader {
     id: root
@@ -25,7 +28,74 @@ StatusSectionLoader {
 
     required property HandlersManagerLoader popupHandler
 
+    /// The Browser is turned on (settings and feature flag).
+    property bool sectionEnabled: true
+    /// The Browser section is the current one.
+    property bool sectionCurrent: false
+    /// Suspended or Hidden (the owner's one notion of background).
+    property bool appInBackground: Qt.application.state === Qt.ApplicationSuspended
+                                   || Qt.application.state === Qt.ApplicationHidden
+
+    /// The Backend brings a dropped Browser back as it was: history and audible
+    /// Tabs (a Keep-alive reason). Without it the layout stays from the first
+    /// visit on.
+    property bool dropSupported: BrowserBackendCapabilities.stateRestoreSupported
+                                 && BrowserBackendCapabilities.playingAudioSupported
+
+    /// The layout was unloaded: the owner may give the memory back.
+    signal uiReleased()
+
+    /// Whether the layout should exist. With dropSupported it is given back
+    /// when inactive (BrowserDropPolicy), else kept from the first visit on.
+    readonly property bool keepLoaded: dropPolicy.keepLoaded
+
+    /// Opens `url` in a new Tab, now or as soon as the layout is there (it may
+    /// be dropped, or not loaded until the app comes to the front).
+    function openUrlInNewTab(url) {
+        if (root.item && root.status === Loader.Ready) {
+            root.item.openUrlInNewTab?.(url)
+            return
+        }
+        d.pendingUrls = d.pendingUrls.concat([url])
+    }
+
+    active: root.keepLoaded
     asynchronous: false
+
+    LoggingCategory {
+        id: dropLog
+        name: "status.browser.drop"
+        defaultLogLevel: LoggingCategory.Warning
+    }
+
+    BrowserDropPolicy {
+        id: dropPolicy
+
+        enabled: root.dropSupported
+
+        shown: root.sectionEnabled && root.sectionCurrent && !root.appInBackground
+        current: root.sectionEnabled && root.sectionCurrent
+        inBackground: root.appInBackground
+        hasLivePage: root.item?.hasLivePage ?? false
+        keepAlive: root.item?.keepAlive ?? false
+
+        onDropIdleViewsRequested: {
+            console.info(dropLog, "idle Web Views (a Keep-alive reason holds the layout)")
+            root.item?.dropIdleTabs?.()
+        }
+        onDropping: {
+            root.item?.captureSession?.()
+            root.item?.terminateRenderers?.()
+            console.info(dropLog, "Tabs kept in memory:", d.sessionCache.tabs.length)
+        }
+        onKeepLoadedChanged: console.info(dropLog, "layout", keepLoaded ? "kept" : "dropped")
+        onShownChanged: if (shown) root.item?.resumeCurrentTab?.()
+    }
+
+    Connections {
+        target: SystemUtils
+        function onMemoryPressure() { dropPolicy.memoryPressure() }
+    }
 
     QtObject {
         id: d
@@ -36,6 +106,14 @@ StatusSectionLoader {
 
         // Holder for the per-load store instances; rebuilt on each privacy-wall toggle.
         property QtObject storeParent: null
+
+        property var pendingUrls: []
+
+        // The Tab set and back/forward histories across layout unloads.
+        readonly property QtObject sessionCache: QtObject {
+            property var tabs: []
+            property int currentIndex: 0
+        }
     }
 
     Component { id: bookmarksStoreComp; BrowserStores.BookmarksStore {} }
@@ -102,6 +180,7 @@ StatusSectionLoader {
             isDebugEnabled:             Qt.binding(() => root.advancedStore.isDebugEnabled),
             transactionStore:           Qt.binding(() => root.transactionStore),
             leftPanelWidthOverride:     Qt.binding(() => root.leftPanelWidthOverride),
+            sessionCache:               d.sessionCache,
             "anchors.fill":             root,
         })
     }
@@ -111,12 +190,23 @@ StatusSectionLoader {
             loadSection()
             return
         }
+        // Otherwise reactivation rebuilds the layout from the old initial
+        // properties, i.e. the stores destroyed below.
+        root.source = ""
         if (d.storeParent) {
             d.storeParent.destroy()
             d.storeParent = null
         }
+        root.uiReleased()
     }
-    onLoaded: item.visible = true
+    onLoaded: {
+        item.visible = true
+        const urls = d.pendingUrls
+        d.pendingUrls = []
+        // BrowserPrivacyWall (privacy mode) opens no Tabs.
+        if (item.openUrlInNewTab)
+            urls.forEach(url => item.openUrlInNewTab(url))
+    }
 
     Connections {
         target: root.rootStore

@@ -21,6 +21,7 @@ Item {
 
     // Appended on destruction, so we never probe a dangling handle.
     property var destroyedViewNames: []
+    property var terminatedViewNames: []
 
     Component {
         id: hostStackComponent
@@ -38,8 +39,12 @@ Item {
             property bool offTheRecord: false
             property bool retained: false
             property int detachCalls: 0
+            property var adapterItem: null
 
             function detachView() { detachCalls += 1 }
+            function terminateRenderer() {
+                root.terminatedViewNames = root.terminatedViewNames.concat([fakeView.viewName])
+            }
 
             Component.onDestruction: root.destroyedViewNames =
                 root.destroyedViewNames.concat([fakeView.viewName])
@@ -222,6 +227,29 @@ Item {
         }
 
         // Clearing ends the retention: it leaves _retainedViews and dies.
+        // Every Tab dropped while the Download held the Browser: the renderer
+        // goes with the last Web View that used it.
+        function test_theLastRetainedViewEndsTheRendererWhenNoTabIsLoaded() {
+            root.terminatedViewNames = []
+            store.busyViews = [firstView]
+            webViewContext.removeView(0)
+
+            store.finishDownloadsFor(firstView)
+
+            compare(root.terminatedViewNames, ["first"])
+        }
+
+        function test_aLoadedTabKeepsTheRenderer() {
+            root.terminatedViewNames = []
+            secondView.adapterItem = root
+            store.busyViews = [firstView]
+            webViewContext.removeView(0)
+
+            store.finishDownloadsFor(firstView)
+
+            compare(root.terminatedViewNames, [])
+        }
+
         function test_viewDownloadsCleared_dropsAndDestroysRetainedView() {
             store.busyViews = [firstView]
             webViewContext.removeView(0)

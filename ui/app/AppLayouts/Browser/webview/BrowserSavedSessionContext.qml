@@ -11,6 +11,14 @@ QtObject {
     required property var determineRealURL
     required property var preferencesStore
     required property Item currentWebView
+    property var otrProfileParams: null
+    property var localPreviewProfileParams: null
+
+    /// Outlives the layout: the Tab set and each Tab's back/forward history,
+    /// kept in memory whatever the Session setting (which only covers disk).
+    /// { tabs: [{ uuid, url, title, icon, offTheRecord, localPreview,
+    ///           readAccessUrl, state }], currentIndex }
+    property var sessionCache: null
 
     property Item previousWebView: null
     property var persistedTabs: []
@@ -117,7 +125,91 @@ QtObject {
         // tab.url = determineRealURL("https://simpledapp.eth");
     }
 
+    /// Fill sessionCache from the live Tabs, local previews included: a Drop
+    /// keeps every Tab the user sees.
+    function captureToCache() {
+        if (!sessionCache)
+            return
+
+        const records = []
+        let currentIndex = 0
+        for (let i = 0; i < tabs.count; i++) {
+            const view = webViewContext.getWebView(i)
+            if (!view)
+                continue
+            const localPreview = !!view.profileParams?.localPreview
+            if (i === tabs.currentIndex)
+                currentIndex = records.length
+            records.push({
+                uuid: view.uid,
+                url: (view.sessionUrl ?? view.url).toString(),
+                title: view.title || "",
+                icon: BrowserSessionUtils.normalizeIcon(view.icon),
+                offTheRecord: !!view.offTheRecord,
+                localPreview: localPreview,
+                readAccessUrl: localPreview ? (view.fileReadAccessUrl ?? "") : "",
+                state: !localPreview && typeof view.saveState === "function" ? view.saveState() : null
+            })
+        }
+        sessionCache.tabs = records
+        sessionCache.currentIndex = currentIndex
+    }
+
+    function _restoreFromCache() {
+        const records = sessionCache.tabs
+        sessionCache.tabs = []
+
+        // Never downgrade a private or preview Tab to the default profile.
+        const profileFor = record => {
+            if (record.localPreview)
+                return localPreviewProfileParams
+            if (record.offTheRecord)
+                return otrProfileParams
+            return defaultProfileParams
+        }
+        let savedIndex = sessionCache.currentIndex
+        const restorable = records.filter((record, i) => {
+            if (profileFor(record))
+                return true
+            console.warn("[Browser] no profile to restore a dropped Tab in, skipped")
+            if (i < sessionCache.currentIndex)
+                savedIndex--
+            else if (i === sessionCache.currentIndex)
+                savedIndex = 0
+            return false
+        })
+
+        setPersisted(restorable.map(r => ({ uuid: r.uuid, url: r.url, title: r.title, icon: r.icon })))
+        purgeSnapshots()
+
+        restorable.forEach(record => {
+            const view = webViewContext.createEmptyTab(profileFor(record), false, false, record.url,
+                                                       record.title, record.icon, record.uuid)
+            if (!view)
+                return
+            if (record.localPreview && "fileReadAccessUrl" in view)
+                view.fileReadAccessUrl = record.readAccessUrl
+            if (record.state && typeof view.setPendingState === "function")
+                view.setPendingState(record.state)
+        })
+
+        Qt.callLater(() => {
+            if (tabs.count === 0) {
+                openDefaultTab()
+                return
+            }
+            if (savedIndex >= 0 && savedIndex < tabs.count)
+                tabs.activateTab(savedIndex)
+            webViewContext.ensureCurrentWebViewLoaded()
+        })
+    }
+
     function restoreSession() {
+        if (sessionCache && sessionCache.tabs.length > 0) {
+            _restoreFromCache()
+            return
+        }
+
         const tabsToRestore = preferencesStore.getRestoreOpenTabs()
             ? preferencesStore.getOpenTabs()
             : []

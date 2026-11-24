@@ -30,10 +30,40 @@ AbstractWebView {
     // Nothing reloads on its own: a page that dies on a timer would be reloaded
     // forever. Cleared when the next navigation starts, whatever asked for it.
     crashed: d.crashed
-    onLoadingChanged: if (loading) d.crashed = false
+    onLoadingChanged: {
+        if (loading)
+            d.crashed = false
+        else
+            d.recordPage()
+    }
+
+    /// A local file shown with a read grant to this directory (loadFileUrl):
+    /// every later load of the Tab's url goes through the grant again.
+    property string fileReadAccessUrl: ""
 
     readonly property QtObject d: QtObject {
         property bool crashed: false
+        // Back/forward history to rebuild on the next load (see drop()), for
+        // the url it was taken at: loading any other url discards it.
+        property var pendingState: null
+        property string pendingUrl: ""
+        // The last committed page, and the last url that became a Download.
+        property url pageUrl: ""
+        property url previousPageUrl: ""
+        property string downloadUrl: ""
+
+        function setPage(u) {
+            if (u.toString() === d.pageUrl.toString())
+                return
+            d.previousPageUrl = d.pageUrl
+            d.pageUrl = u
+        }
+
+        // Settled on a page (also a same-document move): what the Tab shows.
+        function recordPage() {
+            if (root.htmlPageLoaded && !root.loading && root.url.toString() !== d.downloadUrl)
+                d.setPage(root.url)
+        }
     }
 
     function _handleRenderProcessTerminated(willRevive) {
@@ -58,8 +88,18 @@ AbstractWebView {
     property bool htmlPageLoaded: false
     // A committed page load ends "pristine" for good — from here the Tab shows a
     // page of its own, so no Download may close it.
-    onHtmlPageLoadedChanged: if (htmlPageLoaded) root.pristinePopup = false
+    onHtmlPageLoadedChanged: {
+        if (!htmlPageLoaded)
+            return
+        root.pristinePopup = false
+        d.setPage(root.url)
+    }
+
+    /// What the Tab comes back to: its url, unless that url turned into a
+    /// Download (no page to show), then the page it still shows, if any.
+    readonly property url sessionUrl: root.url.toString() === d.downloadUrl ? d.pageUrl : root.url
     readonly property bool loading: loader.item ? loader.item.loading : false
+    readonly property bool playingAudio: loader.item ? !!loader.item.playingAudio : false
     readonly property bool canGoBack: loader.item ? loader.item.canGoBack : false
     readonly property bool canGoForward: loader.item ? loader.item.canGoForward : false
     readonly property real loadProgress: loader.item ? loader.item.loadProgress : 0
@@ -103,13 +143,56 @@ AbstractWebView {
         loader.setSource(root.adapterPath, props)
     }
 
+    /// Back/forward history to rebuild when the Backend next loads, instead of
+    /// a plain load of `url`. Ignored by Backends that cannot restore it.
+    function setPendingState(state) {
+        d.pendingState = state || null
+        d.pendingUrl = root.url.toString()
+    }
+
+    /// The newest back/forward history: the live Backend's, else a pending one.
+    function saveState() {
+        if (loader.item && typeof loader.item.saveState === "function") {
+            const state = loader.item.saveState()
+            if (state && (state.byteLength ?? state.length) > 0)
+                return state
+        }
+        return d.pendingState
+    }
+
+    /// Drop (CONTEXT: Drop): destroy the Backend, keep the Tab. The next
+    /// ensureLoaded() brings the page back with its history.
+    function drop() {
+        if (!loader.item)
+            return
+        const comesBackTo = root.sessionUrl
+        d.pendingUrl = comesBackTo.toString()
+        d.pendingState = root.saveState()
+        loader.item.detachView()
+        loader.source = ""
+        // Loading a Download url again would download it again.
+        if (root.url.toString() !== comesBackTo.toString())
+            root.url = comesBackTo
+        root.htmlPageLoaded = false
+        d.crashed = false
+    }
+
+    /// Ends the renderer behind this Tab's Backend, shared by its profile.
+    function terminateRenderer() {
+        if (loader.item && typeof loader.item.terminateRenderer === "function")
+            loader.item.terminateRenderer()
+    }
+
     function loadUrl(u) {
+        root.fileReadAccessUrl = ""
         root.url = u
         if (u && u.toString())
             ensureLoaded()
     }
     /// Local-file load with a directory read grant; url syncs back via Connections.
     function loadFileUrl(fileUrl, readAccessUrl) {
+        d.pendingState = null
+        root.fileReadAccessUrl = readAccessUrl || ""
         ensureLoaded()
         if (loader.item && loader.item.loadFileUrl)
             loader.item.loadFileUrl(fileUrl, readAccessUrl || "")
@@ -176,15 +259,26 @@ AbstractWebView {
     }
 
     onUrlChanged: {
+        if (d.pendingState && url.toString() !== d.pendingUrl)
+            d.pendingState = null
         if (loader.item && loader.item.url !== url)
             loader.item.url = url
+        d.recordPage()
     }
 
     Loader {
         id: loader
         anchors.fill: parent
         onLoaded: {
-            if (root.url.toString()) loader.item.url = root.url
+            const isFile = root.url.toString().startsWith("file:")
+            // A restore loads its own current entry; the url only backs it up.
+            if (d.pendingState && typeof loader.item.restoreState === "function")
+                loader.item.restoreState(d.pendingState, root.url)
+            else if (isFile && root.fileReadAccessUrl && typeof loader.item.loadFileUrl === "function")
+                loader.item.loadFileUrl(root.url, root.fileReadAccessUrl)
+            else if (root.url.toString())
+                loader.item.url = root.url
+            d.pendingState = null
             root.syncFromAdapterItem()
         }
 
@@ -202,7 +296,13 @@ AbstractWebView {
         }
         function onLinkHovered(hoveredUrl)             { root.linkHovered(hoveredUrl) }
         function onWindowCloseRequested()              { root.windowCloseRequested() }
-        function onDownloadRequested(download, token)  { root.downloadRequested(download, token) }
+        function onDownloadRequested(download, token)  {
+            d.downloadUrl = download?.url?.toString() ?? ""
+            // The url may have moved to the Download before it was announced.
+            if (d.downloadUrl && d.pageUrl.toString() === d.downloadUrl)
+                d.pageUrl = d.previousPageUrl
+            root.downloadRequested(download, token)
+        }
         function onLinkLongPressed(linkUrl, imageUrl, position) {
             root.linkLongPressed(linkUrl, imageUrl, position)
         }
