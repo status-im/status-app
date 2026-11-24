@@ -1,6 +1,7 @@
 import chronicles, stint, json, tables
 import app/global/global_singleton
 import app/global/app_signals
+import app/global/app_sections_config
 import app/core/signals/types as signal_types
 import app/core/eventemitter
 import app/core/notifications/notifications_manager
@@ -124,6 +125,9 @@ proc init*(self: Controller) =
       SIGNAL_COMMUNITIES_UPDATE, SIGNAL_COMMUNITY_MUTED]:
     self.events.on(event) do(e: Args):
       self.chatService.requestSectionUnreadCounts()
+
+  self.events.on(SIGNAL_CURATED_COMMUNITIES_NEW_DOT) do(e: Args):
+    self.delegate.onNotificationsUpdated(COMMUNITIESPORTAL_SECTION_ID, CuratedCommunitiesNewDotArgs(e).shown, 0)
 
   self.events.on(SignalType.MediaServerStarted.event) do(e: Args):
     let args = MediaServerStartedSignal(e)

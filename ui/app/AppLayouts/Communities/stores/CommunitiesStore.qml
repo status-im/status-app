@@ -11,6 +11,7 @@ QtObject {
 
     readonly property var curatedCommunitiesModel: root.communitiesModuleInst.curatedCommunities
     readonly property bool curatedCommunitiesLoading: root.communitiesModuleInst.curatedCommunitiesLoading
+    readonly property int curatedCommunitiesRefreshError: root.communitiesModuleInst.curatedCommunitiesRefreshError
 
     property var discordFileList: root.communitiesModuleInst.discordFileList
     property var discordCategoriesModel: root.communitiesModuleInst.discordCategories
@@ -193,6 +194,18 @@ QtObject {
 
     function navigateToCommunity(communityId) {
         root.communitiesModuleInst.navigateToCommunity(communityId)
+    }
+
+    function refreshCuratedCommunities() {
+        root.communitiesModuleInst.refreshCuratedCommunities()
+    }
+
+    function stopCuratedCommunitiesRefresh() {
+        root.communitiesModuleInst.stopCuratedCommunitiesRefresh()
+    }
+
+    function retryCuratedCommunitiesRefresh() {
+        root.communitiesModuleInst.retryCuratedCommunitiesRefresh()
     }
 
     function removeFileListItem(filePath) {

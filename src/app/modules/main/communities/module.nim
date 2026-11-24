@@ -89,7 +89,6 @@ type
     viewVariant: QVariant
     moduleLoaded: bool
     events: EventEmitter
-    curatedCommunitiesLoaded: bool
     communityTokensModule: community_tokens_module.AccessInterface
     checkingPermissionToJoinInProgress: bool
     checkingAllChannelPermissionsInProgress: bool
@@ -164,7 +163,6 @@ proc newModule*(
   communityTokensService, transactionService, networksService, communityService)
   result.moduleLoaded = false
   result.events = events
-  result.curatedCommunitiesLoaded = false
   result.setCheckingPermissionToJoinInProgress(false)
   result.checkingAllChannelPermissionsInProgress = false
 
@@ -196,23 +194,23 @@ method communityDataLoaded*(self: Module) =
   self.setAllCommunities(self.controller.getAllCommunities())
   self.buildTokensAndCollectiblesFromAllCommunities()
 
-method onActivated*(self: Module) =
-  if self.curatedCommunitiesLoaded:
-    return
-  self.controller.asyncLoadCuratedCommunities()
+method refreshCuratedCommunities*(self: Module) =
+  self.controller.refreshCuratedCommunities()
+
+method stopCuratedCommunitiesRefresh*(self: Module) =
+  self.controller.stopCuratedCommunitiesRefresh()
+
+method retryCuratedCommunitiesRefresh*(self: Module) =
+  self.controller.retryCuratedCommunitiesRefresh()
 
 method curatedCommunitiesLoaded*(self: Module, curatedCommunities: seq[CommunityDto]) =
-  self.curatedCommunitiesLoaded = true
   self.setCuratedCommunities(curatedCommunities)
-  self.view.setCuratedCommunitiesLoading(false)
 
-method curatedCommunitiesLoading*(self: Module) =
-  self.view.setCuratedCommunitiesLoading(true)
+method curatedCommunitiesLoading*(self: Module, loading: bool) =
+  self.view.setCuratedCommunitiesLoading(loading)
 
-method curatedCommunitiesLoadingFailed*(self: Module) =
-  # TODO we probably want to show an error in the UI later
-  self.curatedCommunitiesLoaded = true
-  self.view.setCuratedCommunitiesLoading(false)
+method curatedCommunitiesRefreshError*(self: Module, error: int) =
+  self.view.setCuratedCommunitiesRefreshError(error)
 
 method getCommunityItem(self: Module, community: CommunityDto): SectionItem =
   return initSectionItem(
@@ -326,6 +324,10 @@ method communityEdited*(self: Module, community: CommunityDto) =
   self.view.updateItem(self.getCommunityItem(community))
 
 method setCuratedCommunities*(self: Module, curatedCommunities: seq[CommunityDto]) =
+  var ids = initHashSet[string]()
+  for community in curatedCommunities:
+    ids.incl(community.id)
+  self.view.curatedCommunitiesModel().removeItemsNotIn(ids)
   for community in curatedCommunities:
     self.view.curatedCommunitiesModel().addItem(self.getCuratedCommunityItem(community))
 

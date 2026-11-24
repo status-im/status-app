@@ -27,6 +27,7 @@ Flickable {
     property var collectiblesModel
 
     property bool compactMode
+    property bool loading: false
 
     readonly property bool isEmpty: !featuredRepeater.count && !root.popularCommunitiesCount
     readonly property int popularCommunitiesCount: firstPopularElementsRepeater.count + restOfPopularElementsRepeater.count
@@ -264,6 +265,7 @@ Flickable {
             }
 
             PromotionalCommunityCard {
+                objectName: "promotionalCommunityCard"
                 width: d.delegateWidth
 
                 onLearnMore: Global.requestOpenLink(d.learnAboutCommunitiesVoteLink)
@@ -280,10 +282,12 @@ Flickable {
         }
 
         StatusBaseText {
+            objectName: "noCommunitiesFoundText"
             Layout.alignment: Qt.AlignHCenter
             Layout.topMargin: Theme.xlPadding * 2
             width: d.delegateWidth
             visible: root.model.ModelCount.empty
+            opacity: root.loading ? 0 : 1
             text: qsTr("No communities found")
             color: Theme.palette.baseColor1
         }

@@ -77,5 +77,4 @@ suite "curated community model":
     check(updated.getJoined() == true)
     check(updated.getDescription() == "Keep description")
     check(updated.getIcon() == "keep-icon")
-    check(updated.getPermissionsModel() != originalPermissionsModel)
-    check(updated.getPermissionsModel() == replacement.getPermissionsModel())
+    check(updated.getPermissionsModel() == originalPermissionsModel)

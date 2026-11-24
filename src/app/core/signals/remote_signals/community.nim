@@ -1,4 +1,4 @@
-import json, tables, chronicles
+import json, tables, options, chronicles
 import base
 
 import ../../../../app_service/service/community/dto/[community]
@@ -13,9 +13,17 @@ include  app_service/common/json_utils
 type CommunitySignal* = ref object of Signal
   community*: CommunityDto
 
-type CuratedCommunitiesSignal* = ref object of Signal
-  communities*: seq[CommunityDto]
-  unknownCommunities*: seq[string]
+type CuratedCommunitiesRefreshStartedSignal* = ref object of Signal
+  runId*: Option[int]
+  changed*: bool
+  directoryFailed*: bool
+
+type CuratedCommunitiesRefreshFinishedSignal* = ref object of Signal
+  runId*: Option[int]
+  resolved*: int
+  notFound*: int
+  failed*: int
+  cancelled*: bool
 
 type HistoryArchivesSignal* = ref object of Signal
   communityId*: string
@@ -98,23 +106,31 @@ type CommunityTokenActionSignal* = ref object of Signal
   communityToken*: CommunityTokenDto
   actionType*: CommunityTokenActionType
 
+proc curatedRunId(event: JsonNode): Option[int] =
+  let runId = event{"event", "runId"}
+  if not runId.isNil and runId.kind == JInt:
+    return some(runId.getInt())
+
 proc fromEvent*(T: type CommunitySignal, event: JsonNode): CommunitySignal =
   result = CommunitySignal()
   result.signalType = SignalType.CommunityFound
   result.community = event["event"].toCommunityDto()
 
-proc fromEvent*(T: type CuratedCommunitiesSignal, event: JsonNode): CuratedCommunitiesSignal =
-  result = CuratedCommunitiesSignal()
-  result.signalType = SignalType.CuratedCommunitiesUpdated
+proc fromEvent*(T: type CuratedCommunitiesRefreshStartedSignal, event: JsonNode): CuratedCommunitiesRefreshStartedSignal =
+  result = CuratedCommunitiesRefreshStartedSignal()
+  result.signalType = SignalType.CuratedCommunitiesRefreshStarted
+  result.runId = event.curatedRunId()
+  result.changed = event{"event", "changed"}.getBool()
+  result.directoryFailed = event{"event", "directoryFailed"}.getBool()
 
-  result.communities = @[]
-  if event["event"]["communities"].kind == JObject:
-    for (communityId, community) in event["event"]["communities"].pairs():
-      result.communities.add(community.toCommunityDto())
-
-  if event["event"]["unknownCommunities"].kind == JObject:
-    for communityId in event["event"]["unknownCommunities"].items():
-      result.unknownCommunities.add(communityId.getStr)
+proc fromEvent*(T: type CuratedCommunitiesRefreshFinishedSignal, event: JsonNode): CuratedCommunitiesRefreshFinishedSignal =
+  result = CuratedCommunitiesRefreshFinishedSignal()
+  result.signalType = SignalType.CuratedCommunitiesRefreshFinished
+  result.runId = event.curatedRunId()
+  result.resolved = event{"event", "resolved"}.getInt()
+  result.notFound = event{"event", "notFound"}.getInt()
+  result.failed = event{"event", "failed"}.getInt()
+  result.cancelled = event{"event", "cancelled"}.getBool()
 
 proc fromEvent*(T: type DiscordCategoriesAndChannelsExtractedSignal, event: JsonNode): DiscordCategoriesAndChannelsExtractedSignal =
   result = DiscordCategoriesAndChannelsExtractedSignal()
