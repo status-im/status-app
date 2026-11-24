@@ -7,6 +7,7 @@ from seaqt/QtCore/gen_qabstractitemmodel_types import nil
 import app/modules/main/chat_section/[model, Item]
 
 import app_service/common/types
+import app_service/service/chat/dto/chat
 
 proc createTestChatItem(id: string, catId: string = "", isCategory: bool = false,
   categoryOpened: bool = true, isThread: bool = false, parentChatId: string = ""): ChatItem =
@@ -252,6 +253,61 @@ suite "updating chat items":
     model.appendItemsAfterParent(@[laterThread], parent.id)
     check(model.getItemIdxById(laterThread.id) == 3)
     check(model.getItemIdxById(otherChat.id) == 4)
+
+  test "existing threads follow their channel through category changes":
+    let parent = createTestChatItem("parent")
+    let thread = createTestChatItem("thread", isThread = true, parentChatId = parent.id)
+    let sibling = createTestChatItem("sibling", isThread = true, parentChatId = parent.id)
+    let otherParent = createTestChatItem("other-parent")
+    let otherThread = createTestChatItem("other-thread", isThread = true, parentChatId = otherParent.id)
+    let openCategory = createTestChatItem("open", catId = "open", isCategory = true)
+    let closedCategory = createTestChatItem("closed", catId = "closed", isCategory = true,
+      categoryOpened = false)
+    model.setData(@[parent, thread, sibling, otherParent, otherThread, openCategory, closedCategory])
+    model.updateCategoryDetailsById(openCategory.id, "Open", 0)
+    model.updateCategoryDetailsById(closedCategory.id, "Closed", 1)
+    model.updateNotificationsForItemById(thread.id, hasUnreadMessages = true, notificationsCount = 2)
+
+    model.reorderChats(@[
+      ChatDto(id: parent.id, categoryId: openCategory.id, position: 1),
+      ChatDto(id: otherParent.id, categoryId: openCategory.id, position: 2),
+    ])
+    for item in [parent, thread, sibling]:
+      check item.categoryId == openCategory.id
+      check item.categoryPosition == 0
+      check item.position == 1
+      check item.categoryOpened
+
+    model.reorderChats(@[ChatDto(id: parent.id, categoryId: closedCategory.id, position: 3)])
+    for item in [parent, thread, sibling]:
+      check item.categoryId == closedCategory.id
+      check item.categoryPosition == 1
+      check item.position == 3
+      check not item.categoryOpened
+    check sibling.hidden
+    check not thread.hidden
+    check otherThread.categoryId == openCategory.id
+    check otherThread.position == 2
+
+    model.reorderChats(@[ChatDto(id: parent.id, categoryId: closedCategory.id, position: 4)])
+    check thread.position == 4
+    check sibling.position == 4
+
+    model.removeCategory(closedCategory.id, @[
+      ChatDto(id: parent.id, position: 5),
+      ChatDto(id: otherParent.id, categoryId: openCategory.id, position: 2),
+    ])
+    for item in [parent, thread, sibling]:
+      check item.categoryId == ""
+      check item.categoryPosition == -1
+      check item.position == 5
+      check item.categoryOpened
+      check not item.hidden
+    check otherThread.categoryId == openCategory.id
+    check model.getItemById(thread.id) == thread
+    check thread.hasUnreadMessages
+    check thread.notificationsCount == 2
+    check model.getItemIdxById(thread.id) == model.getItemIdxById(parent.id) + 1
 
   test "thread batches remain with their own parent":
     let firstParent = createTestChatItem("0xparent1")
