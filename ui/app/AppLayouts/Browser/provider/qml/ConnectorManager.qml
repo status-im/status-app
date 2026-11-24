@@ -22,9 +22,19 @@ QtObject {
     property var _ownRequestIds: ({})
     property int _gatedRequests: 0
 
-    // A request of this page awaits the user (connect, sign, send): the
-    // connector asked for their approval and the answer has not come back.
+    // A request of this page awaits the user (connect, sign, send): one the
+    // connector may ask their approval for, sent and not answered yet.
     readonly property bool hasPendingRequests: _gatedRequests > 0
+
+    readonly property var _userGatedMethods: [
+        "eth_requestAccounts",
+        "wallet_requestPermissions",
+        "eth_sendTransaction",
+        "personal_sign",
+        "eth_signTypedData",
+        "eth_signTypedData_v3",
+        "eth_signTypedData_v4"
+    ]
 
     // SIGNALS
     // Notify to re-read all properties
@@ -73,7 +83,11 @@ QtObject {
         }
 
         connectorController.connectorCallRPC(requestId, JSON.stringify(rpcRequest))
-        _ownRequestIds[requestId] = { method: method, gated: false }
+        // Held from the start: the approval prompt arrives later, async.
+        const gated = _userGatedMethods.includes(method)
+        _ownRequestIds[requestId] = { method: method, gated: gated }
+        if (gated)
+            _gatedRequests++
 
         // Return immediately - response comes via connectorCallRPCResult signal
         return JSON.stringify({
@@ -153,8 +167,8 @@ QtObject {
 
     // HELPER FUNCTIONS
     // The connector asks the user about one of our in-flight requests: the
-    // oldest one of that method from this origin (and client, when given).
-    function _markGated(dappJson, method) {
+    // oldest one of those methods from this origin (and client, when given).
+    function _markGated(dappJson, methods) {
         let info
         try {
             info = JSON.parse(dappJson)
@@ -165,10 +179,10 @@ QtObject {
             return
         if (info.clientId && info.clientId !== clientId)
             return
-        const gatedMethod = info.method || method
+        const gatedMethods = info.method ? [info.method] : methods
         for (const id in _ownRequestIds) {
             const pending = _ownRequestIds[id]
-            if (!pending.gated && pending.method === gatedMethod) {
+            if (!pending.gated && gatedMethods.includes(pending.method)) {
                 pending.gated = true
                 _gatedRequests++
                 return
@@ -232,15 +246,15 @@ QtObject {
         }
 
         function onConnectRequested(requestId, dappJson) {
-            _markGated(dappJson, "eth_requestAccounts")
+            _markGated(dappJson, ["eth_requestAccounts", "wallet_requestPermissions"])
         }
 
         function onSendTransaction(requestId, dappJson) {
-            _markGated(dappJson, "eth_sendTransaction")
+            _markGated(dappJson, ["eth_sendTransaction"])
         }
 
         function onSign(requestId, dappJson) {
-            _markGated(dappJson, "")
+            _markGated(dappJson, [])
         }
 
         function onConnectorCallRPCResult(requestId, payload) {

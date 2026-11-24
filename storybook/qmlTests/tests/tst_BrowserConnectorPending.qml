@@ -3,9 +3,9 @@ import QtTest
 
 import AppLayouts.Browser.provider.qml
 
-/// A dApp request is a Keep-alive reason only while it awaits the user: the
-/// connector asked for their approval (connect, sign, send) and no answer came
-/// back. Plain RPC traffic, however steady, never holds the Browser.
+/// A dApp request is a Keep-alive reason only while it may await the user: a
+/// connect, sign or send not answered yet, or one the connector asked their
+/// approval for. Plain RPC traffic, however steady, never holds the Browser.
 Item {
     id: root
 
@@ -92,20 +92,45 @@ Item {
             verify(!manager.hasPendingRequests)
         }
 
-        function test_anotherOriginsApprovalIsNotOurs() {
+        // The prompt arrives async: a drop in between must not lose the page.
+        function test_aUserGatedRequestHoldsBeforeTheConnectorAsks() {
             const { controller, manager } = makeManager()
+
             manager.request({ method: "eth_sendTransaction", requestId: 1 })
+            verify(manager.hasPendingRequests)
 
-            controller.sendTransaction("tx-1", JSON.stringify({ url: "https://other.example" }))
+            controller.sendTransaction("tx-1", dapp())
+            controller.connectorCallRPCResult(1, "{}")
+            verify(!manager.hasPendingRequests, "the prompt does not count it twice")
+        }
 
+        function test_requestPermissionsIsAConnect() {
+            const { controller, manager } = makeManager()
+            manager.request({ method: "wallet_requestPermissions", requestId: 1 })
+
+            controller.connectRequested("cr-1", dapp({ clientId: manager.clientId }))
+            verify(manager.hasPendingRequests)
+
+            controller.connectorCallRPCResult(1, "{}")
             verify(!manager.hasPendingRequests)
         }
 
-        function test_anotherClientsConnectIsNotOurs() {
+        function test_anotherOriginsApprovalIsNotOurs() {
             const { controller, manager } = makeManager()
-            manager.request({ method: "eth_requestAccounts", requestId: 1 })
+            manager.request({ method: "eth_sign", requestId: 1 })
 
-            controller.connectRequested("cr-1", dapp({ clientId: "someone-else" }))
+            controller.sign("sr-1", JSON.stringify({ url: "https://other.example", method: "eth_sign" }))
+            verify(!manager.hasPendingRequests)
+
+            controller.sign("sr-2", dapp({ method: "eth_sign" }))
+            verify(manager.hasPendingRequests)
+        }
+
+        function test_anotherClientsApprovalIsNotOurs() {
+            const { controller, manager } = makeManager()
+            manager.request({ method: "eth_sign", requestId: 1 })
+
+            controller.sign("sr-1", dapp({ clientId: "someone-else", method: "eth_sign" }))
 
             verify(!manager.hasPendingRequests)
         }
