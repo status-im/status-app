@@ -208,7 +208,9 @@ Item {
                 {tag: "central desktop", portrait: false, fromList: false},
                 {tag: "central portrait", portrait: true, fromList: false},
                 {tag: "list desktop", portrait: false, fromList: true},
-                {tag: "list portrait", portrait: true, fromList: true}
+                {tag: "list portrait", portrait: true, fromList: true},
+                {tag: "active thread from list desktop", portrait: false, fromList: true, activeThread: true},
+                {tag: "active thread from list portrait", portrait: true, fromList: true, activeThread: true}
             ]
         }
 
@@ -238,6 +240,11 @@ Item {
                     }
                 }
                 verify(!!threadName)
+                if (data.activeThread) {
+                    harness.mock.setActiveChat(messages.threadId)
+                    view.chatContentModule.messagesModule.threadId = messages.threadId
+                    findChild(view.headerContent, "chatHeaderMessageStore").messageModule = messages
+                }
                 tryCompare(view.leftPanel, "status", Loader.Ready)
                 view.sectionLayout.setCurrentIndex(StatusSectionLayout.LeftPanel)
                 let row
@@ -295,7 +302,7 @@ Item {
             menu.actionAt(0).trigger()
             menu.close()
             let panelHeader
-            if (data.fromList) {
+            if (data.fromList && !data.activeThread) {
                 compare(findChild(view.headerContent, "threadNameInput"), null)
                 tryCompare(view.rootStore, "openThreadId", messages.threadId)
                 tryCompare(view.rightPanel, "status", Loader.Ready)
@@ -314,6 +321,11 @@ Item {
                 verify(!!panelHeader)
                 compare(view.rootStore.openThreadId, "")
                 compare(view.rightPanel.status, Loader.Null)
+                if (data.activeThread) {
+                    compare(view.activeItemId, messages.threadId)
+                    if (data.portrait)
+                        tryCompare(view.sectionLayout, "currentIndex", StatusSectionLayout.CentralPanel)
+                }
             }
             tryCompare(panelHeader, "editing", true)
             const input = findChild(panelHeader, "threadNameInput")
@@ -331,7 +343,7 @@ Item {
             findChild(panelHeader, "threadHeaderMenuButton").clicked()
             const panelMenu = findChild(panelHeader, "threadHeaderContextMenu")
             tryCompare(panelMenu, "opened", true)
-            if (data.fromList)
+            if (data.fromList && !data.activeThread)
                 verifyThreadMuteMenu(panelMenu, messages)
             compare(panelMenu.threadLinkToCopyShare, expectedLink)
             tryCompare(findChild(panelMenu, "threadContextMenu_copyShare"), "enabled", true)
