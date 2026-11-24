@@ -515,7 +515,6 @@ Control {
         objectName: "StatusMessage_textMessage"
         messageDetails: root.messageDetails
         isEdited: root.isEdited
-        allowShowMore: !root.isInPinnedPopup
         textField.anchors.rightMargin: root.isInPinnedPopup ? Theme.xlPadding : 0 // margin for the "Unpin" floating button
         highlightedLink: root.highlightedLink
         linkAddressAndEnsName: root.linkAddressAndEnsName
