@@ -2,12 +2,7 @@ import QtQuick
 import QtTest
 
 import StatusQ
-
-import AppLayouts.stores as AppLayoutStores
-import mainui
-import shared.status
-import shared.stores
-import utils
+import "helpers"
 
 // The emoji picker is built when it is requested and destroyed when it closes;
 // nothing about it is alive in between.
@@ -17,25 +12,16 @@ Item {
     width: 800
     height: 800
 
+    PopupsTestFixture {
+        id: fixture
+        popupParent: root
+    }
+
     Item {
         id: anchorItem
         anchors.centerIn: parent
         width: 40
         height: 40
-    }
-
-    Component {
-        id: popupsComponent
-
-        Popups {
-            popupParent: root
-            keychain: Keychain {}
-            secureStorage: SecureStorage {}
-            sharedRootStore: RootStore {}
-            rootStore: AppLayoutStores.RootStore {}
-            communityTokensStore: CommunityTokensStore {}
-            networksStore: NetworksStore {}
-        }
     }
 
     SignalSpy {
@@ -47,18 +33,9 @@ Item {
         name: "PopupsEmojiPicker"
         when: windowShown
 
-        property Popups popups
         property var watched: null  // a var drops to null when its object is destroyed
 
         function init() {
-            // Popups builds its signing/auth/keycard stores and the community fetch
-            // popup up front; they reach for backend context the test does not provide.
-            ignoreWarning(/Popups\.qml:\d+: TypeError: Cannot read property 'communityFetch.*' of null/)
-            ignoreWarning(/Popups\.qml:\d+: TypeError: Cannot read property 'communityFetch.*' of null/)
-            ignoreWarning(/AuthenticationStore\.qml:\d+: ReferenceError: mainModule is not defined/)
-            ignoreWarning(/SigningStore\.qml:\d+: ReferenceError: mainModule is not defined/)
-            ignoreWarning(/KeycardManagementStore\.qml:\d+: ReferenceError: mainModule is not defined/)
-            popups = createTemporaryObject(popupsComponent, root)
             emojiSpy.clear()
         }
 
@@ -76,9 +53,8 @@ Item {
 
         function openPicker() {
             let picker = null
-            popups.openEmojiPopup({ directParent: anchorItem, relativeY: 12 }, p => picker = p)
-            verify(!!picker)
-            tryCompare(picker, "opened", true)
+            fixture.openEmojiPopup(this, { directParent: anchorItem, relativeY: 12 }, p => picker = p)
+            tryVerify(() => !!picker && picker.opened)
             return picker
         }
 
@@ -119,7 +95,7 @@ Item {
             wait(0)
 
             let called = false
-            compare(popups.openEmojiPopup(params, () => called = true), null)
+            compare(fixture.openEmojiPopup(this, params, () => called = true), null)
             verify(!called)
             tryVerify(() => !pickerExists())
 
@@ -128,8 +104,8 @@ Item {
 
         function test_requesterGoneWhileOpenClosesThePicker() {
             const requester = itemComponent.createObject(root)
-            popups.openEmojiPopup({ directParent: requester }, p => watched = p)
-            tryCompare(watched, "opened", true)
+            fixture.openEmojiPopup(this, { directParent: requester }, p => watched = p)
+            tryVerify(() => !!watched && watched.opened)
 
             requester.destroy()
             tryVerify(() => watched === null)
@@ -137,8 +113,8 @@ Item {
         }
 
         function test_skinToneSurvivesAcrossOpens() {
-            const skinSpy = signalSpy.createObject(root, { target: popups, signalName: "emojiSkinColorSelected" })
-            popups.emojiSkinColorSelected.connect(skinColor => popups.emojiSkinColor = skinColor)
+            const skinSpy = signalSpy.createObject(root, { target: fixture.popups, signalName: "emojiSkinColorSelected" })
+            fixture.popups.emojiSkinColorSelected.connect(skinColor => fixture.popups.emojiSkinColor = skinColor)
 
             let picker = openPicker()
             picker.skinColorSelected("1f3fd")
