@@ -229,7 +229,7 @@ Item {
         }
 
         function findMessageDelegate(view) {
-            const bubble = findChild(view, "StatusMessage_textMessage")
+            const bubble = findChild(view, "StatusTextMessage_chatText")
             if (!bubble)
                 return null
 

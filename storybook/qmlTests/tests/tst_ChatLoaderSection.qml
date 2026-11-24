@@ -533,7 +533,7 @@ Item {
             tryVerify(() => loader.status === Loader.Ready, 60000)
             let bubble = null
             tryVerify(() => {
-                bubble = findChild(loader, "StatusMessage_textMessage")
+                bubble = findChild(loader, "StatusTextMessage_chatText")
                 return !!bubble && bubble.width > 0
             }, 10000)
             // walk up to the MessageView delegate (its root is a Loader with

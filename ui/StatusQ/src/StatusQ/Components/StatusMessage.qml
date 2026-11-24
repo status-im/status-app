@@ -334,6 +334,7 @@ Control {
                     }
                     Loader {
                         Layout.fillWidth: true
+                        Layout.rightMargin: d.textRightMargin
                         active: (!!root.messageDetails.unparsedText && !root.hideMessage
                                  && ((root.messageDetails.contentType === StatusMessage.ContentType.Text) ||
                                      (root.messageDetails.contentType === StatusMessage.ContentType.Emoji) ||
@@ -355,6 +356,7 @@ Control {
                                 active: root.messageDetails.unparsedText !== ""
                                 anchors.left: parent.left
                                 anchors.right: parent.right
+                                anchors.rightMargin: d.textRightMargin
                                 visible: active
                                 sourceComponent: StatusTextMessageCommon {}
                             }
@@ -490,6 +492,8 @@ Control {
     QtObject {
         id: d
         property string selectedText
+        // Keeps the text clear of the "Unpin" floating button.
+        readonly property real textRightMargin: root.isInPinnedPopup ? Theme.xlPadding : 0
 
         readonly property int threadMarkerSize: 20
 
@@ -512,18 +516,16 @@ Control {
     component StatusTextMessageCommon: StatusTextMessage {
         id: statusTextMessage
 
-        objectName: "StatusMessage_textMessage"
         messageDetails: root.messageDetails
         isEdited: root.isEdited
-        textField.anchors.rightMargin: root.isInPinnedPopup ? Theme.xlPadding : 0 // margin for the "Unpin" floating button
         highlightedLink: root.highlightedLink
         linkAddressAndEnsName: root.linkAddressAndEnsName
         disabledTooltipText: root.disabledTooltipText
         isMobile: root.isMobile
         clearSelectionOnLostFocus: root.clearSelectionOnLostFocus
         appearance: root.textAppearance
-        onLinkActivated: link => root.linkActivated(link)
+        onMessageLinkActivated: link => root.linkActivated(link)
         onHoveredLinkChanged: root.hoveredLink = hoveredLink
-        onSelectedTextChanged: d.selectedText = selectedText
+        onSelectionChanged: d.selectedText = selectedText
     }
 }
