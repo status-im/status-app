@@ -3799,6 +3799,26 @@ file format</source>
 <context>
     <name>CommunitiesPortalLayout</name>
     <message>
+        <source>Some communities couldn&apos;t be loaded.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t load communities.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Some communities couldn&apos;t be loaded. Pull to refresh.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t load communities. Pull to refresh.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Retry</source>
+        <translation type="unfinished">Повторити</translation>
+    </message>
+    <message>
         <source>Discover Communities</source>
         <translation>Знайти спільноти</translation>
     </message>

@@ -17,6 +17,7 @@ import shared.controls
 import shared.popups
 import shared.stores
 
+import QtModelsToolkit
 import SortFilterProxyModel
 
 import AppLayouts.Communities.controls
@@ -34,6 +35,9 @@ StatusSectionLayout {
     property var collectiblesModel
 
     property bool createCommunityEnabled: true
+    property bool pullToRefreshEnabled: false
+
+    signal curatedRefreshRequested()
 
     objectName: "communitiesPortalLayout"
 
@@ -49,6 +53,80 @@ StatusSectionLayout {
 
         // Read-only flag that turns true when the component enters a “compact” layout automatically on resize.
         readonly property bool compactMode: root.width < 600
+
+        readonly property bool curatedCommunitiesEmpty: root.communitiesStore.curatedCommunitiesModel.ModelCount.empty
+        readonly property bool curatedCommunitiesPending: root.communitiesStore.curatedCommunitiesLoading
+                                                          && d.curatedCommunitiesEmpty
+
+        property int curatedRefreshError: Constants.CuratedCommunitiesRefreshError.None
+        readonly property bool curatedRefreshErrorVisible:
+            d.curatedRefreshError !== Constants.CuratedCommunitiesRefreshError.None
+
+        readonly property string curatedRefreshErrorText: {
+            const partial = d.curatedRefreshError === Constants.CuratedCommunitiesRefreshError.Partial
+            if (!root.pullToRefreshEnabled) {
+                if (partial)
+                    return qsTr("Some communities couldn't be loaded.")
+                return qsTr("Couldn't load communities.")
+            }
+            if (partial)
+                return qsTr("Some communities couldn't be loaded. Pull to refresh.")
+            return qsTr("Couldn't load communities. Pull to refresh.")
+        }
+
+        property bool curatedRefreshRequested: false
+        readonly property bool curatedPullRefreshing: d.curatedRefreshRequested && root.pullToRefreshEnabled
+                                                      && root.communitiesStore.curatedCommunitiesLoading
+
+        function requestCuratedRefresh() {
+            d.curatedRefreshRequested = true
+            root.curatedRefreshRequested()
+            d.curatedRefreshRequested = root.communitiesStore.curatedCommunitiesLoading
+        }
+    }
+
+    Binding {
+        target: d
+        property: "curatedRefreshError"
+        value: root.communitiesStore.curatedCommunitiesRefreshError
+        when: !root.communitiesStore.curatedCommunitiesLoading
+        restoreMode: Binding.RestoreNone
+    }
+
+    Connections {
+        target: root.communitiesStore
+
+        function onCuratedCommunitiesLoadingChanged() {
+            if (!root.communitiesStore.curatedCommunitiesLoading)
+                d.curatedRefreshRequested = false
+        }
+    }
+
+    Component {
+        id: curatedRefreshErrorPill
+
+        ErrorTag {
+            objectName: "curatedRefreshErrorPill"
+
+            text: d.curatedRefreshErrorText
+            buttonText: qsTr("Retry")
+            buttonVisible: !root.pullToRefreshEnabled
+            tagPrimaryLabel.wrapMode: Text.Wrap
+            implicitHeight: Math.max(33, implicitContentHeight + topPadding + bottomPadding)
+
+            Accessible.role: Accessible.Button
+            Accessible.name: text
+            Accessible.onPressAction: d.requestCuratedRefresh()
+
+            onButtonClicked: d.requestCuratedRefresh()
+
+            StatusMouseArea {
+                anchors.fill: parent
+                z: -1
+                cursorShape: Qt.PointingHandCursor
+                onClicked: d.requestCuratedRefresh()
+            }
+        }
     }
 
     SortFilterProxyModel {
@@ -148,10 +226,50 @@ StatusSectionLayout {
 
             StatusCommunityTagsRow {
                 id: communityTags
+                objectName: "communityTagsRow"
                 Layout.fillWidth: true
                 Layout.rightMargin: Theme.xlPadding
 
                 tags: root.communitiesStore.communityTags
+            }
+
+            Item {
+                id: curatedRefreshErrorSlot
+
+                property real reveal: 0
+
+                Layout.fillWidth: true
+                Layout.rightMargin: Theme.xlPadding
+                Layout.topMargin: -column.spacing
+                Layout.preferredHeight: (column.spacing + curatedRefreshErrorLoader.height) * reveal
+                visible: reveal > 0
+                clip: reveal < 1
+
+                states: State {
+                    name: "shown"
+                    when: d.curatedRefreshErrorVisible
+                    PropertyChanges { curatedRefreshErrorSlot.reveal: 1 }
+                }
+
+                transitions: Transition {
+                    from: "shown"
+                    NumberAnimation {
+                        property: "reveal"
+                        duration: ThemeUtils.AnimationDuration.Default
+                        easing.type: Easing.OutCubic
+                    }
+                }
+
+                Loader {
+                    id: curatedRefreshErrorLoader
+                    objectName: "curatedRefreshErrorLoader"
+                    x: (parent.width - width) / 2
+                    y: column.spacing
+                    width: Math.min(implicitWidth, parent.width)
+                    opacity: curatedRefreshErrorSlot.reveal
+                    active: curatedRefreshErrorSlot.visible
+                    sourceComponent: curatedRefreshErrorPill
+                }
             }
 
             Loader {
@@ -161,8 +279,11 @@ StatusSectionLayout {
                 Layout.fillHeight: true
                 Loader {
                     id: loadingIndicator
+                    objectName: "curatedCommunitiesLoadingIndicator"
                     anchors.centerIn: parent
+                    z: 1
                     active: communitiesGridLoader.status !== Loader.Ready
+                            || (d.curatedCommunitiesPending && !d.curatedPullRefreshing)
                     sourceComponent: StatusLoadingIndicator {
                         width: 40
                         height: 40
@@ -170,10 +291,12 @@ StatusSectionLayout {
                 }
                 sourceComponent: CommunitiesGridView {
                     id: communitiesGrid
+                    objectName: "curatedCommunitiesGrid"
                     visible: communitiesGridLoader.status === Loader.Ready
                     padding: 0
                     bottomPadding: d.layoutBottomMargin
                     compactMode: d.compactMode
+                    loading: d.curatedCommunitiesPending
 
                     model: filteredCommunitiesModel
                     searchLayout: d.searchMode
@@ -182,6 +305,14 @@ StatusSectionLayout {
                     collectiblesModel: root.collectiblesModel
 
                     onCardClicked: (communityId) => root.communitiesStore.navigateToCommunity(communityId)
+
+                    StatusPullToRefresh {
+                        objectName: "curatedPullToRefresh"
+                        flickable: communitiesGrid
+                        enabled: root.pullToRefreshEnabled
+                        refreshing: d.curatedPullRefreshing
+                        onRefreshRequested: d.requestCuratedRefresh()
+                    }
                 }
             }
         }
