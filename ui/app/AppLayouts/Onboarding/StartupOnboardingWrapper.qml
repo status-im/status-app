@@ -36,7 +36,11 @@ Item {
     signal profileSelected(string keyUid)
     signal biometricFlowStarted()
     signal skippedBiometricFlow(bool available)
+    signal stayLoggedInSaveUnconfirmed()
     signal contentLoaded()
+    // The converted profile's databases need a fresh backend: end the session, the next
+    // one starts at the login screen
+    signal newSessionRequested()
 
     OnboardingStore {
         id: defaultOnboardingStore
@@ -96,7 +100,7 @@ Item {
             const loginScreen = onboardingLayout.stack.loginScreen
             if (loginScreen) {
                 if (onboardingLayout.stack.currentItem !== loginScreen)
-                    onboardingLayout.stack.pop(loginScreen)
+                    onboardingLayout.stack.pop(loginScreen, StackView.Immediate)
             } else {
                 onboardingLayout.unwindToLoginScreen()
             }
@@ -132,8 +136,19 @@ Item {
             // A non-empty credential is only sent when the preference is ON or the
             // onboarding opt-in was taken (enforced Nim-side).
             const status = root.secureStorage.setCredential(account, credential)
-            if (enablePreference && status === SecureStorage.StatusSuccess)
+            if (!enablePreference)
+                return
+            if (status === SecureStorage.StatusSuccess) {
                 root.onboardingStore.setStayLoggedIn(true)
+            } else if (status === SecureStorage.StatusIndeterminate) {
+                // The write may have committed: converge to OFF, else match the worst case (ON)
+                const cleanupStatus = root.secureStorage.deleteCredential(account)
+                if (cleanupStatus !== SecureStorage.StatusSuccess
+                        && cleanupStatus !== SecureStorage.StatusNotFound) {
+                    root.onboardingStore.setStayLoggedIn(true)
+                    root.stayLoggedInSaveUnconfirmed()
+                }
+            }
         }
 
         function onStayLoggedInDeleteRequested(account) {
@@ -197,11 +212,15 @@ Item {
         }
 
         onProfileSelected: function (keyUid) {
+            // Before the filter: the initial selection must bind too
+            root.onboardingStore.selectLoginAccount(keyUid)
             if (root.lastSelectedProfileKeyUid === keyUid) {
                 return
             }
             root.profileSelected(keyUid)
         }
+
+        onNewProfileFlowStarted: root.onboardingStore.selectLoginAccount("")
 
         onLoginRequested: function (keyUid, method, data) {
             let selectedProfile = SQUtils.ModelUtils.getByKey(root.onboardingStore.loginAccountsModel, "keyUid", keyUid)
@@ -233,9 +252,7 @@ Item {
             ConvertKeycardAccountPage {
                 convertKeycardAccountState: root.onboardingStore.convertKeycardAccountState
                 restartRequired: root.onboardingStore.convertKeycardAccountRestartRequired
-                onRestartRequested: {
-                    SystemUtils.restartApplication(true)
-                }
+                onNewSessionRequested: root.newSessionRequested()
                 onBackToLoginRequested: {
                     d.loginRequestSent = false
                     onboardingLayout.unwindToLoginScreen()

@@ -2,12 +2,13 @@
 ## Proves the C++ urlActivated(QString) signal -> by-name slot delivery via QCoreApplication.processEvents.
 
 import unittest, os
+import ./support/qt_app
 import nimqml
 import app/core/custom_urls/url_scheme_event
 import statusq_bridge
 # Selective import: pulling all of gen_qcoreapplication would re-export the seaqt
 # gen_qobject_types.QObject and make the nimqml QtObject macro below ambiguous.
-from seaqt/qcoreapplication import QCoreApplication, create, processEvents
+from seaqt/qcoreapplication import QCoreApplication, processEvents
 
 QtObject:
   type Receiver = ref object of QObject
@@ -27,7 +28,7 @@ QtObject:
     self.got = url
     inc self.count
 
-discard QCoreApplication.create()  # one app for the whole suite
+ensureQtCoreApp()  # one app for the whole suite
 
 suite "url_scheme_event":
 

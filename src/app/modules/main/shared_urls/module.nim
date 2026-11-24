@@ -40,7 +40,7 @@ method delete*(self: Module) =
   self.controller.delete
 
 method load*(self: Module) =
-  singletonInstance.engine.setRootContextProperty("sharedUrlsModule", self.viewVariant)
+  singletonInstance.setSessionContextProperty("sharedUrlsModule", self.viewVariant)
   self.view.load()
 
 method isLoaded*(self: Module): bool =
@@ -69,3 +69,9 @@ method createMessageUrl*(self: Module, chatId: string, messageId: string): strin
 
 method parseMessageUrl*(self: Module, url: string): MessageUrlDataDto =
   return self.controller.parseMessageUrl(url)
+
+method createThreadUrl*(self: Module, chatId: string, threadId: string): string =
+  return self.controller.createThreadUrl(chatId, threadId)
+
+method parseThreadUrl*(self: Module, url: string): ThreadUrlDataDto =
+  return self.controller.parseThreadUrl(url)

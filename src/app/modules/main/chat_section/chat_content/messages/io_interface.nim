@@ -61,7 +61,8 @@ method messagesAdded*(self: AccessInterface, messages: seq[MessageDto]) {.base.}
 method onSendingMessageSuccess*(self: AccessInterface, message: MessageDto) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onSendingStarted*(self: AccessInterface, sendToken, text, replyTo: string, contentType: int) {.base.} =
+method onSendingStarted*(self: AccessInterface, sendToken, text, replyTo: string, contentType: int,
+    startNewThread: bool, newThreadName: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onSendingFinished*(self: AccessInterface, sendToken: string) {.base.} =
@@ -122,6 +123,21 @@ method updateThreadCanView*(self: AccessInterface, canView: bool) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method setThreadMuted*(self: AccessInterface, interval: int) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method canManageThreadById*(self: AccessInterface, threadId: string): bool {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method setThreadFollowedById*(self: AccessInterface, threadId: string, followed: bool) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method deleteThreadById*(self: AccessInterface, threadId: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method deleteThread*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onThreadDeleteFinished*(self: AccessInterface, requestId, error: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method editThread*(self: AccessInterface, name: string) {.base.} =

@@ -52,7 +52,7 @@ method onRampProviderUrlReady*(self: Module, uuid: string, url: string) =
   self.view.onProviderUrlReady(uuid, url)
 
 method load*(self: Module) =
-  singletonInstance.engine.setRootContextProperty("walletSectionBuySellCrypto", self.viewVariant)
+  singletonInstance.setSessionContextProperty("walletSectionBuySellCrypto", self.viewVariant)
   self.controller.init()
   self.view.load()
 

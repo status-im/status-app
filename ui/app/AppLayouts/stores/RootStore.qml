@@ -25,6 +25,7 @@ QtObject {
     readonly property bool isMessagingNetworkConnected: !!internal.mainModuleInst && internal.mainModuleInst.isMessagingNetworkConnected
     readonly property var sectionsModel: internal.mainModuleInst.sectionsModel
     readonly property bool sectionsLoaded: internal.mainModuleInst && internal.mainModuleInst.sectionsLoaded
+    readonly property bool shareFlowPending: !!internal.mainModuleInst && internal.mainModuleInst.shareFlowPending
     readonly property string activeSectionId: internal.mainModuleInst.activeSection.id
     readonly property int activeSectionType: internal.mainModuleInst.activeSection.sectionType
     property bool localBackupEnabled: false
@@ -235,10 +236,22 @@ QtObject {
     // End of Notifications related stuff
 
     // Settings related properties and functions that shall be moved to `SettingsRootStore`
-    property real volume: !!appSettings ? appSettings.volume * 0.01 : 0.5
-    property bool notificationSoundsEnabled: !!appSettings ? appSettings.notificationSoundsEnabled : true
+    readonly property real volume: !!appSettings ? appSettings.volume * 0.01 : 0.5
+    readonly property bool notificationSoundsEnabled: !!appSettings ? appSettings.notificationSoundsEnabled : true
 
-    readonly property bool openLinksInStatus: localAccountSensitiveSettings.openLinksInStatus
+    readonly property Binding soundMutedBinding: Binding {
+        target: AudioUtils
+        property: "muted"
+        value: !root.notificationSoundsEnabled
+    }
+
+    readonly property Binding soundVolumeBinding: Binding {
+        target: AudioUtils
+        property: "volume"
+        value: root.volume
+    }
+
+    readonly property bool openLinksInStatus: localAccountSettings.openLinksInStatus
 
     readonly property QtObject _d: QtObject {
         id: d
@@ -486,6 +499,7 @@ QtObject {
     property string currentCurrency: walletSection.currentCurrency
 
     signal showToastAccountAdded(string name)
+    signal showToastThreadLinkFailed()
     signal showToastAccountRemoved(string name)
     signal showToastKeypairRenamed(string oldName, string newName)
     signal showNetworkEndpointUpdated(string name, bool isTest)
@@ -535,6 +549,10 @@ QtObject {
 
         function onShowToastAccountAdded(name: string) {
             root.showToastAccountAdded(name)
+        }
+
+        function onShowToastThreadLinkFailed() {
+            root.showToastThreadLinkFailed()
         }
 
         function onShowToastAccountRemoved(name: string) {

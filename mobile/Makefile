@@ -1,6 +1,16 @@
 -include ./scripts/EnvVariables.mk
 -include ./scripts/Common.mk
 
+# The resolved compiler (NIM) and packages, from the root checkout.
+NIMBLE_ROOT := $(STATUS_DESKTOP)
+include $(STATUS_DESKTOP)/makefiles/nim-libs.mk
+
+# The resolution: the Nim libraries' QML modules are bundled into the same
+# resources, and the client is compiled against its packages. The root make
+# creates it, so it is only a prerequisite once it exists.
+NIMBLE_PATHS := $(wildcard $(STATUS_DESKTOP)/nimble.paths)
+STATUS_DESKTOP_UI_FILES += $(NIMBLE_PATHS)
+
 # iOS device and simulator are both arm64 but produce incompatible objects,
 # so the sentinel key must include the SDK (iphoneos vs iphonesimulator).
 ifeq ($(OS),ios)
@@ -32,7 +42,6 @@ iosdevice: default
 statusq: clean-statusq $(STATUS_Q_LIB)
 openssl: clean-openssl $(OPENSSL_LIB)
 qrcodegen: clean-qrcodegen $(QRCODEGEN_LIB)
-zxing: $(ZXING_LIB)
 status-keycard-qt: clean-status-keycard-qt $(STATUS_KEYCARD_QT_LIB)
 nim-status-client: clean-nim-status-client $(NIM_STATUS_CLIENT_LIB)
 status-desktop-rcc: clean-status-desktop-rcc $(STATUS_DESKTOP_RCC)
@@ -48,13 +57,13 @@ ifeq ($(OS),android)
 	  GOMODCACHE="$(BUILD_PATH)/.gomodcache" \
 	  CGO_CFLAGS="-ffile-prefix-map=$(HOME)=. -ffile-prefix-map=$(BUILD_PATH)=. -ffile-prefix-map=$(ROOT_DIR)=. -ffile-prefix-map=$(ANDROID_NDK_ROOT)=." \
 	  CGO_CXXFLAGS="-ffile-prefix-map=$(HOME)=. -ffile-prefix-map=$(BUILD_PATH)=. -ffile-prefix-map=$(ROOT_DIR)=. -ffile-prefix-map=$(ANDROID_NDK_ROOT)=." \
-	  CGO_LDFLAGS="-Wl,--build-id=none" \
+	  CGO_LDFLAGS="$(LDFLAGS) -Wl,--build-id=none -Wl,--pack-dyn-relocs=android" \
 	  CC="$(CC)" $(MAKE) -C ../vendor/status-go statusgo-android-library \
 		ARCH=$(ARCH) \
 		ANDROID_NDK_ROOT="$(ANDROID_NDK_ROOT)" \
 		ANDROID_API="$(ANDROID_API)" \
 		HOST_OS="$(HOST_OS)" \
-		USE_SYSTEM_NIM=$(USE_SYSTEM_NIM) \
+		$(call statusgo_nim_config,$(LIB_NIM_PARAMS_MOBILE) --passL:$(LDFLAGS)) \
 		GO_GENERATE_CMD="go generate" \
 		SHELL=/bin/sh
 	@$(ANDROID_NDK_ROOT)/toolchains/llvm/prebuilt/$(HOST_OS)-x86_64/bin/llvm-objcopy \
@@ -70,7 +79,7 @@ else ifeq ($(OS),ios)
 		ARCH=$(ARCH) \
 		IPHONE_SDK="$(IPHONE_SDK)" \
 		IOS_TARGET="$(IOS_TARGET)" \
-		USE_SYSTEM_NIM=$(USE_SYSTEM_NIM) \
+		$(call statusgo_nim_config,$(LIB_NIM_PARAMS_MOBILE)) \
 		SHELL=/bin/sh
 endif
 	@echo "Copying library to mobile lib directory"
@@ -117,13 +126,6 @@ $(QRCODEGEN_LIB): $(QRCODEGEN_FILES) | platform-cleanup
 	@QRCODEGEN=$(QRCODEGEN) $(QRCODEGEN_SCRIPT) $(HANDLE_OUTPUT)
 	@echo "QRCodeGen built $(QRCODEGEN_LIB)"
 
-# Always run: build-zxing.sh is a no-op once built, and buildZXing.sh copies
-# only when the content differs (simulator and device share LIB_PATH on iOS).
-$(ZXING_LIB): FORCE | platform-cleanup
-	@echo "Building ZXing"
-	@STATUS_DESKTOP=$(STATUS_DESKTOP) ARCH=$(ARCH) LIB_DIR=$(LIB_PATH) $(ZXING_SCRIPT) $(HANDLE_OUTPUT)
-	@echo "ZXing ready $(ZXING_LIB)"
-
 $(STATUS_KEYCARD_QT_LIB): $(STATUS_KEYCARD_QT_FILES) $(STATUS_KEYCARD_QT_SCRIPT) $(OPENSSL_LIB)
 	@echo "Building status-keycard-qt"
 	@STATUS_KEYCARD_QT=$(STATUS_KEYCARD_QT) KEYCARD_QT=$(KEYCARD_QT) BUILD_DIR=$(BUILD_PATH) $(STATUS_KEYCARD_QT_SCRIPT) $(HANDLE_OUTPUT)
@@ -139,12 +141,11 @@ ifeq ($(OS),android)
 $(NIM_STATUS_CLIENT_LIB): $(STATUS_GO_STUB_LIB) $(STATUS_GO_SERVICE_LIB)
 endif
 
-$(NIM_STATUS_CLIENT_LIB): $(STATUS_DESKTOP_NIM_FILES) $(NIM_STATUS_CLIENT_SCRIPT) $(STATUS_DESKTOP_RCC) $(OPENSSL_LIB) $(STATUS_Q_LIB) $(QRCODEGEN_LIB) $(ZXING_LIB)
+$(NIM_STATUS_CLIENT_LIB): $(STATUS_DESKTOP_NIM_FILES) $(NIMBLE_PATHS) $(NIM_STATUS_CLIENT_SCRIPT) $(STATUS_DESKTOP_RCC) $(OPENSSL_LIB) $(STATUS_Q_LIB) $(QRCODEGEN_LIB)
 	@echo "Building Status Desktop Lib"
 	@STATUS_DESKTOP=$(STATUS_DESKTOP) \
 	LIB_SUFFIX=$(LIB_SUFFIX) \
 	LIB_EXT=$(LIB_EXT) \
-	ZXING_LIB=$(ZXING_LIB) \
 	USE_QML_SERVER=$(USE_QML_SERVER) \
 	BUNDLE_IDENTIFIER="$(BUNDLE_IDENTIFIER)" \
 	DEBUG=$(DEBUG) \
@@ -159,7 +160,7 @@ $(NIM_STATUS_CLIENT_LIB): $(STATUS_DESKTOP_NIM_FILES) $(NIM_STATUS_CLIENT_SCRIPT
 	@echo "Status Desktop Lib built $(NIM_STATUS_CLIENT_LIB)"
 
 # non-phony targets
-$(TARGET): $(APP_SCRIPT) $(STATUS_GO_LIB) $(STATUS_Q_LIB) $(OPENSSL_LIB) $(QRCODEGEN_LIB) $(STATUS_KEYCARD_QT_LIB) $(ZXING_LIB) $(NIM_STATUS_CLIENT_LIB) $(STATUS_DESKTOP_RCC) $(WRAPPER_APP_FILES) $(ANDROID_APP_FILES)
+$(TARGET): $(APP_SCRIPT) $(STATUS_GO_LIB) $(STATUS_Q_LIB) $(OPENSSL_LIB) $(QRCODEGEN_LIB) $(STATUS_KEYCARD_QT_LIB) $(NIM_STATUS_CLIENT_LIB) $(STATUS_DESKTOP_RCC) $(WRAPPER_APP_FILES) $(ANDROID_APP_FILES) $(QT_TRIM_FILES)
 	@echo "Building app"
 ifeq ($(OS),android)
 	@STATUS_DESKTOP=$(STATUS_DESKTOP) \
@@ -252,12 +253,11 @@ ipc-host-tests:
 	@$(STATUS_GO_IPC_DIR)/tests/run.sh
 
 .PHONY: clean
-clean: clean-statusq clean-openssl clean-qrcodegen clean-status-keycard-qt clean-nim-status-client clean-status-desktop-rcc clean-zxing
+clean: clean-statusq clean-openssl clean-qrcodegen clean-status-keycard-qt clean-nim-status-client clean-status-desktop-rcc
 	@echo "Cleaning"
 	-@chmod -R u+w $(ROOT_DIR)/build
 	@rm -rf $(ROOT_DIR)/bin $(ROOT_DIR)/build $(ROOT_DIR)/lib
-	# Best effort for empty submodules and older status-go revisions.
-	-$(MAKE) -C ../vendor/status-go clean-libtkl SHELL=/bin/sh
+	-$(MAKE) -C ../vendor/status-go clean-libtkl SHELL=/bin/sh </dev/null
 
 .PHONY: run
 run: makedir $(TARGET)
@@ -275,10 +275,6 @@ clean-openssl:
 	@rm -f $(OPENSSL_LIB)
 
 .PHONY: clean-qrcodegen
-clean-zxing:
-	@rm -f $(LIB_PATH)/libZXing.a
-	@$(MAKE) -C $(STATUS_DESKTOP) zxing-clean
-
 clean-qrcodegen:
 	@rm -f $(QRCODEGEN_LIB)
 	@cd $(QRCODEGEN) && make clean

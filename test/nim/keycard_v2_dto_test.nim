@@ -34,6 +34,30 @@ suite "keycardV2 dto: secure channel generation":
     check info.secureChannelVersion == 1
     check info.pairingSupported()
 
+suite "keycardV2 dto: applet generation survives a card-removed event":
+  test "empty instance UID keeps the last generation":
+    let applet4 = toKeycardInfoDto(%*{
+      "instanceUID": "22222222222222222222222222222222",
+      "secureChannelVersion": 2,
+    })
+    let removed = toKeycardEventDto(%*{"state": "waiting-for-card"}).keycardInfo
+    check removed.instanceUID.len == 0
+    check removed.pairingSupported()
+    check not applet4.pairingSupported()
+    check not pairingSupportedAfterEvent(applet4.pairingSupported(), removed)
+    check pairingSupportedAfterEvent(true, removed)
+
+  test "a card with an instance UID replaces the previous generation":
+    let applet3 = toKeycardInfoDto(%*{
+      "instanceUID": "11111111111111111111111111111111",
+      "secureChannelVersion": 1,
+    })
+    check pairingSupportedAfterEvent(false, applet3)
+    check not pairingSupportedAfterEvent(true, toKeycardInfoDto(%*{
+      "instanceUID": "22222222222222222222222222222222",
+      "secureChannelVersion": 2,
+    }))
+
 suite "keycardV2 dto: certificate trust":
   test "card from an unknown CA is reported, not refused":
     let info = toKeycardInfoDto(%*{"instanceUID": "44", "secureChannelVersion": 2, "certificateTrusted": false})

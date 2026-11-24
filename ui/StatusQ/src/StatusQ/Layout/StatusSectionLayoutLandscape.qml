@@ -243,10 +243,9 @@ Control {
                                                                                   (!!root.leftPanel ? d.defaultLeftPanelWidth : 0)
 
         Behavior on effectiveLeftPanelWidth {
-            NumberAnimation {
+            PropertyAnimation {
                 id: leftPanelWidthAnimation
-                duration: ThemeUtils.AnimationDuration.Slow
-                easing.type: Easing.InOutCubic
+                duration: ThemeUtils.AnimationDuration.Fast
             }
         }
 

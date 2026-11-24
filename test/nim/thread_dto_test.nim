@@ -8,6 +8,11 @@ suite "thread dto":
     check parseJson("""{"archived":true}""").toThreadDto().archived
     check not parseJson("""{"archived":false}""").toThreadDto().archived
 
+  test "follow state defaults to false and parses both values":
+    check not parseJson("""{"threadId":"legacy"}""").toThreadDto().followed
+    check parseJson("""{"followed":true}""").toThreadDto().followed
+    check not parseJson("""{"followed":false}""").toThreadDto().followed
+
   test "accepts batch thread data without participant previews":
     let dto = parseJson("""{
       "threadId": "thread-id",
@@ -106,3 +111,11 @@ suite "thread dto":
     let dto = (%* {"muted": true, "muteRevision": 42, "muteTill": "0001-01-01T00:00:00Z"}).toThreadDto()
     check dto.muteRevision == 42
     check dto.muted
+
+  test "parses deletion actor and wall-clock timestamp independently of ordering":
+    let dto = (%* {"threadId": "thread", "deleted": true, "deletedBy": "admin",
+      "deletedClock": 200, "deletedAt": 190}).toThreadDto()
+    check dto.deleted
+    check dto.deletedBy == "admin"
+    check dto.deletedClock == 200
+    check dto.deletedAt == 190

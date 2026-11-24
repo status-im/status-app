@@ -1,3 +1,5 @@
+import results
+
 type
   AccessInterface* {.pure inheritable.} = ref object of RootObj
 
@@ -25,7 +27,8 @@ method onMainFailedToLoad*(self: AccessInterface) {.base.} =
 method onNodeLogin*(self: AccessInterface, error: string, account: AccountDto, settings: SettingsDto) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method load*(self: AccessInterface) {.base.} =
+method load*(self: AccessInterface): Result[void, string] {.base.} =
+  ## Err when the backend could not list the profiles (InitializeApplication failed).
   raise newException(ValueError, "No implementation available")
 
 method resetKeycardProgressStates*(self: AccessInterface) {.base.} =
@@ -56,6 +59,9 @@ method finishOnboardingFlow*(self: AccessInterface, flowInt: int, dataJson: stri
   raise newException(ValueError, "No implementation available")
 
 method loginRequested*(self: AccessInterface, keyUid: string, loginFlow: int, dataJson: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method setSelectedLoginAccount*(self: AccessInterface, keyUid: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onLocalPairingStatusUpdate*(self: AccessInterface, status: LocalPairingStatus) {.base.} =

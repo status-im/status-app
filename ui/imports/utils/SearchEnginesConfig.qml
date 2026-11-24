@@ -15,11 +15,14 @@ QtObject {
     readonly property int browserSearchEngineGoogle: 7
     readonly property int browserSearchEngineCustom: 8
 
+    // Names and descriptions are untranslated (QT_TR_NOOP): the model lives as long as
+    // the process and its elements are fixed when created, so a language changed later
+    // would not reach them. Display them through getEngineName / getEngineDescription.
     readonly property ListModel engines: ListModel {
         ListElement {
             engineId: 0  // browserSearchEngineNone
-            name: qsTr("None")
-            description: qsTr("valid URLs open directly; non-addresses won't be searched.")
+            name: QT_TR_NOOP("None")
+            description: QT_TR_NOOP("valid URLs open directly; non-addresses won't be searched.")
             iconUrl: "search_engines/none"
             urlTemplate: ""
         }
@@ -74,8 +77,8 @@ QtObject {
         }
         ListElement {
             engineId: 8  // browserSearchEngineCustom
-            name: qsTr("Custom")
-            description: qsTr("Plug in your own search engine that follows the OpenSearch URL format")
+            name: QT_TR_NOOP("Custom")
+            description: QT_TR_NOOP("Plug in your own search engine that follows the OpenSearch URL format")
             iconUrl: "search_engines/custom"
             urlTemplate: ""
         }
@@ -105,12 +108,12 @@ QtObject {
 
     function getEngineName(engineId) {
         const engine = getEngineByIdOrDefault(engineId)
-        return engine ? engine.name : qsTr("None")
+        return engine ? qsTr(engine.name) : qsTr("None")
     }
 
     function getEngineDescription(engineId) {
         const engine = getEngineByIdOrDefault(engineId)
-        return engine ? engine.description : ""
+        return engine && engine.description ? qsTr(engine.description) : ""
     }
 
     function getEngineIcon(engineId = "") {

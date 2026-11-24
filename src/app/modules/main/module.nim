@@ -15,8 +15,6 @@ import app/modules/shared_modules/keycard_management/module as keycard_managemen
 import app/global/app_sections_config
 import app/global/app_signals
 import app/global/[global_singleton, feature_flags]
-import app/global/app_lifecycle
-import app/android/lifecycle
 import app/global/utils as utils
 import app_service/service/activity_center/dto/notification as activity_center_notification_dto
 import constants
@@ -316,6 +314,10 @@ method delete*[T](self: Module[T]) =
   self.appSearchModule.delete
   self.networkConnectionModule.delete
   self.sharedUrlsModule.delete
+  self.marketModule.delete
+  if not self.keycardManagementModule.isNil:
+    self.keycardManagementModule.delete
+    self.keycardManagementModule = nil
   if not self.authenticationModule.isNil:
     self.authenticationModule.delete
   if not self.signingModule.isNil:
@@ -394,8 +396,7 @@ proc createCommunitySectionItem[T](self: Module[T], communityDetails: CommunityD
       communityTokensItems = existingCommunity.communityTokens.items
 
   let (unviewedCount, notificationsCount) = self.controller.sectionUnreadMessagesAndMentionsCount(
-    communityDetails.id,
-    communityDetails.muted,
+    communityDetails.id
   )
 
   let hasNotification = unviewedCount > 0 or notificationsCount > 0
@@ -632,6 +633,9 @@ proc connectForNotificationsOnly[T](self: Module[T]) =
     let args = AccountArgs(e)
     self.view.showToastAccountAdded(args.account.name)
 
+  self.events.on(SIGNAL_THREAD_LINK_FAILED) do(e: Args):
+    self.view.showToastThreadLinkFailed()
+
   self.events.on(SIGNAL_WALLET_ACCOUNT_DELETED) do(e:Args):
     let args = AccountArgs(e)
     self.view.showToastAccountRemoved(args.account.name)
@@ -696,7 +700,7 @@ method load*[T](
   messageService: message_service.Service,
   mailserversService: mailservers_service.Service,
 ) =
-  singletonInstance.engine.setRootContextProperty("mainModule", self.viewVariant)
+  singletonInstance.setSessionContextProperty("mainModule", self.viewVariant)
   self.controller.init()
   self.view.load()
   self.connectForNotificationsOnly()
@@ -704,7 +708,7 @@ method load*[T](
   let homePageEnabled = singletonInstance.featureFlags().getHomePageEnabled()
 
   var activeSection: SectionItem
-  var activeSectionId = singletonInstance.localAccountSensitiveSettings.getActiveSection()
+  var activeSectionId = singletonInstance.localAccountSettings.getActiveSection()
 
   # Default to Wallet section if no active section is set or if the active section is the settings section
   # or if the active section is the home page section but home page is not enabled
@@ -807,7 +811,7 @@ method load*[T](
     hasNotification = false,
     notificationsCount = 0,
     active = false,
-    enabled = singletonInstance.localAccountSensitiveSettings.getIsBrowserEnabled(),
+    enabled = singletonInstance.localAccountSettings.getIsBrowserEnabled(),
   )
   self.view.model().addItem(browserSectionItem)
   if activeSectionId == browserSectionItem.id:
@@ -941,7 +945,7 @@ method onChatsLoaded*[T](
     return
   let myPubKey = singletonInstance.userProfile.getPubKey()
   var activeSection: SectionItem
-  var activeSectionId = singletonInstance.localAccountSensitiveSettings.getActiveSection()
+  var activeSectionId = singletonInstance.localAccountSettings.getActiveSection()
 
   # Create personal chat section
   self.chatSectionModules[myPubKey] = chat_section_module.newModule(
@@ -963,8 +967,7 @@ method onChatsLoaded*[T](
     networkService
   )
   let (unviewedMessagesCount, unviewedMentionsCount) = self.controller.sectionUnreadMessagesAndMentionsCount(
-    myPubKey,
-    sectionIsMuted = false
+    myPubKey
   )
   var items: seq[SectionItem] = @[]
 
@@ -1280,7 +1283,7 @@ method activeSectionSet*[T](self: Module[T], sectionId: string, skipSavingInSett
   self.view.activeSectionSet(item)
 
   if not skipSavingInSettings:
-    singletonInstance.localAccountSensitiveSettings.setActiveSection(sectionId)
+    singletonInstance.localAccountSettings.setActiveSection(sectionId)
 
   self.notifySubModulesAboutChange(sectionId)
 
@@ -1292,9 +1295,9 @@ proc setSectionAvailability[T](self: Module[T], sectionType: SectionType, availa
 
 method toggleSection*[T](self: Module[T], sectionType: SectionType) =
   if (sectionType == SectionType.Browser):
-    let enabled = singletonInstance.localAccountSensitiveSettings.getIsBrowserEnabled()
+    let enabled = singletonInstance.localAccountSettings.getIsBrowserEnabled()
     self.setSectionAvailability(sectionType, not enabled)
-    singletonInstance.localAccountSensitiveSettings.setIsBrowserEnabled(not enabled)
+    singletonInstance.localAccountSettings.setIsBrowserEnabled(not enabled)
 
 method setCurrentUserStatus*[T](self: Module[T], status: StatusType) =
   self.controller.setCurrentUserStatus(status)
@@ -1422,7 +1425,7 @@ method communityLeft*[T](self: Module[T], communityId: string) =
 
   self.view.model().removeItem(communityId)
 
-  singletonInstance.localAccountSensitiveSettings.removeSectionChatRecord(communityId)
+  singletonInstance.localAccountSettings.removeSectionChatRecord(communityId)
 
   if (self.controller.getActiveSectionId() == communityId):
     let item = self.view.model().getItemById(singletonInstance.userProfile.getPubKey())
@@ -1439,13 +1442,6 @@ method communityEdited*[T](
   if not self.chatSectionModules.contains(community.id):
     return
   var communitySectionItem = self.createCommunitySectionItem(community)
-  # We need to calculate the unread counts because the community update doesn't come with it
-  let (unviewedMessagesCount, unviewedMentionsCount) = self.controller.sectionUnreadMessagesAndMentionsCount(
-    communitySectionItem.id,
-    communitySectionItem.muted,
-  )
-  communitySectionItem.setHasNotification(unviewedMessagesCount > 0)
-  communitySectionItem.setNotificationsCount(unviewedMentionsCount)
   self.view.editItem(communitySectionItem)
   if self.chatSectionModules[community.id].isAdminMembersLoaded():
     self.refreshCommunityAdminMembers(community)
@@ -2015,6 +2011,36 @@ proc activateChatDeepLink[T](self: Module[T], statusDeepLink: string): bool =
 
   return true
 
+proc activateThreadDeepLink[T](self: Module[T], statusDeepLink: string): bool =
+  if not isThreadDeepLink(statusDeepLink):
+    return false
+
+  # A recognized thread route is consumed even when resolution fails.
+  # Falling through could open a different destination or a browser tab.
+  if not THREADS_ENABLED:
+    self.view.showToastThreadLinkFailed()
+    return true
+  let data = self.sharedUrlsModule.parseThreadUrl(statusDeepLink)
+  if data.chatId.len == 0 or data.threadId.len == 0:
+    warn "Ignoring malformed or unavailable thread deep link"
+    self.view.showToastThreadLinkFailed()
+    return true
+
+  let sectionId = if data.communityId.len > 0:
+      data.communityId
+    else:
+      singletonInstance.userProfile.getPubKey()
+  if sectionId notin self.chatSectionModules:
+    warn "Unable to resolve thread deep link section"
+    self.view.showToastThreadLinkFailed()
+    return true
+  if self.getActiveSectionId() != sectionId:
+    self.setActiveSectionById(sectionId)
+  if not self.openSectionChatAndMessage(sectionId, data.chatId, "", data.threadId):
+    warn "Unable to resolve thread deep link"
+    self.view.showToastThreadLinkFailed()
+  return true
+
 proc activateMessageDeepLink[T](self: Module[T], statusDeepLink: string): bool =
   let data = self.sharedUrlsModule.parseMessageUrl(statusDeepLink)
   if data.chatId.len == 0 or data.messageId.len == 0:
@@ -2058,6 +2084,7 @@ method onStatusUrlRequested*[T](self: Module[T], action: StatusUrlAction, commun
 
       if item.isEmpty():
         if self.controller.getCommunityById(communityId).id != "":
+          self.setCommunityIdToSpectate(communityId, channelId)
           self.controller.spectateCommunity(communityId)
           return
         self.communitiesModule.startPendingCommunityFetch(communityId, channelUuid = channelId)
@@ -2065,7 +2092,7 @@ method onStatusUrlRequested*[T](self: Module[T], action: StatusUrlAction, commun
 
       self.controller.switchTo(communityId, chatId, "")
 
-    elif action == StatusUrlAction.OpenLinkInBrowser and singletonInstance.localAccountSensitiveSettings.getIsBrowserEnabled():
+    elif action == StatusUrlAction.OpenLinkInBrowser and singletonInstance.localAccountSettings.getIsBrowserEnabled():
       let item = self.view.model().getItemById(BROWSER_SECTION_ID)
       self.setActiveSection(item)
       self.browserSectionModule.openUrl(url)
@@ -2128,25 +2155,6 @@ method getKeycardManagementModule*[T](self: Module[T]): QVariant =
 ################################################################################
 
 
-method signOutAndQuit*[T](self: Module[T]) =
-  info "signOutAndQuit: logging out and quitting"
-  markShuttingDown()
-  when defined(ios) or defined(android):
-    # Since on mobile devices, application.exit() ends in _exit(0), a graceful status_go.logout() is unnecessary
-    # cause it does a few other things (stops the node, closes the DBs, then re-initializes the node and restarts
-    # the media server, all synchronously on the UI thread) that are not needed on mobile devices.
-    # Desktop keeps the graceful logout (no _exit; the event loop unwinds).
-    when defined(android):
-      # On Android status-go runs in a separate, long-lived service process. _exit(0) only reclaims
-      # the UI process, so without this the service keeps the node logged in and the next launch
-      # resumes the account instead of showing the login screen.
-      # Tell the service to stop (and kill its process); the intent is delivered by the system even
-      # after the UI process exits below.
-      stopBackgroundService()
-  else:
-    self.controller.logout()
-  singletonInstance.application.exit()
-
 method checkAndPerformProfileMigrationIfNeeded*[T](self: Module[T]) =
   let keyUid = singletonInstance.userProfile.getKeyUid()
   let migrationNeeded = self.settingsService.getProfileMigrationNeeded()
@@ -2188,6 +2196,8 @@ method activateStatusDeepLink*[T](self: Module[T], statusDeepLink: string) =
     self.view.wcLinkActivated(statusDeepLink)
     return
   if self.activateThreadNotificationDeepLink(statusDeepLink):
+    return
+  if self.activateThreadDeepLink(statusDeepLink):
     return
   if self.activateMessageDeepLink(statusDeepLink):
     return
@@ -2256,14 +2266,16 @@ method launchShareFlow*[T](self: Module[T], text: string, imagePaths: seq[string
   ## send). Buffered until the main view is loaded, mirroring the deep-link
   ## and browser-tab routes above; the buffer is last-wins, and a replaced
   ## share's cached image copies are released so they don't accumulate.
-  if not self.chatsLoaded:
+  if not self.isEverythingLoaded:
     if self.shareToDeliverPending:
       releaseCachedShareFiles(self.shareImagePathsToDeliver)
     self.shareToDeliverPending = true
     self.shareTextToDeliver = text
     self.shareImagePathsToDeliver = imagePaths
+    self.view.setShareFlowPending(true)
     return
   self.view.emitLaunchShareFlowSignal(text, $(%imagePaths))
+  self.view.setShareFlowPending(false)
 
 method releaseShareIntakeFiles*[T](self: Module[T], imagePathsJson: string) =
   ## Cache lifecycle, cancel path: the share flow was dismissed without
@@ -2400,10 +2412,9 @@ method openSectionChatAndMessage*[T](self: Module[T], sectionId: string, chatId:
   if sectionId notin self.chatSectionModules:
     return false
 
-  if threadId.len > 0:
+  result = self.chatSectionModules[sectionId].openCommunityChatAndScrollToMessage(chatId, messageId, threadId)
+  if result and threadId.len > 0:
     self.view.emitNavigateToMessageDetailsSignal()
-
-  return self.chatSectionModules[sectionId].openCommunityChatAndScrollToMessage(chatId, messageId, threadId)
 
 method updateRequestToJoinState*[T](self: Module[T], sectionId: string, requestToJoinState: RequestToJoinState) =
   if sectionId in self.chatSectionModules:

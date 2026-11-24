@@ -109,7 +109,7 @@ method resetTempValues(self:Module) =
   self.tempSigningKeyUid = ""
 
 method load*(self: Module) =
-  singletonInstance.engine.setRootContextProperty("communityTokensModule", self.viewVariant)
+  singletonInstance.setSessionContextProperty("communityTokensModule", self.viewVariant)
   self.controller.init()
   self.view.load()
 

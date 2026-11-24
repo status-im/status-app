@@ -14,7 +14,7 @@ QtObject {
     property bool gifLoading: d.gifsModuleInst ? d.gifsModuleInst.gifLoading : false
 
     function setGifUnfurlingEnabled(value) {
-        localAccountSensitiveSettings.gifUnfurlingEnabled = value
+        localAccountSettings.gifUnfurlingEnabled = value
     }
 
     function searchGifs(query) {

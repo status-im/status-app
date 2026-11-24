@@ -3,7 +3,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Window
 import QtQml.Models
 import QtQuick.Effects
 
@@ -28,6 +27,8 @@ StatusDialog {
     property bool fastPasswordChangePossible: false
 
     signal changePasswordRequested(bool rekey)
+    // The data was re-encrypted with the new password: log in again
+    signal reloginRequested()
     // Currently this modal handles only the happy path
     // The error is handled in the caller
     function passwordSuccessfulyChanged() {
@@ -73,12 +74,13 @@ StatusDialog {
             anchors.fill: parent
             visible: d.dbEncryptionInProgress && d.doDeepPasswordChange
 
-            // Update the blur source only once, when the modal is shown for performance reasons
             onVisibleChanged: {
                 if (!visible) {
-                    return;
+                    windowLayers.model = []
+                    return
                 }
-                blurSource.scheduleUpdate()
+                const overlay = Overlay.overlay
+                windowLayers.model = overlay.parent.children.filter(item => item !== overlay && item.visible)
             }
 
             MultiEffect {
@@ -86,28 +88,46 @@ StatusDialog {
                 blurMax: 16
                 blur: 1.0
                 autoPaddingEnabled: false
-                visible: true
 
                 anchors.fill: parent
                 source: blurSource
-
-                Rectangle {
-                    anchors.fill: parent
-                    color: normalBackground.color
-                    opacity: 0.6
-                }
             }
 
-            // Capture the entire main window content to be blurred
-            ShaderEffectSource {
+            Rectangle {
+                anchors.fill: parent
+                color: Theme.palette.backdropColor
+                opacity: 0.6
+            }
+
+            // Static snapshot of the window content to be blurred
+            Item {
                 id: blurSource
 
-                sourceItem: Window.window.contentItem
-                width: Window.window.contentItem.width
-                height: Window.window.contentItem.height
-
-                live: false
+                anchors.fill: parent
                 visible: false
+
+                Repeater {
+                    id: windowLayers
+
+                    model: []
+
+                    delegate: ShaderEffectSource {
+                        required property Item modelData
+
+                        sourceItem: modelData
+                        live: false
+
+                        // Geometry is set once, to match the frozen texture: binding it
+                        // would stretch the snapshot if the window resizes meanwhile.
+                        Component.onCompleted: {
+                            z = modelData.z
+                            x = modelData.x
+                            y = modelData.y
+                            width = modelData.width
+                            height = modelData.height
+                        }
+                    }
+                }
             }
         }
     }
@@ -122,7 +142,7 @@ StatusDialog {
             wrapMode: Text.WordWrap
             text: {
                 if (!d.doDeepPasswordChange) {
-                    return qsTr("Your password will be changed. This only re-encrypts your profile key file and takes a moment — no restart needed.")
+                    return qsTr("Your password will be changed. This only re-encrypts your profile key file and takes a moment — you stay logged in.")
                 }
                 if (root.fastPasswordChangePossible) {
                     return qsTr("Your data will be fully re-encrypted with a new encryption key. This process may take some time, during which you won’t be able to interact with the app. Do not quit the app or turn off your device. Doing so will lead to data corruption, loss of your Status profile and the inability to restart Status.")
@@ -149,7 +169,7 @@ StatusDialog {
                 wrapMode: Text.WordWrap
                 font.pixelSize: Theme.tertiaryTextFontSize
                 color: Theme.palette.baseColor1
-                text: qsTr("Only needed if you suspect your device was compromised. Takes considerably longer and requires a restart.")
+                text: qsTr("Only needed if you suspect your device was compromised. Takes considerably longer and requires logging in again.")
             }
         }
 
@@ -180,7 +200,7 @@ StatusDialog {
                 }
                 subTitle: {
                     if (!d.dbEncryptionInProgress) {
-                        return d.doDeepPasswordChange ? qsTr("Restart Status and log in using your new password")
+                        return d.doDeepPasswordChange ? qsTr("Log in again with your new password")
                                                       : qsTr("You can continue using Status")
                     }
                     return d.doDeepPasswordChange ? qsTr("Do not quit the app or turn off your device")
@@ -231,13 +251,13 @@ StatusDialog {
                     if (!d.dbEncryptionInProgress && !d.passwordChanged) {
                         return d.doDeepPasswordChange ? qsTr("Re-encrypt data using new password") : qsTr("Change password")
                     }
-                    return d.doDeepPasswordChange ? qsTr("Restart Status") : qsTr("Close")
+                    return d.doDeepPasswordChange ? qsTr("Log in again") : qsTr("Close")
                 }
                 enabled: !d.dbEncryptionInProgress
                 onClicked: {
                     if (d.passwordChanged) {
                         if (d.doDeepPasswordChange) {
-                            SystemUtils.restartApplication(true);
+                            root.reloginRequested()
                         } else {
                             root.close();
                         }

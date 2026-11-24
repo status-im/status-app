@@ -6,7 +6,7 @@ import ../../common/types
 
 proc canEditThread*(thread: ThreadDto, chat: ChatDto, publicKey: string,
     community: CommunityDto): bool =
-  if thread.threadId.len == 0 or publicKey.len == 0 or thread.chatId != chat.id:
+  if thread.deleted or thread.threadId.len == 0 or publicKey.len == 0 or thread.chatId != chat.id:
     return false
   let isCreator = thread.creatorId.len > 0 and thread.creatorId == publicKey
   case chat.chatType

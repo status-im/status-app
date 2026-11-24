@@ -32,7 +32,7 @@ proc newModule*(
   result.controller = controller.newController(result, events, networkService, walletAccountService, settingsService)
   result.moduleLoaded = false
 
-  singletonInstance.engine.setRootContextProperty("networksModule", result.viewVariant)
+  singletonInstance.setSessionContextProperty("networksModule", result.viewVariant)
 
 method delete*(self: Module) =
   self.view.delete

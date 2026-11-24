@@ -14,6 +14,8 @@ class SystemUtilsInternal : public QObject
     Q_PROPERTY(bool androidKeyboardVisible READ androidKeyboardVisible NOTIFY androidKeyboardVisibleChanged)
     Q_PROPERTY(int iosKeyboardHeight READ iosKeyboardHeight NOTIFY iosKeyboardHeightChanged)
     Q_PROPERTY(bool iosKeyboardVisible READ iosKeyboardVisible NOTIFY iosKeyboardVisibleChanged)
+    // False where the app can't relaunch itself (iOS): ask the user to close and reopen it
+    Q_PROPERTY(bool canRestartApplication READ canRestartApplication CONSTANT)
 
 public:
     explicit SystemUtilsInternal(QObject *parent = nullptr);
@@ -24,6 +26,7 @@ public:
     // The application owner must release backend/single-instance resources before deleting qApp.
     Q_INVOKABLE void restartApplication() const;
     Q_INVOKABLE void restartApplication(bool killBackend) const;
+    bool canRestartApplication() const;
 
     Q_INVOKABLE bool fileExists(const QString &path) const;
     Q_INVOKABLE bool ensureDirectory(const QString &path) const;

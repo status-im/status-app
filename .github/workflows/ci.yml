@@ -1,0 +1,667 @@
+name: CI
+
+on:
+  pull_request:
+  # Runs on master publish the build images and save the caches that pull requests restore.
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  GO_VERSION: 1.26.5
+  QT_VERSION: 6.11.0
+  # The desktop Qt of macOS and Windows.
+  QT_MODULES: >-
+    qtwebchannel qtwebview qtwebsockets qt5compat qtmultimedia qtwebengine
+    qtpositioning qtserialport qtshadertools qtimageformats qtscxml qthttpserver
+  # The merge commit is built; scripts/version.sh names the build after the pull request's head.
+  STATUS_APP_VERSION_COMMIT: ${{ github.event.pull_request.head.sha }}
+  NIMFLAGS: --colors:off
+  FLAG_SWAP_ENABLED: 1
+  FLAG_RELAY_ENABLED: 1
+  FLAG_LIFI_ENABLED: 0
+  FLAG_PARASWAP_ENABLED: 0
+  # Go's build cache and ccache, kept between runs.
+  GOCACHE: ${{ github.workspace }}/.ci-cache/go-build
+  CCACHE_DIR: ${{ github.workspace }}/.ci-cache/ccache
+  CCACHE_MAXSIZE: 2G
+  # Runs a command in the container the container action starts. A step that
+  # sets the three keys passes them on: the Nim compiler reads them from its environment.
+  IN_IMAGE: >-
+    docker exec --env STATUS_BUILD_LIFI_API_KEY --env STATUS_BUILD_RELAY_API_KEY
+    --env STATUS_BUILD_KLIPY_API_KEY build
+
+jobs:
+  # Tells the jobs whether a pull request touches anything but documentation.
+  changes:
+    name: changes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      pull-requests: read
+    outputs:
+      code: ${{ steps.files.outputs.code }}
+    steps:
+      - id: files
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          # A push or a manual run always builds.
+          if [[ -z "$PR" ]]; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          files=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --paginate \
+            --jq '.[] | .filename, (.previous_filename // empty)')
+          # Markdown under ui/ and storybook/ is bundled into the build.
+          if grep -qvE '\.md$|^docs/' <<< "$files" || grep -qE '^(ui|storybook)/' <<< "$files"; then
+            code=true
+          else
+            code=false
+          fi
+          echo "code=$code" | tee -a "$GITHUB_OUTPUT"
+
+  # Publishes the images the Linux and Android jobs run in, named after their
+  # Dockerfiles: a changed Dockerfile is built once, here, before the jobs that use it.
+  # Forks cannot push packages; their jobs build the image themselves.
+  image:
+    name: image (${{ matrix.image }})
+    if: >-
+      github.repository == 'status-im/status-app' &&
+      (github.event_name != 'pull_request' ||
+       github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [desktop, android]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Publish the image unless it is published
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NAME: ${{ matrix.image }}
+        run: |
+          image="$(ci/build-image.sh --image "$NAME")"
+          echo "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          # Only a missing tag leads to a build; any other answer fails the job.
+          if answer="$(docker manifest inspect "$image" 2>&1 >/dev/null)"; then
+            echo "$image is already published"
+            exit 0
+          elif [[ "$answer" != *"manifest unknown"* ]]; then
+            echo "::error::The registry could not be asked about $image: $answer"
+            exit 1
+          fi
+          ci/build-image.sh "$NAME"
+          ci/build-image.sh --check "$NAME"
+          docker push "$image"
+
+  ui-tests:
+    name: ui-tests
+    needs: [changes, image]
+    # Skipped for a pull request that changes only documentation; a failed filter does not skip it.
+    # Nor does a failed or skipped image job: the container action then builds the image itself.
+    if: &if-code ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - &checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          # scripts/version.sh, run by every make call, needs the tags and the history.
+          fetch-depth: 0
+          filter: blob:none
+      - name: Fetch submodules
+        run: scripts/ci-fetch-submodules.sh
+      - uses: ./.github/actions/container
+        id: container
+        with:
+          image: desktop
+          env: |
+            QML_DISABLE_DISK_CACHE=true
+            QT_QPA_PLATFORM=offscreen
+      # Cache keys. ccache is saved once a day, and again when a file of the
+      # job's CCACHE_KEY_FILES changes its compiler flags; Go's build cache once
+      # per status-go revision, OpenSSL once per revision of its submodule.
+      - &cache-keys
+        name: Cache keys
+        id: keys
+        run: |
+          {
+            echo "day=$(date -u +%F)"
+            echo "status-go=$(git rev-parse HEAD:vendor/status-go)"
+            echo "openssl=$(git rev-parse HEAD:mobile/vendors/openssl)"
+            if [ -n "${CCACHE_KEY_FILES:-}" ]; then
+              hashes=$(git hash-object -- $CCACHE_KEY_FILES)
+              echo "ccache-config=-$(echo "$hashes" | git hash-object --stdin | cut -c1-12)"
+            fi
+          } >> "$GITHUB_OUTPUT"
+      # A pull request restores what master saved, and saves only when there was
+      # nothing to restore, into a cache that no other pull request sees.
+      - &restore-ccache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        id: ccache
+        with:
+          path: .ci-cache/ccache
+          key: ccache-${{ github.job }}-${{ steps.keys.outputs.day }}${{ steps.keys.outputs.ccache-config }}
+          restore-keys: ccache-${{ github.job }}-
+      # The compiler and packages nimble.lock pins, kept per lock (and image: a
+      # compiler nimble built in one may not run in another). nimble.paths is not
+      # kept: it holds absolute paths, and the resolution writes it again.
+      - &restore-nimble
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        id: nimble
+        with:
+          path: nimbledeps
+          key: nimbledeps-${{ runner.os }}-${{ runner.arch }}-${{ env.IMAGE }}-${{ hashFiles('nimble.lock', 'nim_status_client.nimble') }}
+      - &nim-packages
+        name: Nim packages
+        id: nim-packages
+        run: $IN_IMAGE make nimble-deps
+      # Only a complete resolution is saved: the key has no fallback, so a
+      # partial one would be restored for as long as the lock stays.
+      - &save-nimble
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        if: ${{ steps.nim-packages.outcome == 'success' && steps.nimble.outputs.cache-hit != 'true' }}
+        with:
+          path: nimbledeps
+          key: ${{ steps.nimble.outputs.cache-primary-key }}
+      - name: QML lint
+        run: $IN_IMAGE make qml-lint
+      - name: StatusQ tests
+        if: ${{ !cancelled() && steps.container.outcome == 'success' }}
+        run: $IN_IMAGE make run-statusq-tests
+      - name: StatusQ sanity checker
+        if: ${{ !cancelled() && steps.container.outcome == 'success' }}
+        run: $IN_IMAGE make run-statusq-sanity-checker
+      - name: Storybook tests
+        if: ${{ !cancelled() && steps.container.outcome == 'success' }}
+        run: $IN_IMAGE make run-storybook-tests
+      - name: Storybook pages validator
+        if: ${{ !cancelled() && steps.container.outcome == 'success' }}
+        run: $IN_IMAGE make run-storybook-pages-validator
+      - name: Translations are up to date
+        if: ${{ !cancelled() && steps.container.outcome == 'success' }}
+        run: |
+          $IN_IMAGE make update-translations
+          if ! git diff --quiet -- 'ui/i18n/*.ts'; then
+            git diff --stat -- 'ui/i18n/*.ts'
+            echo "::error::Translation files are out of date: run 'make update-translations' and commit the result."
+            exit 1
+          fi
+      # A failed build keeps what it compiled; a cancelled one may still be writing.
+      - &save-ccache
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        if: >-
+          ${{ !cancelled() && steps.ccache.outputs.cache-hit != 'true' &&
+          (github.event_name != 'pull_request' || steps.ccache.outputs.cache-matched-key == '') }}
+        with:
+          path: .ci-cache/ccache
+          key: ccache-${{ github.job }}-${{ steps.keys.outputs.day }}${{ steps.keys.outputs.ccache-config }}
+
+  nim-tests:
+    name: nim-tests
+    needs: [changes, image]
+    if: *if-code
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - *checkout
+      - name: Fetch submodules
+        run: scripts/ci-fetch-submodules.sh
+      - uses: ./.github/actions/container
+        with:
+          image: desktop
+          env: |
+            QML_DISABLE_DISK_CACHE=true
+            QT_QPA_PLATFORM=offscreen
+      - *cache-keys
+      - &restore-go
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        id: go
+        with:
+          path: .ci-cache/go-build
+          key: go-${{ github.job }}-${{ steps.keys.outputs.status-go }}
+          restore-keys: go-${{ github.job }}-
+      - *restore-ccache
+      - *restore-nimble
+      - *nim-packages
+      - *save-nimble
+      - name: Dependencies
+        run: $IN_IMAGE make update
+      - name: status-go
+        run: $IN_IMAGE make status-go
+      # The tests build one at a time, so what they link is built here, each
+      # with every core.
+      - name: Libraries and resources
+        run: |
+          for target in statusq qrcodegen status-keycard-qt rcc; do
+            $IN_IMAGE make "$target"
+          done
+      # Nim generates the same C for a test whose sources did not change, so
+      # its compiler runs through ccache: the directory holds gcc as a link to it.
+      - name: Nim tests
+        run: |
+          $IN_IMAGE ccache --zero-stats
+          $IN_IMAGE sh -c 'PATH="/usr/lib/ccache:$PATH" make tests-nim-linux'
+          $IN_IMAGE ccache --show-stats
+      - &save-go
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        if: >-
+          ${{ !cancelled() && steps.go.outputs.cache-hit != 'true' &&
+          (github.event_name != 'pull_request' || steps.go.outputs.cache-matched-key == '') }}
+        with:
+          path: .ci-cache/go-build
+          key: go-${{ github.job }}-${{ steps.keys.outputs.status-go }}
+      - *save-ccache
+
+  linux:
+    name: linux
+    needs: [changes, image]
+    if: *if-code
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - *checkout
+      - name: Fetch submodules
+        run: scripts/ci-fetch-submodules.sh
+      # linuxdeployqt and appimagetool are AppImages: without FUSE they unpack and run.
+      - uses: ./.github/actions/container
+        with:
+          image: desktop
+          env: APPIMAGE_EXTRACT_AND_RUN=1
+      - *cache-keys
+      - *restore-go
+      - *restore-ccache
+      - *restore-nimble
+      - *nim-packages
+      - *save-nimble
+      - name: Dependencies
+        run: $IN_IMAGE make update
+      - name: status-go
+        run: $IN_IMAGE make status-go
+      - name: Package
+        env: &build-keys
+          STATUS_BUILD_LIFI_API_KEY: ${{ secrets.STATUS_BUILD_LIFI_API_KEY }}
+          STATUS_BUILD_RELAY_API_KEY: ${{ secrets.STATUS_BUILD_RELAY_API_KEY }}
+          STATUS_BUILD_KLIPY_API_KEY: ${{ secrets.STATUS_BUILD_KLIPY_API_KEY }}
+        run: $IN_IMAGE make tgz-linux
+      - *save-go
+      - *save-ccache
+      # The tarball preserves the AppImage's executable bit.
+      - uses: ./.github/actions/build-artifact
+        with:
+          platform: linux-x86_64
+          file: pkg/Status.tar.gz
+          suffix: .tar.gz
+
+  android:
+    name: android
+    needs: [changes, image]
+    if: *if-code
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - *checkout
+      - name: Fetch submodules
+        run: scripts/ci-fetch-submodules.sh --mobile
+      - uses: ./.github/actions/container
+        with:
+          image: android
+          env: |
+            QMAKE=/opt/qt/${{ env.QT_VERSION }}/android_arm64_v8a/bin/qmake
+            QMAKE_EXTRA_CONFIG=ccache
+            BUILD_VARIANT=pr
+            STATUSQ_TESTMODE=true
+            STATUS_APP_KEYSTORE_PATH=/tmp/throwaway.keystore
+            STATUS_APP_KEYSTORE_PASSWORD=throwaway
+            STATUS_APP_KEY_ALIAS=throwaway
+            STATUS_APP_KEY_PASSWORD=throwaway
+      - *cache-keys
+      - *restore-go
+      - *restore-ccache
+      - *restore-nimble
+      - *nim-packages
+      - *save-nimble
+      # OpenSSL changes only with its submodule and the build scripts. The
+      # libraries are touched after the restore: make compares them with the sources.
+      - &openssl-cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: |
+            tmp/openssl
+            mobile/lib/**/libssl_3.*
+            mobile/lib/**/libcrypto_3.*
+            mobile/build/**/openssl-*/include
+          key: >-
+            openssl-${{ github.job }}-${{ steps.keys.outputs.openssl }}-${{
+            hashFiles('Makefile', 'mobile/Makefile', 'mobile/scripts/**', 'mobile/docker/Dockerfile') }}
+      - &openssl-touch
+        name: OpenSSL is up to date
+        run: touch -c mobile/lib/*/*/libssl_3.* mobile/lib/*/*/libcrypto_3.*
+      - name: QML lint
+        run: $IN_IMAGE make qml-lint-mobile "QTDIR=/opt/qt/$QT_VERSION/gcc_64" "QT_MOBILE_DIR=/opt/qt/$QT_VERSION/android_arm64_v8a"
+      # The release build must be signed; this key lives for one run.
+      - name: Signing key
+        run: |
+          $IN_IMAGE sh -c 'keytool -genkeypair -keystore "$STATUS_APP_KEYSTORE_PATH" -storetype PKCS12 \
+            -storepass "$STATUS_APP_KEYSTORE_PASSWORD" -alias "$STATUS_APP_KEY_ALIAS" \
+            -keyalg RSA -keysize 2048 -validity 30 -dname "CN=Status PR build"'
+      - name: Build
+        env: *build-keys
+        run: |
+          $IN_IMAGE make mobile-build PACKAGE_TYPE=apk
+          ls -l mobile/bin/android/qt6/StatusPR.apk mobile/bin/android/qt6/StatusPR-mapping.txt
+      - *save-go
+      - *save-ccache
+      - uses: ./.github/actions/build-artifact
+        with:
+          platform: android-arm64
+          file: mobile/bin/android/qt6/StatusPR.apk
+          suffix: .apk
+      - uses: ./.github/actions/build-artifact
+        with:
+          platform: android-arm64
+          file: mobile/bin/android/qt6/StatusPR-mapping.txt
+          suffix: -mapping.txt
+
+  macos:
+    name: macos
+    needs: changes
+    if: *if-code
+    # GitHub's macOS runners are Apple Silicon.
+    runs-on: macos-26
+    timeout-minutes: 120
+    env:
+      CMAKE_POLICY_VERSION_MINIMUM: 3.5
+      # The Makefile's default builds the disk image through Nix.
+      DMGBUILD: dmgbuild
+    steps:
+      - *checkout
+      # With OpenSSL: the macOS build compiles it from mobile/vendors/openssl.
+      - name: Fetch submodules
+        run: scripts/ci-fetch-submodules.sh --mobile
+      - uses: ./.github/actions/macos-toolchain
+        with:
+          qt-modules: ${{ env.QT_MODULES }}
+      - *cache-keys
+      - *restore-go
+      - *restore-ccache
+      - *openssl-cache
+      - *openssl-touch
+      - *restore-nimble
+      - name: Nim packages
+        id: nim-packages
+        run: make nimble-deps
+      - *save-nimble
+      - name: Dependencies
+        run: |
+          pipx install dmgbuild==1.6.7
+          make update
+          make deps
+      - name: status-go
+        run: make status-go
+      # MACOS_CODESIGN_IDENT is not set: the bundle is signed ad hoc.
+      - name: Package
+        env: *build-keys
+        run: make pkg-macos
+      - *save-go
+      - *save-ccache
+      - uses: ./.github/actions/build-artifact
+        with:
+          platform: macos-aarch64
+          file: pkg/Status.dmg
+          suffix: .dmg
+
+  ios:
+    name: ios
+    needs: changes
+    if: *if-code
+    runs-on: macos-26
+    timeout-minutes: 120
+    env:
+      CMAKE_POLICY_VERSION_MINIMUM: 3.5
+      IPHONE_SDK: iphoneos
+      BUILD_VARIANT: pr
+      # Builds without a signature.
+      QMAKE_EXTRA_CONFIG: fastlane
+      # Goes into the build number.
+      CHANGE_ID: ${{ github.event.pull_request.number }}
+      FLAG_BUY_ENABLED: 1
+      CCACHE_KEY_FILES: >-
+        mobile/wrapperApp/Status.pro mobile/scripts/buildApp.sh
+        mobile/scripts/commonCmakeConfig.sh .github/actions/macos-toolchain/action.yml
+    steps:
+      - *checkout
+      - name: Fetch submodules
+        run: scripts/ci-fetch-submodules.sh --mobile
+      - uses: ./.github/actions/macos-toolchain
+        with:
+          # The tools of the macOS Qt that the build runs.
+          qt-modules: qt5compat qtshadertools qtscxml
+          qt-ios-modules: >-
+            qtwebchannel qtwebview qtwebsockets qt5compat qtmultimedia qtconnectivity
+            qtpositioning qtshadertools qtimageformats qtscxml qthttpserver
+      - *cache-keys
+      - *restore-go
+      - *restore-ccache
+      - *openssl-cache
+      - *openssl-touch
+      - *restore-nimble
+      - name: Nim packages
+        id: nim-packages
+        run: make nimble-deps
+      - *save-nimble
+      - name: Dependencies
+        run: |
+          xcrun --sdk "$IPHONE_SDK" --show-sdk-version
+          xcbeautify --version
+          make update
+      - name: App
+        env: *build-keys
+        run: |
+          ccache --zero-stats
+          make mobile-build
+          ccache --show-stats
+      - *save-go
+      - *save-ccache
+      # The layout of an .ipa; it installs only after it is signed.
+      - name: Package
+        run: |
+          app=mobile/bin/ios/qt6/StatusPR.app
+          mkdir -p pkg/Payload
+          cp -R "$app" pkg/Payload/
+          (cd pkg && zip -qry StatusPR-unsigned.ipa Payload)
+          ls -l pkg/StatusPR-unsigned.ipa
+      - uses: ./.github/actions/build-artifact
+        with:
+          platform: ios-arm64-unsigned
+          file: pkg/StatusPR-unsigned.ipa
+          suffix: .ipa
+
+  windows:
+    name: windows
+    needs: changes
+    if: *if-code
+    runs-on: windows-2022
+    timeout-minutes: 120
+    env:
+      # Nim dependency trees nest past MAX_PATH, and Bash needs the scripts with LF
+      # endings. Symlinks are checked out as files: nimble cannot handle the
+      # directory symlinks zxing-cpp's wrappers have, and the Windows build reads
+      # none. Set here so that the checkout and nimble's clones see it too.
+      GIT_CONFIG_COUNT: 3
+      GIT_CONFIG_KEY_0: core.longpaths
+      GIT_CONFIG_VALUE_0: 'true'
+      GIT_CONFIG_KEY_1: core.autocrlf
+      GIT_CONFIG_VALUE_1: 'false'
+      GIT_CONFIG_KEY_2: core.symlinks
+      GIT_CONFIG_VALUE_2: 'false'
+    steps:
+      - *checkout
+      - name: Fetch submodules
+        run: scripts/ci-fetch-submodules.sh
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: false
+      # The versions scripts/windows_build_setup.ps1 installs.
+      - name: Compilers and tools
+        run: |
+          # go-generate-fast prints "file.go: command" lines, which setup-go's matcher reports as errors.
+          echo "::remove-matcher owner=go::"
+          tools="$(cygpath -u "$RUNNER_TEMP")/tools"
+          mkdir -p "$tools"
+          fetch() { # <url> <sha256> <file>
+            curl -sSfL --retry 5 --retry-all-errors -o "$3" "$1"
+            echo "$2  $3" | sha256sum -c -
+          }
+          extract() { # <archive> <directory>
+            7z x -bso0 -bsp0 "-o$(cygpath -w "$2")" "$(cygpath -w "$1")"
+            rm "$1"
+          }
+          # gcc 15.2.0, for the C libraries and the launcher
+          fetch https://github.com/brechtsanders/winlibs_mingw/releases/download/15.2.0posix-13.0.0-ucrt-r5/winlibs-x86_64-posix-seh-gcc-15.2.0-mingw-w64ucrt-13.0.0-r5.7z \
+            6b567e3c158a00c81ceb85298487c905ced3288fb5fb17636e2471cf8134927a "$tools/winlibs.7z"
+          extract "$tools/winlibs.7z" "$tools"
+          # The Makefile runs under MinGW make.
+          cp "$tools/mingw64/bin/mingw32-make.exe" "$tools/mingw64/bin/make.exe"
+          # clang 22.1.8, which compiles the client against Qt's MSVC build
+          fetch https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.8/LLVM-22.1.8-win64.exe \
+            16e5709785fef73c854646241c4a92c5cd574318d1b33c63330dd7721903e55c "$tools/llvm-setup.exe"
+          extract "$tools/llvm-setup.exe" "$tools/llvm"
+          # Nim 2.2.12, the version nim_status_client.nimble pins: nimble takes it
+          # instead of building one from source.
+          fetch https://github.com/nim-lang/nightlies/releases/download/2026-09-08-version-2-2-8e8fbf60693418dc95bb0d762fd660231d08a583/nim-2.2.12-windows_x64.zip \
+            dafe9c81f8118fac2e07ee24f3649448a590d8b0f3b55d1a97c66f99035cc8e6 "$tools/nim.zip"
+          extract "$tools/nim.zip" "$tools"
+          # nimble 0.26.2, which reuses the packages a restored cache holds
+          fetch https://github.com/nim-lang/nimble/releases/download/v0.26.2/nimble-windows_x64.zip \
+            4c3788511c66ac8b552264313ffedd1549637bec750d8c9ca03029321bc52a50 "$tools/nimble.zip"
+          extract "$tools/nimble.zip" "$tools/nimble"
+          # protoc 36.0
+          fetch https://github.com/protocolbuffers/protobuf/releases/download/v36.0/protoc-36.0-win64.zip \
+            510fb2369a4720adb457783768c5e1481a0e1137d9e7694478dfe9b8fe445dc1 "$tools/protoc.zip"
+          extract "$tools/protoc.zip" "$tools/protoc"
+          # rcedit 2.0.0
+          mkdir -p "$tools/rcedit"
+          fetch https://github.com/electron/rcedit/releases/download/v2.0.0/rcedit-x64.exe \
+            3e7801db1a5edbec91b49a24a094aad776cb4515488ea5a4ca2289c400eade2a "$tools/rcedit/rcedit.exe"
+
+          # Inno Setup and OpenSSL come with the runner image.
+          inno='C:\Program Files (x86)\Inno Setup 6'
+          [ -f "$inno/ISCC.exe" ] || { echo "::error::No Inno Setup in $inno"; exit 1; }
+          openssl='C:\Program Files\OpenSSL'
+          [ -f 'C:\Program Files\CMake\bin\cmake.exe' ] || { echo "::error::No CMake on the runner"; exit 1; }
+          [ -f "$openssl/bin/libcrypto-3-x64.dll" ] && [ -f "$openssl/bin/libssl-3-x64.dll" ] || { echo "::error::No OpenSSL in $openssl"; exit 1; }
+          vs="$("/c/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe" -latest -products '*' -property installationPath)"
+          {
+            # The Makefile passes this path unquoted.
+            echo "WIN_OPENSSL_ROOT=$(cygpath -ms "$openssl")"
+            # Where windeployqt finds the Visual C++ runtime installer.
+            echo "VCINSTALLDIR=$(cygpath -m "$vs")/VC"
+            echo "GOPATH=$(cygpath -m "$RUNNER_TEMP")/go"
+            echo "MAKEFLAGS=-j$(nproc) V=1"
+            echo "CMAKE_BUILD_PARALLEL_LEVEL=$(nproc)"
+          } >> "$GITHUB_ENV"
+          # The path added last comes first.
+          {
+            echo "$inno"
+            cygpath -w "$tools/rcedit"
+            cygpath -w "$tools/protoc/bin"
+            cygpath -w "$tools/llvm/bin"
+            cygpath -w "$tools/mingw64/bin"
+            # The compiler archive has a cmake of its own, which builds with Ninja.
+            echo 'C:\Program Files\CMake\bin'
+            cygpath -w "$tools/nim-2.2.12/bin"
+            # Nim ships an older nimble next to the compiler.
+            cygpath -w "$tools/nimble"
+          } >> "$GITHUB_PATH"
+      - name: Qt
+        run: |
+          # Not released yet: 3.3.0 does not know where Qt 6.11 for Windows is.
+          python -m pip install --quiet "git+https://github.com/miurahr/aqtinstall@5a49f2b391ae8ee1d3c0dd87f8b33c1d49a4deb7"
+          # shellcheck disable=SC2086
+          python -m aqt install-qt windows desktop "$QT_VERSION" win64_msvc2022_64 -m $QT_MODULES -O "$RUNNER_TEMP\\qt"
+          qt="$(cygpath -u "$RUNNER_TEMP")/qt/$QT_VERSION/msvc2022_64"
+          cygpath -w "$qt/bin" >> "$GITHUB_PATH"
+      - name: Toolchain versions
+        run: |
+          missing=0
+          for tool in go nim nimble gcc make windres clang lld-link llvm-dlltool protoc qmake windeployqt cmake rcedit ISCC 7z unix2dos python git; do
+            echo "$tool: $(command -v "$tool" || { echo MISSING; })"
+            command -v "$tool" >/dev/null || missing=1
+          done
+          [ "$missing" = 0 ]
+          go version
+          pin="$(sed -nE 's/^requires "nim == ([^"]+)".*/\1/p' nim_status_client.nimble)"
+          nim --version | head -n 1 | grep -F "Version $pin " ||
+            { echo "::error::The prebuilt Nim is not $pin, the version nim_status_client.nimble pins"; exit 1; }
+          nimble --version | grep -F 'nimble v0.26.2'
+          gcc --version | head -n 1
+          make --version | head -n 1
+          clang --version | head -n 1
+          protoc --version
+          cmake --version | head -n 1
+          qmake --version
+          echo "WIN_OPENSSL_ROOT=$WIN_OPENSSL_ROOT"
+          ls "$VCINSTALLDIR/Redist/MSVC"
+      - *cache-keys
+      - *restore-go
+      - *restore-nimble
+      - name: Nim packages
+        id: nim-packages
+        run: make nimble-deps
+      - *save-nimble
+      - name: Dependencies
+        run: |
+          make update
+          make deps
+      - name: status-go
+        run: make status-go
+      # Not signed: WINDOWS_CODESIGN_PFX_PATH is not set.
+      - name: Package
+        env: *build-keys
+        run: make zip-windows
+      - *save-go
+      - uses: ./.github/actions/build-artifact
+        with:
+          platform: windows-x86_64
+          file: pkg/Status.exe
+          suffix: .exe
+      - uses: ./.github/actions/build-artifact
+        with:
+          platform: windows-x86_64
+          file: pkg/Status.7z
+          suffix: .7z
+
+  artifact-links:
+    needs: [linux, android, macos, ios, windows]
+    if: >-
+      !cancelled() && github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      actions: read
+      pull-requests: write
+    uses: ./.github/workflows/ci-artifacts.yml

@@ -16,6 +16,17 @@ RadioButtonSelector {
     property string fleetName: ""
     property string newFleet: ""
 
+    // The fleet was saved: log in again to apply it
+    signal reloginRequested()
+    // The change was cancelled or failed: the group shows the saved fleet again
+    signal fleetChangeCancelled()
+
+    function showSavedFleet() {
+        // The click (or the button group, for the previously checked one) broke or
+        // outdated the binding
+        root.checked = Qt.binding(() => root.advancedStore.fleet === root.fleetName)
+    }
+
     title: fleetName
     checked: root.advancedStore.fleet === root.fleetName
 
@@ -33,12 +44,24 @@ RadioButtonSelector {
         id: confirmDialogComponent
         ConfirmationDialog {
             headerSettings.title: qsTr("Warning!")
-            confirmationText: qsTr("Change fleet to %1").arg(root.newFleet)
+            confirmationText: qsTr("Change fleet to %1").arg(root.newFleet) + "\n"
+                              + qsTr("You will be logged out and back in if you confirm.")
+            property bool saved: false
+
             onConfirmButtonClicked: {
-                root.advancedStore.setFleet(root.newFleet)
+                // Before closing: onClosed tells a cancelled or failed change by it
+                saved = root.advancedStore.setFleet(root.newFleet)
+                close()
+                if (saved)
+                    root.reloginRequested()
+                else
+                    Global.displayToastMessage(qsTr("Failed to change the fleet"), "", "warning",
+                                               false, Constants.ephemeralNotificationType.danger, "")
             }
             onClosed: {
-                destroy();
+                if (!saved)
+                    root.fleetChangeCancelled()
+                destroy()
             }
         }
     }

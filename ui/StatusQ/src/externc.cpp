@@ -1,7 +1,11 @@
+#include <atomic>
+#include <limits>
+
 #include <QtGlobal>
 #include <QObject>
 #include <QString>
 #include <QByteArray>
+#include <QDebug>
 #include <QBasicTimer>
 #include <QElapsedTimer>
 #include <QJsonArray>
@@ -13,6 +17,7 @@
 #include <QQmlIncubator>
 #include <QTimerEvent>
 
+#include <StatusQ/attachmentpreparer.h>
 #include <StatusQ/backgroundgraphicsrelease.h>
 #include <StatusQ/networkaccessfactory.h>
 #include <StatusQ/typesregistration.h>
@@ -290,6 +295,45 @@ Q_DECL_EXPORT void statusq_invoke_method_queued(void* obj, const char* method, c
                               Q_ARG(QString, QString::fromUtf8(arg)));
 }
 
+namespace {
+// Generation of the current app session. Deliveries queued by an earlier session
+// are dropped on the GUI thread instead of reaching receivers that are being retired.
+std::atomic<quint64> g_sessionGeneration{0};
+// Logged once per ended generation, not per dropped delivery.
+std::atomic<quint64> g_lastLoggedStaleGeneration{std::numeric_limits<quint64>::max()};
+}
+
+Q_DECL_EXPORT void statusq_set_session_generation(quint64 generation) {
+    g_sessionGeneration.store(generation);
+}
+
+Q_DECL_EXPORT void statusq_invoke_method_queued_in_generation(void* obj, const char* method,
+                                                              const char* arg, quint64 generation) {
+    auto* receiver = static_cast<QObject*>(obj);
+    // The receiver is the call's context object: if it is deleted before the queued
+    // call runs, Qt discards the call.
+    QMetaObject::invokeMethod(
+        receiver,
+        [receiver, method = QByteArray(method), arg = QString::fromUtf8(arg), generation] {
+            if (generation != g_sessionGeneration.load()) {
+                if (g_lastLoggedStaleGeneration.exchange(generation) != generation)
+                    qDebug() << "dropping deliveries of ended session generation" << generation;
+                return;
+            }
+            QMetaObject::invokeMethod(receiver, method.constData(), Qt::DirectConnection,
+                                      Q_ARG(QString, arg));
+        },
+        Qt::QueuedConnection);
+}
+
+// Delivers "<tag>|<arg>". Lets a callback on a foreign thread stamp its payload without
+// allocating on the caller's side.
+Q_DECL_EXPORT void statusq_invoke_method_queued_tagged(void* obj, const char* method, const char* arg,
+                                                       quint64 tag) {
+    QMetaObject::invokeMethod(static_cast<QObject*>(obj), method, Qt::QueuedConnection,
+                              Q_ARG(QString, QString::number(tag) + QLatin1Char('|') + QString::fromUtf8(arg)));
+}
+
 Q_DECL_EXPORT void* statusq_urlscheme_create() {
     auto* ev = new Status::UrlSchemeEvent();
     ev->registerUrlHandler();
@@ -347,6 +391,14 @@ Q_DECL_EXPORT const char* statusq_shareintake_pending_dir() {
 // pointer stays valid for the process lifetime.
 Q_DECL_EXPORT const char* statusq_shareintake_cache_dir() {
     static const QByteArray dir = Status::ShareIntake::shareIntakeCacheDir().toUtf8();
+    return dir.constData();
+}
+
+// Directory AttachmentPreparer writes prepared image Attachments to; the image
+// send deletes the files found there once sent. The returned pointer stays
+// valid for the process lifetime.
+Q_DECL_EXPORT const char* statusq_prepared_attachments_dir() {
+    static const QByteArray dir = AttachmentPreparer::defaultDirectory().toUtf8();
     return dir.constData();
 }
 

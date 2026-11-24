@@ -1,7 +1,6 @@
 import nimqml
 
 import local_account_settings
-import local_account_sensitive_settings
 import local_app_settings
 import user_profile
 import utils
@@ -11,7 +10,6 @@ import feature_flags
 import app_lifecycle
 
 export local_account_settings
-export local_account_sensitive_settings
 export local_app_settings
 export user_profile
 export utils
@@ -70,22 +68,38 @@ proc setApplication*(self: GlobalSingleton, app: QGuiApplication) =
 proc application*(self: GlobalSingleton): ApplicationHandle =
   ApplicationHandle(app: qGuiApplicationInstance)
 
+# Names of the QML context properties the current app session set (see
+# setSessionContextProperty()).
+var sessionContextPropertyNames: seq[string]
+
+proc setSessionContextProperty*(self: GlobalSingleton, name: string, value: QVariant) =
+  ## A QML context property of the current app session (one login lifetime): the
+  ## session's objects are deleted when it ends, so clearSessionContextProperties()
+  ## unsets it first. Process-lifetime properties use the engine directly.
+  if name notin sessionContextPropertyNames:
+    sessionContextPropertyNames.add(name)
+  self.engine.setRootContextProperty(name, value)
+
+proc clearSessionContextProperties*(self: GlobalSingleton) =
+  ## Unsets the context properties of the ended session before its objects are deleted:
+  ## QML that outlives the session (the window) must not reach them. To QML they are
+  ## undefined again, as before the session set them.
+  let unset = newQVariant()
+  for name in sessionContextPropertyNames:
+    self.engine.setRootContextProperty(name, unset)
+  sessionContextPropertyNames.setLen(0)
+  unset.delete
+
 proc localAccountSettings*(self: GlobalSingleton): LocalAccountSettings =
   var localAccountSettings {.global.}: LocalAccountSettings
   if (localAccountSettings.isNil):
     localAccountSettings = newLocalAccountSettings()
   return localAccountSettings
 
-proc localAccountSensitiveSettings*(self: GlobalSingleton): LocalAccountSensitiveSettings =
-  var localAccountSensitiveSettings {.global.}: LocalAccountSensitiveSettings
-  if (localAccountSensitiveSettings.isNil):
-    localAccountSensitiveSettings = newLocalAccountSensitiveSettings()
-  return localAccountSensitiveSettings
-
 proc localAppSettings*(self: GlobalSingleton): LocalAppSettings =
   var localAppSettings {.global.}: LocalAppSettings
   if (localAppSettings.isNil):
-    localAppSettings = newLocalAppSettings("global")
+    localAppSettings = newLocalAppSettings(APP_SETTINGS_FILE_NAME)
   return localAppSettings
 
 proc userProfile*(self: GlobalSingleton): UserProfile =
@@ -121,7 +135,6 @@ proc featureFlags*(self: GlobalSingleton): FeatureFlags =
 proc delete*(self: GlobalSingleton) =
   self.engine.delete()
   self.localAccountSettings.delete()
-  self.localAccountSensitiveSettings.delete()
   self.localAppSettings.delete()
   self.userProfile.delete()
   self.loaderDeactivator.delete()

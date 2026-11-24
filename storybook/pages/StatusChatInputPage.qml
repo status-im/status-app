@@ -145,6 +145,7 @@ SplitView {
             imageFeaturesEnabled: !isEdit
             stickersButtonVisible: !isEdit
             threadsEnabled: ctrlThreadsEnabled.checked
+            threadsEnabledV2: ctrlThreadsEnabledV2.checked
             isThread: ctrlIsThread.checked
             threadName: ctrlThreadName.text
             chatName: ctrlChannelName.text
@@ -275,17 +276,29 @@ SplitView {
                     placeholderText: "thread name"
                     text: ctrlIsThread.checked ? "coolThread" : ""
                 }
+            }
 
+            RowLayout {
+                visible: ctrlThreadsEnabled.checked
+                Layout.fillWidth: true
+                Layout.leftMargin: 16
+                CheckBox {
+                    id: ctrlThreadsEnabledV2
+                    text: "threads v2 enabled"
+                }
                 Label {
-                    text: "(in #"
+                    enabled: ctrlThreadsEnabledV2.checked && ctrlIsThread.checked
+                    text: "(also send to #"
                 }
                 TextField {
+                    enabled: ctrlThreadsEnabledV2.checked && ctrlIsThread.checked
                     Layout.preferredWidth: 150
                     id: ctrlChannelName
                     placeholderText: "channel name"
                     text: "general"
                 }
                 Label {
+                    enabled: ctrlThreadsEnabledV2.checked && ctrlIsThread.checked
                     text: "channel)"
                 }
             }

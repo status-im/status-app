@@ -1,9 +1,12 @@
 AppMain 1.0 AppMain.qml
 BalancesOnScreenTracker 1.0 BalancesOnScreenTracker.qml
+DeferredActionQueue 1.0 DeferredActionQueue.qml
 GlobalBanner 1.0 GlobalBanner.qml
 SplashScreen 1.0 SplashScreen.qml
 Popups 1.0 Popups.qml
 ProfileEncryptionMigrationFlow 1.0 ProfileEncryptionMigrationFlow.qml
+SessionRoot 1.0 SessionRoot.qml
+SessionTransitionView 1.0 SessionTransitionView.qml
 SignOutConfirmationDialog 1.0 SignOutConfirmationDialog.qml
 ToastsManager 1.0 ToastsManager.qml
 StatusTrayIcon 1.0 StatusTrayIcon.qml

@@ -74,6 +74,7 @@ StackLayout {
 
     // WIP: It will be refactored step by step (now community permissions and community access logic is not part of this store)
     property ChatStores.RootStore rootStore
+    required property MessagingStores.ThreadReplyStore threadReplyStore
 
     // WIP: This is the new store's structure, now used, `PermissionsStore` and `CommunityAccessStore`. More stores will be added in next steps
     property CommunityStores.CommunityRootStore newCommunityStore
@@ -110,6 +111,7 @@ StackLayout {
     property bool sendViaPersonalChatEnabled
     property bool messageLinkSharingEnabled
     property bool threadsFeatureEnabled
+    property bool threadsFeatureEnabledV2
     property string disabledTooltipText
 
     property int extraLeftPadding: 0
@@ -317,6 +319,7 @@ StackLayout {
             activeItemId: root.rootStore.chatCommunitySectionModule?.activeItem?.id ?? ""
             activeItemName: root.rootStore.chatCommunitySectionModule?.activeItem?.name ?? ""
             rootStore: root.rootStore
+            threadReplyStore: root.threadReplyStore
             createChatPropertiesStore: root.createChatPropertiesStore
             communitiesStore: root.communitiesStore
             walletAssetsStore: root.walletAssetsStore
@@ -340,6 +343,7 @@ StackLayout {
             sendViaPersonalChatEnabled: root.sendViaPersonalChatEnabled
             messageLinkSharingEnabled: root.messageLinkSharingEnabled
             threadsFeatureEnabled: root.threadsFeatureEnabled
+            threadsFeatureEnabledV2: root.threadsFeatureEnabledV2
             disabledTooltipText: root.disabledTooltipText
             paymentRequestFeatureEnabled: root.paymentRequestFeatureEnabled
             extraLeftPadding: root.extraLeftPadding

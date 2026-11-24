@@ -3,7 +3,6 @@ import QtQuick
 
 import StatusQ
 import StatusQ.Core.Utils as SQUtils
-import StatusQ.Core.Backpressure
 import StatusQ.Core.Theme
 import StatusQ.Core
 
@@ -190,7 +189,7 @@ QtObject {
 
         onToggleThirdpartyServicesEnabledRequested: {
             root.privacyStore.toggleThirdpartyServicesEnabledRequested()
-            Backpressure.debounce(root, 200, () => { SystemUtils.restartApplication(true) })()
+            Global.reloginRequested()
         }
         onOpenDiscussPageRequested: Global.requestOpenLink(Constants.statusDiscussPageUrl)
         onOpenThirdpartyServicesArticleRequested: Global.requestOpenLink(Constants.statusThirdpartyServicesArticle)

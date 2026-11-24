@@ -114,30 +114,14 @@ Item {
                 showNewIcon: Constants.chains.newChains.indexOf(model.chainId) >= 0
 
                 onSetNetworkActive: function (active) {
-                    if (!active) {
-                        // Launch confirmation popup
-                        Global.openPopup(deactivateNetworkPopupComponent, {chainId: model.chainId, iconUrl: model.iconUrl, chainName: model.chainName})
-                        return
-                    }
-                    if (d.currentActiveNetworksCount >= Constants.maxActiveNetworks && active) {
+                    if (active && d.currentActiveNetworksCount >= Constants.maxActiveNetworks) {
                         Global.openPopup(activeNetworkLimitPopupComponent)
                         return
                     }
-                    // Set network active
                     root.setNetworkActive(model.chainId, active)
                 }
 
                 onEditNetwork: root.editNetwork(model.chainId)
-            }
-        }
-    }
-
-    Component {
-        id: deactivateNetworkPopupComponent
-        DeactivateNetworkPopup {
-            width: 556
-            onAccepted: {
-                root.setNetworkActive(chainId, false)
             }
         }
     }

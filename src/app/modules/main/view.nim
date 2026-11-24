@@ -26,6 +26,7 @@ QtObject:
       sharePaymentRequestModelVariant: QVariant
       tmpCommunityId: string # shouldn't be used anywhere except in prepareCommunitySectionModuleForCommunityId/getCommunitySectionModule procs
       mainLoaded: bool
+      shareFlowPending: bool
 
   proc activeSectionSet*(self: View, item: SectionItem)
 
@@ -64,6 +65,20 @@ QtObject:
   QtProperty[bool] mainLoaded:
     read = getMainLoaded
     notify = mainLoadedChanged
+
+  proc shareFlowPendingChanged*(self: View) {.signal.}
+  proc getShareFlowPending(self: View): bool {.slot.} =
+    return self.shareFlowPending
+  proc setShareFlowPending*(self: View, pending: bool) =
+    if self.shareFlowPending == pending:
+      return
+    self.shareFlowPending = pending
+    self.shareFlowPendingChanged()
+
+  ## True while an external share is buffered until the chats load
+  QtProperty[bool] shareFlowPending:
+    read = getShareFlowPending
+    notify = shareFlowPendingChanged
 
   proc appNetworkChanged*(self: View) {.signal.}
   proc getAppNetworkId*(self: View): int {.slot.} =
@@ -367,6 +382,7 @@ QtObject:
 
   ## Signals for in app (ephemeral) notifications
   proc showToastAccountAdded*(self: View, name: string) {.signal.}
+  proc showToastThreadLinkFailed*(self: View) {.signal.}
   proc showToastAccountRemoved*(self: View, name: string) {.signal.}
   proc showToastKeypairRenamed*(self: View, oldName: string, newName: string) {.signal.}
   proc showNetworkEndpointUpdated*(self: View, name: string, isTest: bool) {.signal.}
@@ -521,5 +537,3 @@ QtObject:
   proc credentialStoredToKeychainResult*(self: View, success: bool) {.slot.} =
     self.delegate.credentialStoredToKeychainResult(success)
 
-  proc signOutAndQuit*(self: View) {.slot.} =
-    self.delegate.signOutAndQuit()

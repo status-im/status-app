@@ -15,9 +15,6 @@ method isLoaded*(self: AccessInterface): bool {.base.} =
 method getModuleAsVariant*(self: AccessInterface): QVariant {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onFleetSet*(self: AccessInterface) {.base.} =
-  raise newException(ValueError, "No implementation available")
-
 method onDebugToggled*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
@@ -30,7 +27,7 @@ method viewDidLoad*(self: AccessInterface) {.base.} =
 method getFleet*(self: AccessInterface): string {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method setFleet*(self: AccessInterface, fleet: string) {.base.} =
+method setFleet*(self: AccessInterface, fleet: string): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method getLogDir*(self: AccessInterface): string {.base.} =
@@ -54,7 +51,7 @@ method getCommunityHistoryArchiveProtocolMode*(self: AccessInterface): int {.bas
 method setCommunityHistoryArchiveProtocolMode*(self: AccessInterface, mode: int): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method toggleDebug*(self: AccessInterface) {.base.} =
+method toggleDebug*(self: AccessInterface): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method isNimbusProxyEnabled*(self: AccessInterface): bool {.base.} =

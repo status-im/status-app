@@ -30,7 +30,7 @@ DropArea {
         }
 
         // needed because drag.urls is not a normal js array
-        rptDraggedPreviews.model = drag.urls.filter(img => Utils.isValidDragNDropImage(img))
+        rptDraggedPreviews.model = drag.urls.filter(img => Utils.isValidChatImage(img))
     }
     onPositionChanged: function(drag) {
         rptDraggedPreviews.x = drag.x

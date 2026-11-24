@@ -106,8 +106,10 @@ Item {
             }
         }
         onProfileMigrationFlowRequested: (migrateToKeycard) => {
-                                             appMain.rootStore.profileMigrationFlowOpened()
-                                             popups.openAlignWithPairedDevicePopup(migrateToKeycard)
+                                             loginPopupsQueue.schedule("profileMigration", () => {
+                                                 appMain.rootStore.profileMigrationFlowOpened()
+                                                 popups.openAlignWithPairedDevicePopup(migrateToKeycard)
+                                             })
                                          }
         keychain: appMain.keychain
         palette: appMain.Theme.palette
@@ -148,7 +150,7 @@ Item {
 
     Loader {
         id: rootChatStoreLoader
-        active: appMain.mainReady
+        active: appMain.mainReady && !!appMain.contactsStore
 
         sourceComponent: ChatStores.RootStore {
             contactsStore: appMain.contactsStore
@@ -156,6 +158,7 @@ Item {
             communityTokensStore: appMain.communityTokensStore
             openCreateChat: createChatView.opened
             networkConnectionStore: appMain.networkConnectionStore
+            isChatSectionModule: true
         }
     }
 
@@ -361,8 +364,7 @@ Item {
         }
 
         function onPlayNotificationSound() {
-            notificationSound.stop()
-            notificationSound.play()
+            AudioUtils.play("qrc:/imports/assets/audio/notification.wav")
         }
 
         function onMailserverWorking() {
@@ -393,6 +395,11 @@ Item {
             } else if (d.messagingNetworkDisconnected && !messagingNetworkDisconnectDebounce.running) {
                 d.doShowMessagingBanner = true
             }
+        }
+
+        function onShowToastThreadLinkFailed() {
+            Global.displayToastMessage(qsTr("Couldn't open this thread. It may be unavailable or you may not have access."),
+                                       "", "warning", false, Constants.ephemeralNotificationType.danger, "")
         }
 
         function onShowToastAccountAdded(name: string) {
@@ -1008,6 +1015,11 @@ Item {
     QtObject {
         id: d
 
+        readonly property bool textInputFocused: {
+            const item = appMain.Window.activeFocusItem
+            return item instanceof TextInput || item instanceof TextEdit
+        }
+
         readonly property string myPublicKey: userProfile.pubKey // we need it very soon, before all the stores
         readonly property string supportBotPublicKey: {
             const chatKey = Constants.statusSupportBotChatKey
@@ -1151,7 +1163,7 @@ Item {
                                                            activeSectionType === Constants.appSection.dApp
 
         readonly property bool isBrowserEnabled: appMain.featureFlagsStore.browserEnabled &&
-                                                 localAccountSensitiveSettings.isBrowserEnabled
+                                                 localAccountSettings.isBrowserEnabled
         readonly property int syncingBadgeCount: (appMain.devicesStore?.totalDevicesCount ?? 0)
                               - (appMain.devicesStore?.pairedDevicesCount ?? 0)
 
@@ -1166,7 +1178,7 @@ Item {
             profileLoader.settingsSubsection = appMain.isPortraitMode ? -1 : Constants.settingsSubsection.profile
             appMain.rootStore.setActiveSectionBySectionType(Constants.appSection.profile)
             if (profileLoader.item)
-                profileLoader.item.currentIndex = StatusSectionLayout.LeftPanel
+                profileLoader.item.setCurrentIndex(StatusSectionLayout.LeftPanel)
         }
 
         function maybeDisplayIntroduceYourselfPopup() {
@@ -1238,9 +1250,21 @@ Item {
         }
 
         function tryOpenNavigationEducationPopup() {
-            if(!appMainGlobalSettings.newMenuEducationPopupSeen && !sidebar.alwaysVisible) {
-                Global.openNavigationEducationPopupRequested()
-            }
+            loginPopupsQueue.schedule("navigationEducation", () => {
+                if (!appMainGlobalSettings.newMenuEducationPopupSeen && !sidebar.alwaysVisible)
+                    Global.openNavigationEducationPopupRequested()
+            })
+        }
+
+        function maybeDisplayMessagingSectionPopups() {
+            if (d.maybeDisplayIntroduceYourselfPopup())
+                return
+            popupRequestsHandler.maybeDisplayEnableMessageBackupPopup()
+        }
+
+        function maybeDisplayEnablePushNotificationsPopup() {
+            loginPopupsQueue.schedule("enablePushNotifications",
+                                      () => popupRequestsHandler.maybeDisplayEnablePushNotificationsPopup())
         }
 
         function goToSupportChatBot() {
@@ -1336,6 +1360,7 @@ Item {
         mutualContactsModel: contactsModelAdaptor?.mutualContacts ?? null
 
         isDevBuild: !appMain.rootStore.isProduction
+        restartSupported: SystemUtils.canRestartApplication
         emojiSkinColor: appMainLocalSettings.skinColor
         isWalletEnabled: appMain.walletProfileStore?.isWalletEnabled ?? false
 
@@ -1400,7 +1425,7 @@ Item {
 
         Component.onCompleted: {
             if (appMain.mainReady)
-                Qt.callLater(() => popupRequestsHandler.maybeDisplayEnablePushNotificationsPopup())
+                Qt.callLater(d.maybeDisplayEnablePushNotificationsPopup)
         }
     }
 
@@ -1409,7 +1434,7 @@ Item {
 
         function onMainReadyChanged() {
             if (appMain.mainReady) {
-                popupRequestsHandler.maybeDisplayEnablePushNotificationsPopup()
+                d.maybeDisplayEnablePushNotificationsPopup()
 
                 Backpressure.debounce(appMain, 50, function() {
                     d.screen = appMain.Window.window.screen.name
@@ -1458,18 +1483,15 @@ Item {
         }
 
         function onPlaySendMessageSound() {
-            sendMessageSound.stop()
-            sendMessageSound.play()
+            AudioUtils.play("qrc:/imports/assets/audio/send_message.wav")
         }
 
         function onPlayNotificationSound() {
-            notificationSound.stop()
-            notificationSound.play()
+            AudioUtils.play("qrc:/imports/assets/audio/notification.wav")
         }
 
         function onPlayErrorSound() {
-            errorSound.stop()
-            errorSound.play()
+            AudioUtils.play("qrc:/imports/assets/audio/error.mp3")
         }
 
         function onSetNthEnabledSectionActive(nthSection: int) {
@@ -1639,51 +1661,6 @@ Item {
         })
     }
 
-    StatusSoundEffect {
-        id: sendMessageSound
-
-        volume: convertVolume(rootStore.volume)
-        muted: !rootStore.notificationSoundsEnabled
-        source: "qrc:/imports/assets/audio/send_message.wav"
-
-        onIsErrorChanged: {
-            if(isError) {
-                console.warn("Sound error:",
-                             statusString)
-            }
-        }
-    }
-
-    StatusSoundEffect {
-        id: notificationSound
-
-        volume: convertVolume(rootStore.volume)
-        muted: !rootStore.notificationSoundsEnabled
-        source: "qrc:/imports/assets/audio/notification.wav"
-
-        onIsErrorChanged: {
-            if(isError) {
-                console.warn("Sound error:",
-                             statusString)
-            }
-        }
-    }
-
-    StatusSoundEffect {
-        id: errorSound
-
-        volume: convertVolume(rootStore.volume)
-        muted: !rootStore.notificationSoundsEnabled
-        source: "qrc:/imports/assets/audio/error.mp3"
-
-        onIsErrorChanged: {
-            if(isError) {
-                console.warn("Sound error:",
-                             statusString)
-            }
-        }
-    }
-
     Loader {
         id: appSearch
         active: false
@@ -1757,7 +1734,7 @@ Item {
 
         spacing: 0
 
-        ColumnLayout {
+        ModuleWarningStack {
             id: bannersLayout
 
             enabled: !localAppSettings.testEnvironment
@@ -1769,8 +1746,6 @@ Item {
             // apply left/right margins when we remove the window titlebar
             Layout.leftMargin: SQUtils.Utils.isMacOS ? appMain.SafeArea.margins.left : 0
             Layout.rightMargin: SQUtils.Utils.isMacOS ? appMain.SafeArea.margins.right : 0
-
-            spacing: 0
 
             GlobalBanner {
                 Layout.fillWidth: true
@@ -2098,19 +2073,20 @@ Item {
                 height: parent.height * 0.9
                 y: parent.height - height
 
+                readonly property int animDuration: ThemeUtils.AnimationDuration.Default
+
                 enter: Transition {
                     ParallelAnimation {
                         NumberAnimation {
                             property: "opacity"
                             from: 0.0; to: 1.0
-                            duration: ThemeUtils.AnimationDuration.Slow
+                            duration: acPortraitPopup.animDuration
                         }
                         NumberAnimation {
                             property: "y"
                             from: acPortraitPopup.parent.height
                             to: acPortraitPopup.parent.height - acPortraitPopup.height
-                            duration: ThemeUtils.AnimationDuration.Slow
-                            easing.type: Easing.OutCubic
+                            duration: acPortraitPopup.animDuration
                         }
                     }
                 }
@@ -2120,14 +2096,13 @@ Item {
                         NumberAnimation {
                             property: "opacity"
                             from: 1.0; to: 0.0
-                            duration: ThemeUtils.AnimationDuration.Slow
+                            duration: acPortraitPopup.animDuration
                         }
                         NumberAnimation {
                             property: "y"
                             from: acPortraitPopup.parent.height - acPortraitPopup.height
                             to: acPortraitPopup.parent.height
-                            duration: ThemeUtils.AnimationDuration.Slow
-                            easing.type: Easing.OutCubic
+                            duration: acPortraitPopup.animDuration
                         }
                     }
                 }
@@ -2364,13 +2339,8 @@ Item {
                     }
                     onCurrentIndexChanged: {
                         // We cannot use isMessagingRelatedSectionType here because it is not updated yet
-                        if (d.activeSectionType === Constants.appSection.chat || d.activeSectionType === Constants.appSection.community) {
-                            if (d.maybeDisplayIntroduceYourselfPopup()) {
-                                // we displayed the popup, so we should not display the enable message backup popup
-                                return
-                            }
-                            popupRequestsHandler.maybeDisplayEnableMessageBackupPopup()
-                        }
+                        if (d.activeSectionType === Constants.appSection.chat || d.activeSectionType === Constants.appSection.community)
+                            loginPopupsQueue.schedule("messagingSection", d.maybeDisplayMessagingSectionPopups)
                     }
 
                     // NOTE:
@@ -2836,6 +2806,7 @@ Item {
                 onViewProfileRequested: pubKey => Global.openProfilePopup(pubKey)
                 onShareOwnProfileRequested: Global.shareProfileDialogRequested(appMain.ownContactDetails.publicKey)
                 onSettingsRequested: d.openSettingsRoot()
+                onSignOutRequested: Global.signOutRequested()
                 onQuitRequested: Global.quitAppRequested()
 
                 onSupportBotChatRequested: {
@@ -3019,6 +2990,13 @@ Item {
         sequence: "Ctrl+,"
         onActivated: globalConns.onAppSectionBySectionTypeChanged(Constants.appSection.profile,
                                                                   Utils.getSettingsSubsectionForSection(d.activeSectionType))
+    }
+
+    DeferredActionQueue {
+        id: loginPopupsQueue
+
+        blocked: appMain.rootStore.shareFlowPending || shareFlowLoader.active
+        busy: SQUtils.Utils.hasPopups(appMain.Overlay.overlay?.children)
     }
 
     ShareFlowLoader {
@@ -3591,10 +3569,25 @@ Item {
     // mention-suggestion list) the unconsumed Backspace reaches this shortcut and
     // hijacks a chat/subsection switch. Bind the explicit Alt+Left there instead so
     // Backspace never navigates; other platforms keep StandardKey.Back unchanged.
+    //
+    // On macOS StandardKey.Back binds Cmd+[ and Cmd+Left, and Cmd+Left is also
+    // "move to start of line", which a focused text input does not claim over a
+    // shortcut. Bind Cmd+[ here and Cmd+Left separately below.
     Shortcut {
-        sequences: Qt.platform.os === SQUtils.Utils.windows
-                   ? ["Alt+Left"] : [StandardKey.Back]
+        sequences: {
+            if (Qt.platform.os === SQUtils.Utils.windows)
+                return ["Alt+Left"]
+            if (SQUtils.Utils.isMacOS)
+                return ["Ctrl+["]
+            return [StandardKey.Back]
+        }
         enabled: !SQUtils.Utils.isMobile && appMain.canGoBackAnywhere
+        onActivated: appMain.tryGoBack()
+    }
+
+    Shortcut {
+        sequence: "Ctrl+Left"
+        enabled: SQUtils.Utils.isMacOS && appMain.canGoBackAnywhere && !d.textInputFocused
         onActivated: appMain.tryGoBack()
     }
 

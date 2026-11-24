@@ -20,6 +20,7 @@ import AppLayouts.Onboarding.controls
 import AppLayouts.Onboarding.components
 
 import utils
+import shared.views
 
 import QtModelsToolkit
 
@@ -47,6 +48,12 @@ OnboardingPage {
     // previously selected profile key UID (used to restore selection on startup)
     property string lastSelectedProfileKeyUid
 
+    // "Save password" toggle: secure storage is usable on this device
+    property bool stayLoggedInAvailable: false
+    // stored "Save password" preference of the selected profile
+    property bool stayLoggedIn: false
+    property var isProfileMigratedToDEKEncryption: (keyUid) => false // (string keyUid) => bool
+
     readonly property string selectedProfileKeyId: loginUserSelector.selectedProfileKeyId
     readonly property bool selectedProfileIsKeycard: d.currentProfileIsKeycard
 
@@ -54,6 +61,9 @@ OnboardingPage {
     signal dismissBiometricsRequested
     signal changeLanguageRequested(string newLanguageCode)
     signal profileSelected(string keyUid)
+
+    // rebinding the selected profile's settings (initial bind, return from another flow)
+    onStayLoggedInChanged: d.stayLoggedInIntent = root.stayLoggedIn
 
     function setBiometricResponse(secret: string, error: string) : void {
         if (!root.isBiometricsLogin)
@@ -81,9 +91,10 @@ OnboardingPage {
             keycardBox.setPin(secret) // automatic login, emits loginRequested() already
         } else if (secret.startsWith(Constants.keychain.dekPrefix)) {
             passwordBox.validationError = ""
-            root.loginRequested(root.selectedProfileKeyId, Onboarding.LoginMethod.Password,{
+            root.loginRequested(root.selectedProfileKeyId, Onboarding.LoginMethod.Password,
+                                d.withStayLoggedInChoice({
                                     dek: secret.slice(Constants.keychain.dekPrefix.length)
-                                })
+                                }))
         } else {
             passwordBox.validationError = ""
             passwordBox.password = secret
@@ -132,10 +143,31 @@ OnboardingPage {
             if (password.length === 0)
                 return
 
-            root.loginRequested(root.selectedProfileKeyId, Onboarding.LoginMethod.Password,{
+            root.loginRequested(root.selectedProfileKeyId, Onboarding.LoginMethod.Password,
+                                d.withStayLoggedInChoice({
                                     password,
                                     updateBiometrics: root.isBiometricsLogin
-                                })
+                                }))
+        }
+
+        // "Save password" choice for the selected profile; applied only after a
+        // successful login, so it is never written here
+        property bool stayLoggedInIntent: root.stayLoggedIn
+
+        readonly property bool stayLoggedInShown: !d.currentProfileIsKeycard
+                                                  && !!loginUserSelector.selectedProfileKeyId
+                                                  && root.stayLoggedInAvailable
+        // cheap conditions first: the migration check is a synchronous backend call
+        readonly property bool selectedProfileMigrated: d.stayLoggedInShown
+                                                        && root.isProfileMigratedToDEKEncryption(loginUserSelector.selectedProfileKeyId)
+        readonly property bool stayLoggedInUsable: d.selectedProfileMigrated
+
+        // Adds "stayLoggedIn" to the login data only when the user changed the toggle;
+        // without it the stored preference is followed.
+        function withStayLoggedInChoice(data) {
+            if (d.stayLoggedInUsable && d.stayLoggedInIntent !== root.stayLoggedIn)
+                data.stayLoggedIn = d.stayLoggedInIntent
+            return data
         }
 
         property string lastPin: ""
@@ -246,6 +278,8 @@ OnboardingPage {
 
                     d.resetBiometricsResult()
                     root.profileSelected(selectedProfileKeyId)
+                    // the selected profile's settings are bound inside profileSelected
+                    d.stayLoggedInIntent = root.stayLoggedIn
 
                     if (d.currentProfileIsKeycard) {
                         keycardBox.loginError = ""
@@ -286,6 +320,17 @@ OnboardingPage {
                 onDetailedErrorPopupRequested: detailedErrorPopupComp.createObject(root, {detailedError}).open()
                 onBiometricsRequested: root.biometricsRequested(loginUserSelector.selectedProfileKeyId)
                 onLoginRequested: (password) => d.doPasswordLogin(password)
+            }
+
+            StayLoggedInSectionView {
+                objectName: "loginStayLoggedInSection"
+                Layout.fillWidth: true
+                visible: d.stayLoggedInShown
+                storageAvailable: root.stayLoggedInAvailable
+                profileMigrated: d.selectedProfileMigrated
+                stayLoggedInEnabled: d.stayLoggedInIntent
+                migrationActionAllowed: false
+                onToggleStayLoggedIn: (checked) => d.stayLoggedInIntent = !checked
             }
 
             LoginKeycardBox {
@@ -333,7 +378,7 @@ OnboardingPage {
         anchors.right: parent.right
         anchors.top: parent.top
         languageCodes: root.availableLanguages
-        activeLanguageCodes: [root.currentLanguage || "en"]
+        activeLanguageCodes: [root.currentLanguage || LanguageService.defaultLanguageCode]
         onLanguageSelected: (languageCode) => root.changeLanguageRequested(languageCode)
     }
 

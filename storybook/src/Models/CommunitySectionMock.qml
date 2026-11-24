@@ -179,8 +179,8 @@ QtObject {
 
         function isCommunity() { return true }
         function setActiveItem(id) { root.setActiveChat(id) }
-        function prepareChatContentModuleForChatId(chatId) { d.preparedChatId = chatId }
-        function getChatContentModule() { return d.contentModuleFor(d.preparedChatId) }
+        function prepareChatContentModuleForChatId(chatId) { d.preparedChat.id = chatId }
+        function getChatContentModule() { return d.contentModuleFor(d.preparedChat.id) }
         function getItemAsJson(id) { return JSON.stringify(d.chatInfo[id] ?? {}) }
         function getMySectionId() { return root.communityId }
 
@@ -318,6 +318,26 @@ QtObject {
                 signal scrollToMessage(string messageId)
                 signal moreMessagesLoaded()
                 signal threadOpenRequested(string threadId, string threadName)
+                signal threadCreationFailed()
+                signal threadEditFinished(string error)
+                property string threadName: "New thread"
+                property bool deferThreadCreation: false
+                property var threadCreationRequests: []
+                function editThread(name) {
+                    threadName = name
+                    threadEditFinished("")
+                }
+                function prepareThreadCreation(parentMessageId) {
+                    d.chatInfo[parentMessageId] = Object.assign({}, contentModule.info)
+                    const threadContent = d.contentModuleFor(parentMessageId)
+                    threadContent.messagesModule.threadId = parentMessageId
+                    threadContent.messagesModule.canEditThread = true
+                    return threadContent
+                }
+                function completeThreadCreation(parentMessageId) {
+                    prepareThreadCreation(parentMessageId)
+                    threadOpenRequested(parentMessageId, "New thread")
+                }
 
                 function getChatId() { return contentModule.chatId }
                 function jumpToMessage(messageId) {
@@ -327,7 +347,9 @@ QtObject {
                 function loadMoreMessages() { moreMessagesLoaded() }
                 function updateKeepUnread(flag) {}
                 function createThread(parentMessageId) {
-                    threadOpenRequested(parentMessageId, "New thread")
+                    threadCreationRequests = threadCreationRequests.concat(parentMessageId)
+                    if (!deferThreadCreation)
+                        Qt.callLater(() => completeThreadCreation(parentMessageId))
                 }
 
                 // Like the backend: the message's editMode role
@@ -375,6 +397,20 @@ QtObject {
                 readonly property var paymentRequestModel: null
                 readonly property bool askToEnableLinkPreview: false
 
+                property var sentMessages: []
+                property bool acceptMessages: true
+                property bool deferTextSends: false
+                signal textMessageSent(string requestId, string error)
+                function sendTextMessage(text, contentType, requestId) {
+                    sentMessages = sentMessages.concat({text, replyTo: "", contentType, startNewThread: false, requestId})
+                    if (acceptMessages && !deferTextSends)
+                        textMessageSent(requestId, "")
+                    return acceptMessages
+                }
+                function sendMessage(text, replyTo, contentType, startNewThread, name) {
+                    sentMessages = sentMessages.concat({text, replyTo, contentType, startNewThread})
+                    return acceptMessages
+                }
                 function clearLinkPreviewCache() {}
                 function setText(text) {}
             }
@@ -392,7 +428,9 @@ QtObject {
     readonly property QtObject d: QtObject {
         id: d
 
-        property string preparedChatId: ""
+        // Native prepare/get slots do not notify QML bindings when their
+        // temporary lookup cursor changes.
+        property var preparedChat: ({id: ""})
         property var contentModules: ({})
         // chatId -> { name, description, requiresPermissions, canView, canPost }
         property var chatInfo: ({})
@@ -431,6 +469,7 @@ QtObject {
                 isCategory: isCategory,
                 isThread: false,
                 archived: false,
+                followed: false,
                 parentChatId: "",
                 loaderActive: false,
                 locked: isPrivate && !root.canViewPrivateChannels,
@@ -740,7 +779,7 @@ QtObject {
             for (const chatId in d.contentModules)
                 d.contentModules[chatId].destroy()
             d.contentModules = ({})
-            d.preparedChatId = ""
+            d.preparedChat.id = ""
         }
     }
 

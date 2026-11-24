@@ -40,6 +40,9 @@ SettingsContentBase {
     property bool messageLinkSharingFeatureEnabled: false
     property bool minimizeOnCloseOptionVisible
     property bool refetchTxHistoryClicked: false
+
+    // A setting the backend reads at login was saved: log in again to apply it
+    signal reloginRequested()
     onVisibleChanged: {
         if (visible) {
             root.advancedStore.refreshLogsFolderSize()
@@ -213,12 +216,13 @@ SettingsContentBase {
             }
 
             StatusSettingsLineButton {
+                objectName: "minimizeToTrayOnCloseButton"
                 width: parent.width
                 visible: root.minimizeOnCloseOptionVisible
                 text: qsTr("Minimize to tray icon on close")
                 isSwitch: true
-                checked: !localAccountSensitiveSettings.quitOnClose
-                onToggled: localAccountSensitiveSettings.quitOnClose = !checked
+                checked: !localAccountSettings.quitOnClose
+                onToggled: localAccountSettings.quitOnClose = !checked
             }
 
             RowLayout {
@@ -331,9 +335,9 @@ SettingsContentBase {
                 width: parent.width
                 text: qsTr("Web/dApp Browser")
                 isSwitch: true
-                checked: localAccountSensitiveSettings.isBrowserEnabled // user setting
+                checked: localAccountSettings.isBrowserEnabled // user setting
                 onToggled: {
-                    checked = Qt.binding(() => localAccountSensitiveSettings.isBrowserEnabled)
+                    checked = Qt.binding(() => localAccountSettings.isBrowserEnabled)
 
                     if (!checked) {
                         confirmationPopup.experimentalFeature = root.advancedStore.experimentalFeatures.browser
@@ -412,7 +416,7 @@ SettingsContentBase {
                         onConfirmButtonClicked: {
                             close()
                             if (root.advancedStore.setWakuV2LightClientEnabled(lightMode))
-                                SystemUtils.restartApplication(true)
+                                root.reloginRequested()
                         }
                         onCancelButtonClicked: {
                             close()
@@ -698,6 +702,7 @@ SettingsContentBase {
         FleetsModal {
             id: fleetModal
             advancedStore: root.advancedStore
+            onReloginRequested: root.reloginRequested()
         }
 
         Component {
@@ -712,10 +717,11 @@ SettingsContentBase {
                     qsTr("Are you sure you want to disable debug mode?") :
                     qsTr("Are you sure you want to enable debug mode?"))
                      + "\n" +
-                    qsTr("The app will restart if you confirm.")
+                    qsTr("You will be logged out and back in if you confirm.")
                 onConfirmButtonClicked: {
-                    root.advancedStore.toggleDebug()
-                    SystemUtils.restartApplication(true)
+                    close()
+                    if (root.advancedStore.toggleDebug())
+                        root.reloginRequested()
                 }
                 onCancelButtonClicked: close()
             }

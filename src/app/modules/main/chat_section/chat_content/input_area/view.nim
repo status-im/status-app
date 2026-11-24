@@ -64,6 +64,15 @@ QtObject:
     self.delegate.setText(msg, false)
     self.delegate.sendImages(imagePathsJson, msg, replyTo, self.linkPreviewModel.getUnfuledLinkPreviews(), self.payment_request_model.getPaymentRequests())
 
+  proc textMessageSent*(self: View, requestId: string, error: string) {.signal.}
+
+  proc sendTextMessage*(self: View, msg: string, contentType: int, requestId: string, replyTo: string): bool {.slot.} =
+    if msg.strip().len == 0 or requestId.len == 0:
+      return false
+    # Independent of the composer's text, payments, attachments and previews.
+    self.delegate.sendChatMessage(msg, replyTo, contentType, @[], @[], false, "", requestId)
+    return true
+
   proc getThreadId(self: View): string {.slot.} =
     return self.delegate.getThreadId()
 
@@ -172,12 +181,6 @@ QtObject:
   proc setSendingInProgress*(self: View, value: bool) =
     self.sendingInProgress = value
     self.sendingInProgressChanged()
-
-  proc emitSendingMessageSuccess*(self: View) =
-    self.setSendingInProgress(false)
-
-  proc emitSendingMessageFailure*(self: View) =
-    self.setSendingInProgress(false)
 
   proc delete*(self: View) =
     self.QObject.delete

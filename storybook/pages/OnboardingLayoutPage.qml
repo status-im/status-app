@@ -107,6 +107,9 @@ SplitView {
                 return ctrlProfileEncryptionMigrated.checked
             }
 
+            // stored "Save password" preference of the selected profile
+            property bool stayLoggedIn: false
+
             // seedphrase/mnemonic
             function validMnemonic(mnemonic: string): bool {
                 logs.logEvent("OnboardingStore.validMnemonic", ["mnemonic"], arguments)
@@ -324,8 +327,8 @@ SplitView {
 
         ConvertKeycardAccountPage {
             convertKeycardAccountState: store.convertKeycardAccountState
-            onRestartRequested: {
-                logs.logEvent("restartRequested")
+            onNewSessionRequested: {
+                logs.logEvent("newSessionRequested")
                 root.restart()
             }
             onBackToLoginRequested: {

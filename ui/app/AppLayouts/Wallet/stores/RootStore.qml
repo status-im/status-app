@@ -36,25 +36,27 @@ QtObject {
     }
 
     /* This property holds address of currently selected account in Wallet Main layout  */
-    readonly property var addressFilters: walletSectionInst.addressFilters
-    readonly property var keypairImportModule: walletSectionInst.keypairImportModule
+    readonly property var addressFilters: walletSectionInst?.addressFilters ?? null
+    readonly property var keypairImportModule: walletSectionInst?.keypairImportModule ?? null
 
-    readonly property var transactionActivityStatus: walletSectionInst.activityController.status
+    readonly property var transactionActivityStatus: walletSectionInst?.activityController.status ?? null
 
 
-    readonly property string defaultSelectedKeyUid: userProfile.keyUid
-    readonly property bool defaultSelectedKeyUidMigratedToColdWallet: userProfile.migratedToColdWallet
+    readonly property string defaultSelectedKeyUid: userProfile?.keyUid ?? ""
+    readonly property bool defaultSelectedKeyUidMigratedToColdWallet: userProfile?.migratedToColdWallet ?? false
 
     property string backButtonName: ""
     property var overview: walletSectionOverview
-    property bool balanceLoading: overview.balanceLoading
-    readonly property var accounts: walletSectionAccounts.accounts
+    // The session's backend went away (sign-out): the store outlives it (singleton)
+    onOverviewChanged: if (!overview) resetSessionState()
+    property bool balanceLoading: overview?.balanceLoading ?? false
+    readonly property var accounts: walletSectionAccounts?.accounts ?? null
     property var appSettings: localAppSettings
-    property var accountSensitiveSettings: localAccountSensitiveSettings
+    property var accountSettings: localAccountSettings
 
     property CollectiblesStore collectiblesStore: CollectiblesStore {}
 
-    readonly property bool areTestNetworksEnabled: networksModule.areTestNetworksEnabled
+    readonly property bool areTestNetworksEnabled: networksModule?.areTestNetworksEnabled ?? false
 
     // proxies must not bind to context properties directly: registered late, they never re-evaluate
     readonly property var _savedAddressesModel: !!walletSectionSavedAddresses ? walletSectionSavedAddresses.model : null
@@ -111,6 +113,8 @@ QtObject {
     }
 
     readonly property var currentActivityFiltersStore: {
+        if (!root.overview || !root.overview.mixedcaseAddress)
+            return null
         const address = root.overview.mixedcaseAddress
         if (address in d.activityFiltersStoreDictionary) {
             return d.activityFiltersStoreDictionary[address]
@@ -122,21 +126,21 @@ QtObject {
 
     // "walletSection" is a context property slow to lookup, so we cache it here
     readonly property var walletSectionInst: walletSection
-    readonly property var totalCurrencyBalance: walletSectionInst.totalCurrencyBalance
+    readonly property var totalCurrencyBalance: walletSectionInst?.totalCurrencyBalance ?? null
 
-    readonly property var activityController: walletSectionInst.activityController
-    readonly property var tmpActivityController0: walletSectionInst.tmpActivityController0
-    readonly property var tmpActivityController1: walletSectionInst.tmpActivityController1
-    readonly property var walletConnectController: walletSectionInst.walletConnectController
-    readonly property var dappsConnectorController: walletSectionInst.dappsConnectorController
+    readonly property var activityController: walletSectionInst?.activityController ?? null
+    readonly property var tmpActivityController0: walletSectionInst?.tmpActivityController0 ?? null
+    readonly property var tmpActivityController1: walletSectionInst?.tmpActivityController1 ?? null
+    readonly property var walletConnectController: walletSectionInst?.walletConnectController ?? null
+    readonly property var dappsConnectorController: walletSectionInst?.dappsConnectorController ?? null
 
-    readonly property bool isAccountTokensReloading: walletSectionInst.isAccountTokensReloading
-    readonly property double lastReloadTimestamp: walletSectionInst.lastReloadTimestamp
+    readonly property bool isAccountTokensReloading: walletSectionInst?.isAccountTokensReloading ?? false
+    readonly property double lastReloadTimestamp: walletSectionInst?.lastReloadTimestamp ?? 0
 
-    readonly property var historyTransactions: walletSectionInst.activityController.model
-    readonly property bool loadingHistoryTransactions: walletSectionInst.activityController.status.loadingData
-    readonly property bool newDataAvailable: walletSectionInst.activityController.status.newDataAvailable
-    readonly property bool isNonArchivalNode: walletSectionInst.isNonArchivalNode
+    readonly property var historyTransactions: walletSectionInst?.activityController.model ?? null
+    readonly property bool loadingHistoryTransactions: walletSectionInst?.activityController.status.loadingData ?? false
+    readonly property bool newDataAvailable: walletSectionInst?.activityController.status.newDataAvailable ?? false
+    readonly property bool isNonArchivalNode: walletSectionInst?.isNonArchivalNode ?? false
 
     signal savedAddressAddedOrUpdated(added: bool, name: string, address: string, errorMsg: string)
     signal savedAddressDeleted(name: string, address: string, errorMsg: string)
@@ -185,6 +189,22 @@ QtObject {
                 root.loggedInUserAuthenticated(reason, password, pin, keyUid, "")
             }
         }
+    }
+
+    function resetSessionState() {
+        showSavedAddresses = false
+        showFollowingAddresses = false
+        selectedAddress = ""
+        lastCreatedSavedAddress = undefined
+        addingSavedAddress = false
+        deletingSavedAddress = false
+        backButtonName = ""
+        currentViewedHoldingTokenGroupKey = ""
+        currentViewedHoldingType = 0
+        currentViewedHoldingCommunityId = ""
+        for (const address in d.activityFiltersStoreDictionary)
+            d.activityFiltersStoreDictionary[address].destroy()
+        d.activityFiltersStoreDictionary = {}
     }
 
     function authenticateLoggedInUser(requestedBy) {

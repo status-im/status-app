@@ -21,10 +21,15 @@ QtObject:
       return payload["error"].getStr()
     return ""
   
+  proc delete*(self: Service)
+
   proc newService*(events: EventEmitter, threadpool: ThreadPool): Service =
-    result = Service()
+    new(result, delete)
     result.QObject.setup
     result.events = events
+
+  proc delete*(self: Service) =
+    self.QObject.delete
 
   proc parseSharedUrl*(self: Service, url: string): UrlDataDto =
     try:
@@ -60,3 +65,24 @@ QtObject:
     except Exception as e:
       if not e.msg.contains("not a status message url"):
         error "failed to parse message url", url, errDescription = e.msg
+
+  proc createThreadUrl*(self: Service, chatId: string, threadId: string): string =
+    try:
+      let response = shared_urls.shareThreadUrl(chatId, threadId)
+      let errMsg = extractResultError(response.result)
+      if errMsg != "":
+        raise newException(Exception, errMsg)
+      return response.result.getStr()
+    except Exception:
+      error "failed to create thread url"
+      return ""
+
+  proc parseThreadUrl*(self: Service, url: string): ThreadUrlDataDto =
+    try:
+      let response = shared_urls.parseThreadUrl(url)
+      let errMsg = extractResultError(response.result)
+      if errMsg != "":
+        raise newException(Exception, errMsg)
+      return response.result.toThreadUrlDataDto()
+    except Exception:
+      error "failed to parse thread url"

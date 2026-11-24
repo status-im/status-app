@@ -17,7 +17,10 @@ RowLayout {
     required property string threadName
     required property string parentChatName
     required property bool canEdit
+    property string threadLinkToCopyShare: ""
     required property bool pending
+    property bool deletePending: false
+    property bool followed: false
 
     readonly property bool editing: d.editing
     readonly property StatusTextField editor: inputLoader.status === Loader.Ready
@@ -29,9 +32,17 @@ RowLayout {
     signal renameRequested(string name)
     signal editNameRequested()
     signal markAsReadRequested()
+    signal deleteRequested()
+    signal followRequested()
+    signal unfollowRequested()
+
+    function deleteFinished(error: string) {
+        if (error)
+            d.error = qsTr("Couldn't delete thread: %1").arg(error)
+    }
 
     function beginEditing() {
-        if (!root.canEdit || root.pending)
+        if (!root.canEdit || root.pending || root.deletePending)
             return
         d.draft = root.threadName
         d.error = ""
@@ -138,11 +149,11 @@ RowLayout {
         StatusBaseText {
             objectName: "threadNameError"
             Layout.fillWidth: true
-            visible: root.pending || !!d.error
-            text: root.pending ? qsTr("Renaming...") : d.error
+            visible: root.pending || root.deletePending || !!d.error
+            text: root.deletePending ? qsTr("Deleting...") : root.pending ? qsTr("Renaming...") : d.error
             textFormat: Text.PlainText
             font.pixelSize: Theme.additionalTextSize
-            color: root.pending ? Theme.palette.baseColor1 : Theme.palette.dangerColor1
+            color: (root.pending || root.deletePending) ? Theme.palette.baseColor1 : Theme.palette.dangerColor1
             wrapMode: Text.Wrap
             Accessible.name: text
         }
@@ -152,7 +163,7 @@ RowLayout {
         id: menuButton
         objectName: "threadHeaderMenuButton"
         visible: !!root.threadId
-        enabled: !root.pending
+        enabled: !root.pending && !root.deletePending
         icon.name: "more"
         type: StatusFlatButton.Type.Secondary
         tooltip.text: qsTr("More")
@@ -169,17 +180,24 @@ RowLayout {
             active: false
             sourceComponent: ThreadContextMenu {
                 objectName: "threadHeaderContextMenu"
+                threadId: root.threadId
                 isMobile: SQUtils.Utils.isMobile
-                followEnabled: false
-                followed: false
+                followed: root.followed
+                onFollowRequested: root.followRequested()
+                onUnfollowRequested: root.unfollowRequested()
                 muted: root.muted
                 onMuteRequested: interval => root.muteRequested(interval)
                 onUnmuteRequested: root.unmuteRequested()
                 pinned: false
                 pinEnabled: false
-                deleteEnabled: false
-                threadLinkToCopyShare: ""
-                editEnabled: root.canEdit && !root.pending
+                deleteEnabled: root.canEdit && !root.pending && !root.deletePending
+                onDeleteRequested: {
+                    d.reset()
+                    d.error = ""
+                    root.deleteRequested()
+                }
+                threadLinkToCopyShare: root.threadLinkToCopyShare
+                editEnabled: root.canEdit && !root.pending && !root.deletePending
                 onMarkAsReadRequested: root.markAsReadRequested()
                 onEditNameRequested: root.editNameRequested()
             }

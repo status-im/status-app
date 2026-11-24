@@ -1,21 +1,20 @@
-pytest==7.4.0
-cryptography==42.0.8
-psutil==5.9.5
-pillow==10.0.0
-opencv-python-headless==4.8.0.74
-numpy~=1.25.1
-pytesseract==0.3.10
+pytest==8.4.2
+cryptography==46.0.7
+psutil==7.2.2
+pillow==12.1.1
+opencv-python-headless==4.14.0.94
+numpy==2.2.6; python_version < "3.11"
+numpy==2.3.5; python_version >= "3.11"
+pytesseract==0.3.13
 atomacos==3.3.0; platform_system == "Darwin"
-allure-pytest==2.15.3
-pyperclip==1.8.2
-pytest-rerunfailures==13.0
+allure-pytest==2.16.2
+pyperclip==1.11.0
+pytest-rerunfailures==16.7
 pytest-ignore-flaky==2.1.0
-pytest-timeout==2.2.0
-shortuuid==1.0.12
-pluggy==1.2.0
-beautifulsoup4==4.12.3
-requests==2.31.0
+pytest-timeout==2.4.0
+shortuuid==1.0.13
+beautifulsoup4==4.14.3
+requests==2.32.5
 mnemonic==0.21
-zpywallet==0.6.2
-web3==7.7.0
+web3==7.16.0
 eth-account==0.14.0

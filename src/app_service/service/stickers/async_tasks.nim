@@ -100,10 +100,12 @@ const asyncSendStickerTask: Task = proc(argEncoded: string) {.gcsafe, nimcall.} 
     arg.finish(%* {
       "response": response,
       "chatId": arg.chatId,
+      "threadId": arg.threadId,
       "error": "",
     })
   except Exception as e:
     arg.finish(%* {
       "error": e.msg,
       "chatId": arg.chatId,
+      "threadId": arg.threadId,
     })

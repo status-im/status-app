@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 
+import StatusQ
 import StatusQ.Components
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -25,8 +26,31 @@ Row {
         id: rptImages
 
         Item {
+            id: attachment
+
             height: chatImage.height
             width: chatImage.width
+
+            // Shown while AttachmentPreparer resizes/compresses this image for sending
+            readonly property string source: modelData.toString()
+            property bool preparing: AttachmentPreparer.isPending(source)
+
+            Connections {
+                target: AttachmentPreparer
+
+                function onStarted(source) {
+                    if (source === attachment.source)
+                        attachment.preparing = true
+                }
+                function onPrepared(source) {
+                    if (source === attachment.source)
+                        attachment.preparing = false
+                }
+                function onRejected(source) {
+                    if (source === attachment.source)
+                        attachment.preparing = false
+                }
+            }
 
             // Decoded for its size, not the full photo: a share can attach
             // dozens of camera images and full decodes exhaust memory. The
@@ -46,6 +70,24 @@ Row {
                 bottomLeftRadius: imageArea.leftTail ? Theme.radius / 2 : Theme.radius * 2
                 bottomRightRadius: imageArea.leftTail ? Theme.radius * 2 : Theme.radius / 2
                 unsetBorderWidth: 0
+            }
+
+            Rectangle {
+                objectName: "attachmentPreparingIndicator"
+                anchors.centerIn: chatImage
+                width: 28
+                height: 28
+                radius: width / 2
+                color: Theme.palette.background
+                opacity: 0.85
+                visible: attachment.preparing
+
+                StatusLoadingIndicator {
+                    anchors.centerIn: parent
+                    width: 18
+                    height: 18
+                    color: Theme.palette.primaryColor1
+                }
             }
 
             StatusMouseArea {

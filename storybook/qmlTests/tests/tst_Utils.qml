@@ -266,4 +266,26 @@ Item {
                     { edited: false, content: "", albumImages: "", albumImagesCount: 0 })
         }
     }
+
+    TestCase {
+        name: "Utils_getImageAndCropInfoJson"
+
+        function test_keepsFileUriAndCropRect_data() {
+            return [
+                { tag: "encoded at",
+                  imgPath: "file:///home/jenkins/workspace/status-app/e2e/prs%402/ext/test_images/comm_banner.jpeg" },
+                { tag: "encoded space",
+                  imgPath: "file:///J:/Users/jenkins/my%20logo.jpeg" },
+            ]
+        }
+
+        function test_keepsFileUriAndCropRect(data) {
+            const parsed = JSON.parse(Utils.getImageAndCropInfoJson(data.imgPath, Qt.rect(0, 20, 1300, 1300)))
+            compare(parsed.imagePath, data.imgPath)
+            compare(parsed.cropRect.x, 0)
+            compare(parsed.cropRect.y, 20)
+            compare(parsed.cropRect.width, 1300)
+            compare(parsed.cropRect.height, 1300)
+        }
+    }
 }

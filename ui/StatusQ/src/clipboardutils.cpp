@@ -1,5 +1,7 @@
 #include "StatusQ/clipboardutils.h"
 
+#include "StatusQ/imagepreparation.h"
+
 #include <QBuffer>
 #include <QClipboard>
 #include <QFile>
@@ -63,10 +65,17 @@ QString ClipboardUtils::imageBase64() const
     if (!hasImage())
         return {};
 
+    // The Attachment is prepared (resized/compressed) before sending: keep transparency as PNG,
+    // and don't lose quality to a low-quality JPEG pass first.
     const auto img = image();
+    const bool keepAlpha = ImagePreparation::hasTransparentPixel(img);
     QByteArray byteArray;
     QBuffer buffer(&byteArray);
-    img.save(&buffer, "JPG");
+    if (keepAlpha) {
+        img.save(&buffer, "PNG");
+        return QByteArrayLiteral("data:image/png;base64,") + byteArray.toBase64();
+    }
+    img.save(&buffer, "JPG", 95);
     return QByteArrayLiteral("data:image/jpeg;base64,") + byteArray.toBase64();
 }
 

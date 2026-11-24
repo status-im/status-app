@@ -1,3 +1,4 @@
+#include "StatusQ/attachmentpreparer.h"
 #include "StatusQ/audioutils.h"
 #include "StatusQ/skeletontileitem.h"
 #include "StatusQ/rippleitem.h"
@@ -140,6 +141,8 @@ void registerStatusQTypes() {
                                                 [](QQmlEngine *engine, QJSEngine *scriptEngine) {
         return ImageEncoderUtils::qmlInstance(engine, scriptEngine);
     });
+    qmlRegisterSingletonType<AttachmentPreparer>("StatusQ", 0, 1, "AttachmentPreparer",
+                                                 &AttachmentPreparer::qmlInstance);
     qmlRegisterSingletonType<UrlUtils>("StatusQ", 0, 1, "UrlUtils", [](QQmlEngine* engine, QJSEngine*) {
         return new UrlUtils(engine);
     });
@@ -182,6 +185,11 @@ void registerStatusQTypes() {
         });
 
     qmlRegisterType<LocalNetworkPermission>("StatusQ.Core", 0, 1, "LocalNetworkPermission");
+    qmlRegisterSingletonType("StatusQ.Core", 0, 1, "TestConfig", [](QQmlEngine*, QJSEngine* jsEngine) {
+        auto config = jsEngine->newObject();
+        config.setProperty(QStringLiteral("testMode"), bool(STATUSQ_TESTMODE));
+        return config;
+    });
     qmlRegisterType<RenderSizedImage>("StatusQ.Components.private", 0, 1, "RenderSizedImage");
     qmlRegisterType<RoundedRenderSizedImage>("StatusQ.Components.private", 0, 1, "RoundedRenderSizedImage");
     qmlRegisterType<RoundedAnimatedImage>("StatusQ.Components.private", 0, 1, "RoundedAnimatedImage");
@@ -249,7 +257,6 @@ void registerStatusQTypes() {
 #endif
 
 #ifdef BUNDLE_QML_RESOURCES
-    Q_INIT_RESOURCE(TestConfig);
 #if defined(STATUSQ_HAS_MOBILEWEBVIEW)
     Q_INIT_RESOURCE(customwebview);
 #endif

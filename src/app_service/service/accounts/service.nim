@@ -71,23 +71,12 @@ QtObject:
     result.events = events
     result.threadpool = threadpool
 
-  proc setLocalAccountSettingsFile(self: Service) =
-    if self.loggedInAccount.isValid():
-      singletonInstance.localAccountSettings.setFileName(self.loggedInAccount.name)
-      # The file is per display name (not unique) — keyUid-namespaced settings need this
-      singletonInstance.localAccountSettings.setKeyUid(self.loggedInAccount.keyUid)
-
   proc getLoggedInAccount*(self: Service): AccountDto =
     return self.loggedInAccount
-
-  proc setLoggedInAccount*(self: Service, account: AccountDto) =
-    self.loggedInAccount = account
-    self.setLocalAccountSettingsFile()
 
   proc updateLoggedInAccount*(self: Service, displayName: string, images: Images) =
     self.loggedInAccount.name = displayName
     self.loggedInAccount.images = images
-    singletonInstance.localAccountSettings.setFileName(displayName)
 
   proc init*(self: Service) =
     discard
@@ -130,6 +119,45 @@ QtObject:
 
   proc clearOpenedAccountsCache*(self: Service) =
     self.accounts = @[]
+
+  proc localProfileNames(self: Service, keyUid: string):
+      tuple[displayName: string, otherProfiles: seq[ProfileName]] =
+    ## Empty if the profiles can't be read.
+    var accounts: seq[AccountDto]
+    try:
+      accounts = self.openedAccounts()
+    except CatchableError:
+      return
+    for account in accounts:
+      if account.keyUid == keyUid:
+        result.displayName = account.name
+      else:
+        result.otherProfiles.add((keyUid: account.keyUid, displayName: account.name))
+
+  proc bindLocalAccountSettings(self: Service, keyUid: string, newOnDevice: bool) =
+    let settings = singletonInstance.localAccountSettings
+    if newOnDevice:
+      settings.bindAccount(keyUid)
+      settings.markNewOnDevice()
+      return
+
+    let (displayName, otherProfiles) = self.localProfileNames(keyUid)
+    settings.bindAccount(keyUid, displayName, otherProfiles)
+
+  proc setLoggedInAccount*(self: Service, account: AccountDto, newOnDevice = false) =
+    self.loggedInAccount = account
+    if self.loggedInAccount.isValid():
+      self.bindLocalAccountSettings(account.keyUid, newOnDevice)
+
+  proc selectLoginAccount*(self: Service, keyUid: string) =
+    ## The login screen selection; empty while a new profile is being onboarded.
+    # Once logged in, a login screen still alive during the transition must not rebind.
+    if self.loggedInAccount.isValid():
+      return
+    if keyUid.len == 0:
+      singletonInstance.localAccountSettings.detach()
+    else:
+      self.bindLocalAccountSettings(keyUid, newOnDevice = false)
 
   proc isAppRestartRequiredAfterProfileConversion*(self: Service): bool =
     return DB_BLOCKED_DUE_TO_PROFILE_MIGRATION
@@ -333,6 +361,7 @@ QtObject:
       error "restore account failed", procName="restoreAccountAndLogin", errName = e.name, errDesription = e.msg
 
   proc deleteMultiaccount*(self: Service, keyUid: string): string =
+    let (displayName, otherProfiles) = self.localProfileNames(keyUid)
     try:
       let response = status_account.deleteMultiaccount(keyUid, joinPath(main_constants.ROOTKEYSTOREDIR, keyUid))
 
@@ -341,14 +370,16 @@ QtObject:
         raise newException(RpcException, "invalid response: no error field found")
 
       let error = response.result["error"].getStr
-      if error == "":
-        debug "Account deleted succesfully"
-        return ""
-
-      raise newException(RpcException, error)
+      if error != "":
+        raise newException(RpcException, error)
+      debug "Account deleted succesfully"
     except Exception as e:
       error "deleteMultiaccount failed", procName="deleteMultiaccount", errName = e.name, errDesription = e.msg
       return "deleteMultiaccount failed: " & e.msg
+
+    self.clearOpenedAccountsCache()
+    singletonInstance.localAccountSettings.removeAccount(keyUid, displayName, otherProfiles)
+    return ""
 
   proc createAccountFromPrivateKey*(self: Service, privateKey: string): GeneratedAccountDto =
     if privateKey.len == 0:
@@ -476,7 +507,6 @@ QtObject:
       return
 
     debug "login request accepted, waiting for node.login signal"
-    self.setLocalAccountSettingsFile()
 
   proc login*(self: Service, account: AccountDto, hashedPassword: string, chatPrivateKey: string = "", mnemonic: string = "",
     walletXPub: string = "", dek: string = "") =

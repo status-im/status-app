@@ -51,7 +51,7 @@ method delete*(self: Module) =
   self.controller.delete
 
 method load*(self: Module) =
-  singletonInstance.engine.setRootContextProperty("chatSectionChatContentInputArea", self.viewVariant)
+  singletonInstance.setSessionContextProperty("chatSectionChatContentInputArea", self.viewVariant)
 
   self.controller.init()
   self.view.load()
@@ -90,6 +90,7 @@ method sendChatMessage*(
     paymentRequests: seq[PaymentRequest],
     startNewThread: bool,
     newThreadName: string,
+    sendToken: string = "",
   ) =
   self.controller.sendChatMessage(
     msg = msg,
@@ -101,10 +102,14 @@ method sendChatMessage*(
     threadId = self.threadId,
     startNewThread = startNewThread,
     newThreadName = newThreadName,
+    sendToken = sendToken,
   )
 
 method getThreadId*(self: Module): string =
   return self.threadId
+
+method onTextMessageSent*(self: Module, requestId, error: string) =
+  self.view.textMessageSent(requestId, error)
 
 method setText*(self: Module, text: string, unfurlNewUrls: bool) =
   self.controller.setText(text, unfurlNewUrls)
@@ -148,8 +153,5 @@ method setUrls*(self: Module, urls: seq[string]) =
 method getContactDetails*(self: Module, contactId: string): ContactDetails =
   return self.controller.getContactDetails(contactId)
 
-method onSendingMessageSuccess*(self: Module) =
-  self.view.emitSendingMessageSuccess()
-
-method onSendingMessageFailure*(self: Module) =
-  self.view.emitSendingMessageFailure()
+method onComposerSendFinished*(self: Module) =
+  self.view.setSendingInProgress(false)

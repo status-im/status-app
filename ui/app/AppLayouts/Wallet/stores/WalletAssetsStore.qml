@@ -30,16 +30,29 @@ QtObject {
             balance         [string] - balance that the `account` has for token with `tokenKey`
 
     */
-    readonly property var baseGroupedAccountAssetModel: walletSectionAssets.groupedAccountAssetsModel
+    readonly property var baseGroupedAccountAssetModel: walletSectionAssets?.groupedAccountAssetsModel ?? null
 
     // Terminal, already-aggregated assets model built in Nim (replaces the QML
     // AssetsViewAdaptor proxy chain). Consumed by AssetsView in RightTabView.
-    readonly property var assetsModel: walletSectionAssetsView.assetsModel
+    readonly property var assetsModel: walletSectionAssetsView?.assetsModel ?? null
 
     // Re-sorts the terminal assets model in place. AssetsView emits the sort
     // intent; this wires it to the model.
     function sortAssets(roleName, order) {
         walletSectionAssetsView.sortBy(roleName, order)
+    }
+
+    // The visibility and order preferences belong to the logged-in profile: the store
+    // outlives the session, so they follow the session's backend.
+    readonly property bool _tokenPreferencesAvailable: !!root.walletTokensStore
+                                                       && root.walletTokensStore.tokenPreferencesAvailable
+    on_TokenPreferencesAvailableChanged: {
+        if (root._tokenPreferencesAvailable) {
+            root.assetsController.revert()
+        } else {
+            root.assetsController.loadingStarted()
+            root.assetsController.loadingFinished("")
+        }
     }
 
     readonly property var assetsController: ManageTokensController {

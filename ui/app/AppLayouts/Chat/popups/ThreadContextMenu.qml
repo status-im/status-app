@@ -22,6 +22,7 @@ StatusMenu {
     property bool editEnabled: false
     property bool followEnabled: true
     property bool muteEnabled: true
+    property string threadId: ""
 
     signal editNameRequested()
     signal followRequested()
@@ -108,7 +109,7 @@ StatusMenu {
         icon.name: "delete"
         type: StatusAction.Type.Danger
         onTriggered: {
-            if (localAccountSensitiveSettings.showDeleteThreadWarning)
+            if (localAccountSettings.showDeleteThreadWarning)
                 Global.openPopup(confirmDeletePopupComponent)
             else
                 root.deleteRequested()
@@ -125,10 +126,18 @@ StatusMenu {
             confirmationText: qsTr("Are you sure you want to delete this thread? It may remain visible on other participants' devices.")
             destroyOnClose: true
             doNotShowAgainOptionVisible: true
-            onAboutToShow: doNotShowAgainChecked = false
+            property string threadIdAtOpen: ""
+            onAboutToShow: {
+                doNotShowAgainChecked = false
+                threadIdAtOpen = root.threadId
+            }
             onConfirmButtonClicked: {
+                if (!root.deleteEnabled || threadIdAtOpen !== root.threadId) {
+                    close()
+                    return
+                }
                 if (doNotShowAgainChecked) {
-                    localAccountSensitiveSettings.showDeleteThreadWarning = false
+                    localAccountSettings.showDeleteThreadWarning = false
                 }
                 root.deleteRequested()
                 close()

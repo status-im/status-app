@@ -3,7 +3,7 @@ project(TestStatusQ LANGUAGES CXX)
 set(CMAKE_AUTOMOC ON)
 
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS
-        QuickTest Qml Quick QuickPrivate QuickLayoutsPrivate WebEngineQuick REQUIRED)
+        QuickTest Qml Quick QuickPrivate QuickLayoutsPrivate WebEngineQuick Multimedia REQUIRED)
 
 ##############
 # Test Library
@@ -125,6 +125,12 @@ target_compile_definitions(TestRenderSizedImage PRIVATE
     TEST_ASSETS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/TestComponents/assets/")
 add_test(NAME TestRenderSizedImage COMMAND TestRenderSizedImage)
 
+add_executable(TestImagePreparation src/tst_imagepreparation.cpp)
+target_link_libraries(TestImagePreparation PRIVATE Qt::Test Qt::Gui Qt::Qml StatusQ)
+target_compile_definitions(TestImagePreparation PRIVATE
+    TEST_ASSETS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/TestComponents/assets/")
+add_test(NAME TestImagePreparation COMMAND TestImagePreparation)
+
 add_executable(TestIncubationCadence src/tst_incubationcadence.cpp)
 target_link_libraries(TestIncubationCadence PRIVATE Qt::Test Qt::Gui Qt::Qml Qt::Quick StatusQ)
 add_test(NAME TestIncubationCadence COMMAND TestIncubationCadence)
@@ -157,8 +163,16 @@ add_executable(TestKeyboardState src/tst_keyboardstate.cpp)
 target_link_libraries(TestKeyboardState PRIVATE Qt::Test Qt::Gui Qt::Quick StatusQ)
 add_test(NAME TestKeyboardState COMMAND TestKeyboardState)
 
+qt_add_executable(TestAudioUtils src/tst_audioutils.cpp)
+target_link_libraries(TestAudioUtils PRIVATE Qt::Test Qt::Gui Qt::Multimedia StatusQ)
+add_test(NAME TestAudioUtils COMMAND TestAudioUtils)
+
 if(NOT ANDROID AND NOT IOS)
     qt_add_executable(TestBrowserCertDistrust src/tst_browsercertdistrust.cpp)
     target_link_libraries(TestBrowserCertDistrust PRIVATE Qt::Test Qt::Network Qt::WebEngineQuick StatusQ)
     add_test(NAME TestBrowserCertDistrust COMMAND TestBrowserCertDistrust)
+
+    qt_add_executable(TestRestartApplication src/tst_restartapplication.cpp)
+    target_link_libraries(TestRestartApplication PRIVATE Qt::Test Qt::Network Qt::Quick StatusQ)
+    add_test(NAME TestRestartApplication COMMAND TestRestartApplication)
 endif()

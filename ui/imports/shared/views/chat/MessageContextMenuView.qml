@@ -73,14 +73,18 @@ StatusMenu {
         readonly property int defaultActionSize: iconSize + 2 * compactPadding
         readonly property int singleRowActionSize: iconSize + 3 * compactPadding
         readonly property bool editActionVisible: root.isMyMessage && !root.editRestricted && !root.disabledForChat
+        readonly property bool threadActionVisible: root.threadsFeatureEnabled && !root.isThreadView && !root.disabledForChat &&
+                                                  Utils.isThreadSupportedChatType(root.chatType)
         readonly property bool compactPinActionVisible: !root.isThreadView && !editActionVisible && d.canPinMessage
         readonly property bool reactionsVisible: !root.emojiReactionLimitReached && (!root.disabledForChat || root.forceEnableEmojiReactions)
         readonly property int singleRowActionCount: 1 +
                                                     (!root.disabledForChat ? 2 : 0) +
                                                     (editActionVisible ? 1 : 0) +
+                                                    (threadActionVisible ? 1 : 0) +
                                                     ((!!root.selectedText || d.canCopyMessage) ? 1 : 0) +
                                                     (compactPinActionVisible ? 1 : 0)
-        readonly property int singleRowReactionsCountLimit: 3
+        // Keep the compact menu within its existing mobile width when adding the thread action.
+        readonly property int singleRowReactionsCountLimit: threadActionVisible ? 2 : 3
         readonly property int singleRowReactionsWidth: (singleRowReactionsCountLimit + 1) * singleRowActionSize +
                                                        singleRowReactionsCountLimit * compactPadding
         readonly property int singleRowMenuWidth: 2 * compactPadding +
@@ -226,6 +230,24 @@ StatusMenu {
             }
 
             StatusFlatRoundButton {
+                objectName: "messageContextMenu_openThread"
+                Accessible.name: openThreadAction.text
+                visible: !root.expanded && d.threadActionVisible
+                Layout.preferredWidth: d.singleRowActionSize
+                Layout.preferredHeight: d.singleRowActionSize
+                type: StatusFlatRoundButton.Type.Quaternary
+                icon.name: "thread"
+                icon.width: d.iconSize
+                icon.height: d.iconSize
+                icon.color: Theme.palette.primaryColor1
+                onClicked: {
+                    root.openThread()
+                    root.close()
+                }
+                onHoveredChanged: root.hoverChanged(hovered)
+            }
+
+            StatusFlatRoundButton {
                 objectName: "messageContextMenu_edit"
                 visible: !root.expanded && d.editActionVisible
                 Layout.preferredWidth: d.singleRowActionSize
@@ -338,11 +360,10 @@ StatusMenu {
     MsgCtxAction {
         id: openThreadAction
         objectName: "messageContextMenu_openThread"
-        text: qsTr("Create Thread")
-        icon.name: "chat"
+        text: root.hasThread ? qsTr("Open thread") : qsTr("Create Thread")
+        icon.name: "thread"
         onTriggered: root.openThread()
-        enabled: root.threadsFeatureEnabled && !root.hasThread && !root.isThreadView && !root.disabledForChat &&
-                Utils.isThreadSupportedChatType(root.chatType)
+        enabled: root.expanded && d.threadActionVisible
     }
 
     MsgCtxAction {

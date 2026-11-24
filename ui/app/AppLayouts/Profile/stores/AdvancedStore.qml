@@ -35,8 +35,8 @@ QtObject {
             return qsTr("Disabled")
         }
     }
-    readonly property bool ensCommunityPermissionsEnabled: localAccountSensitiveSettings.ensCommunityPermissionsEnabled
-    readonly property bool copyMessageLinksEnabled: localAccountSensitiveSettings.copyMessageLinksEnabled
+    readonly property bool ensCommunityPermissionsEnabled: localAccountSettings.ensCommunityPermissionsEnabled
+    readonly property bool copyMessageLinksEnabled: localAccountSettings.copyMessageLinksEnabled
 
     property var customNetworksModel: advancedModule? advancedModule.customNetworksModel : []
 
@@ -123,11 +123,12 @@ QtObject {
         root.advancedModule.setNetworkName(networkName)
     }
 
+    // True when saved: the fleet applies from the next login on
     function setFleet(fleetName) {
         if(!root.advancedModule)
-            return
+            return false
 
-        root.advancedModule.setFleet(fleetName)
+        return root.advancedModule.setFleet(fleetName)
     }
 
     function setWakuV2LightClientEnabled(mode) {
@@ -137,11 +138,12 @@ QtObject {
         return root.advancedModule.setWakuV2LightClientEnabled(mode)
     }
 
+    // True when saved: the log level applies from the next login on
     function toggleDebug() {
         if(!root.advancedModule)
-            return
+            return false
 
-        root.advancedModule.toggleDebug()
+        return root.advancedModule.toggleDebug()
     }
 
     function toggleNimbusProxy() {
@@ -186,7 +188,7 @@ QtObject {
             advancedModule.toggleCommunitiesPortalSection()
         }
         else if (feature === experimentalFeatures.activityCenter) {
-            localAccountSensitiveSettings.isActivityCenterEnabled = !localAccountSensitiveSettings.isActivityCenterEnabled
+            localAccountSettings.isActivityCenterEnabled = !localAccountSettings.isActivityCenterEnabled
         }
     }
 
@@ -207,11 +209,11 @@ QtObject {
     }
 
     function toggleEnsCommunityPermissionsEnabled() {
-        localAccountSensitiveSettings.ensCommunityPermissionsEnabled = !root.ensCommunityPermissionsEnabled
+        localAccountSettings.ensCommunityPermissionsEnabled = !root.ensCommunityPermissionsEnabled
     }
 
     function toggleCopyMessageLinksEnabled() {
-        localAccountSensitiveSettings.copyMessageLinksEnabled = !root.copyMessageLinksEnabled
+        localAccountSettings.copyMessageLinksEnabled = !root.copyMessageLinksEnabled
     }
 
     function toggleManageCommunityOnTestnet() {

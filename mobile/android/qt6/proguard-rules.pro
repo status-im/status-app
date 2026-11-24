@@ -28,6 +28,8 @@
 -keep class app.status.mobile.MediaStoreHelper { *; }
 -keep class app.status.mobile.DensityListener { *; }
 -keep class app.status.mobile.ShakeDetector { *; }
+# AudioUtils constructs this listener and calls start/stop through JNI.
+-keep class app.status.mobile.SilentModeListener { *; }
 
 # ui/StatusQ/src/safutils_android.cpp: callStaticMethod on SafHelper
 # (takePersistablePermission, getReadableTreePath, copyFromPathToTree).
@@ -83,6 +85,13 @@
 -keep class androidx.core.provider.FontsContractCompat { *; }
 -keep class androidx.core.provider.FontsContractCompat$FontFamilyResult { *; }
 -keep class androidx.core.provider.FontsContractCompat$FontInfo { *; }
+
+# Qt qtforandroid plugin, qandroidplatformservices.cpp: QDesktopServices::openUrl
+# turns a file:// URL into a content:// one with FileProvider.getUriForFile by
+# name. Without it Qt.openUrlExternally fails for every local file.
+-keepclassmembers class androidx.core.content.FileProvider {
+    public static android.net.Uri getUriForFile(android.content.Context, java.lang.String, java.io.File);
+}
 
 # MobileUI (im.status:mobileui-android): pushnotification_android.cpp calls
 # PushNotificationHelper static methods by name (initialize,

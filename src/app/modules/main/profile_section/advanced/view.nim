@@ -22,12 +22,11 @@ QtObject:
     read = getFleet
     notify = fleetChanged
 
-  proc setFleet*(self: View, fleet: string) {.slot.} =
-    self.delegate.setFleet(fleet)
-
-  # include this if we decide to not quit the app on fleet change
-  # proc emitFleetSignal*(self: View) =
-  #   self.fleetChanged()
+  proc setFleet*(self: View, fleet: string): bool {.slot.} =
+    ## The fleet applies from the next login on.
+    result = self.delegate.setFleet(fleet)
+    if result:
+        self.fleetChanged()
 
   proc logDir*(self: View): string {.slot.} =
     return self.delegate.getLogDir()
@@ -49,8 +48,8 @@ QtObject:
     read = getIsDebugEnabled
     notify = isDebugEnabledChanged
 
-  proc toggleDebug*(self: View) {.slot.} =
-    self.delegate.toggleDebug()
+  proc toggleDebug*(self: View): bool {.slot.} =
+    return self.delegate.toggleDebug()
 
   proc isNimbusProxyEnabledChanged*(self: View) {.signal.}
   proc getIsNimbusProxyEnabled*(self: View): bool {.slot.} =

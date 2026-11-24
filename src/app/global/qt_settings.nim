@@ -1,6 +1,6 @@
 ## Thin wrapper around seaqt QSettings exposing the same public API that
-## the three caller modules (local_account_settings, local_account_sensitive_settings,
-## local_app_settings) previously obtained from dotherside_ext.
+## caller modules (local_account_settings, local_app_settings) previously obtained
+## from dotherside_ext.
 ##
 ## Callers only need to add:
 ##   import app/global/qt_settings
@@ -48,6 +48,12 @@ proc setValue*(self: QSettings, key: string, value: nimqml.QVariant) =
 
 proc remove*(self: QSettings, key: string) =
   sqset.remove(self.inner, key)
+
+proc contains*(self: QSettings, key: string): bool =
+  sqset.contains(self.inner, key)
+
+proc allKeys*(self: QSettings): seq[string] =
+  sqset.allKeys(self.inner)
 
 proc sync*(self: QSettings) =
   sqset.sync(self.inner)

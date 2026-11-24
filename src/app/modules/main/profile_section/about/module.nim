@@ -28,7 +28,7 @@ proc newModule*(
   result.controller = controller.newController(result, events, aboutService)
   result.moduleLoaded = false
 
-  singletonInstance.engine.setRootContextProperty("aboutModule", result.viewVariant)
+  singletonInstance.setSessionContextProperty("aboutModule", result.viewVariant)
 
 method delete*(self: Module) =
   self.view.delete

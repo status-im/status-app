@@ -116,6 +116,8 @@ QtObject {
     property var mutualContactsModel
 
     property bool isDevBuild
+    // Whether the app can restart itself (not on iOS): otherwise the user reopens Status
+    property bool restartSupported: true
 
     signal openExternalLink(string link)
     signal saveDomainToUnfurledWhitelist(string domain)
@@ -690,8 +692,8 @@ QtObject {
         openPopup(termsOfUsePopupComponent)
     }
 
-    function openQuitConfirmPopup() {
-        openPopup(quitConfirmPopupComponent)
+    function openSignOutConfirmPopup() {
+        openPopup(signOutConfirmPopupComponent)
     }
 
     function openQRScannerPopup() {
@@ -884,6 +886,7 @@ QtObject {
                 onKeycardFlowCompleted: function(flow, keyUid, keycardUid, success) {
                     Global.keycardFlowDone(flow, keyUid, keycardUid, success)
                 }
+                onSignOutRequested: Global.signOutConfirmed()
 
                 onClosed: destroy()
             }
@@ -1792,14 +1795,14 @@ QtObject {
             }
         },
         Component {
-            id: quitConfirmPopupComponent
+            id: signOutConfirmPopupComponent
 
             SignOutConfirmationDialog {
                 id: confirmDialog
                 secureStorage: root.secureStorage
                 privacyStore: root.privacyStore
                 keyUid: root.privacyStore.keyUid
-                onSignOutRequested: mainModule.signOutAndQuit()
+                onSignOutRequested: Global.signOutConfirmed()
             }
         },
 
@@ -1887,15 +1890,18 @@ QtObject {
             ConfirmationDialog {
                 title: qsTr("Display zoom changed")
                 destroyOnClose: true
-                confirmButtonLabel: qsTr("Restart")
+                confirmButtonLabel: root.restartSupported ? qsTr("Restart") : qsTr("OK")
                 cancelButtonLabel: qsTr("Not Now")
                 cancelBtnType: ""
-                showCancelButton: true
-                confirmationText: qsTr("Restart Status to apply your new display zoom")
+                showCancelButton: root.restartSupported
+                confirmationText: root.restartSupported
+                                  ? qsTr("Restart Status to apply your new display zoom")
+                                  : qsTr("Close and reopen Status to apply your new display zoom")
                 onCancelButtonClicked: close()
                 onConfirmButtonClicked: {
                     close()
-                    root.restartRequested()
+                    if (root.restartSupported)
+                        root.restartRequested()
                 }
             }
         }

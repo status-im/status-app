@@ -15,7 +15,7 @@ ConfirmationDialog {
 
     executeConfirm: () => {
         if (doNotShowAgainChecked) {
-            localAccountSensitiveSettings.showDeleteMessageWarning = false
+            localAccountSettings.showDeleteMessageWarning = false
         }
         close()
         messageStore.deleteMessage(messageId)

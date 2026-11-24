@@ -72,6 +72,7 @@ Item {
     property bool sendViaPersonalChatEnabled
     property bool messageLinkSharingEnabled
     property bool threadsFeatureEnabled
+    property bool threadsFeatureEnabledV2
     property string disabledTooltipText
     property bool paymentRequestFeatureEnabled
     property bool joined
@@ -93,7 +94,8 @@ Item {
 
     signal openStickerPackPopup(string stickerPackId)
     signal tokenPaymentRequested(string recipientAddress, string tokenKey, string rawAmount)
-    signal openThreadRequested(string threadId, string threadName)
+    signal openThreadRequested(string threadId, string threadName, string parentMessageId)
+    signal renameThreadRequested(string threadId, string threadName)
 
     // Unfurling related requests:
     signal setNeverAskAboutUnfurlingAgain(bool neverAskAgain)
@@ -140,13 +142,6 @@ Item {
             chatRepeater.forceActiveFocus()
     }
 
-    Connections {
-        target: d.activeMessagesStore.messageModule
-
-        function onThreadOpenRequested(threadId, threadName) {
-            root.openThreadRequested(threadId, threadName)
-        }
-    }
 
     QtObject {
         id: d
@@ -681,15 +676,13 @@ Item {
                 myPublicKey: root.myPublicKey
 
                 onShowReplyArea: (messageId, author) => d.showReplyArea(messageId)
+                onRenameThreadRequested: (threadId, threadName, parentMessageId) =>
+                    root.renameThreadRequested(threadId, threadName)
                 onOpenThread: (threadId, threadName, parentMessageId) => {
                     if (root.threadsFeatureEnabled
                             && Utils.isThreadSupportedChatType(root.activeChatType)
                             && !d.activeMessagesStore.threadId) {
-                        if (threadId) {
-                            root.openThreadRequested(threadId, threadName)
-                            return
-                        }
-                        d.activeMessagesStore.createThread(parentMessageId)
+                        root.openThreadRequested(threadId, threadName, parentMessageId)
                     }
                 }
                 onOpenStickerPackPopup: stickerPackId => root.openStickerPackPopup(stickerPackId)
@@ -788,6 +781,7 @@ Item {
                     }
 
                     threadsEnabled: root.threadsFeatureEnabled
+                    threadsEnabledV2: root.threadsFeatureEnabledV2
                     isThread: d.activeMessagesStore.threadId !== ""
                     chatName: root.parentModule?.activeItem?.name || ""
 

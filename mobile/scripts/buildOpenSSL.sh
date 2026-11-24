@@ -97,7 +97,7 @@ mkdir -p "${SSL_BUILD_DIR}"
     no-ui-console
   # Rebuilding isn't working with the default target, so we need to clean and build again
   make clean
-  make -j$(sysctl -n hw.ncpu) $PLATFORM_BUILD_ARGS build_libs
+  make -j"$(nproc 2>/dev/null || sysctl -n hw.ncpu)" $PLATFORM_BUILD_ARGS build_libs
 
   if [[ "$OS" == "macos" ]]; then
     # Headers + static libs only (no apps, docs or openssl.cnf)

@@ -17,6 +17,7 @@ import app_service/service/chat/dto/chat
 import app/global/feature_flags
 import app/global/global_singleton
 import app/global/qt_settings
+import app/modules/main/io_interface as main_interface
 import app/modules/main/chat_section/module as section_module
 import app/modules/main/chat_section/controller as section_controller
 import app/modules/main/chat_section/view as section_view
@@ -29,7 +30,7 @@ privateAccess(search_module.Module)
 privateAccess(view.View)
 privateAccess(message_service.Service)
 privateAccess(chat_service.Service)
-privateAccess(LocalAccountSensitiveSettings)
+privateAccess(LocalAccountSettings)
 
 type SearchDelegate = ref object of search_interface.AccessInterface
   completions: seq[seq[MessageDto]]
@@ -222,12 +223,22 @@ privateAccess(section_module.Module)
 privateAccess(chat_item.ChatItem)
 
 type
+  SectionDelegate = ref object of main_interface.AccessInterface
+    notifications: seq[tuple[sectionId: string, hasUnreadMessages: bool, notificationsCount: int]]
   ContentStub = ref object of content_interface.AccessInterface
     scrolledTo: seq[string]
     renamedTo: seq[string]
   SectionHarness = ref object of section_module.Module
     activated: seq[string]
     panelClosed: bool
+    refreshes: seq[string]
+
+method requestThreadLinkRefresh(self: SectionHarness, chatId: string) =
+  self.refreshes.add(chatId)
+
+method onNotificationsUpdated(self: SectionDelegate, sectionId: string,
+    sectionHasUnreadMessages: bool, sectionNotificationCount: int) =
+  self.notifications.add((sectionId, sectionHasUnreadMessages, sectionNotificationCount))
 
 method scrollToMessage(self: ContentStub, messageId: string) =
   self.scrolledTo.add(messageId)
@@ -245,9 +256,14 @@ method closeThreadPanel(self: SectionHarness) =
   self.panelClosed = true
 
 proc newSectionHarness(service: message_service.Service, events: EventEmitter): SectionHarness =
+  let chats = chat_service.newService(events, nil, nil)
+  chats.chats["parent"] = ChatDto(id: "parent")
+  service.chatService = chats
   result = SectionHarness(messageService: service)
+  result.delegate = SectionDelegate()
+  result.events = events
   result.controller = section_controller.newController(result, "section", false, events,
-    nil, nil, nil, nil, nil, service, nil, nil, nil, nil, nil, nil)
+    nil, nil, nil, chats, nil, service, nil, nil, nil, nil, nil, nil)
   result.view = section_view.newView(result)
   result.viewVariant = newQVariant(result.view)
   result.threadChatIds = initHashSet[string]()
@@ -256,6 +272,59 @@ proc newSectionHarness(service: message_service.Service, events: EventEmitter): 
     categoryOpened: true)])
 
 suite "thread search result navigation":
+  test "unbuilt sections queue the latest complete navigation and cancel it on leaving":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    let section = newSectionHarness(service, events)
+    defer: section.delete()
+
+    check section.openCommunityChatAndScrollToMessage("parent", "reply", "thread")
+    check section.pendingNavigation.chatId == "parent"
+    check section.pendingNavigation.threadId == "thread"
+    check section.pendingNavigation.messageId == "reply"
+    check section.openCommunityChatAndScrollToMessage("other", "message")
+    check section.pendingNavigation.chatId == "other"
+    check section.pendingNavigation.threadId == ""
+    check section.pendingNavigation.messageId == "message"
+    section.onActiveSectionChange("other-section")
+    check section.pendingNavigation.chatId == ""
+    check section.pendingNavigation.messageId == ""
+
+  test "thread-only navigation waits for metadata and opens on an incremental update":
+    if THREADS_ENABLED:
+      let events = createEventEmitter()
+      let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+      let section = newSectionHarness(service, events)
+      defer: section.delete()
+      section.chatsLoaded = true
+      section.controller.init()
+      service.init()
+      section.chatContentModules["thread"] = ContentStub()
+      service.onAsyncLoadChatThreadsForChats($(%* {"chatIds": ["parent"], "threads": []}))
+
+      check section.openCommunityChatAndScrollToMessage("parent", "", "thread")
+      check section.pendingThreadNavigation
+      events.emit(chat_service.SIGNAL_CHAT_THREADS_UPDATED, chat_service.ChatThreadsUpdatedArgs(threads: @[
+        ThreadDto(chatId: "parent", threadId: "thread", parentMessageId: "root", name: "Thread")
+      ]))
+      check section.activated == @["parent", "thread"]
+      check section.panelClosed
+      check not section.pendingThreadNavigation
+    else:
+      skip()
+
+  test "selecting a channel cancels a pending thread-only navigation":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    let section = newSectionHarness(service, events)
+    defer: section.delete()
+    section.pendingThreadId = "thread"
+    section.pendingThreadParentChatId = "parent"
+    section.pendingThreadNavigation = true
+    procCall section_module.Module(section).setActiveItem("parent")
+    check section.pendingThreadId == ""
+    check not section.pendingThreadNavigation
+
   test "thread rows inherit persisted mute state and preserve mention markers on updates":
     let events = createEventEmitter()
     let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
@@ -293,7 +362,7 @@ suite "thread search result navigation":
       let content = ContentStub()
       section.chatContentModules["thread"] = content
 
-      let settings = singletonInstance.localAccountSensitiveSettings
+      let settings = singletonInstance.localAccountSettings
       let previousSettings = settings.settings
       let settingsDir = createTempDir("thread-search-", "")
       let settingsFile = settingsDir / "settings.ini"
@@ -331,6 +400,8 @@ suite "thread search result navigation":
       check section.pendingThreadId == ""
       check section.pendingThreadMessageId == ""
       check settings.getSectionLastOpenThread("section") == savedThread
+      # Only backend unread counts publish section badge updates.
+      check SectionDelegate(section.delegate).notifications.len == 0
     else:
       skip()
 
@@ -394,6 +465,7 @@ suite "thread search result navigation":
             "parentMessageId": "cached-root", "name": "Cached"}]
         }))
         check section.openCommunityChatAndScrollToMessage("parent", "new-target", nextThreadId)
+        check section.pendingNavigation.chatId == ""
         check section.pendingThreadMessageId == ""
         let activated = section.activated
         section.onChatThreadsForChatsLoaded(@[
@@ -431,12 +503,15 @@ suite "thread search result navigation":
       let thread = ThreadDto(chatId: "parent", threadId: "thread", parentMessageId: "root", name: "Thread")
 
       check section.openCommunityChatAndScrollToMessage("parent", "target", "thread")
-      check section.activated == @["parent"]
+      check section.activated.len == 0
       section.onChatThreadsForChatsLoaded(@[thread], @["parent"])
       check content.scrolledTo.len == 0
-      check section.pendingThreadMessageId == "target"
+      check section.pendingNavigation.messageId == "target"
 
       section.chatsLoaded = true
+      service.onAsyncLoadChatThreadsForChats($(%* {"chatIds": ["parent"], "threads": []}))
+      let pending = section.pendingNavigation
+      check section.openCommunityChatAndScrollToMessage(pending.chatId, pending.messageId, pending.threadId)
       section.onChatThreadsForChatsLoaded(@[thread], @["unrelated"])
       check content.scrolledTo.len == 0
       check content.renamedTo.len == 0
@@ -455,6 +530,8 @@ suite "thread search result navigation":
       let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
       let section = newSectionHarness(service, events)
       defer: section.delete()
+      section.chatsLoaded = true
+      service.onAsyncLoadChatThreadsForChats($(%* {"chatIds": ["parent"], "threads": []}))
       check section.openCommunityChatAndScrollToMessage("parent", "target", "thread")
       section.onActiveSectionChange("another-section")
       check section.pendingThreadId == ""
@@ -468,6 +545,8 @@ suite "thread search result navigation":
       let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
       let section = newSectionHarness(service, events)
       defer: section.delete()
+      section.chatsLoaded = true
+      service.onAsyncLoadChatThreadsForChats($(%* {"chatIds": ["parent"], "threads": []}))
       check section.openCommunityChatAndScrollToMessage("parent", "target", "thread")
       section.onChatThreadsLoadingFailed("unrelated")
       check section.pendingThreadMessageId == "target"
@@ -486,5 +565,317 @@ suite "thread search result navigation":
       section.chatsLoaded = true
       check not section.openCommunityChatAndScrollToMessage("missing-parent", "target", "thread")
       check section.activated.len == 0
+    else:
+      skip()
+
+  test "deletion removes navigation rows and redirects an open thread to its parent":
+    if THREADS_ENABLED:
+      privateAccess(section_controller.Controller)
+      let events = createEventEmitter()
+      let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+      let section = newSectionHarness(service, events)
+      defer: section.delete()
+      section.chatsLoaded = true
+      section.view.chatsModel().setData(@[
+        chat_item.ChatItem(id: "parent", name: "Parent", canView: true),
+        chat_item.ChatItem(id: "thread", name: "Thread", isThread: true, parentChatId: "parent")])
+      section.threadChatIds.incl("thread")
+      section.controller.activeItemId = "thread"
+      section.view.setOpenThread("thread", "Thread", "parent")
+      section.onChatThreadsForChatsLoaded(@[ThreadDto(chatId: "parent", threadId: "thread",
+        parentMessageId: "root", deleted: true)], @[])
+      check section.view.chatsModel().getItemById("thread").isNil
+      check not section.view.chatsModel().getItemById("parent").isNil
+      check section.activated == @["parent"]
+      check section.panelClosed
+      check "thread" notin section.threadChatIds
+    else:
+      skip()
+
+  test "deleted threads disappear from search locations and cached destinations":
+    let events = createEventEmitter()
+    let module = search_module.newModule(nil, events, nil, nil, nil, nil)
+    defer: module.delete()
+    module.threadLocationChatId = "parent"
+    module.onThreadLocationsLoaded(@[
+      ThreadDto(chatId: "parent", threadId: "dead", name: "Delete"),
+      ThreadDto(chatId: "parent", threadId: "keep", name: "Keep")], @["parent"])
+    module.controller.addResultItemDetails("deleted-result", "section", "parent", "message", "dead")
+    module.controller.addResultItemDetails("other-result", "section", "parent", "other", "keep")
+    module.onThreadLocationsLoaded(@[ThreadDto(chatId: "parent", threadId: "dead", deleted: true)], @[])
+    check module.view.threadLocationMenuModel().count() == 1
+    check not module.controller.resultItems.hasKey("deleted-result")
+    check module.controller.resultItems.hasKey("other-result")
+
+suite "thread link navigation":
+  test "a thread link waits for metadata without a message target":
+    if THREADS_ENABLED:
+      let events = createEventEmitter()
+      let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+      let section = newSectionHarness(service, events)
+      defer: section.delete()
+      section.chatsLoaded = true
+      service.chatThreadListsLoadingChats.incl("parent")
+      let content = ContentStub()
+      section.chatContentModules["thread"] = content
+      check section.openCommunityChatAndScrollToMessage("parent", "", "thread")
+      check section.pendingThreadNavigation
+      check section.pendingThreadMessageId == ""
+      section.onChatThreadsForChatsLoaded(@[ThreadDto(chatId: "parent", threadId: "thread",
+        parentMessageId: "root", name: "Thread")], @["parent"])
+      check section.activated == @["parent", "thread"]
+      check section.panelClosed
+      check content.scrolledTo.len == 0
+      check not section.pendingThreadNavigation
+    else:
+      skip()
+
+  test "leaving a section cancels a pending thread link":
+    if THREADS_ENABLED:
+      let events = createEventEmitter()
+      let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+      let section = newSectionHarness(service, events)
+      defer: section.delete()
+      check section.openCommunityChatAndScrollToMessage("parent", "", "thread")
+      check section.pendingNavigation.threadId == "thread"
+      section.onActiveSectionChange("elsewhere")
+      check section.pendingThreadId == ""
+      check section.pendingNavigation.threadId == ""
+      check not section.pendingThreadNavigation
+    else:
+      skip()
+
+  test "failed metadata loading cancels a pending thread link":
+    if THREADS_ENABLED:
+      let events = createEventEmitter()
+      let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+      let section = newSectionHarness(service, events)
+      defer: section.delete()
+      section.chatsLoaded = true
+      service.chatThreadListsLoadingChats.incl("parent")
+      check section.openCommunityChatAndScrollToMessage("parent", "", "thread")
+      section.onChatThreadsLoadingFailed("parent")
+      check section.pendingThreadId == ""
+      check not section.pendingThreadNavigation
+    else:
+      skip()
+
+  test "a thread link rejects a missing or inaccessible parent":
+    if THREADS_ENABLED:
+      let events = createEventEmitter()
+      let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+      let section = newSectionHarness(service, events)
+      defer: section.delete()
+      section.chatsLoaded = true
+      check not section.openCommunityChatAndScrollToMessage("missing", "", "thread")
+      section.view.chatsModel().getItemById("parent").canView = false
+      check not section.openCommunityChatAndScrollToMessage("parent", "", "thread")
+      check section.activated.len == 0
+    else:
+      skip()
+
+  test "a missing thread refreshes once before reporting unavailable":
+    if THREADS_ENABLED:
+      let events = createEventEmitter()
+      let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+      let section = newSectionHarness(service, events)
+      defer: section.delete()
+      section.chatsLoaded = true
+      service.chatThreadListsLoadingChats.incl("parent")
+      check section.openCommunityChatAndScrollToMessage("parent", "", "missing-thread")
+      section.onChatThreadsForChatsLoaded(@[], @["parent"])
+      check section.pendingThreadNavigation
+      check section.refreshes == @["parent"]
+      section.onChatThreadsForChatsLoaded(@[], @["parent"])
+      check section.refreshes == @["parent"]
+      check section.pendingThreadNavigation
+      var failures = 0
+      events.on(SIGNAL_THREAD_LINK_FAILED) do(e: Args):
+        inc failures
+      section.onChatThreadsForChatsLoaded(@[], @["parent"], summariesLoaded = true)
+      check section.pendingThreadId == ""
+      check not section.pendingThreadNavigation
+      check section.activated == @["parent"]
+      check failures == 1
+      section.onChatThreadsForChatsLoaded(@[], @["parent"], summariesLoaded = true)
+      check failures == 1
+    else:
+      skip()
+
+  test "a cached thread link opens without scrolling to an empty message":
+    if THREADS_ENABLED:
+      let events = createEventEmitter()
+      let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+      let section = newSectionHarness(service, events)
+      defer: section.delete()
+      section.chatsLoaded = true
+      let content = ContentStub()
+      section.chatContentModules["thread"] = content
+      service.onAsyncLoadChatThreadsForChats($(%* {
+        "chatIds": ["parent"], "threads": [{"chatId": "parent", "threadId": "thread",
+          "parentMessageId": "root", "name": "Thread"}]
+      }))
+      check section.openCommunityChatAndScrollToMessage("parent", "", "thread")
+      check section.activated[^1] == "thread"
+      check section.panelClosed
+      check content.scrolledTo.len == 0
+    else:
+      skip()
+
+  test "a stale thread row cannot resolve a link absent from the completed list":
+    if THREADS_ENABLED:
+      let events = createEventEmitter()
+      let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+      let section = newSectionHarness(service, events)
+      defer: section.delete()
+      section.chatsLoaded = true
+      service.chatThreadListsLoadingChats.incl("parent")
+      check section.openCommunityChatAndScrollToMessage("parent", "", "thread")
+      section.view.chatsModel().appendItem(chat_item.ChatItem(id: "thread", isThread: true,
+        parentChatId: "parent", canView: true))
+      section.onChatThreadsForChatsLoaded(@[], @["parent"])
+      check section.pendingThreadRefreshRequested
+      section.onChatThreadsForChatsLoaded(@[], @["parent"], summariesLoaded = true)
+      check section.activated == @["parent"]
+      check not section.pendingThreadNavigation
+    else:
+      skip()
+
+  test "a thread row from another parent cannot resolve the link":
+    if THREADS_ENABLED:
+      let events = createEventEmitter()
+      let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+      let section = newSectionHarness(service, events)
+      defer: section.delete()
+      section.chatsLoaded = true
+      section.view.chatsModel().appendItem(chat_item.ChatItem(id: "thread", isThread: true,
+        parentChatId: "another-parent", canView: true))
+      check not section.openCommunityChatAndScrollToMessage("parent", "", "thread")
+      check section.activated.len == 0
+    else:
+      skip()
+
+  test "a cached miss can resolve from refreshed summaries":
+    if THREADS_ENABLED:
+      let events = createEventEmitter()
+      let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+      let section = newSectionHarness(service, events)
+      defer: section.delete()
+      section.chatsLoaded = true
+      section.controller.init()
+      service.init()
+      let content = ContentStub()
+      section.chatContentModules["thread"] = content
+      service.onAsyncLoadChatThreadsForChats($(%* {"chatIds": ["parent"], "threads": []}))
+      check section.openCommunityChatAndScrollToMessage("parent", "", "thread")
+      check section.refreshes == @["parent"]
+      check section.pendingThreadRefreshRequested
+      service.onAsyncLoadChatThreadsForChats($(%* {
+        "chatIds": ["parent"], "includeSummaries": true,
+        "threads": [{"chatId": "parent", "threadId": "thread", "parentMessageId": "root", "name": "Thread"}]
+      }))
+      check section.activated == @["parent", "thread"]
+      check not section.pendingThreadNavigation
+      check content.scrolledTo.len == 0
+    else:
+      skip()
+
+  test "a stale lightweight failure cannot cancel an awaited summary refresh":
+    if THREADS_ENABLED:
+      let events = createEventEmitter()
+      let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+      let section = newSectionHarness(service, events)
+      defer: section.delete()
+      section.chatsLoaded = true
+      service.chatThreadListsLoadingChats.incl("parent")
+      check section.openCommunityChatAndScrollToMessage("parent", "", "thread")
+      section.onChatThreadsForChatsLoaded(@[], @["parent"])
+      section.onChatThreadsLoadingFailed("parent")
+      check section.pendingThreadNavigation
+      var failures = 0
+      events.on(SIGNAL_THREAD_LINK_FAILED) do(e: Args):
+        inc failures
+      section.onChatThreadsLoadingFailed("parent", summariesRequested = true)
+      check not section.pendingThreadNavigation
+      check failures == 1
+    else:
+      skip()
+
+  test "clearing parent history invalidates navigation before a late response":
+    if THREADS_ENABLED:
+      let events = createEventEmitter()
+      let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+      let section = newSectionHarness(service, events)
+      defer: section.delete()
+      section.controller.init()
+      service.init()
+      check section.openCommunityChatAndScrollToMessage("parent", "", "thread")
+      check section.pendingNavigation.threadId == "thread"
+      var failures = 0
+      events.on(SIGNAL_THREAD_LINK_FAILED) do(e: Args):
+        inc failures
+      events.emit(chat_service.SIGNAL_CHAT_HISTORY_CLEARED, ChatArgs(chatId: "parent"))
+      check section.pendingNavigation.threadId == ""
+      check not section.pendingThreadNavigation
+      check failures == 1
+      section.chatsLoaded = true
+      service.onAsyncLoadChatThreadsForChats($(%* {
+        "chatIds": ["parent"], "threads": [{"chatId": "parent", "threadId": "thread",
+          "parentMessageId": "root", "name": "Thread"}]
+      }))
+      check section.activated.len == 0
+      check failures == 1
+    else:
+      skip()
+
+  test "selecting another conversation cancels the pending link before model loading":
+    if THREADS_ENABLED:
+      let events = createEventEmitter()
+      let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+      let section = newSectionHarness(service, events)
+      defer: section.delete()
+      check section.openCommunityChatAndScrollToMessage("parent", "", "thread")
+      check section.pendingNavigation.threadId == "thread"
+      section.activeItemSet("another-thread")
+      check section.pendingNavigation.threadId == ""
+      check not section.pendingThreadNavigation
+      section.chatsLoaded = true
+      section.onChatThreadsForChatsLoaded(@[ThreadDto(chatId: "parent", threadId: "thread",
+        parentMessageId: "root", name: "Thread")], @["parent"], summariesLoaded = true)
+      check section.activated.len == 0
+      check not section.panelClosed
+    else:
+      skip()
+
+  test "opening another thread panel prevents late navigation from stealing focus":
+    if THREADS_ENABLED:
+      let events = createEventEmitter()
+      let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+      let section = newSectionHarness(service, events)
+      defer: section.delete()
+      let settings = singletonInstance.localAccountSettings
+      let previousSettings = settings.settings
+      let settingsDir = createTempDir("thread-link-", "")
+      let settingsFile = settingsDir / "settings.ini"
+      settings.settings = newQSettings(settingsFile, QSettingsFormat.IniFormat)
+      defer:
+        settings.settings.delete()
+        settings.settings = previousSettings
+        removeFile(settingsFile)
+        removeDir(settingsDir)
+      section.view.chatsModel().appendItem(chat_item.ChatItem(id: "other", isThread: true,
+        parentChatId: "parent", canView: true))
+      section.chatContentModules["other"] = ContentStub()
+      check section.openCommunityChatAndScrollToMessage("parent", "", "thread")
+      check section.pendingNavigation.threadId == "thread"
+      section.openThreadPanel("other", "Other", "parent")
+      check section.pendingNavigation.threadId == ""
+      check not section.pendingThreadNavigation
+      section.chatsLoaded = true
+      section.onChatThreadsForChatsLoaded(@[ThreadDto(chatId: "parent", threadId: "thread",
+        parentMessageId: "root", name: "Thread")], @["parent"], summariesLoaded = true)
+      check section.view.getOpenThreadId() == "other"
+      check section.activated.len == 0
+      check not section.panelClosed
     else:
       skip()

@@ -17,6 +17,7 @@ import app_service/service/accounts/dto/[accounts]
 include app_service/common/json_utils
 
 type MessageSignal* = ref object of Signal
+  sectionUnreadCountsChanged*: bool
   bookmarks*: seq[BookmarkDto]
   messages*: seq[MessageDto]
   threads*: seq[ThreadDto]
@@ -52,6 +53,13 @@ type NotificationReplySentSignal* = ref object of Signal
   ## Full successful JSON-RPC response from an Android notification reply.
   response*: JsonNode
 
+type NotificationConversationReadSignal* = ref object of Signal
+  ## A conversation marked as read from an Android notification, with the
+  ## successful JSON-RPC response of the mark-read call.
+  chatId*: string
+  threadId*: string
+  response*: JsonNode
+
 proc fromEvent*(T: type MessageDeliveredSignal, event: JsonNode): MessageDeliveredSignal =
   result = MessageDeliveredSignal()
   result.signalType = SignalType.MessageDelivered
@@ -63,6 +71,14 @@ proc fromEvent*(T: type NotificationReplySentSignal, event: JsonNode): Notificat
   result.signalType = SignalType.NotificationReplySent
   result.response = if event.contains("event"): event["event"] else: newJNull()
 
+proc fromEvent*(T: type NotificationConversationReadSignal, event: JsonNode): NotificationConversationReadSignal =
+  result = NotificationConversationReadSignal()
+  result.signalType = SignalType.NotificationConversationRead
+  let e = event{"event"}
+  result.chatId = e{"chatId"}.getStr
+  result.threadId = e{"threadId"}.getStr
+  result.response = e{"response"}
+
 proc fromEvent*(T: type MessageSignal, event: JsonNode): MessageSignal =
   var signal:MessageSignal = MessageSignal()
   signal.signalType = SignalType.Message
@@ -73,6 +89,8 @@ proc fromEvent*(T: type MessageSignal, event: JsonNode): MessageSignal =
     return signal
 
   let e = event["event"]
+
+  signal.sectionUnreadCountsChanged = e{"sectionUnreadCountsChanged"}.getBool
 
   if e.contains("contacts"):
     for jsonContact in e["contacts"]:

@@ -71,8 +71,11 @@ Item {
                     creds[account] = credential
                     return SecureStorage.StatusSuccess
                 }
+                property int deleteStatus: SecureStorage.StatusSuccess
                 function deleteCredential(account) {
                     deleteCalls.push(account)
+                    if (deleteStatus !== SecureStorage.StatusSuccess)
+                        return deleteStatus
                     if (creds[account] === undefined)
                         return SecureStorage.StatusNotFound
                     delete creds[account]
@@ -108,6 +111,10 @@ Item {
                 function inputConnectionStringForBootstrapping(connectionString) {}
                 function finishOnboardingFlow(flow, data) { return "" }
                 function loginRequested(keyUid, method, data) {}
+                property var selectLoginAccountCalls: []
+                function selectLoginAccount(keyUid) {
+                    selectLoginAccountCalls.push(keyUid)
+                }
 
                 signal accountLoginError(string error, bool wrongPassword)
                 signal stayLoggedInSaveRequested(string keyUid, string credential, bool enablePreference)
@@ -230,6 +237,10 @@ Item {
 
             wrapper.onboardingStore.accountLoginError("login failed", true)
 
+            // back in place at once, no slide-in transition
+            compare(layout.stack.currentItem, layout.stack.loginScreen)
+            verify(!layout.stack.busy)
+
             // Back on a login screen that SHOWS the error (red border via validationError)
             tryVerify(() => {
                 const screen = layout.stack.loginScreen
@@ -266,5 +277,70 @@ Item {
             compare(wrapper.secureStorage.creds["uid_1"], undefined)
             compare(wrapper.onboardingStore.stayLoggedIn, false)
         }
+
+        function test_stayLoggedInIndeterminateEnable_data() {
+            return [
+                { tag: "cleanup verified", deleteStatus: SecureStorage.StatusSuccess,
+                    enabled: false, warned: false },
+                { tag: "cleanup unverified", deleteStatus: SecureStorage.StatusIndeterminate,
+                    enabled: true, warned: true },
+            ]
+        }
+
+        function test_stayLoggedInIndeterminateEnable(data) {
+            wrapper = createTemporaryObject(wrapperComponent, root)
+            verify(!!wrapper)
+            const unconfirmedSpy = signalSpy.createObject(wrapper, {
+                target: wrapper, signalName: "stayLoggedInSaveUnconfirmed" })
+            wrapper.secureStorage.setStatus = SecureStorage.StatusIndeterminate
+            wrapper.secureStorage.deleteStatus = data.deleteStatus
+
+            wrapper.onboardingStore.stayLoggedInSaveRequested("uid_1", "dek:" + root.dummyDekHex, true)
+
+            compare(wrapper.secureStorage.deleteCalls.length, 1)
+            compare(wrapper.onboardingStore.stayLoggedIn, data.enabled)
+            compare(unconfirmedSpy.count, data.warned ? 1 : 0)
+        }
+
+        function test_selectLoginAccountBindsInitialProfileAndDetachesForNewProfile() {
+            wrapper = createTemporaryObject(wrapperComponent, root)
+            verify(!!wrapper)
+            const layout = findChild(wrapper, "startupOnboardingLayout")
+            verify(!!layout)
+            const store = wrapper.onboardingStore
+            store.selectLoginAccountCalls = []
+            const profileSpy = signalSpy.createObject(wrapper, {
+                target: wrapper, signalName: "profileSelected" })
+
+            layout.restartFlow()
+            tryVerify(() => store.selectLoginAccountCalls.length > 0)
+            compare(store.selectLoginAccountCalls[store.selectLoginAccountCalls.length - 1], "uid_1")
+            compare(profileSpy.count, 0)
+
+            const loginScreen = layout.stack.loginScreen
+            verify(!!loginScreen)
+            store.selectLoginAccountCalls = []
+            loginScreen.onboardingCreateProfileFlowRequested()
+            tryVerify(() => store.selectLoginAccountCalls.length > 0)
+            compare(store.selectLoginAccountCalls[store.selectLoginAccountCalls.length - 1], "")
+        }
+
+        // Without an opt-in the preference is already ON; next login reconciles
+        function test_stayLoggedInIndeterminateFollowStoredKeepsCredential() {
+            wrapper = createTemporaryObject(wrapperComponent, root)
+            verify(!!wrapper)
+            wrapper.onboardingStore.stayLoggedIn = true
+            wrapper.secureStorage.setStatus = SecureStorage.StatusIndeterminate
+
+            wrapper.onboardingStore.stayLoggedInSaveRequested("uid_1", "dek:" + root.dummyDekHex, false)
+
+            compare(wrapper.secureStorage.deleteCalls.length, 0)
+            compare(wrapper.onboardingStore.stayLoggedIn, true)
+        }
+    }
+
+    Component {
+        id: signalSpy
+        SignalSpy {}
     }
 }

@@ -1456,7 +1456,8 @@ QtObject {
         Standard = 1,
         StatusContact = 2,
         StatusCommunity = 3,
-        StatusCommunityChannel = 4
+        StatusCommunityChannel = 4,
+        StatusThread = 5
     }
 
     enum StandardLinkPreviewType {
@@ -1563,7 +1564,7 @@ QtObject {
         readonly property string puzzleAuth: "puzzle-auth"
     }
 
-    readonly property int maxActiveNetworks: 5
+    readonly property int maxActiveNetworks: 20
 
     readonly property int maxEmojiReactionsPerMessage: 20
 

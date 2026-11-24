@@ -26,7 +26,7 @@ Item {
                 offTheRecord: false
             }
             bookmarksStore: null
-            localAccountSensitiveSettings: QtObject {}
+            localAccountSettings: QtObject {}
             webChannel: null
             devToolsEnabled: false
             enableJsLogs: false

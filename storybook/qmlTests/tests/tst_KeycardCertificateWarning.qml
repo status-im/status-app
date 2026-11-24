@@ -44,7 +44,9 @@ Item {
             const item = createTemporaryObject(componentUnderTest, root, { certificateTrusted: false })
             verify(!!item)
             verify(item.warning.visible)
+            verify(item.warning.text.indexOf("isn't certified by Keycard") >= 0)
             verify(item.warning.text.indexOf("development or custom-made card") >= 0)
+            verify(item.warning.text.indexOf("trust where it came from") >= 0)
         }
     }
 }

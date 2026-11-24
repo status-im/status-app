@@ -210,9 +210,9 @@ SplitView {
 
             function getFormedUrl(selectedBrowserSearchEngineId, url) {
                 return SearchEnginesConfig.formatSearchUrl(
-                            browserLayout.localAccountSensitiveSettings.selectedBrowserSearchEngineId,
+                            browserLayout.localAccountSettings.selectedBrowserSearchEngineId,
                             url,
-                            browserLayout.localAccountSensitiveSettings.customSearchEngineUrl
+                            browserLayout.localAccountSettings.customSearchEngineUrl
                             )
             }
 
@@ -246,7 +246,7 @@ SplitView {
         networksStore: SharedStores.NetworksStore {}
         currencyStore: SharedStores.CurrenciesStore {}
 
-        readonly property var localAccountSensitiveSettings: Settings {
+        readonly property var localAccountSettings: Settings {
             property bool devToolsEnabled
             property alias shouldShowFavoritesBar: ctrlShowFavoritesBar.checked
             property int useBrowserEthereumExplorer: Constants.browserEthereumExplorerEtherscan

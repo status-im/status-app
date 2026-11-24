@@ -24,6 +24,24 @@ Item {
     }
 
     Component {
+        id: initialIndexComponent
+
+        StatusSectionLayout {
+            anchors.fill: parent
+            initialIndex: StatusSectionLayout.CentralPanel
+        }
+    }
+
+    Component {
+        id: mirrorComponent
+
+        QtObject {
+            property StatusSectionLayout source
+            readonly property int index: source ? source.currentIndex : -1
+        }
+    }
+
+    Component {
         id: landscapeComponent
 
         StatusSectionLayoutLandscape {
@@ -83,79 +101,189 @@ Item {
             return item
         }
 
-        // The internal portrait view; its `visible` is what the orientation
-        // selector flips on rotation, so setting it simulates a rotation.
-        function portraitView() {
-            const list = layout.children
-            for (let i = 0; i < list.length; ++i) {
-                if (list[i].toString().indexOf("StatusSectionLayoutPortrait") === 0)
-                    return list[i]
-            }
-            return null
+        // The loader holding each orientation's view.
+        function loaderOf(typePrefix) {
+            return findChild(layout, typePrefix === "StatusSectionLayoutPortrait" ? "portraitLoader"
+                                                                              : "landscapeLoader")
+        }
+
+        // What LayoutChooser does on rotation: choose the loader, then flip the
+        // loaders' visibility.
+        function rotate(toPortrait) {
+            const portrait = loaderOf("StatusSectionLayoutPortrait")
+            const landscape = loaderOf("StatusSectionLayoutLandscape")
+            layout.chosenLayout = toPortrait ? portrait : landscape
+            landscape.visible = !toPortrait
+            portrait.visible = toPortrait
+            return portrait
+        }
+
+        function isInside(item, ancestor) {
+            for (let p = item; p; p = p.parent)
+                if (p === ancestor)
+                    return true
+            return false
+        }
+
+        // A view is built the first time its orientation is chosen, not before.
+        function test_aViewIsBuiltWhenFirstChosen() {
+            const portrait = loaderOf("StatusSectionLayoutPortrait")
+            const landscape = loaderOf("StatusSectionLayoutLandscape")
+            verify(!!portrait && !!landscape)
+            verify(landscape.visible && !!landscape.item, "the 1000px window starts in landscape")
+            compare(portrait.item, null, "the portrait view is not built before it is chosen")
+            rotate(true)
+            verify(!!portrait.item)
+        }
+
+        // Hiding the section (as AppMain's StackLayout does) destroys nothing.
+        function test_hidingTheSectionKeepsTheView() {
+            const landscape = loaderOf("StatusSectionLayoutLandscape")
+            const view = landscape.item
+            verify(!!view)
+            layout.visible = false
+            compare(landscape.item, view, "the view survives the section being hidden")
+            layout.visible = true
+            compare(landscape.item, view)
+            tryVerify(() => isInside(layout.leftPanel, view))
+        }
+
+        // After rotating and rotating back both views exist; the chosen one is
+        // visible and owns the panels.
+        function test_rotateAndBackKeepsBothViews() {
+            const portrait = loaderOf("StatusSectionLayoutPortrait")
+            const landscape = loaderOf("StatusSectionLayoutLandscape")
+            const landscapeView = landscape.item
+            rotate(true)
+            const portraitView = portrait.item
+            verify(!!portraitView)
+            compare(landscape.item, landscapeView, "the landscape view is kept in portrait")
+            tryVerify(() => isInside(layout.centerPanel, portraitView), 1000, "portrait owns the panels")
+
+            rotate(false)
+            compare(landscape.item, landscapeView)
+            compare(portrait.item, portraitView, "the portrait view is kept in landscape")
+            verify(landscape.visible && !portrait.visible)
+            tryVerify(() => isInside(layout.leftPanel, landscapeView), 1000, "landscape owns the panels again")
+            tryVerify(() => isInside(layout.centerPanel, landscapeView))
+            tryVerify(() => isInside(layout.rightPanel, landscapeView))
         }
 
         // Rotating to landscape mid-slide must close the bracket right away:
         // the slide is no longer visible, so there is nothing left to defer
         // panel swaps for.
         function test_rotateToLandscapeMidSlideClosesBracket() {
-            const pv = portraitView()
+            const pv = rotate(true).item // start in portrait
             verify(!!pv)
             pv.contentItem.highlightMoveDuration = 60000 // hold the slide
-            pv.visible = true // start in portrait
 
-            layout.currentIndex = StatusSectionLayout.RightPanel
+            layout.setCurrentIndex(StatusSectionLayout.RightPanel)
             compare(startedSpy.count, 1)
             compare(endedSpy.count, 0)
 
-            pv.visible = false // rotate away mid-slide
+            rotate(false) // rotate away mid-slide
             compare(endedSpy.count, 1,
                     "rotating away mid-slide must close the bracket at once")
-
-            // the invisible slide settling later must not emit anything more
-            pv.contentItem.highlightMoveDuration = 50
-            tryVerify(() => Math.abs(pv.contentItem.contentX - pv.currentItem.x) < 0.5,
-                      5000)
+            wait(100)
             compare(startedSpy.count, 1)
             compare(endedSpy.count, 1)
         }
 
-        // Rotating to portrait while the (invisible) slide from a landscape
-        // switch is still running must open a bracket for it — the animation
-        // is suddenly visible and panel swaps must defer to its end.
-        function test_rotateToPortraitMidSlideOpensBracket() {
-            const pv = portraitView()
-            verify(!!pv)
-            verify(!pv.visible, "the 1000px window must start in landscape")
-            pv.contentItem.highlightMoveDuration = 60000 // hold the slide
-
-            layout.currentIndex = StatusSectionLayout.RightPanel
+        // A switch made in landscape is a back-to-back pair; rotating to
+        // portrait afterwards builds the view on the kept index, with no slide
+        // and so no further bracket.
+        function test_rotateToPortraitKeepsTheIndexWithoutASlide() {
+            layout.setCurrentIndex(StatusSectionLayout.RightPanel)
             compare(startedSpy.count, 1, "landscape pair")
             compare(endedSpy.count, 1, "landscape pair")
 
-            pv.visible = true // rotate into the running slide
-            compare(startedSpy.count, 2,
-                    "rotating into a running slide must open a bracket")
+            const pv = rotate(true).item
+            verify(!!pv)
+            // the right panel's page is the last one in the view
+            compare(pv.currentIndex, pv.count - 1)
+            compare(layout.currentIndex, StatusSectionLayout.RightPanel)
+            wait(100)
+            compare(startedSpy.count, 1)
             compare(endedSpy.count, 1)
-
-            pv.contentItem.highlightMoveDuration = 50
-            tryCompare(endedSpy, "count", 2, 5000,
-                       "the bracket must close when the slide settles")
-            compare(startedSpy.count, 2)
         }
 
         function test_landscapeSwitchEmitsPairBackToBack() {
-            layout.currentIndex = StatusSectionLayout.RightPanel
+            layout.setCurrentIndex(StatusSectionLayout.RightPanel)
 
             compare(startedSpy.count, 1,
                     "a landscape switch must emit panelSwitchStarted")
             compare(endedSpy.count, 1,
                     "a landscape switch must emit panelSwitchEnded right after")
 
-            // the invisible portrait view still slides underneath; its own
-            // start/end must not leak through as extra emissions
             wait(500)
             compare(startedSpy.count, 1)
             compare(endedSpy.count, 1)
+        }
+
+        // The portrait view is kept after rotating back, but stays out of Back
+        // and panel navigation while hidden.
+        function test_keptPortraitViewIsInertInLandscape() {
+            layout.setCurrentIndex(StatusSectionLayout.CentralPanel)
+            rotate(true)
+            rotate(false)
+            const pv = loaderOf("StatusSectionLayoutPortrait").item
+            verify(!!pv)
+            verify(pv.canGoBackInternally)
+
+            verify(!layout.canGoBack)
+            verify(!layout.tryGoBack())
+            layout.goToNextPanel()
+            compare(layout.currentIndex, StatusSectionLayout.CentralPanel)
+        }
+
+        function test_landscapeSwitchAfterRoundTripEmitsPair() {
+            rotate(true)
+            rotate(false)
+            startedSpy.clear()
+            endedSpy.clear()
+
+            layout.setCurrentIndex(StatusSectionLayout.RightPanel)
+            compare(startedSpy.count, 1)
+            compare(endedSpy.count, 1)
+        }
+
+        function test_currentIndexIsReadOnly() {
+            let threw = false
+            try {
+                layout.currentIndex = StatusSectionLayout.RightPanel
+            } catch (e) {
+                threw = true
+            }
+            verify(threw)
+            compare(layout.currentIndex, StatusSectionLayout.LeftPanel)
+        }
+
+        function test_initialIndexIsTheStartingPanel() {
+            const l = createTemporaryObject(initialIndexComponent, root)
+            verify(!!l)
+            compare(l.currentIndex, StatusSectionLayout.CentralPanel)
+            l.setCurrentIndex(StatusSectionLayout.RightPanel)
+            compare(l.currentIndex, StatusSectionLayout.RightPanel)
+        }
+
+        // Swipes and setCurrentIndex() both reach currentIndex, so a consumer
+        // binding on it follows every change.
+        function test_consumerBindingFollowsSetterAndSwipes() {
+            const mirror = createTemporaryObject(mirrorComponent, root, { source: layout })
+            verify(!!mirror)
+
+            layout.setCurrentIndex(StatusSectionLayout.CentralPanel)
+            compare(mirror.index, StatusSectionLayout.CentralPanel)
+
+            const pv = rotate(true).item
+            verify(!!pv)
+            pv.decrementCurrentIndex()
+            compare(layout.currentIndex, StatusSectionLayout.LeftPanel)
+            compare(mirror.index, StatusSectionLayout.LeftPanel)
+
+            layout.setCurrentIndex(StatusSectionLayout.CentralPanel)
+            compare(pv.currentIndex, StatusSectionLayout.CentralPanel)
+            compare(mirror.index, StatusSectionLayout.CentralPanel)
         }
 
         function test_landscapeSplitStateIsIsolatedPerUserAndSection() {

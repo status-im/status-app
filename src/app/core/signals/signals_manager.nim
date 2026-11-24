@@ -64,9 +64,6 @@ QtObject:
 
     self.events.emit(signal.signalType.event, signal)
 
-  proc receiveSignal(self: SignalsManager, signal: string) {.slot.} =
-    self.processSignal(signal)
-
   proc decode(self: SignalsManager, jsonSignal: JsonNode): Signal =
     let signalString = jsonSignal{"type"}.getStr
     var signalType: SignalType
@@ -77,8 +74,10 @@ QtObject:
 
     result = case signalType:
       of SignalType.Message: MessageSignal.fromEvent(jsonSignal)
+      of SignalType.SectionUnreadCountsChanged: Signal(signalType: signalType)
       of SignalType.MessageDelivered: MessageDeliveredSignal.fromEvent(jsonSignal)
       of SignalType.NotificationReplySent: NotificationReplySentSignal.fromEvent(jsonSignal)
+      of SignalType.NotificationConversationRead: NotificationConversationReadSignal.fromEvent(jsonSignal)
       of SignalType.EnvelopeSent: EnvelopeSentSignal.fromEvent(jsonSignal)
       of SignalType.EnvelopeExpired: EnvelopeExpiredSignal.fromEvent(jsonSignal)
       of SignalType.WhisperFilterAdded: WhisperFilterSignal.fromEvent(jsonSignal)

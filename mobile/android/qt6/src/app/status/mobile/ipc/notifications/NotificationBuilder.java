@@ -41,6 +41,8 @@ public final class NotificationBuilder {
     public static final String REPLY_REMOTE_INPUT_KEY = "reply_text";
     /** Action for inline reply from notification. */
     public static final String ACTION_REPLY = "app.status.mobile.ipc.NOTIFICATION_REPLY";
+    /** Action for marking the notification's conversation as read. */
+    public static final String ACTION_MARK_AS_READ = "app.status.mobile.ipc.NOTIFICATION_MARK_AS_READ";
     /** Action when notification dismissed (swipe/cancel). */
     public static final String ACTION_DISMISS = "app.status.mobile.ipc.NOTIFICATION_DISMISS";
     /** Action for accepting a contact request from notification. */
@@ -154,7 +156,7 @@ public final class NotificationBuilder {
         // Delete intent: clear per-conversation state when user swipes away
         addDismissIntent(context, builder, conversationId, conversationKey, notificationId);
 
-        // Reply action
+        addMarkAsReadAction(context, builder, conversationId, threadId, conversationKey, notificationId);
         addReplyAction(context, builder, conversationId, threadId, conversationKey, notificationId);
 
         builder.setGroup("conv_" + conversationKey);
@@ -385,6 +387,26 @@ public final class NotificationBuilder {
                 context.getString(R.string.notification_reply),
                 replyPendingIntent
         ).addRemoteInput(remoteInput).build());
+    }
+
+    private static void addMarkAsReadAction(Context context, NotificationCompat.Builder builder,
+            String conversationId, String threadId, String conversationKey, int notificationId) {
+        Intent markAsReadIntent = new Intent(context, NotificationReplyReceiver.class);
+        markAsReadIntent.setAction(ACTION_MARK_AS_READ);
+        markAsReadIntent.setPackage(context.getPackageName());
+        markAsReadIntent.putExtra("conversationId", conversationId);
+        markAsReadIntent.putExtra("threadId", threadId);
+        markAsReadIntent.putExtra("conversationKey", conversationKey);
+        PendingIntent markAsReadPendingIntent = PendingIntent.getBroadcast(
+                context, notificationId, markAsReadIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        builder.addAction(new NotificationCompat.Action.Builder(
+                android.R.drawable.ic_menu_view,
+                context.getString(R.string.notification_mark_as_read),
+                markAsReadPendingIntent)
+                .setSemanticAction(NotificationCompat.Action.SEMANTIC_ACTION_MARK_AS_READ)
+                .setShowsUserInterface(false)
+                .build());
     }
 
     private static void addContactRequestActions(Context context, NotificationCompat.Builder builder,

@@ -46,6 +46,8 @@ type
     unfurlingPlan: UrlsUnfurlingPlan
     imageBatches: ImageBatchQueue
     imageBatchPayloads: Table[string, ImageBatchPayload]
+    composerSendTokens: HashSet[string]
+    textSendTokens: HashSet[string]
 
 proc newController*(
     delegate: io_interface.AccessInterface,
@@ -109,22 +111,17 @@ proc init*(self: Controller) =
     self.unfurlingPlanActiveRequest = ""
     self.handleUnfurlingPlan(self.unfurlingPlanActiveRequestUnfurlAfter)
 
-  self.events.on(SIGNAL_SENDING_SUCCESS) do(e:Args):
-    let args = MessageSendingSuccess(e)
-    if self.chatId != args.chat.id:
-      return
-    self.delegate.onSendingMessageSuccess()
-
-  self.events.on(SIGNAL_SENDING_FAILED) do(e:Args):
-    let args = MessageSendingFailure(e)
-    if self.chatId != args.chatId:
-      return
-    self.delegate.onSendingMessageFailure()
-
   self.events.on(SIGNAL_SENDING_FINISHED) do(e: Args):
     let args = SendingFinishedArgs(e)
     if self.chatId != args.chatId:
       return
+    if args.sendToken in self.textSendTokens:
+      self.textSendTokens.excl(args.sendToken)
+      self.delegate.onTextMessageSent(args.sendToken, args.error)
+    if args.sendToken in self.composerSendTokens:
+      self.composerSendTokens.excl(args.sendToken)
+      if self.composerSendTokens.len == 0:
+        self.delegate.onComposerSendFinished()
     if finishBatch(self.imageBatches, args.sendToken):
       self.dispatchNextImageBatch()
 
@@ -169,6 +166,7 @@ proc enqueueImageBatches(self: Controller, imagePathsJson, msg, replyTo, preferr
   if batches.len == 0:
     return false
   for batch in batches:
+    self.composerSendTokens.incl(batch.token)
     var payload = ImageBatchPayload(preferredUsername: preferredUsername, threadId: threadId)
     if batch.withText:
       payload.msg = msg
@@ -191,6 +189,8 @@ proc sendImages*(self: Controller,
   self.resetLinkPreviews()
   if self.enqueueImageBatches(imagePathsJson, msg, replyTo, preferredUsername, linkPreviews, paymentRequests, threadId):
     return
+  let token = $genUUID()
+  self.composerSendTokens.incl(token)
   self.chatService.asyncSendImages(
     self.chatId,
     imagePathsJson,
@@ -199,7 +199,8 @@ proc sendImages*(self: Controller,
     preferredUsername,
     linkPreviews,
     paymentRequests,
-    threadId
+    threadId = threadId,
+    sendToken = token
   )
 
 proc sendChatMessage*(self: Controller,
@@ -211,8 +212,15 @@ proc sendChatMessage*(self: Controller,
                       paymentRequests: seq[PaymentRequest],
                       threadId: string,
                       startNewThread: bool,
-                      newThreadName: string) =
-  self.resetLinkPreviews()
+                      newThreadName: string,
+                      sendToken: string = "") =
+  let token = if sendToken.len == 0: $genUUID() else: sendToken
+  if sendToken.len == 0:
+    self.resetLinkPreviews()
+    self.composerSendTokens.incl(token)
+  else:
+    # Correlated text sends belong to a separate draft, not this composer.
+    self.textSendTokens.incl(token)
   self.chatService.asyncSendChatMessage(self.chatId,
     msg,
     replyTo,
@@ -222,7 +230,8 @@ proc sendChatMessage*(self: Controller,
     paymentRequests,
     threadId = threadId,
     startNewThread = startNewThread,
-    newThreadName = newThreadName
+    newThreadName = newThreadName,
+    sendToken = token
   )
 
 proc getLinkPreviewEnabled*(self: Controller): bool =
@@ -255,7 +264,7 @@ proc handleUnfurlingPlan*(self: Controller, unfurlNewUrls: bool) =
   for metadata in self.unfurlingPlan.urls:
     allUrls.add(metadata.url)
 
-    # Message deep links are navigational links for now and intentionally have no
+    # Message deep links are navigational links and intentionally have no
     # preview payload, so keep them clickable/highlighted but don't unfurl.
     if isStatusMessageUrl(metadata.url):
       continue

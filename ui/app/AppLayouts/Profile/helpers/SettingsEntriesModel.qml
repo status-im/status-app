@@ -184,7 +184,7 @@ SortFilterProxyModel {
         },
         {
             subsection: Constants.settingsSubsection.signout,
-            text: qsTr("Sign out & Quit"),
+            text: qsTr("Sign out"),
             icon: "logout",
             group: root.aboutAndHelpGroupTitle,
             isExperimental: false

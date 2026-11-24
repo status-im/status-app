@@ -27,6 +27,7 @@ import StatusQ.Components
 
 import AppLayouts.Chat.stores as ChatStores
 import AppLayouts.Chat.controls
+import AppLayouts.Chat.popups
 import AppLayouts.stores as AppLayoutStores
 import AppLayouts.Profile.helpers
 
@@ -80,6 +81,7 @@ Loader {
     // user models cannot; an input to mentionsMap, which the owner builds.
     property string mentionedNames: ""
     property string messageImage: ""
+    property string messageImageFormat: "" // "gif", "webp", "jpeg", "png" when known
     property double messageTimestamp: 0 // We use double, because QML's int is too small
     property string messageOutgoingStatus: ""
     property string resendError: ""
@@ -173,6 +175,8 @@ Loader {
     property string threadId: ""
     property string threadOriginalMessageId: ""
     property string threadTitle: ""
+    property bool threadDeleted: false
+    property bool threadFollowed: false
     property int threadMessagesCount: 0
     property bool threadMuted: false
     property int threadNotificationCount: 0
@@ -313,7 +317,7 @@ Loader {
     }
 
     function openMessageContextMenu(delegate, point, selectedText = "", options = ({})) {
-        if (isViewMemberMessagesePopup || placeholderMessage || !root.joined)
+        if (isViewMemberMessagesePopup || placeholderMessage || d.pendingThread || !root.joined)
             return
 
         if (root.isChatBlocked && !d.addReactionAllowed)
@@ -420,6 +424,7 @@ Loader {
 
     signal showReplyArea(string messageId, string author)
     signal openThread(string threadId, string threadName, string parentMessageId)
+    signal renameThreadRequested(string threadId, string threadName, string parentMessageId)
 
 
     function startMessageFoundAnimation() {
@@ -675,6 +680,9 @@ Loader {
 
         // messageContextMenuComponent lifetime trackers
         property var contextMenu: null
+        readonly property bool pendingThread: root.hasThread
+                                              && root.messageOutgoingStatus === Constants.messageOutgoingStatus.sending
+                                              && root.messageId.startsWith("pending-")
         property bool contextMenuClosesOnHoverExit: false
         property bool contextMenuOpenedFromHover: false
         property bool contextMenuHovered: false
@@ -1035,6 +1043,7 @@ Loader {
                 readonly property bool hideQuickActions: {
                     return root.isChatBlocked ||
                                   root.placeholderMessage ||
+                                  d.pendingThread ||
                                   root.isInPinnedPopup ||
                                   root.editModeOn ||
                                       !root.joined
@@ -1084,7 +1093,7 @@ Loader {
                               (delegate.hideQuickActions && !d.addReactionAllowed) ||
                               d.hoverSuppressed
 
-                disableEmojis: !d.addReactionAllowed
+                disableEmojis: d.pendingThread || !d.addReactionAllowed
                 hideMessage: d.hideMessage
                 linkAddressAndEnsName: root.sendViaPersonalChatEnabled
                 disabledTooltipText: root.disabledTooltipText
@@ -1224,6 +1233,7 @@ Loader {
                         }
                         return "";
                     }
+                    messageContentFormat: delegate.contentType === StatusMessage.ContentType.Image ? root.messageImageFormat : ""
                     album: root.album
                     albumCount: root.albumCount
 
@@ -1303,7 +1313,7 @@ Loader {
                         }
                         onHoveredLinkChanged: delegate.highlightedLink = linksMessageView.hoveredLink
                         gifUnfurlingEnabled: root.gifUnfurlingEnabled
-                        onSetGifUnfurlingEnabled: localAccountSensitiveSettings.gifUnfurlingEnabled = true
+                        onSetGifUnfurlingEnabled: localAccountSettings.gifUnfurlingEnabled = true
                         canAskToUnfurlGifs: !root.neverAskAboutUnfurlingAgain
                         onSetNeverAskAboutUnfurlingAgain: neverAskAgain => root.setNeverAskAboutUnfurlingAgain(neverAskAgain)
                         onPaymentRequestClicked: (index) => {
@@ -1344,11 +1354,22 @@ Loader {
 
                     ThreadCard {
                         id: threadCard
+                        objectName: "messageThreadSummary"
+                        enabled: !d.pendingThread
 
                         width: Math.min(maximumWidth, parent.width)
                         threadId: root.threadId || root.messageId
                         originalMessageId: root.threadOriginalMessageId || root.messageId
                         title: root.threadTitle
+                        threadState: root.threadDeleted ? ThreadCard.State.Deleted : ThreadCard.State.Active
+                        deletedMessage: ({
+                            sender: {
+                                name: root.threadLastMessageSenderName,
+                                image: root.threadLastMessageSenderImage,
+                                colorId: root.threadLastMessageSenderColorId
+                            },
+                            timestamp: root.threadLastMessageTimestamp
+                        })
                         messagesCount: root.threadMessagesCount
                         muted: root.threadMuted
                         notificationCount: root.threadNotificationCount
@@ -1363,8 +1384,46 @@ Loader {
                             text: root.threadLastMessageText,
                             timestamp: root.threadLastMessageTimestamp
                         })
+                        onContextMenuRequested: position => {
+                            d.contextMenu?.close()
+                            threadSummaryMenuLoader.active = true
+                            d.contextMenu = threadSummaryMenuLoader.item
+                            d.contextMenu.canManage = root.messageStore?.canManageThreadById(threadCard.threadId) ?? false
+                            d.contextMenuClosesOnHoverExit = false
+                            d.contextMenuOpenedFromHover = false
+                            d.contextMenu.popup(threadCard.mapToItem(root, position))
+                        }
                         onClicked: (threadId, originalMessageId) =>
                             root.openThread(threadId, root.threadTitle, originalMessageId)
+                    }
+
+                    Loader {
+                        id: threadSummaryMenuLoader
+                        active: false
+                        sourceComponent: ThreadContextMenu {
+                            id: summaryMenu
+                            parent: root
+                            objectName: "threadSummaryContextMenu"
+                            threadId: threadCard.threadId
+                            isMobile: StatusQUtils.Utils.isMobile
+                            followed: root.threadFollowed
+                            muted: false
+                            pinned: false
+                            pinEnabled: false
+                            threadLinkToCopyShare: ""
+                            property bool canManage: false
+                            onFollowRequested: root.messageStore.setThreadFollowedById(threadId, true)
+                            onUnfollowRequested: root.messageStore.setThreadFollowedById(threadId, false)
+                            deleteEnabled: canManage && !root.threadDeleted && !(root.messageStore?.threadDeletePending ?? false)
+                            editEnabled: deleteEnabled
+                            onDeleteRequested: root.messageStore.deleteThreadById(threadId)
+                            onEditNameRequested: root.renameThreadRequested(threadId, root.threadTitle,
+                                                                          threadCard.originalMessageId)
+                            onClosed: {
+                                if (d.contextMenu === summaryMenu)
+                                    d.contextMenu = null
+                            }
+                        }
                     }
                 }
             }
@@ -1454,7 +1513,8 @@ Loader {
                 root.showReplyArea(messageContextMenuView.messageId, senderId)
             }
             onOpenThread: {
-                root.openThread("", "", messageContextMenuView.messageId)
+                root.openThread(root.hasThread ? (root.threadId || root.messageId) : "",
+                                root.threadTitle, messageContextMenuView.messageId)
             }
             onCopyToClipboard: (text) => {
                 ClipboardUtils.setText(text)

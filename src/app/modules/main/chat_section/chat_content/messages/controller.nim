@@ -87,19 +87,20 @@ proc init*(self: Controller) =
 
   self.events.on(SIGNAL_SENDING_STARTED) do(e: Args):
     let args = SendingStartedArgs(e)
-    if self.chatId != args.chatId:
+    if self.chatId != args.chatId or self.threadId != args.threadId:
       return
-    self.delegate.onSendingStarted(args.sendToken, args.text, args.replyTo, args.contentType)
+    self.delegate.onSendingStarted(args.sendToken, args.text, args.replyTo, args.contentType,
+      args.startNewThread, args.newThreadName)
 
   self.events.on(SIGNAL_SENDING_FINISHED) do(e: Args):
     let args = SendingFinishedArgs(e)
-    if self.chatId != args.chatId:
+    if self.chatId != args.chatId or self.threadId != args.threadId:
       return
     self.delegate.onSendingFinished(args.sendToken)
 
   self.events.on(SIGNAL_SENDING_FAILED) do(e:Args):
     let args = MessageSendingFailure(e)
-    if self.chatId != args.chatId:
+    if self.chatId != args.chatId or self.threadId != args.threadId:
       return
     self.delegate.onSendingMessageError(args.error)
 
@@ -292,6 +293,11 @@ proc init*(self: Controller) =
       return
     self.delegate.onChatThreadsLoadingFailed(args.summariesRequested)
 
+  self.events.on(SIGNAL_THREAD_DELETE_FINISHED) do(e: Args):
+    let args = ThreadDeleteFinishedArgs(e)
+    if self.chatId == args.chatId and (self.threadId == args.threadId or self.threadId.len == 0):
+      self.delegate.onThreadDeleteFinished(args.requestId, args.error)
+
   self.events.on(SIGNAL_THREAD_EDIT_FINISHED) do(e: Args):
     let args = ThreadEditFinishedArgs(e)
     if self.chatId == args.chatId and self.threadId == args.threadId:
@@ -318,7 +324,7 @@ proc hasThreadForParentMessage*(self: Controller, parentMessageId: string): bool
   return self.messageService.chatHasThreadForParentMessage(self.chatId, parentMessageId)
 
 proc pendingSends*(self: Controller): seq[SendingStartedArgs] =
-  return self.chatService.pendingSendsForChat(self.chatId)
+  return self.chatService.pendingSendsForChat(self.chatId, self.threadId)
 
 proc getThreadForParentMessage*(self: Controller, parentMessageId: string): ThreadDto =
   return self.messageService.getThreadForParentMessage(self.chatId, parentMessageId)
@@ -328,6 +334,15 @@ proc getThread*(self: Controller): lent ThreadDto =
 
 proc setThreadMuted*(self: Controller, interval: int) =
   self.messageService.setThreadMuted(self.chatId, self.threadId, interval)
+
+proc getThreadById*(self: Controller, threadId: string): ThreadDto =
+  self.messageService.getThreadById(self.chatId, threadId)
+
+proc deleteThread*(self: Controller, threadId, requestId: string) =
+  self.messageService.asyncDeleteThread(self.chatId, threadId, requestId)
+
+proc setThreadFollowed*(self: Controller, threadId: string, followed: bool) =
+  self.messageService.asyncSetThreadFollowed(self.chatId, threadId, followed)
 
 proc editThread*(self: Controller, name, requestId: string) =
   self.messageService.asyncEditThread(self.chatId, self.threadId, name, requestId)
@@ -352,6 +367,10 @@ proc getOneToOneChatNameAndImage*(self: Controller):
 
 proc belongsToCommunity*(self: Controller): bool =
   return self.belongsToCommunity
+
+proc restartHistory*(self: Controller) =
+  if self.threadId.len == 0:
+    self.messageService.restartChatHistory(self.chatId)
 
 proc loadMoreMessages*(self: Controller): bool =
   let limit = self.loadingMessagesPerPageFactor * MESSAGES_PER_PAGE

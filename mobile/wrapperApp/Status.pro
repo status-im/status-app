@@ -1,8 +1,15 @@
 TEMPLATE = app
 
-QT += quick gui qml webview svg widgets multimedia
+QT += quick gui qml svg multimedia
 
 CONFIG += qtquickcompiler
+# AOT Storage classes are polymorphic; no RTTI user in this lib, so drop typeinfo
+CONFIG += rtti_off
+
+android {
+    QMAKE_CXXFLAGS_RELEASE -= -O2
+    QMAKE_CXXFLAGS_RELEASE += -Oz
+}
 # Per-binding AOT stats, written next to each generated .cpp
 QMLCACHE_FLAGS += --dump-aot-stats --module-id=status
 # qtquickcompiler.prf passes no import paths; without these, in-repo modules don't AOT-compile
@@ -30,7 +37,7 @@ contains(DEFINES, FLAG_KEYCARD_ENABLED) {
 
 equals(QT_MAJOR_VERSION, 6) {
     message("qt 6 config!!")
-    QT += core5compat core
+    QT += core
 }
 
 SOURCES += \
@@ -63,6 +70,8 @@ android {
 
     QMAKE_LFLAGS += -Wl,-z,max-page-size=16384
     QMAKE_LFLAGS_SHLIB += -Wl,-z,max-page-size=16384
+    # Packed relative relocations (Android tags: minSdk 28 < 30)
+    QMAKE_LFLAGS += -Wl,--pack-dyn-relocs=android+relr -Wl,--use-android-relr-tags
 
     ANDROID_VERSION_NAME = $$VERSION
 
@@ -86,6 +95,10 @@ android {
 
 ios {
     CONFIG += add_ios_ffmpeg_libraries
+
+    # Keep the QML plugins the app never loads out of the static link
+    QT_TOOL.qmlimportscanner.binary = python3 -I $$PWD/../scripts/ios/filter_qml_imports.py \
+        $$[QT_HOST_LIBEXECS]/qmlimportscanner $$PWD/../scripts/ios/qml-import-deny.txt
 
     QMAKE_CXXFLAGS += -Wno-implicit-function-declaration
     QMAKE_CFLAGS += -Wno-implicit-function-declaration
@@ -123,14 +136,23 @@ ios {
             -framework CoreMotion \
             -framework UIKit \
             -framework PhotosUI \
+            -framework AVFoundation \
             -framework Foundation \
             -framework UserNotifications
 
     # Base libraries (always included)
     LIBS += -L$$PWD/../lib/$$LIB_PREFIX -lnim_status_client -lstatusq -lhunspell-1.7 -lMobileWebView -lstatus -lsds -lssl_3 -lcrypto_3 -lZXing -lresolv -lqrcodegen
+    # libMobileWebView; no longer pulled in through QT += webview
+    LIBS += -framework WebKit
 
     # The Go facade owns the token ABI; keep it private in the final executable.
     QMAKE_LFLAGS += -Wl,-unexported_symbols_list,$$shell_quote($$PWD/../../vendor/status-go/scripts/tkl-unexported-macos.txt)
+
+    # Read-only data lives outside __TEXT, which the App Store encrypts and cannot compress.
+    QMAKE_LFLAGS += \
+        -Wl,-rename_section,__TEXT,__const,__DATA_CONST,__tconst \
+        -Wl,-rename_section,__TEXT,__rodata,__DATA_CONST,__trodata \
+        -Wl,-rename_section,__TEXT,__gopclntab,__DATA_CONST,__gopclntab
 
     contains(DEFINES, FLAG_KEYCARD_ENABLED) {
         # Use entitlements with NFC support (requires paid Apple Developer account)

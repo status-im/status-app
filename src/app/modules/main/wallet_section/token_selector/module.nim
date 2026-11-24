@@ -207,7 +207,7 @@ when defined(testing) or defined(QT_MODEL_SPY):
   proc hasCatalogForTest*(self: Module, id: int): bool = self.catalogs.hasKey(id)
 
 method load*(self: Module) =
-  singletonInstance.engine.setRootContextProperty("walletSectionTokenSelector", self.viewVariant)
+  singletonInstance.setSessionContextProperty("walletSectionTokenSelector", self.viewVariant)
 
   self.allTokensModule.onChainTokenGroupsModelUpdated(proc(chainId: int) =
     for id, catalog in self.catalogs:

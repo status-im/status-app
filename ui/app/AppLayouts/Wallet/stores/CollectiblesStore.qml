@@ -16,6 +16,17 @@ QtObject {
     /* PRIVATE: Modules used to get data from backend */
     readonly property var _allCollectiblesModule: !!walletSectionAllCollectibles ? walletSectionAllCollectibles : null
 
+    // The visibility and order preferences belong to the logged-in profile: the store
+    // outlives the session, so they follow the session's backend.
+    on_AllCollectiblesModuleChanged: {
+        if (!!root._allCollectiblesModule) {
+            root.collectiblesController.revert()
+        } else {
+            root.collectiblesController.loadingStarted()
+            root.collectiblesController.loadingFinished("")
+        }
+    }
+
     /* This list contains the complete list of collectibles with separate
        entry per collectible which has a unique [network + contractAddress + tokenID] */
     readonly property var _allCollectiblesModel: !!root._allCollectiblesModule ? root._allCollectiblesModule.allCollectiblesModel : null

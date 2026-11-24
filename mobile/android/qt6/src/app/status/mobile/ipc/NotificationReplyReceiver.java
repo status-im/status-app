@@ -18,7 +18,7 @@ import app.status.mobile.ipc.notifications.NotificationBuilder;
 import app.status.mobile.ipc.notifications.StatusNotificationManager;
 
 /**
- * Handles inline replies from message notifications.
+ * Handles inline replies, mark-as-read and contact request actions from notifications.
  * Runs in the statusgo process so it can call status-go RPC directly.
  * Uses CallPrivateRPC with a JSON-RPC request for wakuext_sendChatMessage.
  * Uses goAsync() and an executor so onReceive returns quickly, clearing the
@@ -71,6 +71,11 @@ public final class NotificationReplyReceiver extends BroadcastReceiver {
             return;
         }
 
+        if (NotificationBuilder.ACTION_MARK_AS_READ.equals(action)) {
+            handleMarkAsReadAction(intent);
+            return;
+        }
+
         if (!NotificationBuilder.ACTION_REPLY.equals(action)) return;
 
         android.os.Bundle remoteInput = RemoteInput.getResultsFromIntent(intent);
@@ -120,6 +125,10 @@ public final class NotificationReplyReceiver extends BroadcastReceiver {
                 args.put(rpcRequest.toString());
                 String argsJson = args.toString();
 
+                // The reply belongs to the backend session it is sent in. Read the epoch
+                // first: if a logout lands while the send is in flight, the result keeps the
+                // old epoch and the next session drops it.
+                final long signalEpoch = StatusGoService.currentSignalEpoch();
                 String result = StatusGoService.callRpc("CallPrivateRPC", argsJson);
                 boolean failed = false;
                 String errorMsg = null;
@@ -142,7 +151,7 @@ public final class NotificationReplyReceiver extends BroadcastReceiver {
                                 || !(sendResult.opt("messages") instanceof JSONArray)) {
                             failed = true;
                             errorMsg = "missing send result";
-                        } else if (!StatusGoService.publishNotificationReplyResult(response.toString())) {
+                        } else if (!StatusGoService.publishNotificationReplyResult(response.toString(), signalEpoch)) {
                             // The message has already been persisted and sent. A later cold start
                             // will reload it from status-go, so this is not a send failure.
                             Log.w(TAG, "sent reply but could not queue frontend update");
@@ -154,6 +163,11 @@ public final class NotificationReplyReceiver extends BroadcastReceiver {
                 }
 
                 StatusNotificationManager mgr = StatusNotificationManager.getInstance();
+
+                if (!failed) {
+                    // Replying implies the conversation was read; the notification stays.
+                    markConversationRead(conversationId, threadId);
+                }
 
                 if (failed) {
                     Log.w(TAG, "sendChatMessage failed: " + errorMsg);
@@ -178,6 +192,68 @@ public final class NotificationReplyReceiver extends BroadcastReceiver {
                 pendingResult.finish();
             }
         });
+    }
+
+    private void handleMarkAsReadAction(Intent intent) {
+        final String conversationId = intent.getStringExtra("conversationId");
+        if (conversationId == null || conversationId.isEmpty()) return;
+        final String threadId = intent.getStringExtra("threadId");
+
+        StatusNotificationManager mgr = StatusNotificationManager.getInstance();
+        if (mgr != null) mgr.clearConversation(conversationKeyOf(intent));
+
+        final PendingResult pendingResult = goAsync();
+        REPLY_EXECUTOR.execute(() -> {
+            try {
+                markConversationRead(conversationId, threadId);
+            } finally {
+                pendingResult.finish();
+            }
+        });
+    }
+
+    /**
+     * Marks every message of the chat (or of the thread, when given) as read and queues the
+     * result for the frontend. Failures are only logged: the conversation just stays unread.
+     */
+    private static void markConversationRead(String conversationId, String threadId) {
+        final boolean isThread = threadId != null && !threadId.isEmpty();
+        final String method = isThread ? "wakuext_markThreadRead" : "wakuext_markAllRead";
+        try {
+            JSONArray rpcParams = new JSONArray();
+            rpcParams.put(conversationId);
+            if (isThread) rpcParams.put(threadId);
+
+            JSONObject rpcRequest = new JSONObject();
+            rpcRequest.put("jsonrpc", "2.0");
+            rpcRequest.put("id", 1);
+            rpcRequest.put("method", method);
+            rpcRequest.put("params", rpcParams);
+
+            JSONArray args = new JSONArray();
+            args.put(rpcRequest.toString());
+
+            // The result belongs to the backend session the call runs in. Read the epoch
+            // first: if a logout lands while the call is in flight, the result keeps the old
+            // epoch and the next session drops it.
+            final long signalEpoch = StatusGoService.currentSignalEpoch();
+            String result = StatusGoService.callRpc("CallPrivateRPC", args.toString());
+            if (result == null || result.isEmpty()) {
+                Log.w(TAG, method + " failed: empty response");
+                return;
+            }
+            JSONObject response = new JSONObject(result);
+            if (response.has("error") && !response.isNull("error")) {
+                Log.w(TAG, method + " failed: " + response.get("error"));
+                return;
+            }
+            if (!StatusGoService.publishNotificationConversationRead(
+                    conversationId, threadId, response.toString(), signalEpoch)) {
+                Log.w(TAG, "marked conversation read but could not queue frontend update");
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, method + " failed", t);
+        }
     }
 
     private void handleContactRequestAction(Context context, Intent intent, String action) {

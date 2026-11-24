@@ -42,7 +42,7 @@ method delete*(self: Module) =
   self.view.delete
 
 method load*(self: Module) =
-  singletonInstance.engine.setRootContextProperty("walletSectionAssets", self.viewVariant)
+  singletonInstance.setSessionContextProperty("walletSectionAssets", self.viewVariant)
 
   self.events.on(SIGNAL_WALLET_ACCOUNT_TOKENS_REBUILT) do(e:Args):
     self.view.modelsUpdated()

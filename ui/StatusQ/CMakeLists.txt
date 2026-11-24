@@ -39,42 +39,8 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT ANDROID)
     find_package(Qt6 COMPONENTS DBus REQUIRED)
 endif()
 
-# --- QML test hooks flag and TestConfig generation ---
+# QML test hooks flag (TestConfig.testMode, registered from C++ so it needs no QML compile at runtime)
 option(STATUSQ_TESTMODE "Enable QML test hooks (TestConfig.testMode)" OFF)
-set(TEST_MODE false)
-if(STATUSQ_TESTMODE)
-    set(TEST_MODE true)
-endif()
-
-# Generate TestConfig.qml into the build tree
-set(_gen_qml ${CMAKE_CURRENT_BINARY_DIR}/src/StatusQ/Core/TestConfig.qml)
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/src/StatusQ/Core)
-configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/StatusQ/Core/TestConfig.qml.in
-  ${_gen_qml}
-  @ONLY
-)
-if(NOT EXISTS ${_gen_qml})
-  message(FATAL_ERROR "Expected generated file missing: ${_gen_qml}")
-endif()
-
-# For shadow build OFF mode, also copy to source directory
-if(NOT ${STATUSQ_SHADOW_BUILD})
-  configure_file(${_gen_qml} ${CMAKE_CURRENT_SOURCE_DIR}/src/StatusQ/Core/TestConfig.qml COPYONLY)
-endif()
-
-# Generate a .qrc that includes the generated QML
-set(_gen_qrc ${CMAKE_CURRENT_BINARY_DIR}/TestConfig.generated.qrc)
-file(WRITE ${_gen_qrc}
-  "<RCC>\n"
-  "  <qresource prefix=\"/StatusQ\">\n"
-  "    <file alias=\"Core/TestConfig.qml\">${_gen_qml}</file>\n"
-  "  </qresource>\n"
-  "</RCC>\n"
-)
-
-qt_add_resources(STATUSQ_TESTCONFIG_RCC ${_gen_qrc})
-# --- END test hooks ---
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     find_package(Qt6 COMPONENTS QuickTest REQUIRED)
@@ -176,7 +142,7 @@ endif()
 
 add_library(StatusQ ${LIB_TYPE}
         ${STATUSQ_QRC_COMPILED}
-        ${STATUSQ_TESTCONFIG_RCC}
+        include/StatusQ/attachmentpreparer.h
         include/StatusQ/audioutils.h
         include/StatusQ/skeletontileitem.h
         include/StatusQ/rippleitem.h
@@ -201,6 +167,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/genericvalidator.h
         include/StatusQ/httpstats.h
         include/StatusQ/imageencoderutils.h
+        include/StatusQ/imagepreparation.h
         include/StatusQ/inputmethodeventfilter.h
         include/StatusQ/keychain.h
         include/StatusQ/securestorage.h
@@ -239,6 +206,7 @@ add_library(StatusQ ${LIB_TYPE}
         include/StatusQ/undefinedfilter.h
         include/StatusQ/urlutils.h
         include/StatusQ/statuslayoutstate.h
+        src/attachmentpreparer.cpp
         src/audioutils.cpp
         src/skeletontileitem.cpp
         src/rippleitem.cpp
@@ -266,6 +234,7 @@ add_library(StatusQ ${LIB_TYPE}
         src/genericvalidator.cpp
         src/httpstats.cpp
         src/imageencoderutils.cpp
+        src/imagepreparation.cpp
         src/inputmethodeventfilter.cpp
         src/keychain.cpp
         src/securestorage.cpp
@@ -328,6 +297,7 @@ add_library(StatusQ ${LIB_TYPE}
         )
 
 target_compile_features(StatusQ PRIVATE cxx_std_17)
+target_compile_definitions(StatusQ PRIVATE STATUSQ_TESTMODE=$<BOOL:${STATUSQ_TESTMODE}>)
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::GuiPrivate Qt6::QuickPrivate
         Qt6::QuickLayoutsPrivate)
 
@@ -362,7 +332,8 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
     find_library(UserNotifications UserNotifications)
     find_library(CoreMotion CoreMotion)
     find_library(PhotosUI PhotosUI)
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${UIKit} ${Foundation} ${Security} ${LocalAuthentication} ${WebKit} ${UserNotifications} ${CoreMotion} ${PhotosUI})
+    find_library(AVFoundation AVFoundation REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${UIKit} ${Foundation} ${Security} ${LocalAuthentication} ${WebKit} ${UserNotifications} ${CoreMotion} ${PhotosUI} ${AVFoundation})
     target_sources(StatusQ PRIVATE
         src/ios_utils.mm
         src/shareutils_ios.mm
@@ -375,6 +346,8 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
         src/StatusQ/Controls/NativePasteButtonItem_ios.mm
         src/localnetworkpermission_ios.mm
     )
+    # Keep AudioUtils cross-platform while allowing native AVAudioSession setup on iOS.
+    set_source_files_properties(src/audioutils.cpp PROPERTIES COMPILE_OPTIONS "-x;objective-c++")
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Android")
     target_sources(StatusQ PRIVATE
         src/keychain_android.cpp
@@ -437,18 +410,26 @@ function(statusq_add_hunspell)
 endfunction()
 statusq_add_hunspell()
 target_link_libraries(StatusQ PRIVATE hunspell)
+
+set(_dict_big "")
+if (NOT (ANDROID OR IOS))
+    set(_dict_big BIG_RESOURCES)
+endif()
 qt_add_resources(StatusQ "statusq_dictionaries"
     PREFIX "/StatusQ/dictionaries"
     BASE "${CMAKE_CURRENT_SOURCE_DIR}/src/assets/dictionaries"
+    ${_dict_big}
     FILES
         src/assets/dictionaries/cs_CZ.aff
         src/assets/dictionaries/cs_CZ.dic
         src/assets/dictionaries/en_US.aff
         src/assets/dictionaries/en_US.dic
+        src/assets/dictionaries/en_GB.aff
+        src/assets/dictionaries/en_GB.dic
         src/assets/dictionaries/es_ES.aff
         src/assets/dictionaries/es_ES.dic
-        src/assets/dictionaries/fr.aff
-        src/assets/dictionaries/fr.dic
+        src/assets/dictionaries/fr_FR.aff
+        src/assets/dictionaries/fr_FR.dic
         src/assets/dictionaries/ko_KR.aff
         src/assets/dictionaries/ko_KR.dic
         src/assets/dictionaries/uk_UA.aff

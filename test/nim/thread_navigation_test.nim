@@ -18,6 +18,8 @@ import app_service/service/community/service as community_service
 import app_service/service/message/message_cursor
 import app_service/service/message/dto/message
 import app_service/service/message/dto/thread
+import app_service/common/types
+import backend/response_type
 
 privateAccess(messages_module.Module)
 privateAccess(message_service.Service)
@@ -35,7 +37,24 @@ type
     controller: controller.Controller
     names: seq[string]
     namesAtCompletion: seq[string]
+    deletions: seq[string]
     summaries: seq[ThreadDto]
+
+  SendDelegate = ref object of messages_interface.AccessInterface
+    started, finished, errors: seq[string]
+    newThreadNames: seq[string]
+
+method onSendingStarted(self: SendDelegate, sendToken, text, replyTo: string, contentType: int,
+    startNewThread: bool, newThreadName: string) =
+  self.started.add(sendToken)
+  if startNewThread:
+    self.newThreadNames.add(newThreadName)
+
+method onSendingFinished(self: SendDelegate, sendToken: string) =
+  self.finished.add(sendToken)
+
+method onSendingMessageError(self: SendDelegate, error: string) =
+  self.errors.add(error)
 
 method updateThreadDetails(self: ThreadDetailsDelegate) =
   self.names.add(self.controller.getThread().name)
@@ -43,8 +62,14 @@ method updateThreadDetails(self: ThreadDetailsDelegate) =
 method onThreadEditFinished(self: ThreadDetailsDelegate, requestId, error: string) =
   self.namesAtCompletion.add(self.names[^1])
 
+method onThreadDeleteFinished(self: ThreadDetailsDelegate, requestId, error: string) =
+  self.deletions.add(requestId)
+
 method onChatThreadsLoaded(self: ThreadDetailsDelegate, threads: seq[ThreadDto], listLoaded: bool = false) =
   self.summaries = threads
+
+method messagesDidLoad(self: MockDelegate) =
+  discard
 
 method openThreadAsChat(self: MockDelegate, threadId, threadName, parentMessageId: string,
     setActive: bool = true, hasUnreadMessages: bool = false, notificationsCount: int = 0) =
@@ -53,6 +78,196 @@ method openThreadAsChat(self: MockDelegate, threadId, threadName, parentMessageI
     hasUnreadMessages: hasUnreadMessages, notificationsCount: notificationsCount))
 
 suite "thread navigation":
+  test "new thread pending sends reach only the parent and preserve the title on replay":
+    let events = createEventEmitter()
+    let chats = chat_service.newService(events, nil, nil)
+    let parent = SendDelegate()
+    let thread = SendDelegate()
+    let parentController = controller.newController(parent, events, "section", "chat",
+      true, nil, nil, chats, nil, nil, nil)
+    let threadController = controller.newController(thread, events, "section", "chat",
+      true, nil, nil, chats, nil, nil, nil, threadId = "another-thread")
+    parentController.init()
+    threadController.init()
+    defer:
+      parentController.delete()
+      threadController.delete()
+    chats.announceSending(chat_service.SendingStartedArgs(chatId: "chat", sendToken: "token",
+      text: "First reply", startNewThread: true, newThreadName: "Title"))
+    check parent.started == @["token"]
+    check parent.newThreadNames == @["Title"]
+    check thread.started.len == 0
+    require parentController.pendingSends().len == 1
+    check parentController.pendingSends()[0].newThreadName == "Title"
+    check parentController.pendingSends()[0].startNewThread
+
+  test "send response caches the summary before publishing its root message":
+    let events = createEventEmitter()
+    let chats = chat_service.newService(events, nil, nil)
+    let messages = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    messages.init()
+    var seen = false
+    events.on(chat_service.SIGNAL_SENDING_SUCCESS) do(e: Args):
+      let args = chat_service.MessageSendingSuccess(e)
+      if args.message.id == "root":
+        let summary = messages.getThreadForParentMessage("chat", "root")
+        check summary.threadId == "root"
+        check summary.messagesCount == 1
+        check summary.lastMessage.text == "First reply"
+        seen = true
+    discard chats.processMessengerResponse(RpcResponse[JsonNode](result: %* {
+      "chats": [{"id": "chat"}],
+      "messages": [{"id": "root", "chatId": "chat"}],
+      "threads": [{"chatId": "chat", "threadId": "root", "parentMessageId": "root",
+        "messagesCount": 1, "lastMessage": {"text": "First reply"}}]
+    }))
+    check seen
+
+  test "pending thread cards are isolated and removed on completion":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    let contacts = contact_service.newService(events, nil, nil, nil)
+    let chats = chat_service.newService(events, nil, contacts)
+    let communities = community_service.newService(events, nil, chats, nil, service)
+    let module = messages_module.newModule(MockDelegate(), events, "section", "chat",
+      true, contacts, communities, chats, service, nil, nil)
+    defer: module.delete()
+
+    module.onSendingStarted("one", "First reply", "", 1, true, "Title")
+    module.onSendingStarted("two", "Second reply", "", 4, true, "")
+    let first = module.view.model().findIndexForMessageId("pending-one")
+    let second = module.view.model().findIndexForMessageId("pending-two")
+    require first >= 0
+    require second >= 0
+    check module.view.model().items[first].hasThread
+    check module.view.model().items[first].unparsedText == "First reply"
+    check module.view.model().items[first].threadSummary.title == "Title"
+    check module.view.model().items[first].threadSummary.messagesCount == 1
+    check module.view.model().items[first].threadSummary.lastMessageText == "First reply"
+    check module.view.model().items[first].threadSummary.threadId == ""
+    check module.view.model().items[second].threadSummary.title == "Second reply"
+    check module.view.model().items[second].contentType == ContentType.Emoji
+    module.onSendingFinished("one")
+    check module.view.model().findIndexForMessageId("pending-one") == -1
+    check module.view.model().findIndexForMessageId("pending-two") >= 0
+    module.onSendingFinished("two")
+    check module.view.model().findIndexForMessageId("pending-two") == -1
+
+  test "new thread send reconciles the pending card and removes failed sends":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    let contacts = contact_service.newService(events, nil, nil, nil)
+    let chats = chat_service.newService(events, nil, contacts)
+    let communities = community_service.newService(events, nil, chats, nil, service)
+    let module = messages_module.newModule(MockDelegate(), events, "section", "chat",
+      true, contacts, communities, chats, service, nil, nil)
+    service.init()
+    module.controller.init()
+    defer: module.delete()
+
+    chats.announceSending(chat_service.SendingStartedArgs(chatId: "chat", sendToken: "one",
+      text: "First reply", startNewThread: true, newThreadName: "Title"))
+    require module.view.model().findIndexForMessageId("pending-one") >= 0
+    chats.onAsyncSendMessageDone($(%* {
+      "chatId": "chat", "threadId": "", "sendToken": "one",
+      "response": {"result": {
+        "chats": [{"id": "chat"}],
+        "messages": [{"id": "root", "chatId": "chat", "text": "First reply"}],
+        "threads": [{"chatId": "chat", "threadId": "root", "parentMessageId": "root",
+          "name": "Title", "messagesCount": 1, "lastMessage": {"from": "alice", "text": "First reply"}}]
+      }}
+    }))
+    check module.view.model().findIndexForMessageId("pending-one") == -1
+    let root = module.view.model().findIndexForMessageId("root")
+    require root >= 0
+    check module.view.model().items[root].hasThread
+    check module.view.model().items[root].unparsedText == "First reply"
+    check module.view.model().items[root].threadSummary.title == "Title"
+    check module.view.model().items[root].threadSummary.messagesCount == 1
+    check module.view.model().items[root].threadSummary.lastMessageText == "First reply"
+
+    chats.announceSending(chat_service.SendingStartedArgs(chatId: "chat", sendToken: "two",
+      text: "Failed reply", startNewThread: true))
+    require module.view.model().findIndexForMessageId("pending-two") >= 0
+    chats.onAsyncSendMessageDone($(%* {
+      "chatId": "chat", "threadId": "", "sendToken": "two", "error": "Offline"
+    }))
+    check module.view.model().findIndexForMessageId("pending-two") == -1
+    check module.view.model().findIndexForMessageId("root") >= 0
+
+  test "send responses route replies to the destination thread, not the main chat":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    let contacts = contact_service.newService(events, nil, nil, nil)
+    let chats = chat_service.newService(events, nil, contacts)
+    let communities = community_service.newService(events, nil, chats, nil, service)
+    let mainChat = messages_module.newModule(MockDelegate(), events, "section", "chat",
+      true, contacts, communities, chats, service, nil, nil)
+    let thread = messages_module.newModule(MockDelegate(), events, "section", "chat",
+      true, contacts, communities, chats, service, nil, nil, threadId = "root")
+    let otherThread = messages_module.newModule(MockDelegate(), events, "section", "chat",
+      true, contacts, communities, chats, service, nil, nil, threadId = "other")
+    service.init()
+    mainChat.controller.init()
+    thread.controller.init()
+    otherThread.controller.init()
+    defer:
+      mainChat.delete()
+      thread.delete()
+      otherThread.delete()
+
+    chats.onAsyncSendMessageDone($(%* {
+      "chatId": "chat", "threadId": "root", "sendToken": "reply",
+      "response": {"result": {
+        "chats": [{"id": "chat"}],
+        "messages": [{"id": "reply", "chatId": "chat", "threadId": "root", "text": "Reply"}]
+      }}
+    }))
+    check mainChat.view.model().findIndexForMessageId("reply") == -1
+    check thread.view.model().findIndexForMessageId("reply") >= 0
+    check otherThread.view.model().findIndexForMessageId("reply") == -1
+
+  test "only the destination thread receives or replays its pending send":
+    let events = createEventEmitter()
+    let chats = chat_service.newService(events, nil, nil)
+    let channel = SendDelegate()
+    let threadA = SendDelegate()
+    let threadB = SendDelegate()
+    let channelController = controller.newController(channel, events, "section", "chat",
+      true, nil, nil, chats, nil, nil, nil)
+    let controllerA = controller.newController(threadA, events, "section", "chat",
+      true, nil, nil, chats, nil, nil, nil, threadId = "thread-a")
+    let controllerB = controller.newController(threadB, events, "section", "chat",
+      true, nil, nil, chats, nil, nil, nil, threadId = "thread-b")
+    channelController.init()
+    controllerA.init()
+    controllerB.init()
+    defer:
+      channelController.delete()
+      controllerA.delete()
+      controllerB.delete()
+
+    let send = chat_service.SendingStartedArgs(chatId: "chat", threadId: "thread-a",
+      sendToken: "reply", text: "Thread reply")
+    chats.announceSending(send)
+    check channel.started.len == 0
+    check threadA.started == @["reply"]
+    check threadB.started.len == 0
+    check channelController.pendingSends().len == 0
+    check controllerA.pendingSends() == @[send]
+    check controllerB.pendingSends().len == 0
+
+    chats.onAsyncSendMessageDone($(%* {
+      "chatId": "chat", "threadId": "thread-a", "sendToken": "reply", "error": "Offline"
+    }))
+    check controllerA.pendingSends().len == 0
+    check threadA.finished == @["reply"]
+    check threadA.errors == @["Offline"]
+    check channel.finished.len == 0
+    check channel.errors.len == 0
+    check threadB.finished.len == 0
+    check threadB.errors.len == 0
+
   test "thread-only signals carry archive transitions without losing summaries":
     let events = createEventEmitter()
     let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
@@ -255,6 +470,28 @@ suite "thread navigation":
 
     for id in ["loaded-reply", "added-reply"]:
       check((module.view.model().findIndexForMessageId(id) >= 0) == not THREADS_ENABLED)
+
+  test "thread view displays the root as a standalone message":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    let contacts = contact_service.newService(events, nil, nil, nil)
+    let chats = chat_service.newService(events, nil, contacts)
+    let communities = community_service.newService(events, nil, chats, nil, service)
+    let module = messages_module.newModule(MockDelegate(), events, "section", "chat",
+      true, contacts, communities, chats, service, nil, nil, threadId = "root")
+    defer: module.delete()
+
+    module.newMessagesLoaded(@[MessageDto(id: "root", threadId: "root", text: "Initial message", clock: 1)], @[])
+    let root = module.view.model().findIndexForMessageId("root")
+    require root >= 0
+    check module.view.model().items[root].unparsedText == "Initial message"
+    check module.view.model().items[root].responseToMessageWithId == ""
+
+    module.messagesAdded(@[MessageDto(id: "reply", threadId: "root", text: "Reply",
+      responseTo: "root", clock: 2)])
+    let reply = module.view.model().findIndexForMessageId("reply")
+    require reply >= 0
+    check module.view.model().items[reply].responseToMessageWithId == "root"
 
   test "info thread snapshots settle empty lists and incremental updates preserve other rows":
     let events = createEventEmitter()
@@ -552,3 +789,140 @@ suite "thread navigation":
       service.asyncLoadChatThreadSummaries("chat-id")
       check(completed.len == 0)
       check("chat-id" in service.chatThreadSummariesLoadedChats)
+
+  test "deleted threads keep the parent card and reject stale reply pages":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    let contacts = contact_service.newService(events, nil, nil, nil)
+    let module = messages_module.newModule(MockDelegate(), events, "section-id", "chat-id",
+      true, contacts, nil, nil, service, nil, nil)
+    defer: module.delete()
+    let parent = createMessageItemFromDtos(MessageDto(id: "parent", clock: 1), "",
+      ContactDetails(), false, "")
+    module.view.model().insertItemBasedOnClock(parent)
+    module.onChatThreadsLoaded(@[ThreadDto(threadId: "dead", parentMessageId: "parent",
+      deleted: true, deletedAt: 100)], listLoaded = true)
+    check parent.hasThread
+    check parent.threadSummary.deleted
+    check parent.threadSummary.lastMessageTimestamp == 100
+    check module.view.threadsModel().rowCount(nil) == 0
+    check module.view.model().findIndexForMessageId("parent") >= 0
+    service.onAsyncLoadChatThreadsForChats($(%* {
+      "chatIds": ["chat-id"], "threads": [{"threadId": "dead", "chatId": "chat-id",
+      "parentMessageId": "parent", "deleted": true}]
+    }))
+    let thread = messages_module.newModule(MockDelegate(), events, "section-id", "chat-id",
+      true, contacts, nil, nil, service, nil, nil, threadId = "dead")
+    defer: thread.delete()
+    thread.messagesAdded(@[MessageDto(id: "late", threadId: "dead")])
+    thread.newMessagesLoaded(@[MessageDto(id: "stale", threadId: "dead")], @[])
+    check thread.view.model().rowCount(nil) == 0
+    module.createThread("parent")
+
+  test "summary deletions complete in their parent chat as well as the selected thread":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    var delegates: seq[ThreadDetailsDelegate]
+    for (chatId, threadId) in [("chat", ""), ("chat", "target"), ("chat", "other"), ("elsewhere", "")]:
+      let delegate = ThreadDetailsDelegate()
+      delegate.controller = controller.newController(delegate, events, "section", chatId,
+        false, nil, nil, nil, service, nil, nil, threadId = threadId)
+      delegate.controller.init()
+      delegates.add(delegate)
+    defer:
+      for delegate in delegates:
+        delegate.controller.delete()
+    events.emit(SIGNAL_THREAD_DELETE_FINISHED,
+      ThreadDeleteFinishedArgs(chatId: "chat", threadId: "target", requestId: "request"))
+    check delegates[0].deletions == @["request"]
+    check delegates[1].deletions == @["request"]
+    check delegates[2].deletions.len == 0
+    check delegates[3].deletions.len == 0
+
+suite "chat history before the messages module loads":
+  proc chatModule(events: EventEmitter, service: message_service.Service): messages_module.Module =
+    let contacts = contact_service.newService(events, nil, nil, nil)
+    let chats = chat_service.newService(events, nil, contacts)
+    let communities = community_service.newService(events, nil, chats, nil, service)
+    messages_module.newModule(MockDelegate(), events, "section-id", "chat-id",
+      true, contacts, communities, chats, service, nil, nil)
+
+  # A section build can select a chat, and fetch its newest page, before the
+  # chat's module listens: the page never reaches the model.
+  test "a page fetched before the module listened is fetched again":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    service.msgCursor["chat-id"] = initMessageCursor("cursor-2", false, false)
+    let module = chatModule(events, service)
+    defer: module.delete()
+
+    module.load()
+
+    check(not service.msgCursor.hasKey("chat-id"))
+
+  test "a page still in flight reaches the module that loads meanwhile":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    service.msgCursor["chat-id"] = initMessageCursor("cursor-1", true, false)
+    let module = chatModule(events, service)
+    defer: module.delete()
+
+    module.load()
+
+    check(service.msgCursor["chat-id"].isPending())
+
+suite "threads and the chat history restart":
+  proc contentModule(events: EventEmitter, service: message_service.Service,
+      threadId: string): messages_module.Module =
+    let contacts = contact_service.newService(events, nil, nil, nil)
+    let chats = chat_service.newService(events, nil, contacts)
+    let communities = community_service.newService(events, nil, chats, nil, service)
+    messages_module.newModule(MockDelegate(), events, "section-id", "chat-id",
+      true, contacts, communities, chats, service, nil, nil, threadId = threadId)
+
+  test "a thread that loads leaves its parent chat's history alone":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    service.msgCursor["chat-id"] = initMessageCursor("chat-cursor", false, false)
+    service.threadMsgCursor["chat-id:thread-id"] = initMessageCursor("", true, false)
+    let thread = contentModule(events, service, "thread-id")
+    defer: thread.delete()
+
+    thread.load()
+
+    check(service.msgCursor["chat-id"].getValue() == "chat-cursor")
+    check(service.threadMsgCursor["chat-id:thread-id"].isPending())
+
+  test "a parent chat that loads leaves its threads' history alone":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    service.threadMsgCursor["chat-id:thread-id"] = initMessageCursor("thread-cursor", false, false)
+    let parent = contentModule(events, service, "")
+    defer: parent.delete()
+
+    parent.load()
+
+    check(service.threadMsgCursor["chat-id:thread-id"].getValue() == "thread-cursor")
+
+  test "replies received before a thread loads come with its first page":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    service.threadMsgCursor["chat-id:thread-id"] = initMessageCursor("", true, false)
+    let thread = contentModule(events, service, "thread-id")
+    defer: thread.delete()
+    let reply = MessageDto(id: "reply-1", threadId: "thread-id", localChatId: "chat-id", clock: 5)
+
+    events.emit(SIGNAL_NEW_MESSAGE_RECEIVED, MessagesArgs(chatId: "chat-id",
+      threadId: "thread-id", messages: @[reply]))
+    check(thread.view.model().findIndexForMessageId("reply-1") == -1)
+
+    thread.load()
+    service.onAsyncLoadMoreMessagesForThread($(%* {
+      "chatId": "chat-id",
+      "threadId": "thread-id",
+      "messages": [{"id": "reply-1", "threadId": "thread-id", "localChatId": "chat-id", "clock": 5}],
+      "messagesCursor": "",
+      "reactions": []
+    }))
+
+    check(thread.view.model().findIndexForMessageId("reply-1") >= 0)

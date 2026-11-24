@@ -399,6 +399,11 @@ QtObject {
         return String(url).startsWith(Constants.dataImagePrefix) || UrlUtils.isValidImageUrl(url)
     }
 
+    // Chat Attachments also accept SVG (rasterised before sending)
+    function isValidChatImage(url) {
+        return String(url).startsWith(Constants.dataImagePrefix) || UrlUtils.isValidChatImageUrl(url)
+    }
+
     function isFilesizeValid(img) {
         if (String(img).startsWith(Constants.dataImagePrefix)) {
             return img.length < Constants.maxImgSizeBytes
@@ -524,7 +529,7 @@ QtObject {
 
     // See also: backend/interpret/cropped_image.nim
     function getImageAndCropInfoJson(imgPath, cropRect) {
-        return JSON.stringify({imagePath: String(imgPath).replace("file://", ""), cropRect: cropRect})
+        return JSON.stringify({imagePath: String(imgPath), cropRect: cropRect})
     }
 
     // handle translations for section names coming from app_sections_config.nim

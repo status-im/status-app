@@ -77,6 +77,7 @@ SplitView {
                 property string fleet: "fleet-123"
                 function setFleet(fl) {
                     fleet = fl
+                    return true
                 }
 
                 property bool wakuV2LightClientEnabled
@@ -101,6 +102,7 @@ SplitView {
                 function collectStorageStats() {}
                 function toggleDebug() {
                     isDebugEnabled = !isDebugEnabled
+                    return true
                 }
                 function setArchiveProtocolMode(mode) {}
                 function toggleEnsCommunityPermissionsEnabled() {}
@@ -122,7 +124,7 @@ SplitView {
                 }
                 function toggleExperimentalFeature(feat) {
                     if (feat === experimentalFeatures.browser)
-                        advancedView.localAccountSensitiveSettings.isBrowserEnabled = !advancedView.localAccountSensitiveSettings.isBrowserEnabled
+                        advancedView.localAccountSettings.isBrowserEnabled = !advancedView.localAccountSettings.isBrowserEnabled
                 }
                 function toggleCopyMessageLinksEnabled() {
                     copyMessageLinksEnabled = !copyMessageLinksEnabled
@@ -132,7 +134,7 @@ SplitView {
                     readonly property string browser: "browser"
                 }
             }
-            readonly property var localAccountSensitiveSettings: QtObject {
+            readonly property var localAccountSettings: QtObject {
                 property bool quitOnClose
                 property bool isBrowserEnabled: true
             }

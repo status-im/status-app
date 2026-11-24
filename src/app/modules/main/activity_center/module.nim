@@ -59,7 +59,7 @@ method delete*(self: Module) =
   self.view.delete
 
 method load*(self: Module) =
-  singletonInstance.engine.setRootContextProperty("activityCenterModule", self.viewVariant)
+  singletonInstance.setSessionContextProperty("activityCenterModule", self.viewVariant)
   self.controller.init()
   self.view.load()
 

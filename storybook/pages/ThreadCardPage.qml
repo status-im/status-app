@@ -73,7 +73,7 @@ SplitView {
             participantsPreviewModel: participantsListModel
             participantsCount: participantsCount.value
             lastMessage: ({
-                sender: { name: "You", color: "#4360DF" },
+                sender: { name: "Johnny Doe", color: "#4360DF" },
                 text: lastMessageField.text,
                 timestamp: Date.now() - timeField.value * 60 * 1000
             })
@@ -170,8 +170,9 @@ SplitView {
                         id: timeField
                         width: parent.width
                         from: 0
-                        to: 999
+                        to: 999999
                         value: 38
+                        editable: true
                     }
 
                     Row {
@@ -188,6 +189,7 @@ SplitView {
                             from: 1
                             to: 999
                             value: 4
+                            editable: true
                         }
                     }
 
@@ -205,6 +207,7 @@ SplitView {
                             from: 1
                             to: root.participants.length
                             value: 15
+                            editable: true
                         }
                     }
 
@@ -222,6 +225,7 @@ SplitView {
                             from: 0
                             to: 999
                             value: 2
+                            editable: true
                         }
                     }
                 }

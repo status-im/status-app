@@ -1,4 +1,4 @@
-import nimqml, chronicles, json, strutils, sequtils
+import nimqml, chronicles, json, strutils, sequtils, sets, options, results
 
 import io_interface, states
 import view, controller
@@ -42,6 +42,8 @@ type
     accountsService: accounts_service.Service
     generalService: general_service.Service
     resumeLogin: bool
+    # Profiles on the login screen; any other one logging in is new on this device.
+    listedKeyUids: Option[HashSet[string]]
     tmpKeyUid: string # TODO: remove this, once we switch fully to new keycard approach
     keycardModule: keycard_management_module.Module[Module[T]]
     events: EventEmitter
@@ -119,7 +121,7 @@ method cleanupAfterMainTransition*[T](self: Module[T]) =
   if self.view.isNil:
     return
 
-  singletonInstance.engine.setRootContextProperty("onboardingModule", newQVariant())
+  singletonInstance.setSessionContextProperty("onboardingModule", newQVariant())
   if not self.keycardModule.isNil:
     self.keycardModule.delete
     self.keycardModule = nil
@@ -133,14 +135,13 @@ method cleanupAfterMainTransition*[T](self: Module[T]) =
 method onMainFailedToLoad*[T](self: Module[T]) =
   self.view.accountLoginError("Failed to load main module, please restart the app and try again.", wrongPassword = false)
 
-proc buildLoginAccountsModel[T](self: Module[T]): bool =
+proc buildLoginAccountsModel[T](self: Module[T]): Result[void, string] =
   var openedAccounts: seq[AccountDto]
-  var accountsLoadFailed = false
   try:
     openedAccounts = self.controller.getOpenedAccounts()
   except Exception as e:
     error "failed to load opened accounts", msg = e.msg
-    accountsLoadFailed = true
+    return err(e.msg)
 
   if openedAccounts.len > 0:
     var items: seq[login_acc_item.Item]
@@ -158,10 +159,11 @@ proc buildLoginAccountsModel[T](self: Module[T]): bool =
       ))
 
     self.view.setLoginAccountsModelItems(items)
-  return accountsLoadFailed
+  self.listedKeyUids = some(openedAccounts.mapIt(it.keyUid).toHashSet())
+  ok()
 
-method load*[T](self: Module[T]) =
-  singletonInstance.engine.setRootContextProperty("onboardingModule", self.viewVariant)
+method load*[T](self: Module[T]): Result[void, string] =
+  singletonInstance.setSessionContextProperty("onboardingModule", self.viewVariant)
   self.controller.init()
 
   let loggedInAccount = self.accountsService.fetchLoggedInAccount()
@@ -169,14 +171,15 @@ method load*[T](self: Module[T]) =
   if self.resumeLogin:
     self.controller.setLoggedInAccount(loggedInAccount)
     self.finishAppLoading2()
-    return
+    return ok()
 
-  let accountsLoadFailed = self.buildLoginAccountsModel()
+  let accountsLoaded = self.buildLoginAccountsModel()
 
   self.delegate.onboardingDidLoad()
-  if accountsLoadFailed:
+  if accountsLoaded.isErr:
     self.view.accountLoginError("Failed to load accounts. Please restart the app and try again.",
       wrongPassword = false)
+  accountsLoaded
 
 method loginKeycard*[T](self: Module[T], keyUid: string, pin: string, pairingPassword: string) =
   self.controller.loginKeycard(keyUid, pin, pairingPassword)
@@ -329,7 +332,7 @@ method finishOnboardingFlow*[T](self: Module[T], flowInt: int, dataJson: string)
     # "Stay logged in" opt-in from the onboarding password screen (password profiles
     # only; the task additionally skips keycard profiles as a safety net)
     if data{"stayLoggedIn"}.getBool(false) and pin.len == 0 and password.len > 0:
-      self.postLoginTasks.add(newSaveStayLoggedInPasswordTask(password, enablePreference = true))
+      self.postLoginTasks.add(newSaveStayLoggedInPasswordTask(password, action = StayLoggedInAction.Enable))
     if backupImportFileUrl != "":
       self.postLoginTasks.add(newLocalBackupTask(backupImportFileUrl))
 
@@ -337,6 +340,9 @@ method finishOnboardingFlow*[T](self: Module[T], flowInt: int, dataJson: string)
   except Exception as e:
     error "Error finishing Onboarding Flow", msg = e.msg
     return e.msg
+
+method setSelectedLoginAccount*[T](self: Module[T], keyUid: string) =
+  self.controller.selectLoginAccount(keyUid)
 
 method loginRequested*[T](self: Module[T], keyUid: string, loginFlow: int, dataJson: string) =
   try:
@@ -353,18 +359,19 @@ method loginRequested*[T](self: Module[T], keyUid: string, loginFlow: int, dataJ
 
     case self.loginFlow:
       of LoginMethod.Password:
-        # Re-store (or reconcile) the "Stay logged in" credential after any successful
-        # password-method login. The task is a no-op unless the per-account preference is
-        # ON (checked QML-side) — this is what makes the preference survive logout: the
-        # next explicit login puts the credential back.
+        # After a successful password-method login the task follows the stored preference
+        # (re-stores the credential when it is ON, removes a leftover one when it is OFF) —
+        # that is what makes the preference survive logout. The login screen sends
+        # "stayLoggedIn" only when the user changed the toggle; then that choice is applied.
+        let action = stayLoggedInActionFromLoginData(data)
         let dek = data{"dek"}.getStr
         if dek.len > 0:
-          self.postLoginTasks.add(newSaveStayLoggedInDekTask(dek, keyUid = keyUid))
+          self.postLoginTasks.add(newSaveStayLoggedInDekTask(dek, keyUid = keyUid, action = action))
           self.controller.loginWithDEK(account, dek)
         else:
           if data{"updateBiometrics"}.getBool(false):
             self.postLoginTasks.add(newSaveBiometricsTask(data["password"].str, isPin = false, keyUid = keyUid))
-          self.postLoginTasks.add(newSaveStayLoggedInPasswordTask(data["password"].str, keyUid = keyUid))
+          self.postLoginTasks.add(newSaveStayLoggedInPasswordTask(data["password"].str, keyUid = keyUid, action = action))
           self.controller.login(account, data["password"].str)
       of LoginMethod.Keycard:
         # Removes a leftover "save password" credential, e.g. one a
@@ -401,7 +408,8 @@ method onNodeLogin*[T](self: Module[T], err: string, account: AccountDto, settin
     self.onAccountLoginError(err)
     return
   info "account logged in", keyUid = account.keyUid
-  self.controller.setLoggedInAccount(account)
+  let newOnDevice = self.listedKeyUids.isSome and account.keyUid notin self.listedKeyUids.get
+  self.controller.setLoggedInAccount(account, newOnDevice)
   discard self.delegate.userLoggedIn()
 
 method onMessengerStarted*[T](self: Module[T], err: string) =
@@ -458,7 +466,9 @@ method onKeycardAccountConverted*[T](self: Module[T], success: bool) =
   debug "keycard account converted", success, restartRequired
   self.view.setConvertKeycardAccountRestartRequired(restartRequired)
   self.view.setConvertKeycardAccountState(state)
-  self.generalService.logout()
+  discard self.generalService.logout()
+  # Logged out: the login screen binds the selected profile's settings again.
+  self.accountsService.clear()
   if success and not restartRequired:
     self.postLoginTasks = newSeq[PostOnboardingTask]()
     self.accountsService.clearOpenedAccountsCache()
@@ -487,6 +497,8 @@ method requestDeleteMultiaccount*[T](self: Module[T], keyUid: string): string =
   if err.len > 0:
     return err
 
+  if self.listedKeyUids.isSome:
+    self.listedKeyUids.get.excl(keyUid)
   self.view.removeLoginAccountItem(keyUid)
   return ""
 

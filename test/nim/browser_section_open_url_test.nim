@@ -1,6 +1,6 @@
 import unittest
+import ./support/qt_app
 import nimqml
-from seaqt/qcoreapplication import QCoreApplication, create
 
 import app/modules/main/browser_section/view as browser_view
 from app/modules/main/browser_section/io_interface import AccessInterface
@@ -26,7 +26,7 @@ QtObject:
   proc onOpenUrl*(self: UrlCapture, url: string) {.slot.} =
     self.urls.add url
 
-discard QCoreApplication.create()
+ensureQtCoreApp()
 
 suite "browser section view openUrl signal":
   test "sendOpenUrlSignal emits openUrl with the url":

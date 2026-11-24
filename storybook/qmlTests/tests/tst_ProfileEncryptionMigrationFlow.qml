@@ -86,6 +86,14 @@ Item {
         }
     }
 
+    Component {
+        id: reloginSpyComponent
+        SignalSpy {
+            target: Global
+            signalName: "reloginRequested"
+        }
+    }
+
     TestCase {
         name: "ProfileEncryptionMigrationFlow"
         when: windowShown
@@ -105,10 +113,10 @@ Item {
             if (root.migrationFlow) {
                 root.migrationFlow.d.migratingProfile = false
                 root.migrationFlow.progressDialog.close()
-                root.migrationFlow.restartDialog.restartTriggered = true
-                root.migrationFlow.restartDialog.close()
+                root.migrationFlow.reloginDialog.reloginTriggered = true
+                root.migrationFlow.reloginDialog.close()
                 tryVerify(() => !root.migrationFlow.progressDialog.opened
-                                && !root.migrationFlow.restartDialog.opened)
+                                && !root.migrationFlow.reloginDialog.opened)
                 root.migrationFlow = null
             }
         }
@@ -156,9 +164,9 @@ Item {
         }
 
         // Success: biometric item refreshed with the wrapped DEK (same password), the
-        // progress modal is replaced by the non-dismissible restart dialog — restart is
-        // the only way out of a deep re-encryption.
-        function test_successRefreshesBiometricsAndForcesRestart() {
+        // progress modal is replaced by the non-dismissible dialog — a new login is the
+        // only way out of a deep re-encryption.
+        function test_successRefreshesBiometricsAndForcesRelogin() {
             root.keychainMock.creds[root.testKeyUid] = "legacy-password"
 
             startMigration()
@@ -171,14 +179,18 @@ Item {
 
             tryVerify(() => !root.migrationFlow.progressDialog.opened)
 
-            const dialog = root.migrationFlow.restartDialog
+            const dialog = root.migrationFlow.reloginDialog
             tryVerify(() => dialog.opened)
             compare(dialog.escapeKeyCloses, false)
             compare(dialog.closeOnOverlayClick, false)
 
-            // Any close that is not the restart action immediately reopens the dialog
+            // Any close that is not the confirm action immediately reopens the dialog
             dialog.close()
             tryVerify(() => dialog.opened)
+
+            const reloginSpy = createTemporaryObject(reloginSpyComponent, root)
+            dialog.confirmButtonClicked()
+            compare(reloginSpy.count, 1)
         }
 
         // Success without a stored biometric item: the keychain is never touched.
@@ -187,7 +199,7 @@ Item {
             root.migrationFlow.privacyStore.privacyModule.passwordChanged(true, "")
 
             compare(root.keychainMock.updateCalls.length, 0)
-            tryVerify(() => root.migrationFlow.restartDialog.opened)
+            tryVerify(() => root.migrationFlow.reloginDialog.opened)
         }
 
         // Failure: the modal is dismissed, no restart is forced, nothing is touched.
@@ -198,7 +210,7 @@ Item {
             root.migrationFlow.privacyStore.privacyModule.passwordChanged(false, "some error")
 
             tryVerify(() => !root.migrationFlow.progressDialog.opened)
-            verify(!root.migrationFlow.restartDialog.opened)
+            verify(!root.migrationFlow.reloginDialog.opened)
             compare(root.keychainMock.updateCalls.length, 0)
             compare(root.keychainMock.creds[root.testKeyUid], "legacy-password")
         }
@@ -222,7 +234,7 @@ Item {
             tryVerify(() => drained)
             compare(root.preference, "notNow")
 
-            tryVerify(() => root.migrationFlow.restartDialog.opened)
+            tryVerify(() => root.migrationFlow.reloginDialog.opened)
         }
     }
 }

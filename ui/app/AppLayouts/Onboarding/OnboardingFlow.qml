@@ -51,6 +51,8 @@ OnboardingStackView {
 
     required property bool biometricsAvailable
     property bool stayLoggedInAvailable: false
+    // stored "Save password" preference of the profile selected on the login screen
+    property bool stayLoggedIn: false
     required property bool displayKeycardPromoBanner
     required property bool networkChecksEnabled
 
@@ -82,6 +84,8 @@ OnboardingStackView {
     signal deleteMultiaccountRequested(string keyUid)
 
     signal profileSelected(string keyUid)
+    // Create, recover or sync: the profile is new on this device
+    signal newProfileFlowStarted()
     signal linkActivated(string link)
 
     signal finished(int flow)
@@ -177,8 +181,14 @@ OnboardingStackView {
             privacyModeFeatureEnabled: root.privacyModeFeatureEnabled
             thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
 
-            onCreateProfileRequested: root.push(createProfilePage)
-            onLoginRequested: root.push(loginPage)
+            onCreateProfileRequested: {
+                root.newProfileFlowStarted()
+                root.push(createProfilePage)
+            }
+            onLoginRequested: {
+                root.newProfileFlowStarted()
+                root.push(loginPage)
+            }
 
             onPrivacyPolicyRequested: d.openPrivacyPolicyPopup()
             onTermsOfUseRequested: d.openTermsOfUsePopup()
@@ -207,6 +217,9 @@ OnboardingStackView {
             lastSelectedProfileKeyUid: root.lastSelectedProfileKeyUid
             isBiometricsLogin: root.biometricsAvailable &&
                                root.isBiometricsLogin(loginScreen.selectedProfileKeyId)
+            stayLoggedInAvailable: root.stayLoggedInAvailable
+            stayLoggedIn: root.stayLoggedIn
+            isProfileMigratedToDEKEncryption: root.isProfileMigratedToDEKEncryption
 
             onProfileSelected: (keyUid) => root.profileSelected(keyUid)
             onBiometricsRequested: (profileId) => {
@@ -215,8 +228,14 @@ OnboardingStackView {
             }
             onDismissBiometricsRequested: root.dismissBiometricsRequested()
             onLoginRequested: (keyUid, method, data) => root.loginRequested(keyUid, method, data)
-            onOnboardingCreateProfileFlowRequested: root.push(createProfilePage)
-            onOnboardingLoginFlowRequested: root.push(loginPage)
+            onOnboardingCreateProfileFlowRequested: {
+                root.newProfileFlowStarted()
+                root.push(createProfilePage)
+            }
+            onOnboardingLoginFlowRequested: {
+                root.newProfileFlowStarted()
+                root.push(loginPage)
+            }
             onLostKeycardFlowRequested: {
                 root.keyUidSubmitted(loginScreen.selectedProfileKeyId)
                 root.push(keycardLostPage)
@@ -246,6 +265,8 @@ OnboardingStackView {
             onVisibleChanged: {
                 if (!visible)
                     root.dismissBiometricsRequested()
+                else if (loginScreen.selectedProfileKeyId) // back from another flow
+                    root.profileSelected(loginScreen.selectedProfileKeyId)
             }
 
             Component.onDestruction: root.dismissBiometricsRequested()
