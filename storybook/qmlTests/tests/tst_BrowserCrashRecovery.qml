@@ -101,37 +101,48 @@ Item {
             compare(fake.reloadCalls, 1)
         }
 
-        // A Backend that revives its view brings a killed renderer back itself.
-        function test_aKilledRendererOfARevivingBackendShowsNothing() {
+        // A Backend that revives its view brings the renderer back itself.
+        function test_aRendererTheBackendRevivesShowsNothing() {
             const { view, fake } = makeView()
-            fake.revivesAfterRendererLoss = true
 
-            fake.simulateKill()
+            fake.simulateKill(true)
+            fake.simulateCrash(true)
 
             verify(!view.crashed)
             compare(fake.reloadCalls, 0)
         }
 
-        // Hidden, it comes back when shown: no crashed page to meet the user.
-        function test_aHiddenCrashOfARevivingBackendShowsNothing() {
+        // The Backend decided on its own visibility when the renderer died.
+        function test_aHiddenRendererTheBackendLeftDownShowsTheCrashedPage() {
             const { view, fake } = makeView()
-            fake.revivesAfterRendererLoss = true
             view.visible = false
 
-            fake.simulateCrash()
-
-            verify(!view.crashed)
-        }
-
-        // On screen it stays down: reloading a crashing page is the user's call.
-        function test_aShownCrashOfARevivingBackendShowsTheCrashedPage() {
-            const { view, fake } = makeView()
-            fake.revivesAfterRendererLoss = true
-
-            fake.simulateCrash()
+            fake.simulateCrash(false)
+            view.visible = true
 
             verify(view.crashed)
             compare(fake.reloadCalls, 0)
+        }
+
+        // Repeated kills: the Backend gives up, the page is the user's to reload.
+        function test_aKillTheBackendLeftDownShowsTheCrashedPage() {
+            const { view, fake } = makeView()
+
+            fake.simulateKill(false)
+
+            verify(view.crashed)
+            compare(fake.reloadCalls, 0)
+        }
+
+        function test_theBackendStatusReachesListenersUnchanged() {
+            const { view, fake } = makeView()
+            const statuses = []
+            view.renderProcessTerminated.connect((status, exitCode, willRevive) =>
+                statuses.push([status, exitCode, willRevive]))
+
+            fake.simulateCrash(true)
+
+            compare(statuses, [[2, 133, true]])
         }
 
         // No Tab left to show a crashed page in (ADR 0006 §6).

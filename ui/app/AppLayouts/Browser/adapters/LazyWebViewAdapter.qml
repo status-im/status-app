@@ -36,14 +36,9 @@ AbstractWebView {
         property bool crashed: false
     }
 
-    function _handleRenderProcessTerminated(status) {
+    function _handleRenderProcessTerminated(willRevive) {
         // No Tab left to show a crashed page in (ADR 0006 §6).
-        if (root.retained)
-            return
-
-        if (root.revivesAfterRendererLoss
-                && (status !== AbstractWebView.RenderProcessTerminationStatus.CrashedTerminationStatus
-                    || !root.visible))
+        if (root.retained || willRevive)
             return
 
         d.crashed = true
@@ -57,7 +52,6 @@ AbstractWebView {
     hasNativeFindPanel:     loader.item ? loader.item.hasNativeFindPanel     : false
     clearSiteDataSupported: loader.item ? loader.item.clearSiteDataSupported : false
     clearing:               loader.item ? loader.item.clearing               : false
-    revivesAfterRendererLoss: loader.item ? loader.item.revivesAfterRendererLoss : false
 
     property string title: ""
     property url icon: ""
@@ -219,9 +213,9 @@ AbstractWebView {
         function onJavaScriptDialogRequested(request)  { root.javaScriptDialogRequested(request) }
         function onFindTextFinished(result)            { root.findTextFinished(result) }
         function onDevToolsToggled(enabled)            { root.devToolsToggled(enabled) }
-        function onRenderProcessTerminated(status, exitCode) {
-            root._handleRenderProcessTerminated(status)
-            root.renderProcessTerminated(status, exitCode)
+        function onRenderProcessTerminated(status, exitCode, willRevive) {
+            root._handleRenderProcessTerminated(willRevive)
+            root.renderProcessTerminated(status, exitCode, willRevive)
         }
         function onTitleChanged()                      { root.syncFromAdapterItem() }
         function onIconChanged()                       { root.syncFromAdapterItem() }

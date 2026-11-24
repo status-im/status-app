@@ -40,10 +40,6 @@ Item {
     // The render process died and the page is gone until reloaded.
     property bool crashed: false
 
-    // The Backend brings a View back by itself after losing its renderer while
-    // hidden, or to a system kill: only a crash on screen is the user's to see.
-    property bool revivesAfterRendererLoss: false
-
     // === Capability Flags ===
     required property bool supportsZoom
     required property bool supportsDevTools
@@ -139,7 +135,8 @@ Item {
     signal javaScriptDialogRequested(var request)
     signal findTextFinished(var result)
     /// status/exitCode are the Backend's own values, not normalised.
-    signal renderProcessTerminated(int status, int exitCode)
+    /// willRevive: the Backend brings the page back by itself.
+    signal renderProcessTerminated(int status, int exitCode, bool willRevive)
 
     function loadUrl(url) { console.warn("AbstractWebView: loadUrl not implemented") }
 

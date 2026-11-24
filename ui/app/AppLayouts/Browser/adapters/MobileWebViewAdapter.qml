@@ -31,7 +31,6 @@ AbstractWebView {
     hasNativeFindPanel: backend.hasNativeFindPanel
     clearSiteDataSupported: backend.clearSiteDataSupported
     clearing: backend.clearing
-    revivesAfterRendererLoss: true
 
     MobileWebViewBackend {
         id: backend
@@ -82,12 +81,10 @@ AbstractWebView {
             root.linkLongPressed(linkUrl, imageUrl, position)
         }
 
-        // A view the Backend does not bring back itself is the user's to
-        // reload, so it reports as crashed (repeated kills included).
         function onRenderProcessGone(crashed, willRevive) {
-            root.renderProcessTerminated(willRevive
-                ? AbstractWebView.RenderProcessTerminationStatus.KilledTerminationStatus
-                : AbstractWebView.RenderProcessTerminationStatus.CrashedTerminationStatus, 0)
+            root.renderProcessTerminated(crashed
+                ? AbstractWebView.RenderProcessTerminationStatus.CrashedTerminationStatus
+                : AbstractWebView.RenderProcessTerminationStatus.KilledTerminationStatus, 0, willRevive)
         }
     }
 
