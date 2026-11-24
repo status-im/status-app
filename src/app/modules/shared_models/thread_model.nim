@@ -17,6 +17,7 @@ type
     LastMessageSenderColorId
     LastMessageText
     LastMessageTimestamp
+    LastMessageSenderId
 
   Row = object
     summary: ThreadSummary
@@ -51,6 +52,7 @@ QtObject:
       ModelRole.LastMessageSenderColorId.int: "lastMessageSenderColorId",
       ModelRole.LastMessageText.int: "lastMessageText",
       ModelRole.LastMessageTimestamp.int: "lastMessageTimestamp",
+      ModelRole.LastMessageSenderId.int: "lastMessageSenderId",
     }.toTable
 
   method data(self: Model, index: QModelIndex, role: int): QVariant =
@@ -70,6 +72,7 @@ QtObject:
     of ModelRole.LastMessageSenderColorId: result = newQVariant(row.summary.lastMessageSenderColorId)
     of ModelRole.LastMessageText: result = newQVariant(row.summary.lastMessageText)
     of ModelRole.LastMessageTimestamp: result = newQVariant(row.summary.lastMessageTimestamp)
+    of ModelRole.LastMessageSenderId: result = newQVariant(row.summary.lastMessageSenderId)
     else: result = newQVariant()
 
   proc retain*(self: Model, threadIds: seq[string])
@@ -105,6 +108,7 @@ QtObject:
         addChangedRole(roles, previous.lastMessageSenderColorId, summary.lastMessageSenderColorId, ModelRole.LastMessageSenderColorId.int): discard
         addChangedRole(roles, previous.lastMessageText, summary.lastMessageText, ModelRole.LastMessageText.int): discard
         addChangedRole(roles, previous.lastMessageTimestamp, summary.lastMessageTimestamp, ModelRole.LastMessageTimestamp.int): discard
+        addChangedRole(roles, previous.lastMessageSenderId, summary.lastMessageSenderId, ModelRole.LastMessageSenderId.int): discard
       return
     let parent = newQModelIndex()
     defer: parent.delete()

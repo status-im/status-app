@@ -18436,11 +18436,20 @@ This action cannot be undone.</source>
         <source>deleted this thread</source>
         <translation>이 스레드를 삭제했습니다</translation>
     </message>
+    <message>
+        <source>deleted this thread</source>
+        <comment>Current user</comment>
+        <translation type="unfinished">이 스레드를 삭제했습니다</translation>
+    </message>
     <message numerus="yes">
         <source>%n message(s)</source>
         <translation>
             <numerusform>메시지 %n개</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>You</source>
+        <translation type="unfinished">사용자</translation>
     </message>
 </context>
 <context>

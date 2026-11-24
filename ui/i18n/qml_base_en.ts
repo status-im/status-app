@@ -18499,12 +18499,21 @@ This action cannot be undone.</source>
         <source>deleted this thread</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>deleted this thread</source>
+        <comment>Current user</comment>
+        <translation type="unfinished"></translation>
+    </message>
     <message numerus="yes">
         <source>%n message(s)</source>
         <translation type="unfinished">
             <numerusform></numerusform>
             <numerusform></numerusform>
         </translation>
+    </message>
+    <message>
+        <source>You</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

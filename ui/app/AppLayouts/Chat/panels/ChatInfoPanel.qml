@@ -19,6 +19,7 @@ ColumnLayout {
     enum Tab { Default = -1, Members, Threads, Pins }
 
     property string chatKey
+    property string myPublicKey
     property bool membersAvailable: true
     property bool threadsEnabled: true
     property var threadsModel
@@ -205,6 +206,7 @@ ColumnLayout {
                 notificationCount: model.notificationCount
                 participantsCount: model.participantsCount
                 participantsPreviewModel: model.participantsModel
+                amISender: root.myPublicKey !== "" && model.lastMessageSenderId === root.myPublicKey
                 lastMessageMentionsMap: root.threadMentionResolver?.resolveFor(model.lastMessageText) ?? ({})
                 lastMessage: ({
                     sender: {

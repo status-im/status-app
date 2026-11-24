@@ -18521,12 +18521,21 @@ Esta acción no se puede deshacer.</translation>
         <source>deleted this thread</source>
         <translation>eliminó este hilo</translation>
     </message>
+    <message>
+        <source>deleted this thread</source>
+        <comment>Current user</comment>
+        <translation>eliminaste este hilo</translation>
+    </message>
     <message numerus="yes">
         <source>%n message(s)</source>
         <translation>
             <numerusform>%n mensaje</numerusform>
             <numerusform>%n mensajes</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>You</source>
+        <translation>Tú</translation>
     </message>
 </context>
 <context>

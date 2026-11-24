@@ -80,6 +80,28 @@ Item {
     TestCase {
         name: "MessageViewThreadContextMenu"
         when: windowShown
+
+        function test_threadCardLabelsCurrentUser() {
+            const view = createTemporaryObject(viewComponent, root, {
+                myPublicKey: "self",
+                threadLastMessageSenderId: "self",
+                threadLastMessageSenderName: "Alice",
+                threadLastMessageText: "Latest reply"
+            })
+            verify(!!view)
+            tryVerify(() => !!findChild(view, "threadCardMessageSender"))
+            const sender = findChild(view, "threadCardMessageSender")
+            compare(sender.text, qsTr("You"))
+
+            view.threadLastMessageSenderId = "other"
+            tryCompare(sender, "text", "Alice")
+
+            view.threadDeleted = true
+            view.threadLastMessageSenderId = "self"
+            tryCompare(findChild(view, "threadCardMessagePreview"), "text", qsTr("deleted this thread"))
+            tryCompare(sender, "text", qsTr("You"))
+        }
+
         function test_pendingThreadCardCannotBeOpened() {
             const view = createTemporaryObject(viewComponent, root, {
                 messageId: "pending-send",

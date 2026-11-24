@@ -53,6 +53,7 @@ Item {
         ChatInfoPanel {
             anchors.fill: parent
             sectionModule: testChatSectionModule
+            myPublicKey: "self"
             onTabRequested: tab => requestedTab = tab
             threadsModel: threads
             membersContent: Component { Item {} }
@@ -80,7 +81,7 @@ Item {
                     archived: false,
                     title: entry.title, lastMessageTimestamp: entry.timestamp,
                     messagesCount: 2, notificationCount: 1, muted: false, participantsCount: 0, participantsModel: participants,
-                    lastMessageSenderName: "Alice", lastMessageSenderImage: "",
+                    lastMessageSenderId: "other", lastMessageSenderName: "Alice", lastMessageSenderImage: "",
                     lastMessageSenderColorId: 0, lastMessageText: "Latest reply"
                 })
             }
@@ -178,6 +179,19 @@ Item {
             tryCompare(findChild(card, "threadCardUnreadBadge"), "visible", true)
             threads.setProperty(1, "muted", false)
             tryCompare(card, "muted", false)
+        }
+
+        function test_threadCardLabelsCurrentUser() {
+            panel.requestedTab = ChatInfoPanel.Threads
+            const list = findChild(panel, "chatInfoThreadsList")
+            tryVerify(() => !!list.itemAtIndex(0))
+            const sender = findChild(list.itemAtIndex(0), "threadCardMessageSender")
+            compare(sender.text, "Alice")
+            threads.setProperty(1, "lastMessageSenderId", "self")
+            tryCompare(sender, "text", qsTr("You"))
+            panel.myPublicKey = ""
+            threads.setProperty(1, "lastMessageSenderId", "")
+            tryCompare(sender, "text", "Alice")
         }
 
         function test_activityOrderUpdatesAndNavigation() {

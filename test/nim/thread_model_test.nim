@@ -102,10 +102,11 @@ suite "chat info threads":
       proc(topLeft, bottomRight: gen_qabstractitemmodel_types.QModelIndex, roles: openArray[cint]) =
         changed.add(@roles))
     gen_qabstractitemmodel.onModelReset(qtModel, proc() = inc resetCount)
-    var unreadRole, timestampRole: cint
+    var unreadRole, timestampRole, senderIdRole: cint
     for role, name in model.roleNames():
       if name == "notificationCount": unreadRole = role.cint
       if name == "lastMessageTimestamp": timestampRole = role.cint
+      if name == "lastMessageSenderId": senderIdRole = role.cint
     summary.notificationCount = 0
     model.upsert(summary)
     check(changed == @[@[unreadRole]])
@@ -117,6 +118,12 @@ suite "chat info threads":
     summary.lastMessageTimestamp = 200
     model.upsert(summary)
     check(changed == @[@[unreadRole], @[timestampRole]])
+    summary.lastMessageSenderId = "alice"
+    model.upsert(summary)
+    check(changed[^1] == @[senderIdRole])
+    let senderId = model.value(0, "lastMessageSenderId")
+    check(senderId.stringVal == "alice")
+    senderId.delete()
     check(resetCount == 0)
 
   test "mute state is exposed and updated without replacing the row":

@@ -18606,6 +18606,11 @@ Tuto akci nelze vzít zpět.</translation>
         <source>deleted this thread</source>
         <translation>smazal(a) toto vlákno</translation>
     </message>
+    <message>
+        <source>deleted this thread</source>
+        <comment>Current user</comment>
+        <translation type="unfinished">smazal(a) toto vlákno</translation>
+    </message>
     <message numerus="yes">
         <source>%n message(s)</source>
         <translation>
@@ -18613,6 +18618,10 @@ Tuto akci nelze vzít zpět.</translation>
             <numerusform>%n zprávy</numerusform>
             <numerusform>%n zpráv</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>You</source>
+        <translation type="unfinished">Vy</translation>
     </message>
 </context>
 <context>
