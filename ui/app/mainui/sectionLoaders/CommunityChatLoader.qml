@@ -99,11 +99,13 @@ StatusSectionLoader {
         shown: root.sectionCurrent && root.appInFront
         current: root.sectionCurrent
         inBackground: !root.appInFront
+        // unsaved settings edits live only in the UI
+        held: root.item?.currentIndex === d.settingsViewIndex
     }
 
-    Connections {
-        target: SystemUtils
-        function onMemoryPressure(critical) { dropPolicy.memoryPressure(critical) }
+    /// The system is short of memory (SystemUtils.memoryPressure).
+    function memoryPressure(critical) {
+        dropPolicy.memoryPressure(critical)
     }
 
     onKeepLoadedChanged: console.info(dropLog, root.sectionId, keepLoaded ? "kept" : "dropped")
@@ -185,11 +187,15 @@ StatusSectionLoader {
     // The panel shown is part of the section's view state: it outlives the UI.
     // The right panel (a thread, the members) comes back as the chat.
     Connections {
-        target: root.active ? chromeLoader.item : null
+        target: chromeLoader.item
 
         function onCurrentIndexChanged() {
-            d.chatRootStore?.setShownPanel(Math.min(chromeLoader.item.currentIndex,
-                                                    StatusSectionLayout.CentralPanel))
+            const panel = Math.min(chromeLoader.item.currentIndex, StatusSectionLayout.CentralPanel)
+
+            if (d.chatRootStore)
+                d.chatRootStore.setShownPanel(panel)
+            else
+                d.unsavedShownPanel = panel
         }
     }
 
@@ -317,12 +323,22 @@ StatusSectionLoader {
         property int pendingSettingsSubsection: -1
         property bool showUsersPanel: root.accountSettingsStore.showUsersList
         property int pendingViewIndex: -1
+        readonly property int channelsViewIndex: 0
+        readonly property int settingsViewIndex: 1
         property bool visited: false
-        property bool uiBuilt: false
+        property bool uiStarted: false
+        // chosen while there were no stores to keep it
+        property int unsavedShownPanel: -1
 
         function restoreShownPanel() {
-            if (chromeLoader.item && d.chatRootStore)
-                chromeLoader.item.setCurrentIndex(d.chatRootStore.shownPanel)
+            if (!chromeLoader.item || !d.chatRootStore)
+                return
+            if (d.unsavedShownPanel !== -1) {
+                d.chatRootStore.setShownPanel(d.unsavedShownPanel)
+                d.unsavedShownPanel = -1
+                return
+            }
+            chromeLoader.item.setCurrentIndex(d.chatRootStore.shownPanel)
         }
 
         // The view switch may arrive while the section still incubates —
@@ -385,8 +401,10 @@ StatusSectionLoader {
     function loadSection() {
         if (!root.active)
             return
+        d.visited = true
         if (!!root.item)
             return
+        d.uiStarted = true
         d.createStores()
         d.restoreShownPanel()
         setSource(d.url, {
@@ -430,8 +448,6 @@ StatusSectionLoader {
     }
 
     onLoaded: {
-        d.uiBuilt = true
-        d.visited = true
         root.item.visible = true
         if (d.pendingViewIndex !== -1) {
             root.item.currentIndex = d.pendingViewIndex
@@ -446,8 +462,8 @@ StatusSectionLoader {
             return
         }
         d.clearStores()
-        if (d.uiBuilt) {
-            d.uiBuilt = false
+        if (d.uiStarted) {
+            d.uiStarted = false
             root.uiReleased()
         }
     }
@@ -462,12 +478,12 @@ StatusSectionLoader {
         function onSwitchToCommunitySettings(communityId) {
             if (communityId !== root.sectionId)
                 return
-            d.openCommunityView(1) // Settings
+            d.openCommunityView(d.settingsViewIndex)
         }
         function onSwitchToCommunityChannelsView(communityId) {
             if (communityId !== root.sectionId)
                 return
-            d.openCommunityView(0) // Channels
+            d.openCommunityView(d.channelsViewIndex)
         }
         function onSwitchToCommunitySettingsSubsection(communityId, subsection, subsectionItem) {
             if (communityId !== root.sectionId)

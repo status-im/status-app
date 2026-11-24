@@ -855,7 +855,6 @@ Item {
             loader.chromeNeeded = false
             loader.chromeNeeded = true
             mock.setActiveChat("channel-u-1")
-            wait(50)
 
             compare(spy.count, 0)
         }
@@ -913,7 +912,7 @@ Item {
             showSection(loader)
             loader.appInFront = false
 
-            SystemUtils.memoryPressure(true)
+            loader.memoryPressure(true)
 
             verify(loader.keepLoaded)
             verify(!!loader.item)
@@ -924,11 +923,11 @@ Item {
             showSection(loader)
             loader.appInFront = false
 
-            SystemUtils.memoryPressure(false)
+            loader.memoryPressure(false)
             verify(loader.keepLoaded)
 
             loader.sectionCurrent = false
-            SystemUtils.memoryPressure(false)
+            loader.memoryPressure(false)
             tryVerify(() => !loader.item)
         }
 
@@ -937,7 +936,46 @@ Item {
             showSection(loader)
 
             loader.sectionCurrent = false
-            SystemUtils.memoryPressure(true)
+            loader.memoryPressure(true)
+
+            verify(loader.keepLoaded)
+            verify(!!loader.item)
+        }
+
+        // left while it still incubates: the visit counts from the start
+        function test_desktopKeepsACommunityLeftWhileItLoads() {
+            const loader = wiredLoader({ dropWhenNotShown: false })
+
+            loader.sectionCurrent = true
+            verify(loader.status === Loader.Loading)
+            loader.sectionCurrent = false
+
+            verify(loader.active)
+            tryVerify(() => loader.status === Loader.Ready, 10000)
+        }
+
+        // a drop mid-incubation frees what was built
+        function test_aDropWhileLoadingReleasesTheUi() {
+            const loader = wiredLoader({ dropWhenNotShown: true, dropDelay: 0 })
+            const spy = createTemporaryObject(releasedSpyComp, root, { target: loader })
+
+            loader.sectionCurrent = true
+            verify(loader.status === Loader.Loading)
+            loader.sectionCurrent = false
+
+            tryVerify(() => !loader.active)
+            compare(spy.count, 1)
+        }
+
+        // unsaved settings edits live only in the UI
+        function test_theSettingsViewHoldsTheCommunity() {
+            const loader = wiredLoader({ dropWhenNotShown: true, dropDelay: 50 })
+            showSection(loader)
+            Global.switchToCommunitySettings(loader.sectionId)
+            compare(loader.item.currentIndex, 1)
+
+            loader.sectionCurrent = false
+            loader.appInFront = false
 
             verify(loader.keepLoaded)
             verify(!!loader.item)
@@ -980,6 +1018,22 @@ Item {
             verify(!!rebuilt)
             verify(rebuilt !== chrome, "built again")
             compare(rebuilt.currentIndex, StatusSectionLayout.CentralPanel)
+        }
+
+        // chosen while the chrome stood before the section loaded
+        function test_aPanelChosenBeforeTheSectionLoadsIsKept() {
+            root.mainReady = false
+            const loader = wiredLoader({ dropWhenNotShown: false })
+            loader.sectionCurrent = true
+            const chrome = findChild(loader, "sectionChrome")
+            verify(!!chrome)
+
+            chrome.setCurrentIndex(StatusSectionLayout.CentralPanel)
+            root.mainReady = true
+            tryVerify(() => loader.status === Loader.Ready, 10000)
+
+            compare(chrome.currentIndex, StatusSectionLayout.CentralPanel)
+            compare(mock.sectionModule.viewState.shownPanel, StatusSectionLayout.CentralPanel)
         }
 
         // the thread or members page is no panel to come back to

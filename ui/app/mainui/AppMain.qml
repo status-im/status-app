@@ -2557,6 +2557,15 @@ Item {
                         releaseContext: appMain
                     }
 
+                    Connections {
+                        target: SystemUtils
+
+                        function onMemoryPressure(critical) {
+                            for (let i = 0; i < communityRepeater.count; ++i)
+                                communityRepeater.itemAt(i)?.memoryPressure(critical)
+                        }
+                    }
+
                     Repeater {
                         id: communityRepeater
 
