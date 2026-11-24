@@ -47,6 +47,10 @@ on:
         description: 'Name of an artifact in the calling run that holds one APK built with STATUSQ_TESTMODE=true'
         type: string
         default: ''
+      apk-producer-sha:
+        description: 'Full git rev-parse HEAD from the APK build checkout; required with apk-artifact'
+        type: string
+        default: ''
       account:
         description: '1, 2 or auto. auto spreads pull requests that pass apk-artifact over both accounts by PR number; with app-id it is account 1.'
         type: string
@@ -142,6 +146,7 @@ jobs:
       packages: read
     outputs:
       pytest-args: ${{ steps.args.outputs.pytest-args }}
+      tested-ref: ${{ steps.checkout.outputs.sha }}
       image: ${{ steps.peer.outputs.image }}
       artifact: ${{ steps.peer.outputs.artifact }}
       published: ${{ steps.peer.outputs.published }}
@@ -159,6 +164,10 @@ jobs:
         shell: bash
     steps:
       - name: Check the app inputs
+        id: app-inputs
+        env:
+          APK_PRODUCER_SHA: ${{ inputs.apk-producer-sha }}
+          EVENT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           if [[ -n "$APP_ID_INPUT" && -n "$APK_ARTIFACT" ]] || [[ -z "$APP_ID_INPUT" && -z "$APK_ARTIFACT" ]]; then
             echo "::error::Give exactly one of app-id and apk-artifact."
@@ -168,13 +177,35 @@ jobs:
             echo "::error::app-id must look like bs:// followed by 40 hex characters."
             exit 1
           fi
+          ref="$EVENT_SHA"
+          if [[ -n "$APK_ARTIFACT" ]]; then
+            if [[ ! "$APK_PRODUCER_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "::error::apk-artifact requires apk-producer-sha from git rev-parse HEAD."
+              exit 1
+            fi
+            ref="$APK_PRODUCER_SHA"
+          elif [[ -n "$APK_PRODUCER_SHA" ]]; then
+            echo "::error::apk-producer-sha is only accepted with apk-artifact."
+            exit 1
+          fi
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          # On a pull request the default is the merge commit. The caller builds
-          # its APK from the PR head, so the tests must come from it too.
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ steps.app-inputs.outputs.ref }}
+
+      - name: Verify the peer checkout
+        id: checkout
+        env:
+          EXPECTED_REF: ${{ steps.app-inputs.outputs.ref }}
+        run: &verify-checkout |
+          actual=$(git rev-parse HEAD)
+          if [[ "$actual" != "$EXPECTED_REF" ]]; then
+            echo "::error::Checked out $actual, expected $EXPECTED_REF."
+            exit 1
+          fi
+          echo "sha=$actual" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
@@ -275,9 +306,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          # On a pull request the default is the merge commit. The caller builds
-          # its APK from the PR head, so the tests must come from it too.
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ needs.peer-image.outputs.tested-ref }}
+
+      - name: Verify the test checkout
+        id: checkout
+        env:
+          EXPECTED_REF: ${{ needs.peer-image.outputs.tested-ref }}
+        run: *verify-checkout
 
       - name: Check out the vendored status-go
         run: |
@@ -370,23 +405,29 @@ jobs:
         run: |
           # Apps are usable by every user in the BrowserStack group, so ask for
           # the group's uploads (kept 30 days); a lookup by id cannot prove absence.
-          if ! apps=$(printf 'user = "%s:%s"\n' "$BS_USER" "$BS_KEY" | curl --config - \
-            --silent --show-error --fail-with-body \
-            "https://api-cloud.browserstack.com/app-automate/recent_group_apps?limit=200"); then
-            echo "::error::BrowserStack could not list apps: ${apps}"
-            exit 1
-          fi
-          # An account with no uploads answers with a message, not an empty list.
-          if jq -e 'type == "object" and .message == "No results found"' <<< "$apps" > /dev/null; then
-            apps='[]'
-          fi
-          if ! jq -e 'type == "array"' <<< "$apps" > /dev/null; then
-            echo "::error::Unexpected answer from BrowserStack when listing apps: ${apps}"
-            exit 1
-          fi
-          app=$(jq -c --arg id "$APP_ID" 'first(.[] | select(.app_url == $id)) | {app_id: .app_url, app_name, uploaded_at}' <<< "$apps")
+          limit=100
+          app=''
+          for ((offset=0; ; offset+=limit)); do
+            if ! apps=$(printf 'user = "%s:%s"\n' "$BS_USER" "$BS_KEY" | curl --config - \
+              --silent --show-error --fail-with-body \
+              "https://api-cloud.browserstack.com/app-automate/recent_group_apps?limit=${limit}&offset=${offset}"); then
+              echo "::error::BrowserStack could not list apps at offset ${offset}."
+              exit 1
+            fi
+            if jq -e 'type == "object" and .message == "No results found"' <<< "$apps" > /dev/null; then
+              break
+            fi
+            if ! count=$(jq -er 'if type == "array" and all(.[]; type == "object") then length else error("expected an array of apps") end' <<< "$apps"); then
+              echo "::error::Unexpected answer from BrowserStack when listing apps at offset ${offset}."
+              exit 1
+            fi
+            app=$(jq -c --arg id "$APP_ID" 'first(.[] | select(.app_url == $id)) | {app_id: .app_url, app_name, uploaded_at}' <<< "$apps")
+            if [[ -n "$app" ]] || ((count < limit)); then
+              break
+            fi
+          done
           if [[ -z "$app" ]]; then
-            echo "::error::${APP_ID} is not among the 200 newest uploads of BrowserStack account ${ACCOUNT}'s group: deleted after 30 days, uploaded to another group, or older than those 200."
+            echo "::error::${APP_ID} is not among recent uploads of BrowserStack account ${ACCOUNT}'s group: deleted after 30 days or uploaded to another group."
             exit 1
           fi
           echo "$app"
@@ -401,7 +442,7 @@ jobs:
           BROWSERSTACK_APP_ID: ${{ steps.app.outputs.app-id }}
           BROWSERSTACK_PROJECT_NAME: Mobile E2E GHA
           BROWSERSTACK_BUILD_NAME: e2e-android-${{ github.run_number }}
-          GIT_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+          GIT_COMMIT: ${{ steps.checkout.outputs.sha }}
           BUILD_ID: ${{ github.run_id }}
         run: |
           export BROWSERSTACK_USERNAME="$BS_USER" BROWSERSTACK_ACCESS_KEY="$BS_KEY"
@@ -451,11 +492,18 @@ jobs:
         env:
           APP_JSON: ${{ steps.app.outputs.app-json }}
           BUILD_URL: ${{ steps.build.outputs.url }}
-          COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+          COMMIT: ${{ steps.checkout.outputs.sha }}
+          APK_PRODUCER_SHA: ${{ inputs.apk-producer-sha }}
           BASE_REF: ${{ github.event.pull_request.base.ref }}
           GH_TOKEN: ${{ github.token }}
           TESTS_OUTCOME: ${{ steps.tests.outcome }}
         run: |
+          from_commit=false
+          if [[ -n "$APK_ARTIFACT" && -n "$APK_PRODUCER_SHA" && "$APK_PRODUCER_SHA" == "$COMMIT" ]]; then
+            from_commit=true
+          fi
+          printf "APK producer SHA: \`%s\`\n\nTest checkout SHA: \`%s\`\n\n" \
+            "${APK_PRODUCER_SHA:-unverified}" "${COMMIT:-unverified}" >> "$GITHUB_STEP_SUMMARY"
           # Normally under reports/<run id>/; the harness writes to reports/
           # itself when it cannot load its configuration.
           junit=""
@@ -466,10 +514,8 @@ jobs:
             echo "## E2E Android: no test results, the run stopped before pytest reported" >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          if [[ -n "$APK_ARTIFACT" ]]; then from_commit=true; else from_commit=false; fi
           app="${APP_JSON}"
           if [[ -z "$app" ]]; then app='{}'; fi
-          # The PR head is tested, not the merge, so say how far it is behind its base.
           behind=""
           if [[ -n "$BASE_REF" ]]; then
             count=$(gh api "repos/${GITHUB_REPOSITORY}/compare/$(jq -rn --arg ref "$BASE_REF" '$ref | @uri')...${COMMIT}" --jq .behind_by 2> /dev/null) || count=""

@@ -103,7 +103,7 @@ e2e:
     group: e2e-android-pr-${{ github.event.pull_request.number || github.run_id }}
     cancel-in-progress: true
   uses: ./.github/workflows/e2e-android.yml
-  with: { apk-artifact: <artifact with one APK>, account: auto }
+  with: { apk-artifact: <artifact with one APK>, apk-producer-sha: "${{ needs.apk.outputs.producer-sha }}", account: auto }
   secrets:
     BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
     BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
@@ -118,9 +118,11 @@ The called jobs need `contents: read` and `packages: read`. A called workflow
 cannot get more than its caller has, so a caller with narrower permissions
 fails at startup.
 
-On a pull request, build the APK from the PR head
-(`github.event.pull_request.head.sha`). The tests are checked out from that
-commit, not from the merge commit.
+Expose the output of `git rev-parse HEAD` from the build checkout as the
+`apk` job's `producer-sha` output. On a pull request, the build checkout
+can be the merge commit even if the APK name contains the PR head.
+The tests and backend peer use the producer commit, and the run checks both
+checkouts before it uploads the APK.
 
 The APK must be built with `STATUSQ_TESTMODE=true`, or the e2e hooks are
 compiled out. Release APKs cannot run the suite.
@@ -142,7 +144,7 @@ jobs:
   apk:
     # Any label sends a labeled event. Only this one needs a new build.
     if: github.event.action != 'labeled' || github.event.label.name == 'e2e-android'
-    # builds the APK and uploads it as the artifact "apk"
+    # builds the APK, exposes producer-sha, and uploads the artifact "apk"
   e2e:
     needs: apk
     if: contains(github.event.pull_request.labels.*.name, 'e2e-android')
@@ -150,7 +152,7 @@ jobs:
       contents: read
       packages: read
     uses: ./.github/workflows/e2e-android.yml
-    with: { apk-artifact: apk, account: auto }
+    with: { apk-artifact: apk, apk-producer-sha: "${{ needs.apk.outputs.producer-sha }}", account: auto }
     secrets:
       BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
       BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
