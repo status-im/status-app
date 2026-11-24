@@ -334,8 +334,6 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     continue-on-error: true
-    permissions:
-      packages: read
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -378,7 +376,7 @@ jobs:
         run: |
           APP="$RUNNER_TEMP/aut/squashfs-root/AppRun" PLUGINS="$RUNNER_TEMP/qmlinspector/plugins" \
             test/e2e/scripts/inspector/run-in-docker.sh -m critical -v --reruns=1 --timeout=300 \
-            -o timeout_func_only=true --disable-warnings --alluredir=./allure-results
+            -o timeout_func_only=true --disable-warnings --junitxml=junit.xml --alluredir=./allure-results
       - name: Upload results
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -389,34 +387,44 @@ jobs:
             test/e2e/allure-results/
           if-no-files-found: warn
           retention-days: 7
-      - name: Allure report
-        id: allure
+      - name: Failure summary
         if: ${{ !cancelled() }}
         run: |
-          if [ ! -d test/e2e/allure-results ] || [ -z "$(ls -A test/e2e/allure-results)" ]; then
-            echo "No allure results."
-            exit 0
-          fi
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq openjdk-17-jre-headless
-          curl -fsSL -o "$RUNNER_TEMP/allure.tgz" \
-            https://github.com/allure-framework/allure2/releases/download/2.46.2/allure-2.46.2.tgz
-          tar -xzf "$RUNNER_TEMP/allure.tgz" -C "$RUNNER_TEMP"
-          "$RUNNER_TEMP/allure-2.46.2/bin/allure" generate test/e2e/allure-results \
-            -o "$RUNNER_TEMP/allure-report" --clean --single-file
-          echo "report=$RUNNER_TEMP/allure-report/index.html" >> "$GITHUB_OUTPUT"
-      - name: Upload Allure report
-        id: allure-artifact
-        if: ${{ !cancelled() && steps.allure.outputs.report != '' }}
+          python3 - <<'PY'
+          import os
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+          summary = Path(os.environ["GITHUB_STEP_SUMMARY"])
+          path = Path("test/e2e/junit.xml")
+          if not path.is_file():
+              summary.write_text("No junit report.\n")
+              raise SystemExit
+          rows = []
+          for case in ET.parse(path).getroot().iter("testcase"):
+              failed = case.find("failure")
+              if failed is None:
+                  failed = case.find("error")
+              if failed is None:
+                  continue
+              name = case.get("classname", "") + "::" + case.get("name", "")
+              text = (failed.get("message") or failed.text or "").strip().splitlines()
+              line = text[0] if text else ""
+              rows.append((name.replace("|", "\\|"), line.replace("|", "\\|")))
+          if not rows:
+              summary.write_text("No failed tests.\n")
+              raise SystemExit
+          lines = ["| Test | Error |", "| --- | --- |"]
+          lines += [f"| {name} | {line} |" for name, line in rows]
+          summary.write_text("\n".join(lines) + "\n")
+          PY
+      - name: Failure screenshots
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: e2e-allure
-          path: ${{ steps.allure.outputs.report }}
-          if-no-files-found: warn
+          name: e2e-failure-screenshots
+          path: test/e2e/local_run_results/**/screenshot_*.png
+          if-no-files-found: ignore
           retention-days: 7
-      - name: Allure report link
-        if: ${{ !cancelled() && steps.allure-artifact.outputs.artifact-url != '' }}
-        run: echo "Allure report ${{ steps.allure-artifact.outputs.artifact-url }}" >> "$GITHUB_STEP_SUMMARY"
 
   android:
     name: android
