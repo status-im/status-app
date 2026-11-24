@@ -71,7 +71,7 @@ Item {
                                         dropDelay: 60000 })
 
             policy.shown = false
-            policy.memoryPressure(true)
+            policy.memoryPressure()
 
             verify(policy.keepLoaded)
             compare(policy.idleDrops, 1)
@@ -82,7 +82,7 @@ Item {
             const policy = makePolicy({ shown: true, hasLivePage: true, keepAlive: true,
                                         dropDelay: 60000 })
             policy.shown = false
-            policy.memoryPressure(true)
+            policy.memoryPressure()
             policy.dropDelay = 50
 
             policy.keepAlive = false
@@ -110,7 +110,7 @@ Item {
 
             policy.shown = true
             policy.shown = false
-            policy.memoryPressure(true)
+            policy.memoryPressure()
 
             verify(policy.keepLoaded)
             verify(policy.policy.shown, "the shared policy never sees an exit")
@@ -130,12 +130,12 @@ Item {
             compare(policy.droppings, 0)
         }
 
-        function test_aBackgroundTrimSparesTheCurrentBrowser() {
+        function test_memoryPressureSparesTheCurrentBrowser() {
             const policy = makePolicy({ shown: true, current: true, hasLivePage: true })
             policy.inBackground = true
             policy.shown = false
 
-            policy.memoryPressure(false)
+            policy.memoryPressure()
 
             verify(policy.keepLoaded)
             compare(policy.droppings, 0)

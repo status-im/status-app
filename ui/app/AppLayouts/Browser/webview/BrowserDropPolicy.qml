@@ -6,10 +6,11 @@ import utils
 /// SectionDropPolicy. Left for another section, it goes after a delay while
 /// the app is in front (dropGrace without a live page, so a passing state
 /// flicker is no exit, else dropDelay), or at once when the app goes to the
-/// background. In focus it stays through the background. Memory pressure
-/// drops it at once when not on screen; a background trim only when it is not
-/// the current section. A Keep-alive reason holds the layout: only the idle Web Views are
-/// dropped, and the delay starts over once the last reason ends.
+/// background. In focus it stays through the background. Memory pressure in
+/// front drops it at once when it is not the current section (see
+/// SectionDropPolicy.memoryPressure). A Keep-alive reason holds the layout:
+/// only the idle Web Views are dropped, and the delay starts over once the
+/// last reason ends.
 QtObject {
     id: root
 
@@ -40,10 +41,9 @@ QtObject {
     /// The layout is about to go: the last moment to read its Tabs.
     signal dropping()
 
-    /// critical: real pressure; else a background trim (see SectionDropPolicy).
-    function memoryPressure(critical) {
+    function memoryPressure() {
         if (root.enabled)
-            policy.memoryPressure(critical)
+            policy.memoryPressure()
     }
 
     readonly property QtObject d: QtObject {

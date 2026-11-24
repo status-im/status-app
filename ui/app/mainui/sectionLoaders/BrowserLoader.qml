@@ -94,7 +94,7 @@ StatusSectionLoader {
 
     Connections {
         target: SystemUtils
-        function onMemoryPressure(critical) { dropPolicy.memoryPressure(critical) }
+        function onMemoryPressure() { dropPolicy.memoryPressure() }
     }
 
     QtObject {
