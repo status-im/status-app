@@ -82,6 +82,8 @@ Control {
     */
     property var deletedMessage: ({})
 
+    property bool amISender: false
+
     readonly property int maximumWidth: 420
     readonly property real connectorY: contentItem.y + (d.deleted
         ? bodyRow.y + bodyRow.height / 2
@@ -121,7 +123,7 @@ Control {
         readonly property var bodySender: bodyMessage.sender || {}
         readonly property string bodyMessageText: {
             if (deleted)
-                return qsTr("deleted this thread")
+                return root.amISender ? qsTr("deleted this thread", "Current user") : qsTr("deleted this thread")
 
             const text = bodyMessage.text || ""
             const mentions = root.lastMessageMentionsMap
@@ -369,7 +371,7 @@ Control {
                     y: d.bodyTopMargin
                     width: Math.min(implicitWidth, parent.width / 2)
                     height: d.bodyLineHeight
-                    text: d.bodySender.name || ""
+                    text: root.amISender ? qsTr("You") : (d.bodySender.name || "")
                     textFormat: Text.PlainText
                     elide: Text.ElideRight
                     color: Theme.palette.directColor1

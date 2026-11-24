@@ -658,6 +658,7 @@ Item {
             headerInToolbar: !!root.sectionLayout?.isPortrait
             visible: rightPanelLoader.status === Loader.Ready
             chatKey: root.chatContentModule?.getMyChatId() ?? ""
+            myPublicKey: root.myPublicKey
             membersAvailable: root.chatContentModule?.chatDetails.isUsersListAvailable ?? false
             threadsEnabled: root.threadsFeatureEnabled && !(root.chatContentModule?.messagesModule.threadId ?? "")
             threadsModel: currentTab === ChatInfoPanel.Threads && threadsEnabled

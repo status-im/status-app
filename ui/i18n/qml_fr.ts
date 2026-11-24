@@ -18516,12 +18516,21 @@ This action cannot be undone.</source>
         <source>deleted this thread</source>
         <translation>a supprimé ce fil</translation>
     </message>
+    <message>
+        <source>deleted this thread</source>
+        <comment>Current user</comment>
+        <translation type="unfinished">a supprimé ce fil</translation>
+    </message>
     <message numerus="yes">
         <source>%n message(s)</source>
         <translation>
             <numerusform>%n message</numerusform>
             <numerusform>%n messages</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>You</source>
+        <translation type="unfinished">Vous</translation>
     </message>
 </context>
 <context>

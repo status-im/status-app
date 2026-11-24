@@ -182,6 +182,7 @@ Loader {
     property int threadNotificationCount: 0
     property var threadParticipantsModel: null
     property int threadParticipantsCount: 0
+    property string threadLastMessageSenderId: ""
     property string threadLastMessageSenderName: ""
     property string threadLastMessageSenderImage: ""
     property int threadLastMessageSenderColorId: 0
@@ -1363,6 +1364,7 @@ Loader {
                         originalMessageId: root.threadOriginalMessageId || root.messageId
                         title: root.threadTitle
                         threadState: root.threadDeleted ? ThreadCard.State.Deleted : ThreadCard.State.Active
+                        amISender: root.myPublicKey !== "" && root.threadLastMessageSenderId === root.myPublicKey
                         deletedMessage: ({
                             sender: {
                                 name: root.threadLastMessageSenderName,

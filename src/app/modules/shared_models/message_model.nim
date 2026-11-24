@@ -93,6 +93,7 @@ type
     ThreadLastMessageSenderColorId
     ThreadLastMessageText
     ThreadLastMessageTimestamp
+    ThreadLastMessageSenderId
 
 QtObject:
   type
@@ -222,6 +223,7 @@ QtObject:
       ModelRole.ThreadLastMessageSenderColorId.int: "threadLastMessageSenderColorId",
       ModelRole.ThreadLastMessageText.int: "threadLastMessageText",
       ModelRole.ThreadLastMessageTimestamp.int: "threadLastMessageTimestamp",
+      ModelRole.ThreadLastMessageSenderId.int: "threadLastMessageSenderId",
     }.toTable
 
   # The message a reply responds to, when this model has it loaded: the
@@ -486,6 +488,8 @@ QtObject:
       result = newQVariant(item.threadSummary.lastMessageText)
     of ModelRole.ThreadLastMessageTimestamp:
       result = newQVariant(item.threadSummary.lastMessageTimestamp)
+    of ModelRole.ThreadLastMessageSenderId:
+      result = newQVariant(item.threadSummary.lastMessageSenderId)
 
   proc updateAdjacentMessageRolesAtIndex(self: Model, row: int) =
     if row < 0 or row >= self.items.len:
@@ -814,6 +818,8 @@ QtObject:
         ModelRole.ThreadLastMessageText.int): discard
       addChangedRole(roles, previous.lastMessageTimestamp, summary.lastMessageTimestamp,
         ModelRole.ThreadLastMessageTimestamp.int): discard
+      addChangedRole(roles, previous.lastMessageSenderId, summary.lastMessageSenderId,
+        ModelRole.ThreadLastMessageSenderId.int): discard
 
   proc setThreadSummary*(self: Model, messageId: string, summary: ThreadSummary) =
     self.setThreadSummary(self.findIndexForMessageId(messageId), summary)

@@ -18607,6 +18607,11 @@ This action cannot be undone.</source>
         <source>deleted this thread</source>
         <translation>видаляє цю гілку</translation>
     </message>
+    <message>
+        <source>deleted this thread</source>
+        <comment>Current user</comment>
+        <translation type="unfinished">видаляє цю гілку</translation>
+    </message>
     <message numerus="yes">
         <source>%n message(s)</source>
         <translation>
@@ -18614,6 +18619,10 @@ This action cannot be undone.</source>
             <numerusform>%n повідомлення</numerusform>
             <numerusform>%n повідомлень</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>You</source>
+        <translation type="unfinished">Ви</translation>
     </message>
 </context>
 <context>
