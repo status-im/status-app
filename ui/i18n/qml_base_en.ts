@@ -18400,6 +18400,21 @@ This action cannot be undone.</source>
     </message>
 </context>
 <context>
+    <name>ThirdpartyServicesLabel</name>
+    <message>
+        <source>Third-party services %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>enabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>ThirdpartyServicesPopup</name>
     <message>
         <source>Third-party services</source>
@@ -20735,18 +20750,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Log in</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Third-party services %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>enabled</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>disabled</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

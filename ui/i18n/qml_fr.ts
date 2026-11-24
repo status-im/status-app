@@ -18417,6 +18417,21 @@ This action cannot be undone.</source>
     </message>
 </context>
 <context>
+    <name>ThirdpartyServicesLabel</name>
+    <message>
+        <source>Third-party services %1</source>
+        <translation type="unfinished">Services tiers %1</translation>
+    </message>
+    <message>
+        <source>enabled</source>
+        <translation type="unfinished">activé</translation>
+    </message>
+    <message>
+        <source>disabled</source>
+        <translation type="unfinished">désactivé</translation>
+    </message>
+</context>
+<context>
     <name>ThirdpartyServicesPopup</name>
     <message>
         <source>Third-party services</source>
@@ -20765,18 +20780,6 @@ Si une transaction avec un nonce inférieur est en attente, les transactions ave
     <message>
         <source>Log in</source>
         <translation>Se connecter</translation>
-    </message>
-    <message>
-        <source>Third-party services %1</source>
-        <translation>Services tiers %1</translation>
-    </message>
-    <message>
-        <source>enabled</source>
-        <translation>activé</translation>
-    </message>
-    <message>
-        <source>disabled</source>
-        <translation>désactivé</translation>
     </message>
     <message>
         <source>By proceeding you accept Status&lt;br&gt;%1 and %2</source>

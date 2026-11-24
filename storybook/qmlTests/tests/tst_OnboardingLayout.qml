@@ -1448,6 +1448,14 @@ Item {
                 const currentPage = controlUnderTest.stack.currentItem
                 return !!currentPage && currentPage instanceof data.landingPage
             })
+
+            // third-party services toggle is reachable when adding another profile
+            const thirdPartyServices = findChild(controlUnderTest.stack.currentItem, "thirdPartyServices")
+            verify(!!thirdPartyServices)
+            controlUnderTest.privacyModeFeatureEnabled = false
+            tryCompare(thirdPartyServices, "visible", false)
+            controlUnderTest.privacyModeFeatureEnabled = true
+            tryCompare(thirdPartyServices, "visible", true)
         }
 
         function test_loginScreenLostKeycardSeedphraseLoginFlow_data() {

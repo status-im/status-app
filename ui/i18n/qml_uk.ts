@@ -18508,6 +18508,21 @@ This action cannot be undone.</source>
     </message>
 </context>
 <context>
+    <name>ThirdpartyServicesLabel</name>
+    <message>
+        <source>Third-party services %1</source>
+        <translation type="unfinished">Сторонні сервіси %1</translation>
+    </message>
+    <message>
+        <source>enabled</source>
+        <translation type="unfinished">увімкнено</translation>
+    </message>
+    <message>
+        <source>disabled</source>
+        <translation type="unfinished">вимкнено</translation>
+    </message>
+</context>
+<context>
     <name>ThirdpartyServicesPopup</name>
     <message>
         <source>Third-party services</source>
@@ -20864,18 +20879,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Log in</source>
         <translation>Увійти</translation>
-    </message>
-    <message>
-        <source>Third-party services %1</source>
-        <translation>Сторонні сервіси %1</translation>
-    </message>
-    <message>
-        <source>enabled</source>
-        <translation>увімкнено</translation>
-    </message>
-    <message>
-        <source>disabled</source>
-        <translation>вимкнено</translation>
     </message>
     <message>
         <source>By proceeding you accept Status&lt;br&gt;%1 and %2</source>
