@@ -112,6 +112,10 @@ Item {
             signal threadCreationFailed()
 
             function getChatId() { return moduleMock.mockChatId }
+
+            // the messages the backend was asked to load and scroll to
+            property var jumpCalls: []
+            function jumpToMessage(messageId) { jumpCalls.push(messageId) }
             function updateKeepUnread(flag) {}
 
             // the backend's per-chat record of where the reader was
@@ -308,6 +312,7 @@ Item {
             moduleB.messagesModule.readingPositions.records = {}
             moduleT.messagesModule.readingPositions.records = {}
             moduleA.messagesModule.readingPositions.jump = ""
+            moduleA.messagesModule.jumpCalls = []
         }
 
         function cleanup() {
@@ -607,10 +612,9 @@ Item {
 
             view.visible = false
             view.destroy()
-            wait(0)
 
+            tryVerify(() => !!recordOf(moduleA), 1000, "recorded in the backend")
             const record = recordOf(moduleA)
-            verify(!!record, "recorded in the backend")
             compare(record.key, before.key)
             compare(record.firstKey, windowBefore.first)
             compare(record.lastKey, windowBefore.last)
@@ -636,11 +640,25 @@ Item {
             const before = messageIdAtViewportTop(view)
             verify(!recordOf(moduleA))
 
-            appState.setActive(false)
+            appState.setSuspended()
 
             const record = recordOf(moduleA)
             verify(!!record)
             compare(record.key, before.key)
+        }
+
+        // focus lost on desktop: no drop can follow, nothing to record
+        function test_anInactiveAppRecordsNothing() {
+            prewarmedPool()
+            const view = openView()
+            const lv = view.chatLogView
+
+            lv.contentY = Math.max(0, lv.contentHeight - lv.height * 2.5)
+            waitForRendering(lv)
+
+            appState.setActive(false)
+
+            verify(!recordOf(moduleA))
         }
 
         function test_aRecordWhoseWindowEdgeIsGoneCentresOnItsMessage() {
@@ -693,6 +711,43 @@ Item {
                 return !isNaN(offset) && Math.abs(offset) < lv.height
             }, 5000, "the jump target is on screen")
             compare(moduleA.messagesModule.readingPositions.jump, "", "the jump is taken")
+        }
+
+        // the store still loads the target's page: the jump lands with it
+        function test_aJumpToAMessageStillLoadingLandsWhenItArrives() {
+            prewarmedPool()
+            const module = moduleA.messagesModule
+            module.loading = true
+            module.readingPositions.jump = "a-200"
+
+            const view = createTemporaryObject(viewComp, root, { rowPool: pool })
+            verify(!!view)
+            const lv = view.chatLogView
+            compare(module.readingPositions.jump, "", "the jump is taken")
+
+            messagesA.append(makeMessage("a", 200))
+            module.loading = false
+
+            tryVerify(() => {
+                if (lv.busy)
+                    return false
+                const row = lv.rowForKey("a-200")
+                const offset = row >= 0 ? lv.viewportOffsetToRow(row) : NaN
+                return !isNaN(offset) && Math.abs(offset) < lv.height
+            }, 5000, "the jump target is on screen")
+            compare(module.jumpCalls.length, 0)
+        }
+
+        // the target left the model before the view was built: the backend
+        // is asked to bring it back
+        function test_aJumpToAMessageNoLongerLoadedAsksTheBackend() {
+            prewarmedPool()
+            const module = moduleA.messagesModule
+            module.readingPositions.jump = "a-gone"
+
+            openView()
+
+            compare(module.jumpCalls, ["a-gone"])
         }
 
         // the section loaded but not on screen: the jump waits for the view

@@ -151,6 +151,7 @@ Item {
         readonly property bool isMostRecentMessageInViewport:
             chatLogView.atBottom && !messageWindow.moreAvailableStart
             && !chatLogView.initialLoading && !d.pendingRestore && !d.deferredRecord
+            && !d.deferredJump
 
         // ---- Window sizing ------------------------------------------------
         //
@@ -200,12 +201,13 @@ Item {
         // renumber while a chat is not shown: {atBottom: true}, or {key,
         // offset} with the window's bounds as {firstKey, lastKey}.
         function readRecord() {
-            return d.recordPositions ? d.recordPositions.read(d.recordThread) : null
+            const json = d.recordPositions ? d.recordPositions.read(d.recordThread) : ""
+            return json ? JSON.parse(json) : null
         }
 
         function writeRecord(record) {
             if (d.recordPositions)
-                d.recordPositions.write(d.recordThread, record)
+                d.recordPositions.write(d.recordThread, record ? JSON.stringify(record) : "")
         }
 
         // A recorded position waiting for the fill that brings its rows.
@@ -298,6 +300,7 @@ Item {
             d.toNewest = false
             d.pendingRestore = null
             d.deferredRecord = null
+            d.deferredJump = ""
             d.historyMayHaveMore = true
         }
 
@@ -305,6 +308,9 @@ Item {
         // still loading it - leaving a thread empties the model and refills it
         // afterwards. Resolved as the loading batch closes.
         property var deferredRecord: null
+
+        // A jump whose message is not in the model yet, resolved the same way.
+        property string deferredJump: ""
 
         // Where the window opens on `model` for the latched chat: around its
         // recorded position, or at the newest message.
@@ -317,6 +323,16 @@ Item {
                 d.jumpKey = jump
                 return Math.max(0, jumpIndex - Math.floor(d.windowSize / 2))
             }
+
+            if (jump && store.loading) {
+                d.deferredJump = jump
+                return 0
+            }
+
+            // gone from the model since it was asked for: the backend loads
+            // it again and answers with scrollToMessage
+            if (jump)
+                store.jumpToMessage(jump)
 
             const record = d.readRecord()
 
@@ -361,6 +377,22 @@ Item {
         // Inside the still-open loading batch, so the restored window comes in
         // the same reveal as the rows that just arrived.
         function resolveDeferredRecord() {
+            const jump = d.deferredJump
+            d.deferredJump = ""
+
+            if (jump && renamedMessages.sourceModel) {
+                const jumpIndex = SQUtils.ModelUtils.indexOf(renamedMessages.sourceModel, "id", jump)
+
+                if (jumpIndex >= 0) {
+                    d.deferredRecord = null
+                    d.jumpKey = jump
+                    messageWindow.moveTo(Math.max(0, jumpIndex - Math.floor(d.windowSize / 2)))
+                    return
+                }
+
+                d.attachedStore.jumpToMessage(jump)
+            }
+
             const record = d.deferredRecord
             d.deferredRecord = null
 
@@ -923,11 +955,12 @@ Item {
     Connections {
         target: Qt.application
 
-        // Out of the foreground the section may be dropped, view and all.
+        // In the background the section may be dropped, view and all.
         function onStateChanged() {
             if (Qt.application.state === Qt.ApplicationActive)
                 d.markAllMessagesReadIfMostRecentMessageIsInViewport()
-            else
+            else if (Qt.application.state === Qt.ApplicationSuspended
+                     || Qt.application.state === Qt.ApplicationHidden)
                 d.captureRecord()
         }
     }
