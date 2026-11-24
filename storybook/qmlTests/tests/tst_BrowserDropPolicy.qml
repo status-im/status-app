@@ -126,7 +126,7 @@ Item {
             policy.shown = false
 
             verify(policy.keepLoaded)
-            verify(!policy.policy.d.timer.running)
+            verify(!policy.policy.dropPending)
             compare(policy.droppings, 0)
         }
 
@@ -176,12 +176,12 @@ Item {
                                         dropDelay: 60000 })
             policy.current = false
             policy.shown = false
-            verify(policy.policy.d.timer.running)
+            verify(policy.policy.dropPending)
 
             policy.keepAlive = true
             policy.inBackground = true
 
-            verify(!policy.policy.d.timer.running)
+            verify(!policy.policy.dropPending)
         }
 
         function test_aReasonOnTheWayOutStillDelays() {
