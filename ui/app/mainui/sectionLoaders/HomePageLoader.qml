@@ -60,6 +60,7 @@ StatusSectionLoader {
             showBackUpSeed: !root.privacyStore.mnemonicBackedUp
             backUpSeedBadgeCount: root.profileStore.userDeclinedBackupBanner ? 0 : showBackUpSeed
             keycardEnabled: root.featureFlagsStore.keycardEnabled
+            showPassword: !root.privacyStore.migratedToColdWallet
 
             searchPhrase: root.item ? root.item.searchPhrase : ""
 

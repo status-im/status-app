@@ -49,6 +49,7 @@ Item {
             showBackUpSeed: true
             backUpSeedBadgeCount: 1
             keycardEnabled: true
+            showPassword: true
 
             searchPhrase: ""
             profileId: root.uniqueProfileId()
@@ -102,6 +103,7 @@ Item {
             showBackUpSeed: false
             backUpSeedBadgeCount: 0
             keycardEnabled: false
+            showPassword: true
 
             searchPhrase: ""
             profileId: root.uniqueProfileId()
@@ -257,6 +259,12 @@ Item {
             const k = keys(adaptor.homePageEntriesModel)
             dumpIfRequested("visibilityFlags", k)
             compareJson(k, Golden.visibilityFlags)
+        }
+
+        function test_showPassword() {
+            const passwordKey = "4;" + Constants.settingsSubsection.password
+            verify(keys(createAdaptor({ showPassword: true }).homePageEntriesModel).includes(passwordKey))
+            verify(!keys(createAdaptor({ showPassword: false }).homePageEntriesModel).includes(passwordKey))
         }
 
         function test_saveLoadRoundtrip() {

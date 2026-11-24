@@ -39,6 +39,7 @@ Item {
         showBackUpSeed: true
         backUpSeedBadgeCount: 1
         keycardEnabled: true
+        showPassword: true
         showAllChats: true
         searchPhrase: ""
         profileId: "tst_HomePageGrid_" + Date.now()

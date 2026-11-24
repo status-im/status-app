@@ -32,6 +32,7 @@ Item {
         showBackUpSeed: true
         backUpSeedBadgeCount: 1
         keycardEnabled: true
+        showPassword: true
 
         searchPhrase: controlUnderTest ? controlUnderTest.searchPhrase : ""
 
