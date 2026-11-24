@@ -50,6 +50,26 @@ suite "empty model":
   test "initial size":
     require(model.rowCount() == 0)
 
+suite "unread marker":
+  test "marking the shared root unseen preserves the thread's unread marker":
+    let model = newModel()
+    defer: model.delete()
+    let root = createTestMessageItem("root", 1)
+    let reply = createTestMessageItem("reply", 2)
+    root.seen = true
+    reply.seen = true
+    model.insertItemBasedOnClock(root)
+    model.insertItemBasedOnClock(reply)
+    model.markMessageAsUnread("reply")
+    let markerIndex = model.newMessagesMarkerIndex()
+    require markerIndex == 1
+    check not reply.seen
+
+    model.markMessageAsUnseen("root")
+    check not root.seen
+    check model.newMessagesMarkerIndex() == markerIndex
+    check model.getNewMessagesCount() == 1
+
 suite "thread summary":
   test "notifies only the unread role without replacing the participants model":
     let model = newModel()

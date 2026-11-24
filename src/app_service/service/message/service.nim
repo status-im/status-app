@@ -1643,9 +1643,9 @@ QtObject:
     except Exception as e:
       error "error: ", procName="pinUnpinMessage", errName = e.name, errDesription = e.msg
 
-  proc asyncMarkMessageAsUnread*(self: Service, chatId: string, messageId: string, threadId: string = "") =
+  proc asyncMarkMessageAsUnread*(self: Service, chatId: string, messageId: string) =
     if (chatId.len == 0):
-      error "empty chat id", procName="markAllMessagesRead"
+      error "empty chat id", procName="asyncMarkMessageAsUnread"
       return
 
     let arg = AsyncMarkMessageAsUnreadTaskArg(
@@ -1653,8 +1653,7 @@ QtObject:
       vptr: cast[uint](self.vptr),
       slot: "onAsyncMarkMessageAsUnread",
       messageId: messageId,
-      chatId: chatId,
-      threadId: threadId
+      chatId: chatId
     )
     self.threadpool.start(arg)
 
@@ -1846,10 +1845,18 @@ QtObject:
       var count, countWithMentions: int
 
       discard responseObj.getProp("chatId", chatId)
-      discard responseObj.getProp("threadId", threadId)
       discard responseObj.getProp("messageId", messageId)
       discard responseObj.getProp("messagesCount", count)
       discard responseObj.getProp("messagesWithMentionsCount", countWithMentions)
+
+      let threads = responseObj{"threads"}
+      if not threads.isNil and threads.kind == JArray and threads.len > 0:
+        # status-go returns the updated thread only for a thread reply.
+        let thread = threads[0].toThreadDto()
+        threadId = thread.threadId
+        self.handleThreadsUpdate(@[thread])
+      else:
+        self.chatService.updateUnreadMessage(chatId, count, countWithMentions)
 
       let data = MessageMarkMessageAsUnreadArgs(
         chatId: chatId,
@@ -1858,18 +1865,6 @@ QtObject:
         messagesCount: count,
         messagesWithMentionsCount: countWithMentions
       )
-
-      if threadId.len > 0:
-        let threads = responseObj{"threads"}
-        if threads.isNil or threads.kind != JArray or threads.len != 1 or
-            threads[0]{"chatId"}.getStr != chatId or threads[0]{"threadId"}.getStr != threadId:
-          raise newException(RpcException, "markMessageAsUnread response is missing the requested thread")
-        self.handleThreadsFromResponse(responseObj)
-      else:
-        if responseObj{"threads"}.kind == JArray and responseObj{"threads"}.len > 0:
-          raise newException(RpcException, "markMessageAsUnread returned a thread for a chat message")
-        self.chatService.updateUnreadMessage(chatId, count, countWithMentions)
-        self.chatService.handleSectionUnreadCountsResponse(responseObj)
 
       self.events.emit(SIGNAL_MESSAGE_MARKED_AS_UNREAD, data)
       checkAndEmitACNotificationsFromResponse(self.events, responseObj{"activityCenterNotifications"})

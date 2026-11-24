@@ -134,10 +134,11 @@ proc init*(self: Controller) =
     let args = MessageMarkMessageAsUnreadArgs(e)
     if self.chatId != args.chatId:
       return
-    if self.threadId != args.threadId and not (args.threadId.len == 0 and self.threadId.len > 0 and
-        self.messageService.getThreadById(self.chatId, self.threadId).parentMessageId == args.messageId):
-      return
-    self.delegate.onMarkMessageAsUnread(args.messageId)
+    if self.threadId == args.threadId:
+      self.delegate.onMarkMessageAsUnread(args.messageId)
+    elif args.threadId.len == 0 and args.messageId == self.threadId:
+      # The thread ID is the root message ID, including after cache eviction.
+      self.delegate.onThreadRootMarkedAsUnread(args.messageId)
 
   self.events.on(SIGNAL_MESSAGE_REACTION_ADDED) do(e:Args):
     let args = MessageAddRemoveReactionArgs(e)
@@ -395,13 +396,7 @@ proc pinUnpinMessage*(self: Controller, messageId: string, pin: bool) =
   self.messageService.pinUnpinMessage(self.chatId, messageId, pin)
 
 proc markMessageAsUnread*(self: Controller, messageId: string) =
-  # The root is displayed in the thread but belongs to the parent chat.
-  let threadId = if self.threadId.len > 0 and
-      self.messageService.getThreadById(self.chatId, self.threadId).parentMessageId == messageId:
-        ""
-      else:
-        self.threadId
-  self.messageService.asyncMarkMessageAsUnread(self.chatId, messageId, threadId)
+  self.messageService.asyncMarkMessageAsUnread(self.chatId, messageId)
 
 proc getContactById*(self: Controller, contactId: string): ContactsDto =
   return self.contactService.getContactById(contactId)

@@ -1028,9 +1028,7 @@ QtObject:
     self.firstUnseenMessageId = messageId
     self.resetNewMessagesMarker()
 
-  proc markMessageAsUnread*(self: Model, messageId: string) =
-    self.setMessageMarker(messageId)
-
+  proc markMessageAsUnseen*(self: Model, messageId: string) =
     for ind in 0 ..< self.items.len:
       let item = self.items[ind]
 
@@ -1039,6 +1037,9 @@ QtObject:
           updateRoleWithValue(seen, false)
         break
 
+  proc markMessageAsUnread*(self: Model, messageId: string) =
+    self.setMessageMarker(messageId)
+    self.markMessageAsUnseen(messageId)
 
   proc markAsSeen*(self: Model, messages: seq[string]) =
     if messages.len == 0:

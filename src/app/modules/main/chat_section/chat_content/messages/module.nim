@@ -498,6 +498,9 @@ method onUnpinMessage*(self: Module, messageId: string) =
 method onMarkMessageAsUnread*(self: Module, messageId: string) =
   self.view.model().markMessageAsUnread(messageId)
 
+method onThreadRootMarkedAsUnread*(self: Module, messageId: string) =
+  self.view.model().markMessageAsUnseen(messageId)
+
 method getSectionId*(self: Module): string =
   return self.controller.getMySectionId()
 

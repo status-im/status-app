@@ -55,6 +55,9 @@ method markMessageAsUnread*(self: AccessInterface, messageId: string) {.base.} =
 method onMarkMessageAsUnread*(self: AccessInterface, messageId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method onThreadRootMarkedAsUnread*(self: AccessInterface, messageId: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method messagesAdded*(self: AccessInterface, messages: seq[MessageDto]) {.base.} =
   raise newException(ValueError, "No implementation available")
 
