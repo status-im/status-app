@@ -18422,6 +18422,21 @@ Esta acción no se puede deshacer.</translation>
     </message>
 </context>
 <context>
+    <name>ThirdpartyServicesLabel</name>
+    <message>
+        <source>Third-party services %1</source>
+        <translation type="unfinished">Servicios de terceros %1</translation>
+    </message>
+    <message>
+        <source>enabled</source>
+        <translation type="unfinished">habilitado</translation>
+    </message>
+    <message>
+        <source>disabled</source>
+        <translation type="unfinished">deshabilitado</translation>
+    </message>
+</context>
+<context>
     <name>ThirdpartyServicesPopup</name>
     <message>
         <source>Third-party services</source>
@@ -20785,18 +20800,6 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <message>
         <source>Log in</source>
         <translation>Iniciar sesión</translation>
-    </message>
-    <message>
-        <source>Third-party services %1</source>
-        <translation>Servicios de terceros %1</translation>
-    </message>
-    <message>
-        <source>enabled</source>
-        <translation>habilitado</translation>
-    </message>
-    <message>
-        <source>disabled</source>
-        <translation>deshabilitado</translation>
     </message>
     <message>
         <source>By proceeding you accept Status&lt;br&gt;%1 and %2</source>

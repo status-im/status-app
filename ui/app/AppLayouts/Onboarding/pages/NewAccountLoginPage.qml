@@ -22,6 +22,7 @@ OnboardingPage {
     id: root
 
     required property bool networkChecksEnabled
+    required property bool privacyModeFeatureEnabled
     required property bool thirdpartyServicesEnabled
 
     property bool isKeycardEnabled: true
@@ -31,6 +32,7 @@ OnboardingPage {
     signal loginWithSeedphraseRequested()
     signal loginWithSyncingRequested()
     signal loginWithKeycardRequested()
+    signal openThirdpartyServicesInfoPopupRequested()
 
     contentItem: Item {
         ColumnLayout {
@@ -130,6 +132,14 @@ OnboardingPage {
                         visible: root.isKeycardEnabled
                     }
                 }
+            }
+
+            ThirdpartyServicesLabel {
+                objectName: "thirdPartyServices"
+                Layout.fillWidth: true
+                thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
+                onOpenThirdpartyServicesInfoPopupRequested: root.openThirdpartyServicesInfoPopupRequested()
+                visible: root.privacyModeFeatureEnabled
             }
         }
     }

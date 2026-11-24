@@ -8,3 +8,4 @@ LoginUserSelector 1.0 LoginUserSelector.qml
 LoginUserSelectorDelegate 1.0 LoginUserSelectorDelegate.qml
 LoginPasswordInput 1.0 LoginPasswordInput.qml
 LoginTouchIdIndicator 1.0 LoginTouchIdIndicator.qml
+ThirdpartyServicesLabel 1.0 ThirdpartyServicesLabel.qml

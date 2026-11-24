@@ -18507,6 +18507,21 @@ Tuto akci nelze vzít zpět.</translation>
     </message>
 </context>
 <context>
+    <name>ThirdpartyServicesLabel</name>
+    <message>
+        <source>Third-party services %1</source>
+        <translation type="unfinished">Služby třetích stran %1</translation>
+    </message>
+    <message>
+        <source>enabled</source>
+        <translation type="unfinished">zapnuto</translation>
+    </message>
+    <message>
+        <source>disabled</source>
+        <translation type="unfinished">vypnuto</translation>
+    </message>
+</context>
+<context>
     <name>ThirdpartyServicesPopup</name>
     <message>
         <source>Third-party services</source>
@@ -20876,18 +20891,6 @@ Pokud je ve frontě transakce s nižším nonce, transakce s vyšším nonce zů
     <message>
         <source>Log in</source>
         <translation>Přihlásit se</translation>
-    </message>
-    <message>
-        <source>Third-party services %1</source>
-        <translation>Služby třetích stran %1</translation>
-    </message>
-    <message>
-        <source>enabled</source>
-        <translation>zapnuto</translation>
-    </message>
-    <message>
-        <source>disabled</source>
-        <translation>vypnuto</translation>
     </message>
     <message>
         <source>By proceeding you accept Status&lt;br&gt;%1 and %2</source>
