@@ -160,6 +160,7 @@ StatusSectionLayout {
         showBackUpSeed: !root.privacyStore.mnemonicBackedUp
         backUpSeedBadgeCount: root.profileStore.userDeclinedBackupBanner ? 0 : showBackUpSeed
         isKeycardEnabled: root.isKeycardEnabled
+        showPassword: !root.privacyStore.migratedToColdWallet
         localBackupEnabled: root.devicesStore.localBackupEnabled
 
         syncingBadgeCount: root.syncingBadgeCount
