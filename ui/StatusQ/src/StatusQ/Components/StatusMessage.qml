@@ -282,22 +282,6 @@ Control {
                             visible: profileImage.active && profileImage.status !== Loader.Ready
                         }
                     }
-
-                    // Stands in for the avatar on a header-less message that still
-                    // anchors the connector, so the line has something to start from.
-                    // A Loader keeps the icon out of every row that doesn't need it.
-                    Loader {
-                        anchors.top: parent.top
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        active: messageAttachmentLoader.active && !root.showHeader
-                        sourceComponent: StatusIcon {
-                            width: d.threadMarkerSize
-                            height: d.threadMarkerSize
-                            icon: "thread"
-                            color: Theme.palette.baseColor1
-                            opacity: 0.4
-                        }
-                    }
                 }
 
                 ColumnLayout {
@@ -456,11 +440,10 @@ Control {
                         Loader {
                             objectName: "messageAttachmentConnector"
                             x: -(messageRow.spacing + messageRail.width / 2)
-                            y: (root.showHeader ? profileImage.height : d.threadMarkerSize)
-                               - messageAttachmentHost.y
+                            y: profileImage.height - messageAttachmentHost.y
                             width: messageRow.spacing + messageRail.width / 2
                             height: Math.max(0, messageAttachmentHost.connectorY - y)
-                            active: messageAttachmentLoader.active
+                            active: messageAttachmentLoader.active && root.showHeader
                             visible: active
                             sourceComponent: StatusMessageConnector {
                                 direction: StatusMessageConnector.Direction.Down
@@ -494,8 +477,6 @@ Control {
         property string selectedText
         // Keeps the text clear of the "Unpin" floating button.
         readonly property real textRightMargin: root.isInPinnedPopup ? Theme.xlPadding : 0
-
-        readonly property int threadMarkerSize: 20
 
         // Hover must be reported for real pointing devices only. A touch tap makes Qt synthesize a
         // mouse move (a "core pointer" event, indistinguishable from a real mouse by
