@@ -8,15 +8,13 @@ import StatusQ.Controls
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils
 
-Item {
+// The parser and renderer share typed runs; decorations remain in the item.
+// `text` (plain, mentions resolved, with the edited suffix) is the accessible
+// name and what e2e reads; ChatTextItem provides both.
+ChatTextItem {
     id: root
 
-    readonly property alias hoveredLink: chatTextItem.hoveredLink
-    readonly property string selectedText: chatTextItem.selectedText
-
-    property alias highlightedLink: chatTextItem.highlightedLink
     property bool clearSelectionOnLostFocus: true
-    property ChatTextAppearance appearance
     property bool linkAddressAndEnsName
     property string disabledTooltipText
 
@@ -25,52 +23,40 @@ Item {
 
     property bool isMobile
 
-    property alias textField: chatTextItem
+    // ChatTextItem's own linkActivated carries the raw href; this one carries
+    // the link in the form message consumers expect, and is not emitted for
+    // send-via-personal-chat links while they are disabled.
+    signal messageLinkActivated(string link)
 
-    signal linkActivated(string link)
+    objectName: "StatusTextMessage_chatText"
 
-    implicitHeight: chatTextItem.implicitHeight
+    selectable: !root.isMobile
+    persistentSelection: !root.clearSelectionOnLostFocus
 
-    QtObject {
-        id: d
-        function showDisabledTooltipForAddressEnsName(link) {
-            return link.startsWith('//send-via-personal-chat//') && !!root.disabledTooltipText
-        }
+    edited: root.isEdited
+    segments: MarkdownUtils.toChatTextSegments(root.messageDetails.unparsedText, root.messageDetails.mentionsMap)
+
+    // Profile mentions use //<pubkey>; URLs and wallet intents keep their href.
+    onLinkActivated: href => {
+        if (disabledLinkTooltip.isDisabledLink(href))
+            return
+        const isLink = href.indexOf("://") >= 0 || href.startsWith("//")
+        root.messageLinkActivated(isLink ? href : "//" + href)
     }
 
-    // The parser and renderer share typed runs; decorations remain in the item.
-    ChatTextItem {
-        id: chatTextItem
-        objectName: "StatusTextMessage_chatText"
-        // `text` (plain, mentions resolved, with the edited suffix) is the
-        // accessible name and what e2e reads; ChatTextItem provides both.
+    StatusLazyToolTip {
+        id: disabledLinkTooltip
 
-        anchors.left: parent.left
-        anchors.right: parent.right
-
-        appearance: root.appearance
-        selectable: !root.isMobile
-        persistentSelection: !root.clearSelectionOnLostFocus
-
-        edited: root.isEdited
-        segments: MarkdownUtils.toChatTextSegments(root.messageDetails.unparsedText, root.messageDetails.mentionsMap)
-
-        // Profile mentions use //<pubkey>; URLs and wallet intents keep their href.
-        onLinkActivated: href => {
-            if (d.showDisabledTooltipForAddressEnsName(href))
-                return
-            const isLink = href.indexOf("://") >= 0 || href.startsWith("//")
-            root.linkActivated(isLink ? href : "//" + href)
+        // Send-via-personal-chat links (addresses, ENS names) while disabled.
+        function isDisabledLink(link: string): bool {
+            return link.startsWith('//send-via-personal-chat//') && !!root.disabledTooltipText
         }
 
-        StatusLazyToolTip {
-            id: disabledLinkTooltip
-            objectName: "StatusTextMessage_disabledLinkTooltipLoader"
-            tooltipObjectName: "StatusTextMessage_disabledLinkTooltip"
-            target: chatTextItem
-            enabled: d.showDisabledTooltipForAddressEnsName(chatTextItem.hoveredLink)
-            text: root.disabledTooltipText
-            delay: 100
-        }
+        objectName: "StatusTextMessage_disabledLinkTooltipLoader"
+        tooltipObjectName: "StatusTextMessage_disabledLinkTooltip"
+        target: root
+        enabled: isDisabledLink(root.hoveredLink)
+        text: root.disabledTooltipText
+        delay: 100
     }
 }

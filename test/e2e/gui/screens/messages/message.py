@@ -250,10 +250,10 @@ class Message:
         return match.group(0).rstrip('.,;:!?)]}') if match else None
 
     def activate_link(self, href: str) -> None:
-        text_bubble = _find_named_descendant(self.object, 'StatusMessage_textMessage')
+        text_bubble = _find_named_descendant(self.object, 'StatusTextMessage_chatText')
         if text_bubble is None:
             raise LookupError(f'Message text bubble was not found for link {href!r}')
-        text_bubble.linkActivated(href)
+        text_bubble.messageLinkActivated(href)
 
     def _find_go_to_community_button(self) -> typing.Optional[Button]:
         self._ensure_ui_parsed()
