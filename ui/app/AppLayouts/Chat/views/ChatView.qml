@@ -240,6 +240,12 @@ Item {
             if (!requestId)
                 threadDraftError = qsTr("Couldn't send thread reply. Try again.")
         }
+        // Portrait keeps adjacent pages alive outside the clipped viewport.
+        function panelInView(index: int): bool {
+            return !root.sectionLayout?.isPortrait
+                    || (!root.sectionLayout.panelSwitchOngoing && root.sectionLayout.currentIndex === index)
+        }
+
         readonly property bool threadPanelOpen: !!openThreadId || !!newThreadParentMessageId
         readonly property string openThreadId: root.rootStore.openThreadId
         readonly property string openThreadName: root.rootStore.openThreadName
@@ -932,6 +938,7 @@ Item {
                     rootStore: root.rootStore
                     createChatPropertiesStore: root.createChatPropertiesStore
                     messagesViewEnabled: rightPanelLoader.status === Loader.Ready
+                    panelInView: d.panelInView(StatusSectionLayout.RightPanel)
                     areTestNetworksEnabled: root.areTestNetworksEnabled
                     stickersLoaded: root.stickersLoaded
                     reactionEmojiModel: root.reactionEmojiModel
@@ -1102,6 +1109,7 @@ Item {
             threadName: root.activeItemName
 
             messagesViewEnabled: centerPanelLoader.status === Loader.Ready
+            panelInView: d.panelInView(StatusSectionLayout.CentralPanel)
 
             areTestNetworksEnabled: root.areTestNetworksEnabled
             createChatPropertiesStore: root.createChatPropertiesStore
