@@ -291,6 +291,9 @@ LayoutChooser {
     */
     signal panelSwitchEnded()
 
+    // True while the portrait swipe is moving between pages.
+    readonly property bool panelSwitchOngoing: d.panelSwitchOngoing
+
     // While the slide runs, keep QML incubation gentle so heavy async section
     // loads don't steal the animation's frame budget. The signal pair is
     // guaranteed balanced, so the hint can't leak.

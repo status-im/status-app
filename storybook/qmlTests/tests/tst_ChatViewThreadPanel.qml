@@ -344,6 +344,46 @@ Item {
             compare(view.sectionLayout.currentIndex, StatusSectionLayout.RightPanel)
         }
 
+        function test_portraitOnlyReadsTheCurrentPanel() {
+            harness.loader.active = true
+            const loader = harness.loader.item
+            tryCompare(loader, "status", Loader.Ready, 120000)
+            const view = harness.findChildByTypePrefix(loader, "ChatView")
+            view.sectionLayout.criteria = [true, true]
+            tryCompare(view.sectionLayout, "isPortrait", true)
+            const parentId = view.activeItemId
+            const chats = harness.mock.chatsModel
+            let threadId = ""
+            for (let i = 0; i < chats.count; ++i) {
+                const row = chats.get(i)
+                if (row.type === Constants.chatType.communityChat && row.itemId !== parentId) {
+                    threadId = row.itemId
+                    break
+                }
+            }
+            verify(!!threadId)
+            harness.mock.setActiveChat(threadId)
+            harness.mock.setActiveChat(parentId)
+            view.rootStore.openThreadPanel(threadId, "Thread", parentId)
+            tryCompare(view.rightPanel, "status", Loader.Ready)
+
+            const chat = harness.findChildByTypePrefix(view.centerPanel, "ChatColumnView")
+            let thread
+            tryVerify(() => {
+                thread = harness.findChildByTypePrefix(view.rightPanel.item, "ChatColumnView")
+                return !!thread
+            })
+            view.sectionLayout.setCurrentIndex(StatusSectionLayout.CentralPanel)
+            tryCompare(view.sectionLayout, "currentIndex", StatusSectionLayout.CentralPanel)
+            tryCompare(view.sectionLayout, "panelSwitchOngoing", false)
+            tryCompare(chat, "panelInView", true)
+            compare(thread.panelInView, false)
+
+            view.sectionLayout.setCurrentIndex(StatusSectionLayout.RightPanel)
+            tryCompare(thread, "panelInView", true)
+            compare(chat.panelInView, false)
+        }
+
         function test_closeThreadTeardown_data() {
             return [{ tag: "from-message", fromInfo: false }, { tag: "from-info", fromInfo: true }]
         }

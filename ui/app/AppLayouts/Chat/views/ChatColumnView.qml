@@ -58,6 +58,7 @@ Item {
        show first, as intended.
     */
     property bool messagesViewEnabled: true
+    property bool panelInView: true
 
     // Thread rendered by this view. Empty when rendering the selected chat.
     property string threadId
@@ -627,6 +628,7 @@ Item {
             ChatMessagesView {
                 id: sharedMessagesView
 
+                panelInView: root.panelInView
                 parent: d.activeContentItem ? d.activeContentItem.messagesSlot
                                             : messagesViewHolder
                 anchors.fill: parent
