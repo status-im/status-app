@@ -3,7 +3,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 
 import utils
-import shared.popups
 import shared.stores
 
 import mainui.sectionLoaders
@@ -262,13 +261,30 @@ Item {
         service: "StatusDesktop.AutoLogin"
     }
 
-    Loader {
-        active: SQUtils.Utils.isAndroid
-        sourceComponent: KeycardChannelDrawer {
-            currentState: d.keycardStateStore.state
-            onDismissed: {
-                d.keycardStateStore.keycardDismissed()
-            }
+    // created on the first non-idle keycard state, released when closed in idle
+    SQUtils.DeferredComponent {
+        id: keycardChannelDrawer
+
+        readonly property bool idle: d.keycardStateStore.state === Constants.keycardChannelState.idle
+
+        module: "shared.popups"
+        typeName: "KeycardChannelDrawer"
+        single: true
+        properties: ({ currentState: Qt.binding(() => d.keycardStateStore.state) })
+
+        function sync() {
+            if (SQUtils.Utils.isAndroid && !keycardChannelDrawer.idle)
+                keycardChannelDrawer.createObject(root)
         }
+
+        onCreated: drawer => {
+            drawer.dismissed.connect(() => d.keycardStateStore.keycardDismissed())
+            drawer.closed.connect(() => Qt.callLater(() => {
+                if (keycardChannelDrawer.idle)
+                    keycardChannelDrawer.destroyInstance()
+            }))
+        }
+        onIdleChanged: keycardChannelDrawer.sync()
+        Component.onCompleted: keycardChannelDrawer.sync()
     }
 }

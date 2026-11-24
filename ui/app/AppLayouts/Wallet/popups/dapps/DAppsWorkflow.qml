@@ -100,28 +100,33 @@ SQUtils.QObject {
 
     /// Response to pairingValidationRequested
     function pairingValidated(validationState) {
-        if (pairWCLoader.item) {
-            pairWCLoader.item.pairingValidated(validationState)
-        }
+        pairWC.instance?.pairingValidated(validationState)
     }
 
     /// Confirmation received on connectionAccepted
     function connectionSuccessful(pairingId, newConnectionId) {
-        connectDappLoader.connectionSuccessful(pairingId, newConnectionId)
+        const modal = connectDapp.instance
+        if (modal && modal.key === pairingId) {
+            modal.topic = newConnectionId
+            modal.pairSuccessful()
+        }
     }
 
     /// Confirmation received on connectionAccepted
     function connectionFailed(pairingId) {
-        connectDappLoader.connectionFailed(pairingId)
+        const modal = connectDapp.instance
+        if (modal && modal.key === pairingId)
+            modal.pairFailed()
     }
 
     /// Request to connect to a dApp
     function connectDApp(dappChains, dappUrl, dappName, dappIcon, connectorId, pairingId) {
-        connectDappLoader.connect(dappChains, dappUrl, dappName, dappIcon, connectorId, pairingId)
+        connectDapp.connect({ dappChains, dappUrl, dappName, dappIcon, connectorId, key: pairingId })
     }
 
     function openPairing() {
-        pairWCLoader.active = true
+        pairWC.open(root)
+        root.pairWCReady()
     }
 
     function chooseConnector() {
@@ -129,352 +134,150 @@ SQUtils.QObject {
     }
 
     function disconnectDapp(topic) {
-        disconnectdAppDialogLoader.dAppTopic = topic
-        disconnectdAppDialogLoader.active = true
+        const dApp = SQUtils.ModelUtils.getByKey(root.dAppsModel, "topic", topic)
+        confirmDisconnect.open(root, {
+            topic,
+            dappName: dApp?.name ?? "",
+            dappIcon: dApp?.iconUrl ?? "",
+            dappUrl: dApp?.url ?? "",
+            connectorId: dApp?.connectorId ?? -1,
+            clientId: dApp?.clientId || ""
+        })
     }
 
-    Loader {
-        id: disconnectdAppDialogLoader
+    SQUtils.DeferredComponent {
+        id: confirmDisconnect
 
-        property string dAppTopic
-        property string dAppUrl: ""
-        property int dAppConnectorId: -1
-        property string dAppClientId: ""
+        source: Qt.resolvedUrl("DAppConfirmDisconnectPopupInstance.qml")
+        single: true
+        destroyOnClose: true
+        properties: ({ parent: root.visualParent })
+        onCreated: popup => popup.disconnectRequested.connect(root.disconnectRequested)
+    }
 
-        active: false
-        parent: root.visualParent
+    SQUtils.DeferredComponent {
+        id: pairWC
 
-        onLoaded: {
-            const dApp = SQUtils.ModelUtils.getByKey(root.dAppsModel, "topic", dAppTopic);
-            if (dApp) {
-                item.dappName = dApp.name;
-                item.dappIcon = dApp.iconUrl;
-                item.dappUrl = dApp.url;
-                dAppUrl = dApp.url;
-                dAppConnectorId = dApp.connectorId;
-                dAppClientId = dApp.clientId || "";
-            }
-
-            item.open();
-        }
-
-        sourceComponent: DAppConfirmDisconnectPopup {
-
-            visible: true
-
-            onClosed: {
-                disconnectdAppDialogLoader.active = false
-            }
-
-            onAccepted: {
-                root.disconnectRequested(disconnectdAppDialogLoader.dAppTopic, disconnectdAppDialogLoader.dAppUrl, disconnectdAppDialogLoader.dAppConnectorId, disconnectdAppDialogLoader.dAppClientId)
-            }
+        module: "shared.popups.walletconnect"
+        typeName: "PairWCModal"
+        single: true
+        destroyOnClose: true
+        properties: ({ parent: root.visualParent })
+        onCreated: modal => {
+            modal.pair.connect(root.pairingRequested)
+            modal.pairUriChanged.connect(root.pairingValidationRequested)
+            modal.pairInstructionsRequested.connect(() => pairInstructions.open(root))
         }
     }
 
-    Loader {
-        id: pairWCLoader
+    SQUtils.DeferredComponent {
+        id: pairInstructions
 
-        active: false
-        parent: root.visualParent
-
-        onLoaded: {
-            item.open()
-            root.pairWCReady()
-        }
-
-        sourceComponent: PairWCModal {
-            visible: true
-
-            onClosed: pairWCLoader.active = false
-            onPair: (uri) => root.pairingRequested(uri)
-            onPairUriChanged: (uri) => root.pairingValidationRequested(uri)
-            onPairInstructionsRequested: pairInstructionsLoader.active = true
-        }
+        module: "shared.popups.walletconnect"
+        typeName: "DAppsUriCopyInstructionsPopup"
+        single: true
+        properties: ({ parent: root.visualParent })
     }
 
-    Loader {
-        id: pairInstructionsLoader
+    SQUtils.DeferredComponent {
+        id: connectDapp
 
-        active: false
-        parent: root.visualParent
+        // requests that arrive while one is shown
+        property var queue: []
+        // the request shown once the pairing popup confirmed it
+        property var pending: null
 
-        sourceComponent: Component {
-            DAppsUriCopyInstructionsPopup{
-                visible: true
-                destroyOnClose: false
-                onClosed: pairInstructionsLoader.active = false
-            }
-        }
-    }
-
-    Loader {
-        id: connectDappLoader
-
-        active: false
-        parent: root.visualParent
-
-        // Array of chaind ids
-        property var dappChains
-        property url dappUrl
-        property string dappName
-        property url dappIcon
-        property string connectorIcon
-        property int dappConnectorId: Constants.DAppConnectors.WalletConnect
-        property var key
-        property var topic
-
-        property bool connectRequestHandled: false
-
-        function resolve(action) {
-            connectRequestHandled = true
-            action()
+        source: Qt.resolvedUrl("ConnectDAppModalInstance.qml")
+        single: true
+        destroyOnClose: true
+        properties: ({
+            parent: root.visualParent,
+            accounts: root.accountsModel,
+            networksModel: root.networksModel,
+            selectedAccountAddress: root.selectedAccountAddress,
+            connectButtonEnabled: Qt.binding(() => root.enabled)
+        })
+        onCreated: modal => {
+            modal.connectionAccepted.connect(root.connectionAccepted)
+            modal.connectionDeclined.connect(root.connectionDeclined)
+            modal.disconnectRequested.connect(root.disconnectRequested)
         }
 
-        property var connectionQueue: []
-        onActiveChanged: {
-            if (!active && connectionQueue.length > 0) {
-                connect(connectionQueue[0].dappChains,
-                        connectionQueue[0].dappUrl,
-                        connectionQueue[0].dappName,
-                        connectionQueue[0].dappIcon,
-                        connectionQueue[0].connectorId,
-                        connectionQueue[0].key)
-                connectionQueue.shift()
-            }
+        onInstanceChanged: {
+            if (!connectDapp.instance && connectDapp.queue.length > 0)
+                connectDapp.connect(connectDapp.queue.shift())
         }
 
-        function connect(dappChains, dappUrl, dappName, dappIcon, connectorId, key) {
+        function connect(request) {
             console.log("[StatusConnect] DAppsWorkflow connect",
-                         "key=" + key,
-                         "url=" + dappUrl,
-                         "connectorId=" + connectorId,
-                         "chains=" + JSON.stringify(dappChains),
-                         "loaderActive=" + connectDappLoader.active,
-                         "queueLen=" + connectionQueue.length)
-            if (connectDappLoader.active) {
-                connectionQueue.push({ dappChains, dappUrl, dappName, dappIcon, connectorId, key })
+                         "key=" + request.key,
+                         "url=" + request.dappUrl,
+                         "connectorId=" + request.connectorId,
+                         "chains=" + JSON.stringify(request.dappChains),
+                         "modalShown=" + !!connectDapp.instance,
+                         "queueLen=" + connectDapp.queue.length)
+            if (connectDapp.instance) {
+                connectDapp.queue.push(request)
                 return
             }
 
-            connectDappLoader.connectRequestHandled = false
-            connectDappLoader.dappChains = dappChains
-            connectDappLoader.dappUrl = dappUrl
-            connectDappLoader.dappName = dappName
-            connectDappLoader.dappIcon = dappIcon
-            connectDappLoader.connectorIcon = Constants.dappImageByType[connectorId] || ""
-            connectDappLoader.dappConnectorId = connectorId
-            connectDappLoader.key = key
-
-            if (pairWCLoader.item) {
+            if (pairWC.instance) {
                 // Allow user to get the uri valid confirmation
-                pairWCLoader.item.pairingValidated(Pairing.errors.dappReadyForApproval)
+                connectDapp.pending = request
+                pairWC.instance.pairingValidated(Pairing.errors.dappReadyForApproval)
                 connectDappTimer.start()
             } else {
-                connectDappLoader.active = true
+                connectDapp.show(request)
             }
         }
 
-        function connectionSuccessful(key, newTopic) {
-            if (connectDappLoader.key === key && connectDappLoader.item) {
-                connectDappLoader.topic = newTopic
-                connectDappLoader.item.pairSuccessful()
-            }
-        }
-
-        function connectionFailed(id) {
-            if (connectDappLoader.key === id && connectDappLoader.item) {
-                connectDappLoader.item.pairFailed()
-            }
-        }
-
-        sourceComponent: ConnectDAppModal {
-            visible: true
-
-            Component.onCompleted: {
-                console.log("[StatusConnect] ConnectDAppModal shown",
-                             "url=" + connectDappLoader.dappUrl,
-                             "key=" + connectDappLoader.key)
-            }
-
-            onClosed: {
-                if (!connectDappLoader.connectRequestHandled && connectDappLoader.key) {
-                    root.connectionDeclined(connectDappLoader.key)
-                }
-                connectDappLoader.connectRequestHandled = false
-                connectDappLoader.active = false
-            }
-            accounts: root.accountsModel
-            flatNetworks: SortFilterProxyModel {
-                sourceModel: root.networksModel
-                filters: [
-                    FastExpressionFilter {
-                        inverted: true
-                        expression: connectDappLoader.dappChains.indexOf(chainId) === -1
-                        expectedRoles: ["chainId"]
-                    }
-                ]
-            }
-            selectedAccountAddress: root.selectedAccountAddress
-
-            dAppUrl: connectDappLoader.dappUrl
-            dAppName: connectDappLoader.dappName
-            dAppIconUrl: connectDappLoader.dappIcon
-            dAppConnectorBadge: connectDappLoader.connectorIcon
-            connectButtonEnabled: root.enabled
-
-            onConnect: {
-                if (!selectedAccount || !selectedAccount.address) {
-                    console.error("Missing account selection")
-                    return
-                }
-                if (!selectedChains || selectedChains.length === 0) {
-                    console.error("Missing chain selection")
-                    return
-                }
-
-                connectDappLoader.resolve(() => root.connectionAccepted(connectDappLoader.key, selectedChains, selectedAccount.address))
-            }
-
-            onDecline: connectDappLoader.resolve(() => {
-                root.connectionDeclined(connectDappLoader.key)
-                close()
-            })
-
-            onDisconnect: connectDappLoader.resolve(() => {
-                const connectorId = connectDappLoader.dappConnectorId
-                const isStatusConnect = connectorId === Constants.DAppConnectors.StatusConnect
-                const clientId = isStatusConnect
-                        ? ConnectorConstants.clientIdFor(false)
-                        : "walletconnect"
-                const topic = connectDappLoader.topic || connectDappLoader.dappUrl
-                console.log("[StatusConnect] ConnectDAppModal disconnect",
-                             "url=" + connectDappLoader.dappUrl,
-                             "connectorId=" + connectorId,
-                             "clientId=" + clientId)
-                root.disconnectRequested(topic, connectDappLoader.dappUrl, connectorId, clientId)
-                close()
+        function show(request) {
+            connectDapp.open(root, {
+                dappChains: request.dappChains,
+                dAppUrl: request.dappUrl,
+                dAppName: request.dappName,
+                dAppIconUrl: request.dappIcon,
+                dAppConnectorBadge: Constants.dappImageByType[request.connectorId] || "",
+                dappConnectorId: request.connectorId,
+                key: request.key
             })
         }
     }
 
     Instantiator {
         model: root.sessionRequestsModel
-        delegate: DAppSignRequestModal {
-            id: dappRequestModal
-            objectName: "dappsRequestModal"
+        delegate: QtObject {
+            id: requestEntry
 
             required property var model
             required property int index
 
-            readonly property var request: model.requestItem
-            readonly property var account: accountEntry.available ? accountEntry.item : {
-                name: "",
-                address: "",
-                emoji: "",
-                colorId: 0,
-                keyUid: "",
-                migratedToColdWallet: false
-            }
+            // a child of this entry, so it goes with the entry when the request is removed
+            property QtObject modal
 
-            readonly property var network: networkEntry.available ? networkEntry.item : {
-                chainName: "",
-                iconUrl: ""
-            }
-            property bool requestHandled: false
+            Component.onCompleted: modal = dappSignRequestModalComponent.createObject(requestEntry, {
+                model: requestEntry.model,
+                index: requestEntry.index
+            })
+        }
 
-            function rejectRequest() {
-                // Allow rejecting only once
-                if (requestHandled) {
-                    return
-                }
-                requestHandled = true
-                root.signRequestRejected(request.topic, request.requestId)
-            }
+    }
 
-            parent: root.visualParent
+    SQUtils.DeferredComponent {
+        id: dappSignRequestModalComponent
 
-            keyUid: account.keyUid
-            migratedToColdWallet: account.migratedToColdWallet
-            formatBigNumber: root.formatBigNumber
-
-            visible: !!request.dappUrl
-
-            dappUrl: request.dappUrl
-            dappIcon: request.dappIcon
-            dappName: request.dappName
-
-            accountColor: Utils.getColorForId(Theme.palette, account.colorId)
-            accountName: account.name
-            accountAddress: account.address
-            accountEmoji: account.emoji
-
-            networkName: network.chainName
-            networkIconPath: Assets.svg(network.iconUrl)
-
-            fiatFees: request.fiatMaxFees ? request.fiatMaxFees.toFixed() : ""
-            fiatSymbol: request.fiatSymbol
-            cryptoFees: request.nativeTokenMaxFees ? request.nativeTokenMaxFees.toFixed() : ""
-            nativeTokenSymbol: Utils.getNativeTokenSymbol(request.chainId)
-            estimatedTime: WalletUtils.getLabelForEstimatedTxTime(request.estimatedTimeCategory)
-            feesLoading: hasFees && (!fiatFees || !cryptoFees) && !gasEstimateFailed
-            estimatedTimeLoading: request.estimatedTimeCategory === Constants.TransactionEstimatedTime.Unknown
-            hasFees: signingTransaction
-            enoughFundsForTransaction: request.haveEnoughFunds
-            enoughFundsForFees: request.haveEnoughFees
-            gasEstimateFailed: !!request.gasEstimateFailed
-
-            // the gas to sign is known once our estimate answered
-            signButtonEnabled: ((!hasFees) || enoughFundsForTransaction && enoughFundsForFees && !!request.gasLimit) && root.enabled
-            signingTransaction: !!request.method && (request.method === SessionRequest.methods.signTransaction.name
-                                                  || request.method === SessionRequest.methods.sendTransaction.name)
-            requestPayload: {
-                try {
-                    const data = JSON.parse(request.preparedData)
-
-                    delete data.maxFeePerGas
-                    delete data.maxPriorityFeePerGas
-                    delete data.gasPrice
-
-                    return JSON.stringify(data, null, 2)
-                } catch(_) {
-                    return request.preparedData
-                }
-            }
-            expirationSeconds: request.expirationTimestamp ? request.expirationTimestamp - requestTimestamp.getTime() / 1000
-                                                            : 0
-            hasExpiryDate: !!request.expirationTimestamp
-
-            onOpened: {
-                root.signRequestIsLive(request.topic, request.requestId)
-            }
-
-            onClosed: {
-                Qt.callLater(rejectRequest)
-            }
-
-            onAccepted: {
-                requestHandled = true
-                root.signRequestAccepted(request.topic, request.requestId)
-            }
-
-            onRejected: {
-                rejectRequest()
-            }
-
-            ModelEntry {
-                id: accountEntry
-                sourceModel: root.accountsModel
-                key: "address"
-                value: request.accountAddress
-            }
-
-            ModelEntry {
-                id: networkEntry
-                sourceModel: root.networksModel
-                key: "chainId"
-                value: request.chainId
-            }
+        source: Qt.resolvedUrl("DAppSignRequestModalInstance.qml")
+        properties: ({
+            parent: root.visualParent,
+            accountsModel: root.accountsModel,
+            networksModel: root.networksModel,
+            formatBigNumber: root.formatBigNumber,
+            workflowEnabled: Qt.binding(() => root.enabled)
+        })
+        onCreated: modal => {
+            modal.signRequestAccepted.connect(root.signRequestAccepted)
+            modal.signRequestRejected.connect(root.signRequestRejected)
+            modal.signRequestIsLive.connect(root.signRequestIsLive)
         }
     }
 
@@ -563,8 +366,11 @@ SQUtils.QObject {
         repeat: false
 
         onTriggered: {
-            pairWCLoader.item.close()
-            connectDappLoader.active = true
+            pairWC.instance?.close()
+            const request = connectDapp.pending
+            connectDapp.pending = null
+            if (request)
+                connectDapp.show(request)
         }
     }
 }

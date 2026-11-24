@@ -167,7 +167,7 @@ mainWindow_insertDetailsViewChatKeyTxt_StyledText = {"container": statusDesktop_
 mainWindow_EmojiHash = {"container": statusDesktop_mainWindow, "objectName": "publicKeyEmojiHash", "type": "EmojiHash", "visible": True}
 mainWindow_Header_Title = {"container": statusDesktop_mainWindow, "objectName": "onboardingHeaderText", "type": "StyledText", "visible": True}
 mainWindow_userImageCopy_StatusSmartIdenticon = {"container": statusDesktop_mainWindow, "id": "userImageCopy", "type": "StatusSmartIdenticon", "unnamed": 1, "visible": True}
-profileImageCropper = {"container": statusDesktop_mainWindow, "objectName": "imageCropWorkflow", "type": "ImageCropWorkflow", "visible": True}
+profileImageCropper = {"container": statusDesktop_mainWindow, "objectName": "imageCropWorkflow", "type": RegularExpression("^(ImageCropWorkflow|ImageCropWorkflowInstance)$"), "visible": True}
 
 # Create Password View
 mainWindow_CreatePasswordPage = {"container": onboardingLayout, "type": "CreatePasswordPage", "unnamed": 1, "visible": True}

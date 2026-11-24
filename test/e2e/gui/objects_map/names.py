@@ -6,7 +6,7 @@ from objectmaphelper import RegularExpression
 statusDesktop_mainWindow = {"name": "mainWindow", "type": "QQuickWindowQmlImpl", "visible": True}
 statusDesktop_mainWindow_overlay = {"container": statusDesktop_mainWindow, "type": "Overlay", "unnamed": 1,
                                     "visible": True}
-statusModal = {"container": statusDesktop_mainWindow_overlay, "objectName": "StatusModal", "type": "PopupItem",
+statusModal = {"container": statusDesktop_mainWindow_overlay, "objectName": RegularExpression("^(StatusModal|LeaveCommunityPopupInstance)$"), "type": "PopupItem",
                "visible": True}
 statusStackModal = {"container": statusDesktop_mainWindow_overlay, "objectName": "StatusStackModal",
                     "type": "PopupItem", "visible": True}
@@ -35,7 +35,7 @@ closeCrossPopupButton = {"container": statusDesktop_mainWindow_overlay, "objectN
 
 # Enable biometrics popup (post-login)
 enableBiometricsPopup = {"container": statusDesktop_mainWindow_overlay,
-                         "objectName": "EnableBiometricsPopup", "type": "PopupItem", "visible": True}
+                         "objectName": RegularExpression("^(EnableBiometricsPopup|EnableBiometricsPopupInstance)$"), "type": "PopupItem", "visible": True}
 enableBiometricsMaybeLaterButton = {"container": statusDesktop_mainWindow_overlay,
                                     "objectName": "btnDontEnableBiometrics",
                                     "type": "StatusButton", "visible": True}
@@ -99,7 +99,7 @@ o_StatusListView = {"container": statusDesktop_mainWindow_overlay, "type": "Popu
 """ Onboarding """
 
 # Back Up Your Seed Phrase Popup
-backUpSeedModal = {"container": statusDesktop_mainWindow_overlay, "objectName": "BackupSeedModal", "type": "PopupItem",
+backUpSeedModal = {"container": statusDesktop_mainWindow_overlay, "objectName": RegularExpression("^(BackupSeedModal|BackupSeedModalInstance)$"), "type": "PopupItem",
                    "visible": True}
 o_PopupItem = {"container": statusDesktop_mainWindow_overlay, "type": "PopupItem", "unnamed": 1, "visible": True}
 i_have_a_pen_and_paper_StatusCheckBox = {"checkable": True, "container": statusDesktop_mainWindow_overlay,
@@ -148,7 +148,7 @@ seedInput = {"container": statusDesktop_mainWindow_overlay, "objectName": Regula
 continueButton = {"container": statusDesktop_mainWindow_overlay, "text": "Continue", "type": "StatusButton", "unnamed": 1, "visible": True}
 
 """Keep or delete recovery phrase"""
-keepOrDeleteRecoveryPhraseModal = {"container": statusDesktop_mainWindow_overlay, "objectName": "BackupSeedModal", "type": "PopupItem", "visible": True}
+keepOrDeleteRecoveryPhraseModal = {"container": statusDesktop_mainWindow_overlay, "objectName": RegularExpression("^(BackupSeedModal|BackupSeedModalInstance)$"), "type": "PopupItem", "visible": True}
 removeSeedCheckBox = {"checkable": True, "container": statusDesktop_mainWindow_overlay, "objectName": "cbRemove", "type": "StatusCheckBox", "visible": True}
 doneButton = {"container": statusDesktop_mainWindow_overlay, "text": "Done", "type": "StatusButton", "unnamed": 1, "visible": True}
 # Send Contact Request Popup
@@ -341,7 +341,7 @@ save_StatusButton = {"checkable": False, "container": statusDesktop_mainWindow_o
 
 # Invite Contacts Popup
 inviteFriendsToCommunityPopup = {"container": statusDesktop_mainWindow_overlay,
-                                 "objectName": "InviteFriendsToCommunityPopup", "type": "PopupItem", "visible": True}
+                                 "objectName": RegularExpression("^(InviteFriendsToCommunityPopup|InviteFriendsToCommunityPopupInstance)$"), "type": "PopupItem", "visible": True}
 closeButton = {"container": inviteFriendsToCommunityPopup, "objectName": "headerCloseButton",
                "type": "StatusFlatRoundButton", "visible": True}
 communityProfilePopupInviteFrindsPanel = {"container": statusDesktop_mainWindow_overlay,
@@ -371,7 +371,7 @@ copy_icon_StatusIcon = {"container": statusDesktop_mainWindow_overlay, "objectNa
 
 # Welcome community
 communityMembershipSetupDialog = {"container": statusDesktop_mainWindow_overlay,
-                                  "objectName": "CommunityMembershipSetupDialog", "type": "PopupItem", "visible": True}
+                                  "objectName": RegularExpression("^(CommunityMembershipSetupDialog|CommunityJoinDialogInstance|EditSharedAddressesDialogInstance)$"), "type": "PopupItem", "visible": True}
 o_ColumnLayout = {"container": statusDesktop_mainWindow_overlay, "type": "ColumnLayout", "unnamed": 1, "visible": True}
 
 headerTitle_StatusBaseText = {"container": statusDesktop_mainWindow_overlay, "objectName": "headerTitle",
@@ -441,19 +441,19 @@ profileSendContactRequestModal_sayWhoYouAreInput_TextEdit = {"container": status
                                                              "type": "TextEdit", "visible": True}
 
 # Review Contact Request
-reviewContactRequestPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "ReviewContactRequestPopup", "type": "PopupItem", "visible": True}
+reviewContactRequestPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": RegularExpression("^(ReviewContactRequestPopup|ReviewContactRequestPopupInstance)$"), "type": "PopupItem", "visible": True}
 ignore_StatusFlatButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay,
                            "objectName": "ignoreButton", "type": "StatusFlatButton", "visible": True}
 accept_StatusButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "objectName": "acceptButton",
                        "type": "StatusButton", "visible": True}
 
 # RemoveContactPopup
-removeContactPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "RemoveContactPopup", "type": "PopupItem", "visible": True}
+removeContactPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": RegularExpression("^(RemoveContactPopup|RemoveContactPopupInstance)$"), "type": "PopupItem", "visible": True}
 remove_contact_StatusButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay,
                                "objectName": "removeContactButton", "type": "StatusButton", "visible": True}
 
 # Block user popup
-blockUserPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "BlockContactConfirmationDialog",
+blockUserPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": RegularExpression("^(BlockContactConfirmationDialog|BlockContactConfirmationDialogInstance)$"),
                   "type": "PopupItem", "visible": True}
 blockWarningBox_StatusWarningBox = {"container": statusDesktop_mainWindow_overlay, "objectName": "blockWarningBox",
                                     "type": "StatusWarningBox", "visible": True}
@@ -465,7 +465,7 @@ cancel_StatusFlatButton = {"checkable": False, "container": statusDesktop_mainWi
                            "objectName": "cancelButton", "type": "StatusFlatButton", "visible": True}
 
 # Unblock user popup
-unblockUserPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "UnblockContactConfirmationDialog",
+unblockUserPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": RegularExpression("^(UnblockContactConfirmationDialog|UnblockContactConfirmationDialogInstance)$"),
                     "type": "PopupItem", "visible": True}
 unblock_StatusButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay,
                         "objectName": "unblockUserButton", "type": "StatusButton", "visible": True}
@@ -541,7 +541,7 @@ log_in_again_required_StatusBaseText = {"container": statusDesktop_mainWindow_ov
                                         "type": "StatusBaseText", "visible": True}
 
 # Add saved address popup
-addEditSavedAddressPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "AddEditSavedAddressPopup",
+addEditSavedAddressPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": RegularExpression("^(AddEditSavedAddressPopup|AddEditSavedAddressPopupInstance)$"),
                             "type": "PopupItem", "visible": True}
 mainWallet_Saved_Addreses_Popup_Name_Input = {"container": statusDesktop_mainWindow,
                                               "objectName": "savedAddressNameInput", "type": "TextEdit"}
@@ -623,7 +623,7 @@ educationPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "
 educationPopupCloseButton = {"container": educationPopup, "objectName": "headerActionsCloseButton", "type": "StatusFlatRoundButton", "visible": True}
 
 # Authenticate Popup — AuthenticationPopup (PopupBase / StatusDialog)
-authenticatePopup = {"container": statusDesktop_mainWindow_overlay, "type": "AuthenticationPopup", "visible": True}
+authenticatePopup = {"container": statusDesktop_mainWindow_overlay, "type": RegularExpression("^(AuthenticationPopup|AuthenticationPopupInstance)$"), "visible": True}
 # auth_sign_base/states/EnterPassword.qml: StatusPasswordInput objectName authenticationPasswordInput
 authenticate_keycardPasswordInput = {"container": statusDesktop_mainWindow_overlay,
                                     "objectName": "authenticationPasswordInput", "type": "StatusPasswordInput",
@@ -632,7 +632,7 @@ authenticate_keycardPasswordInput = {"container": statusDesktop_mainWindow_overl
 authenticate_StatusButton = {"container": statusDesktop_mainWindow_overlay,
                              "objectName": "keycardPopupBaseSubmitButton", "type": "StatusButton", "visible": True}
 
-signPopup = {"container": statusDesktop_mainWindow_overlay, "type": "SignPopup", "visible": True}
+signPopup = {"container": statusDesktop_mainWindow_overlay, "type": RegularExpression("^(SignPopup|SignPopupInstance)$"), "visible": True}
 keycardAuthPinInput = {"container": statusDesktop_mainWindow_overlay,
                        "objectName": "keycardAuthPinInput", "type": "StatusPinInput", "visible": True}
 headerCloseButton_StatusFlatRoundButton = {"container": statusDesktop_mainWindow_overlay,
@@ -664,7 +664,7 @@ color_StatusColorRadioButton = {"checkable": True, "container": statusDesktop_ma
                                 "type": "StatusColorRadioButton", "unnamed": 1, "visible": True}
 
 mainWallet_AddEditAccountPopup_Content = {"container": statusDesktop_mainWindow_overlay,
-                                          "objectName": "AddAccountPopup", "type": "PopupItem", "visible": True}
+                                          "objectName": RegularExpression("^(AddAccountPopup|AddAccountPopupInstance)$"), "type": "PopupItem", "visible": True}
 mainWallet_AddEditAccountPopup_PrimaryButton = {"container": statusDesktop_mainWindow,
                                                 "objectName": "AddAccountPopup-PrimaryButton", "type": "StatusButton",
                                                 "visible": True}
@@ -830,7 +830,7 @@ editWalletSettings_EmojiItem = {"container": statusDesktop_mainWindow_overlay,
 
 # Remove Account from settings popup
 removeAccountConfirmationPopup = {"container": statusDesktop_mainWindow_overlay,
-                                  "objectName": "RemoveAccountConfirmationPopup", "type": "PopupItem", "visible": True}
+                                  "objectName": RegularExpression("^(RemoveAccountConfirmationPopup|RemoveAccountConfirmationPopupInstance)$"), "type": "PopupItem", "visible": True}
 removeConfirmationCrossCloseButton = {"container": statusDesktop_mainWindow_overlay, "objectName": "close-icon",
                                       "type": "StatusIcon", "visible": True}
 removeButton = {"container": statusDesktop_mainWindow, "objectName": "RemoveAccountPopup-ConfirmButton", "type": "StatusButton"}
@@ -847,7 +847,7 @@ removeConfirmationConfirmButton = {"checkable": False, "container": statusDeskto
 
 # Testnet mode popup
 testnetAlert = {"container": statusDesktop_mainWindow_overlay, "objectName": "TestnetModePopup",
-                "type": "TestnetModePopup", "visible": True}
+                "type": RegularExpression("^(TestnetModePopup|TestnetModePopupInstance)$"), "visible": True}
 turn_on_testnet_mode_StatusButton = {"container": statusDesktop_mainWindow_overlay,
                                      "objectName": "alertPopupAcceptButton", "type": "StatusButton",
                                      "visible": True}
@@ -1003,7 +1003,7 @@ search_TextEdit = {"container": o_SearchBoxWithRightIcon, "id": "edit", "type": 
                    "visible": True}
 
 # new Send modal (single chain)
-simpleSendModal = {"container": statusDesktop_mainWindow_overlay, "objectName": "SimpleSendModal", "type": "PopupItem",
+simpleSendModal = {"container": statusDesktop_mainWindow_overlay, "objectName": RegularExpression("^(SimpleSendModal|SimpleSendModalInstance)$"), "type": "PopupItem",
                    "visible": True}
 sendModalHeader = {"container": statusDesktop_mainWindow_overlay, "objectName": "sendModalHeader",
                    "type": "SendModalHeader", "visible": True}
@@ -1075,7 +1075,7 @@ modalHeader_HeaderTitleText = {"container": statusDesktop_mainWindow_overlay, "o
                                "type": "HeaderTitleText", "visible": True}
 """Swap popup"""
 
-swapPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "SwapModal", "type": "PopupItem", "visible": True}
+swapPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": RegularExpression("^(SwapModal|SwapModalInstance)$"), "type": "PopupItem", "visible": True}
 swapModalCloseButton = {"container": swapPopup, "objectName": "closeButton", "type": "StatusFlatRoundButton", "visible": True}
 swapModalPayPanel = {"container": swapPopup, "objectName": "payPanel", "type": "SwapInputPanel", "visible": True}
 swapModalReceivePanel = {"container": swapPopup, "objectName": "receivePanel", "type": "SwapInputPanel", "visible": True}
@@ -1131,7 +1131,7 @@ tokenSelectorSearchBar = {"container": statusDesktop_mainWindow_overlay, "object
                           "type": "TokenSearchBox", "visible": True}
 
 """Send contact request modal"""
-sendContactRequestModal = {"container": statusDesktop_mainWindow_overlay, "objectName": "SendContactRequestModal",
+sendContactRequestModal = {"container": statusDesktop_mainWindow_overlay, "objectName": RegularExpression("^(SendContactRequestModal|SendContactRequestModalInstance)$"),
                            "type": "PopupItem", "visible": True}
 profileSendContactRequestModal_sayWhoYouAreInput_TextEdit = {"container": statusDesktop_mainWindow_overlay,
                                                              "objectName": "ProfileSendContactRequestModal_sayWhoYouAreInput",
@@ -1233,9 +1233,9 @@ mainWallet_All_Accounts_Balance = {"container": mainWallet_All_Accounts_Button,
                                    "visible": True}
 
 # Saved Address View
-mainWindow_SavedAddressesView = {"container": statusDesktop_mainWindow, "type": "SavedAddressesView", "unnamed": 1,
+mainWindow_SavedAddressesView = {"container": statusDesktop_mainWindow, "type": RegularExpression("^(SavedAddressesView|SavedAddressesViewInstance)$"), "unnamed": 1,
                                  "visible": True}
-mainWindow_SavedAddressesView_2 = {"container": mainWindow_WalletLayout, "type": "SavedAddressesView", "unnamed": 1,
+mainWindow_SavedAddressesView_2 = {"container": mainWindow_WalletLayout, "type": RegularExpression("^(SavedAddressesView|SavedAddressesViewInstance)$"), "unnamed": 1,
                                    "visible": True}
 mainWallet_Saved_Addresses_Add_Buttton = {"container": mainWindow_SavedAddressesView,
                                           "objectName": "walletHeaderButton", "type": "StatusButton"}

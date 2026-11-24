@@ -64,6 +64,14 @@ Item {
             compare(modal.title, qsTr("Downloads"))
         }
 
+        function test_overview_initialModeDownloads() {
+            const modal = createTemporaryObject(overviewComponent, root,
+                                                { initialMode: TabsBookmarksOverviewMode.Mode.Downloads })
+            modal.open()
+            tryCompare(modal, "opened", true)
+            compare(modal.title, qsTr("Downloads"))
+        }
+
         function test_overview_addTabRequested() {
             const modal = createTemporaryObject(overviewComponent, root)
             const spy = createTemporaryQmlObject("import QtTest; SignalSpy {}", root)

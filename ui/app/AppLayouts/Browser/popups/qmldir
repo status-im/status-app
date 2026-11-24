@@ -2,6 +2,7 @@ BrowserLinkContextMenu 1.0 BrowserLinkContextMenu.qml
 DownloadRecordMenu 1.0 DownloadRecordMenu.qml
 MobileSettingsMenu 1.0 MobileSettingsMenu.qml
 TabsBookmarksOverviewModal 1.0 TabsBookmarksOverviewModal.qml
+TabsBookmarksOverviewMode 1.0 TabsBookmarksOverviewMode.qml
 JSDialogWindow 1.0 JSDialogWindow.qml
 BrowserSettingsMenu 1.0 BrowserSettingsMenu.qml
 AddFavoriteModal 1.0 AddFavoriteModal.qml

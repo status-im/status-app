@@ -212,62 +212,15 @@ QtObject {
         return false
     }
 
-    readonly property Component enablePushNotificationsPopupComponent: Component {
-        EnablePushNotificationsPopup {
-            id: enablePushNotificationsPopup
-            destroyOnClose: true
-            hasPermission: PushNotifications.status === PushNotifications.Granted &&
-                            root.notificationsStore.notificationsSettings.remotePushNotificationsEnabled
-
-            onClosed: {
-                appMainLocalSettings.enablePushNotificationsFreshInstallSeen = true
-                appMainLocalSettings.enablePushNotificationsDontAskAgain = enablePushNotificationsPopup.dontAskAgain
-                appMainLocalSettings.enablePushNotificationsLastShownVersion = currentMinorVersion()
-            }
-
-            onEnablePushNotifications: {
-                if (SQUtils.Utils.isIOS) {
-                    root.notificationsStore.notificationsSettings.remotePushNotificationsEnabled = true
-                } else {
-                    root.notificationsStore.notificationsSettings.notifSettingAllowNotifications = true
-                }
-                if (PushNotifications.status !== PushNotifications.Granted) {
-                    pushNotificationsConnections.enabled = true
-                    PushNotifications.request()
-                    enablePushNotificationsPopup.loading = true
-                }
-            }
-
-            onOpenSettingsRequested: {
-                PushNotifications.openSettings()
-                enablePushNotificationsPopup.close()
-            }
-
-
-            Connections {
-                id: pushNotificationsConnections
-                target: PushNotifications
-
-                function onStatusChanged() {
-                    enablePushNotificationsPopup.loading = false
-                    enablePushNotificationsPopup.hasPermission = PushNotifications.status === PushNotifications.Granted
-
-                    if (PushNotifications.status === PushNotifications.Granted) {
-                        Global.displayToastMessage(
-                            qsTr("Push notifications enabled"),
-                            "",
-                            "checkmark-circle",
-                            false,
-                            Constants.ephemeralNotificationType.success,
-                            ""
-                        )
-                        enablePushNotificationsPopup.close()
-                        pushNotificationsConnections.enabled = false
-                        return
-                    }
-                }
-            }
-        }
+    readonly property SQUtils.DeferredComponent enablePushNotificationsPopupComponent: SQUtils.DeferredComponent {
+        source: Qt.resolvedUrl("EnablePushNotificationsPopupInstance.qml")
+        destroyOnClose: true
+        properties: ({ notificationsStore: root.notificationsStore })
+        onCreated: popup => popup.closed.connect(() => {
+            appMainLocalSettings.enablePushNotificationsFreshInstallSeen = true
+            appMainLocalSettings.enablePushNotificationsDontAskAgain = popup.dontAskAgain
+            appMainLocalSettings.enablePushNotificationsLastShownVersion = currentMinorVersion()
+        })
     }
 
     function currentMinorVersion(): string {

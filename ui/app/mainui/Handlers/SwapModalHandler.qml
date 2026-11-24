@@ -37,7 +37,9 @@ QtObject {
 
         d.swapInputParams.resetFormData()
 
-        let swapModalInst = swapModalComponent.createObject(popupParent)
+        let swapModalInst = swapModalComponent.createObject(popupParent, {
+            swapAdaptor: swapAdaptorComponent.createObject(root)
+        })
         root.openModals++
         swapModalInst.closed.connect(() => root.openModals--)
         swapModalInst.open()
@@ -148,43 +150,31 @@ QtObject {
         property SwapInputParamsForm swapInputParams: SwapInputParamsForm {}
     }
 
-    readonly property Component swapModalComponent: Component {
-        // TODO: Update the API to be explicit and avoid direct store access
-        SwapModal {
-            id: swapModal
+    readonly property SQUtils.DeferredComponent swapModalComponent: SQUtils.DeferredComponent {
+        source: Qt.resolvedUrl("SwapModalInstance.qml")
+        destroyOnClose: true
+        properties: ({
+            rootStore: root.rootStore,
+            swapInputParamsForm: d.swapInputParams,
+            routeOrderEnabled: Qt.binding(() => root.routeOrderEnabled),
+            savedAddressesModel: Qt.binding(() => root.savedAddressesModel),
+            recentRecipientsModel: Qt.binding(() => root.recentRecipientsModel)
+        })
+    }
 
-            swapAdaptor: SwapModalAdaptor {
-                swapStore: d.swapStore
-                walletAssetsStore: root.walletAssetsStore
-                currencyStore: root.currencyStore
-                networksStore: root.networksStore
-                swapFormData: d.swapInputParams
-                swapOutputData: SwapOutputData{}
+    // TODO: Update the API to be explicit and avoid direct store access
+    readonly property Component swapAdaptorComponent: Component {
+        SwapModalAdaptor {
+            swapStore: d.swapStore
+            walletAssetsStore: root.walletAssetsStore
+            currencyStore: root.currencyStore
+            networksStore: root.networksStore
+            swapFormData: d.swapInputParams
+            swapOutputData: SwapOutputData{}
 
-                onUuidChanged: {
-                    if (!!uuid)
-                        d.lastUuid = uuid
-                }
-            }
-            swapInputParamsForm: d.swapInputParams
-            routeOrderEnabled: root.routeOrderEnabled
-
-            savedAddressesModel: root.savedAddressesModel
-            recentRecipientsModel: root.recentRecipientsModel
-            fnResolveENS: function(ensName, uuid) {
-                root.rootStore.resolveENS(ensName, uuid)
-            }
-
-            readonly property Connections resolvedEnsConnection: Connections {
-                target: root.rootStore
-                function onEnsNameResolved(resolvedPubKey, resolvedAddress, uuid) {
-                    swapModal.ensNameResolved(resolvedPubKey, resolvedAddress, uuid)
-                }
-            }
-
-            onClosed: {
-                swapInputParamsForm.resetFormData()
-                destroy()
+            onUuidChanged: {
+                if (!!uuid)
+                    d.lastUuid = uuid
             }
         }
     }
