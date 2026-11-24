@@ -91,7 +91,7 @@ We accept these costs:
   - nim-token-lists: status-im/nim-token-lists#26 (v0.2.0).
   - logos-delivery: logos-messaging/logos-delivery#4744.
   - nim-leopard: logos-storage/nim-leopard#34.
-- Library side: [logos-delivery ADR](https://github.com/logos-messaging/logos-delivery/blob/master/docs/decisions/2026-11-24-let-callers-build-liblogosdelivery-with-plain-nim-c.md).
+- Library side: [logos-delivery ADR-0001](https://github.com/logos-messaging/logos-delivery/blob/master/docs/decisions/0001-let-callers-build-liblogosdelivery-with-plain-nim-c.md).
 - Supersedes the sealing note in [ADR 0003, part 2](0003-platform-sentinel-ownership.md#part-2-ios-libsds-nim-runtime-symbol-collision): nim-sds no longer seals libsds, status-go does.
 - Known gaps as of 2026-11-24:
   - status-go pins `nim == 2.2.12` (status-im/status-go#8089), while the app pins 2.2.10 and passes that compiler to status-go. The pin check does not cover the Nim version, chronos, logos-delivery or nim-leopard. logos-delivery requires Nim >= 2.2.12, so this matters as soon as liblogosdelivery is linked.
