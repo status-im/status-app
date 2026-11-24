@@ -345,7 +345,6 @@ Some other comment there`
                     reactionsModel: model.reactionsModel
                     maxEmojiReactionsPerMessage: 20
                     isMobile: ctrlIsMobile.checked
-                    showHeader: index !== 1 || !showMessageAttachmentCheckbox.checked
                     messageAttachmentComponent: hasThreadCard && showMessageAttachmentCheckbox.checked
                                                 ? threadCardComponent : null
 

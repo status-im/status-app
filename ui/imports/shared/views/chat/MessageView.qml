@@ -1077,7 +1077,8 @@ Loader {
                 paymentRequestModel: root.paymentRequestModel
                 gifLinks: root.gifLinks
 
-                showHeader: root.shouldRepeatHeader || dateGroupLabel.visible || isAReply ||
+                showHeader: d.showThreadCard || root.shouldRepeatHeader ||
+                            dateGroupLabel.visible || isAReply ||
                             root.prevMessageContentType === Constants.messageContentType.systemMessagePrivateGroupType ||
                             root.prevMessageContentType === Constants.messageContentType.systemMessagePinnedMessage ||
                             root.prevMessageContentType === Constants.messageContentType.systemMessageMutualEventSent ||
