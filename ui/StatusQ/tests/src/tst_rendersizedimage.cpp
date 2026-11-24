@@ -350,6 +350,143 @@ private slots:
             QCOMPARE(changed.count(), 1);
         }
     }
+
+    void decodeRatioFollowsCap_data()
+    {
+        QTest::addColumn<qreal>("cap");
+        QTest::addColumn<qreal>("dpr");
+        QTest::addColumn<qreal>("decodedFor");
+
+        QTest::newRow("no cap, 3x") << 0.0 << 3.0 << 3.0;
+        QTest::newRow("cap 2, 3x") << 2.0 << 3.0 << 2.0;
+        QTest::newRow("cap 2, 2x") << 2.0 << 2.0 << 2.0;
+        QTest::newRow("cap 2, 1x") << 2.0 << 1.0 << 1.0;
+        QTest::newRow("cap above the screen's, 3x") << 4.0 << 3.0 << 3.0;
+        QTest::newRow("negative cap, 3x") << -1.0 << 3.0 << 3.0;
+    }
+
+    void decodeRatioFollowsCap()
+    {
+        QFETCH(qreal, cap);
+        QFETCH(qreal, dpr);
+        QFETCH(qreal, decodedFor);
+        const int size = 128;
+
+        QQmlComponent component(m_engine);
+        component.setData(QStringLiteral(R"(
+            import QtQuick
+            import StatusQ.Components
+            Window {
+                width: 300; height: 300; visible: true
+                property alias image: img
+                StatusImage {
+                    id: img
+                    width: %1; height: %1
+                    maxDecodeDevicePixelRatio: %2
+                    source: "%3"
+                }
+            })").arg(size).arg(cap)
+                                  .arg(QUrl::fromLocalFile(QStringLiteral(
+                                               ASSETS_DIR "png/status-logo-icon.png")).toString())
+                                  .toUtf8(),
+                          QUrl());
+        std::unique_ptr<QObject> root(component.create());
+        QVERIFY2(root, qPrintable(component.errorString()));
+        auto window = qobject_cast<QQuickWindow*>(root.get());
+        QVERIFY(window);
+        auto image = root->property("image").value<QQuickItem*>();
+        QVERIFY(image);
+
+        setDevicePixelRatio(window, dpr);
+        QCOMPARE(window->devicePixelRatio(), dpr);
+        QTRY_COMPARE(image->property("status").toInt(), int(QQuickImageBase::Ready));
+        QTRY_COMPARE(decodedSize(image).width(), decodeBucket(size * decodedFor));
+        QCOMPARE(image->property("sourceSize").toSize(), QSize(size, size));
+        QCOMPARE(image->implicitWidth(), qreal(size));
+    }
+
+    void decodeRatioCapChangeReloads()
+    {
+        const int size = 128;
+        QQmlComponent component(m_engine);
+        component.setData(QStringLiteral(R"(
+            import QtQuick
+            import StatusQ.Components
+            Window {
+                width: 300; height: 300; visible: true
+                property alias image: img
+                StatusImage { id: img; width: %1; height: %1; source: "%2" }
+            })").arg(size)
+                                  .arg(QUrl::fromLocalFile(QStringLiteral(
+                                               ASSETS_DIR "png/status-logo-icon.png")).toString())
+                                  .toUtf8(),
+                          QUrl());
+        std::unique_ptr<QObject> root(component.create());
+        QVERIFY2(root, qPrintable(component.errorString()));
+        auto window = qobject_cast<QQuickWindow*>(root.get());
+        QVERIFY(window);
+        auto image = root->property("image").value<QQuickItem*>();
+        QVERIFY(image);
+
+        setDevicePixelRatio(window, 3.0);
+        QTRY_COMPARE(decodedSize(image).width(), decodeBucket(size * 2.0));
+
+        QVERIFY(image->setProperty("maxDecodeDevicePixelRatio", 0.0));
+        QTRY_COMPARE(decodedSize(image).width(), decodeBucket(size * 3.0));
+        QCOMPARE(image->implicitWidth(), qreal(size));
+
+        QVERIFY(image->setProperty("maxDecodeDevicePixelRatio", 2.0));
+        QTRY_COMPARE(decodedSize(image).width(), decodeBucket(size * 2.0));
+        QCOMPARE(image->implicitWidth(), qreal(size));
+    }
+
+    void communityCardBannerIsDecodedForAtMost2x()
+    {
+        const QUrl source = QUrl::fromLocalFile(QStringLiteral(ASSETS_DIR "png/status-logo-icon.png"));
+        QQmlComponent component(m_engine);
+        component.setData(QStringLiteral(R"(
+            import QtQuick
+            import StatusQ.Components
+            Window {
+                width: 600; height: 600; visible: true
+                property alias card: card
+                StatusCommunityCard { id: card; banner: "%1" }
+            })").arg(source.toString()).toUtf8(),
+                          QUrl());
+        std::unique_ptr<QObject> root(component.create());
+        QVERIFY2(root, qPrintable(component.errorString()));
+        auto window = qobject_cast<QQuickWindow*>(root.get());
+        QVERIFY(window);
+        auto card = root->property("card").value<QQuickItem*>();
+        QVERIFY(card);
+
+        QQuickItem* banner = nullptr;
+        for (auto image : card->findChildren<RenderSizedImage*>())
+            if (image->source() == source)
+                banner = image;
+        QVERIFY(banner);
+        QTRY_COMPARE(banner->property("status").toInt(), int(QQuickImageBase::Ready));
+        const QSizeF cardSize = card->size();
+        const QSizeF cardImplicitSize(card->implicitWidth(), card->implicitHeight());
+        const QSizeF bannerSize = banner->size();
+
+        // a square 1024 px source covering the banner box: decoded at the box width
+        setDevicePixelRatio(window, 2.0);
+        QTRY_COMPARE(decodedSize(banner).width(), decodeBucket(bannerSize.width() * 2.0));
+        QVERIFY(decodeBucket(bannerSize.width() * 2.0) < decodeBucket(bannerSize.width() * 3.0));
+
+        // the same capped decode at 3x: no reload
+        QSignalSpy reloaded(banner, SIGNAL(statusChanged(QQuickImageBase::Status)));
+        setDevicePixelRatio(window, 3.0);
+        QCOMPARE(window->devicePixelRatio(), 3.0);
+        QTest::qWait(50);
+        QVERIFY(reloaded.isEmpty());
+        QCOMPARE(decodedSize(banner).width(), decodeBucket(bannerSize.width() * 2.0));
+
+        QCOMPARE(card->size(), cardSize);
+        QCOMPARE(QSizeF(card->implicitWidth(), card->implicitHeight()), cardImplicitSize);
+        QCOMPARE(banner->size(), bannerSize);
+    }
 };
 
 QTEST_MAIN(TestRenderSizedImage)
