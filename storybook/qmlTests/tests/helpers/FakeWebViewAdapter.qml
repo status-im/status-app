@@ -48,7 +48,7 @@ Item {
     signal javaScriptDialogRequested(var request)
     signal findTextFinished(var result)
     signal devToolsToggled(bool enabled)
-    signal renderProcessTerminated(int status, int exitCode)
+    signal renderProcessTerminated(int status, int exitCode, bool willRevive)
 
     property int reloadCalls: 0
     property var loadedUrls: []
@@ -65,5 +65,11 @@ Item {
     function runJavaScript(script, callback) {}
 
     /// Convenience: the Backend values a WebEngine crash reports.
-    function simulateCrash() { root.renderProcessTerminated(2 /*Crashed*/, 133) }
+    function simulateCrash(willRevive) {
+        root.renderProcessTerminated(2 /*Crashed*/, 133, !!willRevive)
+    }
+    /// The system killed the renderer (low memory), the page did nothing wrong.
+    function simulateKill(willRevive) {
+        root.renderProcessTerminated(3 /*Killed*/, 0, !!willRevive)
+    }
 }

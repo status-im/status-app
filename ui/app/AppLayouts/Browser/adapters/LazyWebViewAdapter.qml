@@ -36,9 +36,9 @@ AbstractWebView {
         property bool crashed: false
     }
 
-    function _handleRenderProcessTerminated() {
+    function _handleRenderProcessTerminated(willRevive) {
         // No Tab left to show a crashed page in (ADR 0006 §6).
-        if (root.retained)
+        if (root.retained || willRevive)
             return
 
         d.crashed = true
@@ -213,9 +213,9 @@ AbstractWebView {
         function onJavaScriptDialogRequested(request)  { root.javaScriptDialogRequested(request) }
         function onFindTextFinished(result)            { root.findTextFinished(result) }
         function onDevToolsToggled(enabled)            { root.devToolsToggled(enabled) }
-        function onRenderProcessTerminated(status, exitCode) {
-            root._handleRenderProcessTerminated()
-            root.renderProcessTerminated(status, exitCode)
+        function onRenderProcessTerminated(status, exitCode, willRevive) {
+            root._handleRenderProcessTerminated(willRevive)
+            root.renderProcessTerminated(status, exitCode, willRevive)
         }
         function onTitleChanged()                      { root.syncFromAdapterItem() }
         function onIconChanged()                       { root.syncFromAdapterItem() }

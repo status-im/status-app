@@ -80,6 +80,12 @@ AbstractWebView {
         function onLinkLongPressed(linkUrl, imageUrl, position) {
             root.linkLongPressed(linkUrl, imageUrl, position)
         }
+
+        function onRenderProcessGone(crashed, willRevive) {
+            root.renderProcessTerminated(crashed
+                ? AbstractWebView.RenderProcessTerminationStatus.CrashedTerminationStatus
+                : AbstractWebView.RenderProcessTerminationStatus.KilledTerminationStatus, 0, willRevive)
+        }
     }
 
     function rebuildHistoryModel() {

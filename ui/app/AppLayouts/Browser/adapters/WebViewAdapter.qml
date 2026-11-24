@@ -233,7 +233,7 @@ AbstractWebView {
             console.warn("Render process exited with code " + exitCode + " " + status)
             webView.rendererGone = true
             webView.navigatedSinceCrash = false
-            root.renderProcessTerminated(terminationStatus, exitCode)
+            root.renderProcessTerminated(terminationStatus, exitCode, false)
         }
         onSelectClientCertificate: function(selection) {
             selection.certificates[0].select()

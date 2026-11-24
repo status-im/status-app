@@ -37,7 +37,7 @@ Item {
     // True while at least one data-clearing operation is in flight (see CONTEXT: Clearing).
     property bool clearing: false
 
-    // Desktop only: mobile Backends host no separate render process.
+    // The render process died and the page is gone until reloaded.
     property bool crashed: false
 
     // === Capability Flags ===
@@ -98,6 +98,14 @@ Item {
         DownloadPaused = 5
     }
 
+    // === Render Process Termination Status (WebEngine-shaped numbering) ===
+    enum RenderProcessTerminationStatus {
+        NormalTerminationStatus = 0,
+        AbnormalTerminationStatus = 1,
+        CrashedTerminationStatus = 2,
+        KilledTerminationStatus = 3
+    }
+
     // === JavaScript Dialog Types (constants for cross-platform compatibility) ===
     // These map to JavaScriptDialogRequest.DialogType enum on desktop
     enum JavaScriptDialogType {
@@ -127,7 +135,8 @@ Item {
     signal javaScriptDialogRequested(var request)
     signal findTextFinished(var result)
     /// status/exitCode are the Backend's own values, not normalised.
-    signal renderProcessTerminated(int status, int exitCode)
+    /// willRevive: the Backend brings the page back by itself.
+    signal renderProcessTerminated(int status, int exitCode, bool willRevive)
 
     function loadUrl(url) { console.warn("AbstractWebView: loadUrl not implemented") }
 
