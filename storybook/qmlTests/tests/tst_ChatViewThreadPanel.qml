@@ -255,6 +255,7 @@ Item {
                 verify(!!listStore)
                 listStore.messageModule = messages
             } else {
+                view.chatContentModule.messagesModule.threadId = messages.threadId
                 const centralStore = findChild(view.headerContent, "chatHeaderMessageStore")
                 verify(!!centralStore)
                 centralStore.messageModule = messages
@@ -293,21 +294,28 @@ Item {
             verify(menu.actionAt(0).enabled)
             menu.actionAt(0).trigger()
             menu.close()
-            compare(findChild(view.headerContent, "threadNameInput"), null)
-            tryCompare(view.rootStore, "openThreadId", messages.threadId)
-            tryCompare(view.rightPanel, "status", Loader.Ready)
             let panelHeader
-            tryVerify(() => {
-                const panel = data.portrait ? view.threadToolbarHeader : view.rightPanel.item
-                panelHeader = findChild(panel, "threadPanelHeader")
-                return !!panelHeader
-            })
-            const panelStore = findChild(panelHeader, "threadPanelMessageStore")
-            verify(!!panelStore)
-            panelStore.messageModule = messages
+            if (data.fromList) {
+                compare(findChild(view.headerContent, "threadNameInput"), null)
+                tryCompare(view.rootStore, "openThreadId", messages.threadId)
+                tryCompare(view.rightPanel, "status", Loader.Ready)
+                tryVerify(() => {
+                    const panel = data.portrait ? view.threadToolbarHeader : view.rightPanel.item
+                    panelHeader = findChild(panel, "threadPanelHeader")
+                    return !!panelHeader
+                })
+                const panelStore = findChild(panelHeader, "threadPanelMessageStore")
+                verify(!!panelStore)
+                panelStore.messageModule = messages
+                if (data.portrait)
+                    tryCompare(view.sectionLayout, "currentIndex", StatusSectionLayout.RightPanel)
+            } else {
+                panelHeader = harness.findChildByTypePrefix(view.headerContent, "ThreadHeader")
+                verify(!!panelHeader)
+                compare(view.rootStore.openThreadId, "")
+                compare(view.rightPanel.status, Loader.Null)
+            }
             tryCompare(panelHeader, "editing", true)
-            if (data.portrait)
-                tryCompare(view.sectionLayout, "currentIndex", StatusSectionLayout.RightPanel)
             const input = findChild(panelHeader, "threadNameInput")
             verify(!!input)
             tryCompare(input, "activeFocus", true)
@@ -323,7 +331,8 @@ Item {
             findChild(panelHeader, "threadHeaderMenuButton").clicked()
             const panelMenu = findChild(panelHeader, "threadHeaderContextMenu")
             tryCompare(panelMenu, "opened", true)
-            verifyThreadMuteMenu(panelMenu, messages)
+            if (data.fromList)
+                verifyThreadMuteMenu(panelMenu, messages)
             compare(panelMenu.threadLinkToCopyShare, expectedLink)
             tryCompare(findChild(panelMenu, "threadContextMenu_copyShare"), "enabled", true)
             panelMenu.actionAt(0).trigger()
@@ -559,6 +568,77 @@ Item {
             }
         }
 
+        function test_mainViewThreadHidesInfo_data() {
+            return [
+                {tag: "desktop open", portrait: false, infoOpen: true},
+                {tag: "desktop closed", portrait: false, infoOpen: false},
+                {tag: "portrait open", portrait: true, infoOpen: true},
+                {tag: "portrait closed", portrait: true, infoOpen: false}
+            ]
+        }
+
+        function test_mainViewThreadHidesInfo(data) {
+            harness.loader.active = true
+            const loader = harness.loader.item
+            tryCompare(loader, "status", Loader.Ready, 120000)
+            const view = harness.findChildByTypePrefix(loader, "ChatView")
+            const layout = view.sectionLayout
+            layout.criteria = [data.portrait, true]
+            tryCompare(layout, "isPortrait", data.portrait)
+            layout.setCurrentIndex(StatusSectionLayout.CentralPanel)
+
+            view.showUsersListRequested(false)
+            tryCompare(loader.accountSettingsStore, "showUsersList", false)
+
+            const chatId = view.activeItemId
+            const model = harness.mock.chatsModel
+            let threadId
+            for (let i = 0; i < model.count; ++i) {
+                const row = model.get(i)
+                if (row.type === Constants.chatType.communityChat && row.itemId !== chatId) {
+                    threadId = row.itemId
+                    break
+                }
+            }
+            verify(!!threadId)
+            harness.mock.setActiveChat(threadId)
+            view.chatContentModule.messagesModule.threadId = threadId
+            harness.mock.setActiveChat(chatId)
+
+            const header = harness.findChildByTypePrefix(view.headerContent, "ChatHeaderContentView")
+            const infoButton = findChild(header, "membersButton")
+            tryCompare(infoButton, "visible", true)
+            if (data.infoOpen) {
+                header.showPinsRequested()
+                tryCompare(loader.accountSettingsStore, "showUsersList", true)
+                tryCompare(view.rightPanel, "status", Loader.Ready)
+                compare(view.rightPanel.item.currentTab, ChatInfoPanel.Pins)
+                if (data.portrait)
+                    tryCompare(layout, "currentIndex", StatusSectionLayout.RightPanel)
+            }
+
+            harness.mock.setActiveChat(threadId)
+            tryCompare(view.rightPanel, "status", Loader.Null)
+            if (data.portrait)
+                tryCompare(layout, "currentIndex", StatusSectionLayout.CentralPanel)
+            tryCompare(infoButton, "visible", false)
+            verify(view.rightPanelDecisionReady)
+
+            compare(view.showUsersList, data.infoOpen)
+            harness.mock.setActiveChat(chatId)
+            tryCompare(view.rightPanel, "status", data.infoOpen ? Loader.Ready : Loader.Null)
+            compare(view.showUsersList, data.infoOpen)
+            if (data.infoOpen) {
+                compare(view.rightPanel.item.currentTab, ChatInfoPanel.Pins)
+                if (data.portrait)
+                    tryCompare(layout, "currentIndex", StatusSectionLayout.RightPanel)
+                else
+                    tryCompare(infoButton, "visible", true)
+            } else {
+                tryCompare(infoButton, "visible", true)
+            }
+        }
+
         function test_infoTabsAndPinSearch() {
             harness.loader.active = true
             const loader = harness.loader.item
@@ -717,7 +797,7 @@ Item {
             compare(search.text, "tokens")
         }
 
-        function test_threadsTabUnavailableInsideCentralThread() {
+        function test_threadsTabRestoredAfterLeavingCentralThread() {
             harness.loader.active = true
             const loader = harness.loader.item
             tryVerify(() => loader.status === Loader.Ready, 120000)
@@ -744,14 +824,12 @@ Item {
             compare(input.threadName, "Release planning")
             view.activeItemName = "Renamed thread"
             compare(input.threadName, "Renamed thread")
-            tryCompare(tab, "visible", false)
-            compare(panel.currentTab, ChatInfoPanel.Members)
-            verify(waitForPolish(panel))
+            tryCompare(view.rightPanel, "status", Loader.Null)
             compare(messages.loadThreadsRequests, 1)
 
             messages.threadId = ""
-            tryCompare(tab, "visible", true)
-            compare(panel.currentTab, ChatInfoPanel.Threads)
+            tryCompare(view.rightPanel, "status", Loader.Ready)
+            compare(view.rightPanel.item.currentTab, ChatInfoPanel.Threads)
             tryCompare(messages, "loadThreadsRequests", 2)
         }
 
