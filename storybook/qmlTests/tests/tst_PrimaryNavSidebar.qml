@@ -1,6 +1,7 @@
 import QtQuick
 import QtTest
 
+import StatusQ.Core.Utils as SQUtils
 import StatusQ.Popups
 
 import AppLayouts.Profile.helpers
@@ -260,6 +261,22 @@ Item {
             const communitiesBtn = findChild(controlUnderTest, "Communities-navbar")
             verify(!!communitiesBtn)
             tryCompare(communitiesBtn, "visible", true)
+        }
+
+        function test_communities_portal_dot() {
+            const sections = sidebarAdaptor.sectionsModel
+            const index = SQUtils.ModelUtils.indexOf(sections, "sectionType", Constants.appSection.communitiesPortal)
+            verify(index >= 0)
+            const communitiesBtn = findChild(controlUnderTest, "Communities-navbar")
+            verify(!!communitiesBtn)
+            verify(!communitiesBtn.badgeVisible)
+
+            sections.setProperty(index, "hasNotification", true)
+            tryCompare(communitiesBtn, "badgeVisible", true)
+            compare(communitiesBtn.badgeCount, 0)
+
+            sections.setProperty(index, "hasNotification", false)
+            tryCompare(communitiesBtn, "badgeVisible", false)
         }
 
         function test_market_swap_sections() {
