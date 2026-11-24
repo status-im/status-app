@@ -55,6 +55,13 @@ RowLayout {
 
     signal toggleShowMembersRequested
 
+    function beginThreadNameEdit(threadId: string) {
+        Qt.callLater(() => {
+            if (messageStore.threadId === threadId && loader.item instanceof ThreadHeader)
+                loader.item.beginEditing()
+        })
+    }
+
     function addRemoveGroupMember() {
         root.state = d.stateMembersSelectorContent
     }
@@ -279,7 +286,7 @@ RowLayout {
             }
             canEdit: messageStore.canEditThread
             pending: messageStore.threadEditPending
-            onEditNameRequested: Qt.callLater(selectedThreadHeader.beginEditing)
+            onEditNameRequested: root.beginThreadNameEdit(messageStore.threadId)
             onMarkAsReadRequested: root.rootStore.chatCommunitySectionModule.markAllMessagesRead(messageStore.chatId, messageStore.threadId)
             deletePending: messageStore.threadDeletePending
             followed: messageStore.threadFollowed

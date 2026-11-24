@@ -291,6 +291,16 @@ Item {
         }
 
         function editThreadName(threadId, threadName, parentChatId) {
+            if (threadId === infoMessageStore.threadId) {
+                d.requestCenterPanel()
+                if (root.sectionLayout?.isPortrait)
+                    root.sectionLayout.setCurrentIndex(StatusSectionLayout.CentralPanel)
+                const header = headerContentLoader.item
+                if (header instanceof ChatHeaderContentView)
+                    header.beginThreadNameEdit(threadId)
+                return
+            }
+
             root.rootStore.chatCommunitySectionModule.setActiveItem(parentChatId)
             threadOpenedFromInfo = false
             threadNameEditId = threadId
