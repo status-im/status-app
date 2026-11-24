@@ -12,10 +12,12 @@ QtObject {
     required property var preferencesStore
     required property Item currentWebView
     property var otrProfileParams: null
+    property var localPreviewProfileParams: null
 
     /// Outlives the layout: the Tab set and each Tab's back/forward history,
     /// kept in memory whatever the Session setting (which only covers disk).
-    /// { tabs: [{ uuid, url, title, icon, offTheRecord, state }], currentIndex }
+    /// { tabs: [{ uuid, url, title, icon, offTheRecord, localPreview,
+    ///           readAccessUrl, state }], currentIndex }
     property var sessionCache: null
 
     property Item previousWebView: null
@@ -123,7 +125,8 @@ QtObject {
         // tab.url = determineRealURL("https://simpledapp.eth");
     }
 
-    /// Fill sessionCache from the live Tabs; local previews are no browsing Tabs.
+    /// Fill sessionCache from the live Tabs, local previews included: a Drop
+    /// keeps every Tab the user sees.
     function captureToCache() {
         if (!sessionCache)
             return
@@ -132,8 +135,9 @@ QtObject {
         let currentIndex = 0
         for (let i = 0; i < tabs.count; i++) {
             const view = webViewContext.getWebView(i)
-            if (!view || view.profileParams?.localPreview)
+            if (!view)
                 continue
+            const localPreview = !!view.profileParams?.localPreview
             if (i === tabs.currentIndex)
                 currentIndex = records.length
             records.push({
@@ -142,7 +146,9 @@ QtObject {
                 title: view.title || "",
                 icon: BrowserSessionUtils.normalizeIcon(view.icon),
                 offTheRecord: !!view.offTheRecord,
-                state: typeof view.saveState === "function" ? view.saveState() : null
+                localPreview: localPreview,
+                readAccessUrl: localPreview ? (view.fileReadAccessUrl ?? "") : "",
+                state: !localPreview && typeof view.saveState === "function" ? view.saveState() : null
             })
         }
         sessionCache.tabs = records
@@ -151,18 +157,39 @@ QtObject {
 
     function _restoreFromCache() {
         const records = sessionCache.tabs
-        const savedIndex = sessionCache.currentIndex
         sessionCache.tabs = []
 
-        setPersisted(records.map(r => ({ uuid: r.uuid, url: r.url, title: r.title, icon: r.icon })))
+        // Never downgrade a private or preview Tab to the default profile.
+        const profileFor = record => {
+            if (record.localPreview)
+                return localPreviewProfileParams
+            if (record.offTheRecord)
+                return otrProfileParams
+            return defaultProfileParams
+        }
+        let savedIndex = sessionCache.currentIndex
+        const restorable = records.filter((record, i) => {
+            if (profileFor(record))
+                return true
+            console.warn("[Browser] no profile to restore a dropped Tab in, skipped")
+            if (i < sessionCache.currentIndex)
+                savedIndex--
+            else if (i === sessionCache.currentIndex)
+                savedIndex = 0
+            return false
+        })
+
+        setPersisted(restorable.map(r => ({ uuid: r.uuid, url: r.url, title: r.title, icon: r.icon })))
         purgeSnapshots()
 
-        records.forEach(record => {
-            const profileParams = record.offTheRecord && otrProfileParams
-                ? otrProfileParams : defaultProfileParams
-            const view = webViewContext.createEmptyTab(profileParams, false, false, record.url,
+        restorable.forEach(record => {
+            const view = webViewContext.createEmptyTab(profileFor(record), false, false, record.url,
                                                        record.title, record.icon, record.uuid)
-            if (view && record.state && typeof view.setPendingState === "function")
+            if (!view)
+                return
+            if (record.localPreview && "fileReadAccessUrl" in view)
+                view.fileReadAccessUrl = record.readAccessUrl
+            if (record.state && typeof view.setPendingState === "function")
                 view.setPendingState(record.state)
         })
 

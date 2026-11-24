@@ -480,6 +480,7 @@ StatusSectionLayout {
         tabs: tabs
         defaultProfileParams: browserConfig.defaultProfileParams
         otrProfileParams: browserConfig.otrProfileParams
+        localPreviewProfileParams: browserConfig.localPreviewProfileParams
         sessionCache: root.sessionCache
         determineRealURL: (u) => root.browserRootStore.determineRealURL(u)
         preferencesStore: root.browserPreferencesStore

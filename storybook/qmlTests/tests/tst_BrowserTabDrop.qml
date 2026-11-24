@@ -155,6 +155,64 @@ Item {
             compare(String(view.sessionUrl), "https://status.app/next")
         }
 
+        // A new url replaces the history the Tab was dropped with.
+        function test_aNewUrlOnADroppedTabLoadsThatUrl() {
+            const { view, fake } = makeLoadedView()
+            fake.savedState = "history"
+            view.drop()
+
+            view.loadUrl("https://example.org/")
+
+            compare(view.adapterItem.restoredStates, [])
+            compare(String(view.adapterItem.url), "https://example.org/")
+        }
+
+        function test_aNewUrlBeforeTheFirstLoadDiscardsAPendingState() {
+            const view = createTemporaryObject(lazyViewComponent, root)
+            view.url = "https://status.app/"
+            view.setPendingState("history")
+
+            view.url = "https://example.org/"
+            view.ensureLoaded()
+
+            compare(view.adapterItem.restoredStates, [])
+            compare(String(view.adapterItem.url), "https://example.org/")
+        }
+
+        // Same-document moves keep the page loaded: each one is the page shown.
+        function test_aDropKeepsTheLastSameDocumentPage() {
+            const { view, fake } = makeLoadedView()
+            fake.url = "https://status.app/b"
+            fake.url = "https://status.app/c"
+            fake.url = "https://status.app/file.bin"
+            fake.downloadRequested({ url: "https://status.app/file.bin" }, "")
+
+            compare(String(view.sessionUrl), "https://status.app/c")
+            view.drop()
+            compare(String(view.url), "https://status.app/c")
+        }
+
+        function test_aLoadInFlightIsNotThePageShown() {
+            const { view, fake } = makeLoadedView()
+            fake.loading = true
+            fake.url = "https://status.app/file.bin"
+            fake.downloadRequested({ url: "https://status.app/file.bin" }, "")
+            fake.loading = false
+
+            compare(String(view.sessionUrl), "https://status.app/")
+        }
+
+        // A local preview comes back through its read grant, not a plain load.
+        function test_aDroppedLocalFileReloadsWithItsReadGrant() {
+            const view = createTemporaryObject(lazyViewComponent, root)
+            view.loadFileUrl("file:///docs/a.pdf", "file:///docs/")
+            view.drop()
+
+            view.ensureLoaded()
+
+            compare(view.adapterItem.fileLoads, ["file:///docs/a.pdf|file:///docs/"])
+        }
+
         function test_droppingAnUnloadedTabDoesNothing() {
             const view = createTemporaryObject(lazyViewComponent, root)
             view.drop()

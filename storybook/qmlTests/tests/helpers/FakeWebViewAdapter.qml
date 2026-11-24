@@ -64,6 +64,11 @@ Item {
 
     function reload() { root.reloadCalls += 1 }
     function loadUrl(u) { root.url = u; root.loadedUrls = root.loadedUrls.concat([String(u)]) }
+    property var fileLoads: []
+    function loadFileUrl(fileUrl, readAccessUrl) {
+        root.fileLoads = root.fileLoads.concat([String(fileUrl) + "|" + readAccessUrl])
+        root.url = fileUrl
+    }
     function goBack() {}
     function goForward() {}
     function goBackOrForward(offset) {}

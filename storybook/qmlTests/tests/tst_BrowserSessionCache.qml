@@ -20,6 +20,7 @@ Item {
             property url icon: ""
             property bool offTheRecord: false
             property var profileParams: ({ localPreview: false })
+            property string fileReadAccessUrl: ""
             property var state: null
             property var pendingState: null
 
@@ -73,6 +74,7 @@ Item {
             tabs: tabsRef
             defaultProfileParams: "default"
             otrProfileParams: "otr"
+            localPreviewProfileParams: "preview"
             determineRealURL: (u) => u
             preferencesStore: QtObject {
                 property var purged: null
@@ -110,13 +112,15 @@ Item {
             return { tabs, webViewContext, cache, context }
         }
 
-        function test_captureKeepsBrowsingTabsWithTheirHistory() {
+        function test_captureKeepsEveryTabWithItsHistory() {
             const { tabs, webViewContext, cache, context } = makeAll()
             webViewContext.views = [
                 fakeViewComponent.createObject(root, { uid: "a", url: "https://a.example/",
                                                        title: "A", state: "history-a" }),
                 fakeViewComponent.createObject(root, { uid: "p", url: "file:///tmp/x.pdf",
-                                                       profileParams: { localPreview: true } }),
+                                                       profileParams: { localPreview: true },
+                                                       fileReadAccessUrl: "file:///tmp/",
+                                                       state: "never-taken" }),
                 fakeViewComponent.createObject(root, { uid: "b", url: "https://b.example/",
                                                        offTheRecord: true })
             ]
@@ -125,13 +129,17 @@ Item {
 
             context.captureToCache()
 
-            compare(cache.tabs.length, 2, "a local preview is no browsing Tab")
+            compare(cache.tabs.length, 3, "a Drop keeps local previews too")
             compare(cache.tabs[0].uuid, "a")
             compare(cache.tabs[0].title, "A")
             compare(cache.tabs[0].state, "history-a")
-            compare(cache.tabs[1].uuid, "b")
-            verify(cache.tabs[1].offTheRecord)
-            compare(cache.currentIndex, 1)
+            compare(cache.tabs[1].uuid, "p")
+            verify(cache.tabs[1].localPreview)
+            compare(cache.tabs[1].readAccessUrl, "file:///tmp/")
+            compare(cache.tabs[1].state, null)
+            compare(cache.tabs[2].uuid, "b")
+            verify(cache.tabs[2].offTheRecord)
+            compare(cache.currentIndex, 2)
         }
 
         // A Tab whose url turned into a Download keeps its page, or nothing.
@@ -169,6 +177,39 @@ Item {
             compare(webViewContext.views[0].pendingState, "history-a")
             compare(cache.tabs.length, 0, "used once")
 
+            tryCompare(webViewContext, "ensureLoadedCalls", 1)
+            compare(tabs.currentIndex, 1)
+        }
+
+        function test_restoreBringsALocalPreviewBackWithItsReadGrant() {
+            const { tabs, webViewContext, cache, context } = makeAll()
+            cache.tabs = [
+                { uuid: "p", url: "file:///tmp/x.pdf", title: "x.pdf", icon: "",
+                  offTheRecord: false, localPreview: true, readAccessUrl: "file:///tmp/", state: null }
+            ]
+
+            context.restoreSession()
+
+            compare(webViewContext.created[0].profileParams, "preview")
+            compare(webViewContext.views[0].fileReadAccessUrl, "file:///tmp/")
+        }
+
+        // Never downgraded to the default profile, where its url would persist.
+        function test_aPrivateTabWithoutItsProfileIsSkipped() {
+            const { tabs, webViewContext, cache, context } = makeAll()
+            context.otrProfileParams = null
+            cache.tabs = [
+                { uuid: "a", url: "https://a.example/", title: "A", icon: "", offTheRecord: false },
+                { uuid: "b", url: "https://b.example/", title: "B", icon: "", offTheRecord: true },
+                { uuid: "c", url: "https://c.example/", title: "C", icon: "", offTheRecord: false }
+            ]
+            cache.currentIndex = 2
+
+            ignoreWarning(/no profile to restore a dropped Tab in/)
+            context.restoreSession()
+
+            compare(webViewContext.created.length, 2)
+            compare(webViewContext.created[1].uid, "c")
             tryCompare(webViewContext, "ensureLoadedCalls", 1)
             compare(tabs.currentIndex, 1)
         }
