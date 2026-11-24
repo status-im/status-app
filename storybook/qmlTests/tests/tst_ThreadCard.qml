@@ -73,15 +73,20 @@ Item {
 
         function test_mutedThreadKeepsMentionBadgeAndUsesMutedTitle() {
             controlUnderTest.muted = true
+            controlUnderTest.hasUnreadMessages = true
             controlUnderTest.notificationCount = 1
             const title = findChild(controlUnderTest, "threadCardTitle")
             const badge = findChild(controlUnderTest, "threadCardUnreadBadge")
             compare(title.color, Theme.palette.directColor5)
             compare(title.font.weight, Font.Normal)
             compare(badge.visible, true)
+            compare(badge.color, Theme.palette.primaryColor2)
             controlUnderTest.notificationCount = 0
             compare(badge.visible, false)
             controlUnderTest.muted = false
+            compare(badge.visible, true)
+            compare(badge.value, 0)
+            compare(badge.color, Theme.palette.baseColor1)
             compare(title.color, Theme.palette.directColor1)
             compare(title.font.weight, Font.DemiBold)
         }
@@ -166,6 +171,7 @@ Item {
             compare(count.text, qsTr("%n message(s)", "", 13))
             compare(badge.value, 2)
             compare(badge.visible, true)
+            compare(badge.color, Theme.palette.primaryColor1)
             compare(findChild(controlUnderTest, "threadCardMessageSender").text, "Alice")
             tryVerify(() => preview.text.includes("New reply"))
 

@@ -101,6 +101,8 @@ SplitView {
                     originalMessageId: "parent-" + i,
                     title: ["Threads MVP", "Design tokens migration", "Q3 roadmap", "Token cost breakdown", "Old release notes"][i],
                     messagesCount: 4 + i,
+                    muted: false,
+                    hasUnreadMessages: i < 3,
                     notificationCount: i < 2 ? 2 - i : 0,
                     participantsCount: 3,
                     participantsModel: participants,

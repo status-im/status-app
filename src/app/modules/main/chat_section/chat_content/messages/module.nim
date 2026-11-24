@@ -669,11 +669,9 @@ proc threadSummary(self: Module, thread: ThreadDto): ThreadSummary =
     summary.lastMessageTimestamp = thread.deletedAt
     return summary
   summary.messagesCount = thread.messagesCount
-  # Mentions and replies are messages, so adding their counters would count
-  # the same unseen activity more than once.
   summary.muted = thread.muted
-  summary.notificationCount = if thread.muted: thread.unviewedMentionsCount
-                              else: thread.unviewedMessagesCount
+  summary.hasUnreadMessages = thread.unviewedMessagesCount > 0
+  summary.notificationCount = thread.unviewedMentionsCount
   summary.participantsCount = thread.participantsCount
 
   for participantId in thread.participantsPreviewIds:

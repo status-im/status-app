@@ -51,9 +51,10 @@ Control {
     property int messagesCount: 0
 
     property bool muted: false
+    property bool hasUnreadMessages: false
 
     /*!
-       Unread/new activity count shown as a badge. Hidden when 0.
+       Unread mention count shown in the badge.
        Only used when threadState is ThreadCard.State.Active.
     */
     property int notificationCount: 0
@@ -196,9 +197,13 @@ Control {
 
             StatusBadge {
                 objectName: "threadCardUnreadBadge"
-                visible: root.notificationCount > 0
+                readonly property bool onlyUnread: !root.muted && root.notificationCount === 0 && root.hasUnreadMessages
+                visible: root.notificationCount > 0 || onlyUnread
+                color: onlyUnread ? Theme.palette.baseColor1 :
+                                    root.muted ? Theme.palette.primaryColor2 : Theme.palette.primaryColor1
+                border.width: onlyUnread ? -2 : 4
+                border.color: color
                 value: root.notificationCount
-                border.width: 0
             }
         }
 

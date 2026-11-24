@@ -102,14 +102,15 @@ suite "chat info threads":
       proc(topLeft, bottomRight: gen_qabstractitemmodel_types.QModelIndex, roles: openArray[cint]) =
         changed.add(@roles))
     gen_qabstractitemmodel.onModelReset(qtModel, proc() = inc resetCount)
-    var unreadRole, timestampRole, senderIdRole: cint
+    var notificationRole, unreadRole, timestampRole, senderIdRole: cint
     for role, name in model.roleNames():
-      if name == "notificationCount": unreadRole = role.cint
+      if name == "notificationCount": notificationRole = role.cint
+      if name == "hasUnreadMessages": unreadRole = role.cint
       if name == "lastMessageTimestamp": timestampRole = role.cint
       if name == "lastMessageSenderId": senderIdRole = role.cint
     summary.notificationCount = 0
     model.upsert(summary)
-    check(changed == @[@[unreadRole]])
+    check(changed == @[@[notificationRole]])
     model.upsert(summary)
     check(changed.len == 1)
     summary.participants = @[Participant(id: "alice", name: "Updated Alice")]
@@ -117,7 +118,12 @@ suite "chat info threads":
     check(changed.len == 1)
     summary.lastMessageTimestamp = 200
     model.upsert(summary)
-    check(changed == @[@[unreadRole], @[timestampRole]])
+    summary.hasUnreadMessages = true
+    model.upsert(summary)
+    check(changed == @[@[notificationRole], @[timestampRole], @[unreadRole]])
+    let unread = model.value(0, "hasUnreadMessages")
+    check(unread.boolVal)
+    unread.delete()
     summary.lastMessageSenderId = "alice"
     model.upsert(summary)
     check(changed[^1] == @[senderIdRole])
