@@ -180,6 +180,14 @@ jobs:
 `device` (Android ids from `config/environments/browserstack.yaml`); `workers`
 (`auto` is 4 for the gate, which leaves one of the account's 5 sessions spare,
 and 2 when multi-phone tests can be selected); `account` (`1`, `2` or `auto`).
+The Android workflow excludes tests marked `ios` in all selection modes.
+
+Separate node IDs with spaces. If an ID contains spaces, quote the whole ID.
+For example, enter this in the `tests` field:
+
+```text
+'tests/test_message_visibility_guards.py::test_the_rect_rule[rect0-True-inside the list]'
+```
 
 **Accounts:** each BrowserStack account has its own 5 sessions, and an app
 exists only on the account that uploaded it. A run with `app-id` must name

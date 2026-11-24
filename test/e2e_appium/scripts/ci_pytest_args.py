@@ -9,28 +9,30 @@ pytest as an option.
 import argparse
 import configparser
 import re
+import shlex
 import sys
 from pathlib import Path
 
 import yaml
 
 SELECTIONS = {
-    "gate": ["-m", "(gate and not two_phone) or backend_peer", "tests"],
-    "smoke": ["-m", "smoke", "tests"],
+    "gate": "(gate and not two_phone) or backend_peer",
+    "smoke": "smoke",
 }
 WORKERS = {"1", "2", "3", "4", "5"}
 # The gate has only one-phone tests, so 4 workers leave one session spare.
 # Other selections can hold two- and three-phone tests: 2 workers fit 5 sessions.
 AUTO_WORKERS_GATE = "4"
 AUTO_WORKERS_OTHER = "2"
-NODE_ID = re.compile(r"^tests/[A-Za-z0-9_./\[\]:@-]+$")
+TEST_PATH = re.compile(r"tests/[A-Za-z0-9_./:@-]+")
+TEST_SELECTOR = re.compile(r"[A-Za-z0-9_.@-]+(?:::[A-Za-z0-9_.@-]+)*")
 MARKER_TOKEN = re.compile(r"[()]|[^\s()]+")
 MARKER_OPERATORS = {"and", "or", "not", "(", ")"}
 BROWSERSTACK_CONFIG = Path(__file__).resolve().parents[1] / "config" / "environments" / "browserstack.yaml"
 PYTEST_INI = Path(__file__).resolve().parents[1] / "pytest.ini"
 
 
-def marker_args(markers: str, known_markers: set[str]) -> list[str]:
+def marker_expression(markers: str, known_markers: set[str]) -> str:
     """Check the expression is well formed, so a bad one fails here rather than
     after the run has queued for a BrowserStack account."""
     tokens = MARKER_TOKEN.findall(markers)
@@ -61,7 +63,22 @@ def marker_args(markers: str, known_markers: set[str]) -> list[str]:
         raise ValueError(f"{markers!r} ends without a marker")
     if depth:
         raise ValueError(f"unbalanced parentheses in {markers!r}")
-    return ["-m", " ".join(markers.split()), "tests"]
+    return " ".join(markers.split())
+
+
+def parse_node_ids(tests: str) -> list[str]:
+    node_ids = shlex.split(tests)
+    for node_id in node_ids:
+        target, bracket, parameter = node_id.partition("[")
+        path, separator, selector = target.partition("::")
+        if (
+            not TEST_PATH.fullmatch(path)
+            or ".." in path.split("/")
+            or (separator and not TEST_SELECTOR.fullmatch(selector))
+            or (bracket and not (selector and parameter.endswith("]") and parameter.isprintable()))
+        ):
+            raise ValueError(f"not a test node id under tests/: {node_id!r}")
+    return node_ids
 
 
 def build_args(
@@ -80,22 +97,18 @@ def build_args(
     if device and device not in known_devices:
         raise ValueError(f"unknown device {device!r}; expected one of {sorted(known_devices)}")
 
-    node_ids = tests.split()
-    for node_id in node_ids:
-        if not NODE_ID.match(node_id) or ".." in node_id.split("::")[0].split("/"):
-            raise ValueError(f"not a test node id under tests/: {node_id!r}")
-
-    if node_ids and markers.strip():
+    node_ids = parse_node_ids(tests)
+    markers = markers.strip()
+    if node_ids and markers:
         raise ValueError("give tests or markers, not both")
 
     if node_ids:
-        selected = node_ids
-    elif markers.strip():
-        selected = marker_args(markers, known_markers)
+        selected = [*node_ids, "-m", "not ios"]
     else:
-        selected = SELECTIONS[selection]
+        expression = marker_expression(markers, known_markers) if markers else SELECTIONS[selection]
+        selected = ["-m", f"({expression}) and not ios", "tests"]
     if workers == "auto":
-        only_gate = selection == "gate" and not node_ids and not markers.strip()
+        only_gate = selection == "gate" and not node_ids and not markers
         workers = AUTO_WORKERS_GATE if only_gate else AUTO_WORKERS_OTHER
     return [*selected, "-n", workers, "--env", "browserstack"]
 

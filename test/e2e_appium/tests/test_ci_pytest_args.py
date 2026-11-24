@@ -11,8 +11,15 @@ from scripts.ci_pytest_args import build_args
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "ci_pytest_args.py"
 KNOWN = {"pixel_8_android_14", "galaxy_tab_s10p_android_15"}
 MARKERS = {"gate", "smoke", "two_phone", "backend_peer", "messaging", "wallet"}
-GATE = "(gate and not two_phone) or backend_peer"
+GATE = "((gate and not two_phone) or backend_peer) and not ios"
+SMOKE = "(smoke) and not ios"
 TAIL = ["-n", "4", "--env", "browserstack"]
+IOS = "tests/test_ios_poc.py::TestIOSOnboarding::test_ios_onboarding_flow"
+ONE_PHONE = (
+    "tests/messaging/test_message_received_backend.py::TestMessageActionsReceived::"
+    "test_received_reply_shows_reply_corner"
+)
+SPACED = "tests/test_message_visibility_guards.py::test_the_rect_rule[rect0-True-inside the list]"
 
 pytestmark = pytest.mark.component
 
@@ -22,17 +29,30 @@ def test_gate_default():
 
 
 def test_smoke():
-    assert build_args("smoke", "4", "", "", KNOWN)[:3] == ["-m", "smoke", "tests"]
+    assert build_args("smoke", "4", "", "", KNOWN)[:3] == ["-m", SMOKE, "tests"]
 
 
 def test_tests_replace_selection():
     args = build_args("gate", "4", "", "tests/test_a.py::T::test_x tests/b.py", KNOWN)
-    assert args == ["tests/test_a.py::T::test_x", "tests/b.py", *TAIL]
+    assert args == ["tests/test_a.py::T::test_x", "tests/b.py", "-m", "not ios", *TAIL]
 
 
 def test_parametrised_node_id_allowed():
     args = build_args("gate", "4", "", "tests/test_a.py::test_x[pixel-1]", KNOWN)
     assert args[0] == "tests/test_a.py::test_x[pixel-1]"
+
+
+def test_quoted_node_id_with_other_targets():
+    args = build_args("gate", "4", "", f'"{SPACED}" tests/b.py', KNOWN)
+    assert args[:2] == [SPACED, "tests/b.py"]
+
+
+@pytest.mark.parametrize(
+    "tests", ["'tests/../a.py::test_x[a b]'", "'tests/a.py::test_x[a b'", "tests/a.py::test_x[a\0b]"]
+)
+def test_rejects_bad_parameterized_node_ids(tests):
+    with pytest.raises(ValueError):
+        build_args("gate", "4", "", tests, KNOWN)
 
 
 @pytest.mark.parametrize("tests", ["-p evil", "--env=x", "tests/a.py --rootdir=/"])
@@ -80,12 +100,12 @@ def test_unknown_selection():
 
 def test_markers_replace_selection():
     args = build_args("gate", "4", "", "", KNOWN, "two_phone and  messaging", MARKERS)
-    assert args == ["-m", "two_phone and messaging", "tests", *TAIL]
+    assert args == ["-m", "(two_phone and messaging) and not ios", "tests", *TAIL]
 
 
 def test_markers_with_parentheses_and_not():
     args = build_args("gate", "4", "", "", KNOWN, "(smoke or gate) and not two_phone", MARKERS)
-    assert args[:2] == ["-m", "(smoke or gate) and not two_phone"]
+    assert args[:2] == ["-m", "((smoke or gate) and not two_phone) and not ios"]
 
 
 def test_tests_and_markers_together_rejected():
@@ -109,7 +129,7 @@ def test_rejects_unbalanced_parentheses(markers):
 
 
 def test_blank_markers_keep_selection():
-    assert build_args("smoke", "4", "", "", KNOWN, "   ", MARKERS)[:3] == ["-m", "smoke", "tests"]
+    assert build_args("smoke", "4", "", "", KNOWN, "   ", MARKERS)[:3] == ["-m", SMOKE, "tests"]
 
 
 def _cli(*extra):
@@ -140,11 +160,46 @@ def test_cli_exit_2_on_bad_input():
 def test_cli_reads_markers_from_pytest_ini():
     out = _cli("--markers", "two_phone and messaging")
     assert out.returncode == 0, out.stderr
-    assert out.stdout.split("\0")[:3] == ["-m", "two_phone and messaging", "tests"]
+    assert out.stdout.split("\0")[:3] == ["-m", "(two_phone and messaging) and not ios", "tests"]
 
 
 def test_cli_exit_2_on_unknown_marker():
     assert _cli("--markers", "not_a_marker").returncode == 2
+
+
+def _collect(*inputs):
+    options = _cli(*inputs)
+    assert options.returncode == 0, options.stderr
+    args = options.stdout.split("\0")[:-1]
+    return subprocess.run(
+        [sys.executable, "-m", "pytest", "--collect-only", "-q", "-o", "verbosity_test_cases=-1", *args],
+        cwd=SCRIPT.parents[1],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+@pytest.mark.parametrize("markers", ["not two_phone", "single_device"])
+def test_marker_selection_collects_one_phone_but_not_ios(markers):
+    result = _collect("--markers", markers)
+    assert result.returncode == 0, result.stdout + result.stderr
+    node_ids = result.stdout.splitlines()
+    assert ONE_PHONE in node_ids
+    assert IOS not in node_ids
+    assert not any(node.startswith("tests/messaging/test_z_chat_management.py::") for node in node_ids)
+
+
+def test_explicit_ios_node_is_deselected():
+    result = _collect("--tests", IOS)
+    assert result.returncode == pytest.ExitCode.NO_TESTS_COLLECTED, result.stdout + result.stderr
+    assert "1 deselected" in result.stdout
+
+
+def test_quoted_spaced_node_collects_one_parameter_case():
+    result = _collect("--tests", f"'{SPACED}'")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert [line for line in result.stdout.splitlines() if line.startswith("tests/")] == [SPACED]
 
 
 @pytest.mark.parametrize(
@@ -204,7 +259,7 @@ def test_rejects_malformed_marker_expressions(markers):
     ["smoke", "not smoke", "smoke and not wallet", "(smoke or wallet) and not two_phone", "not (smoke and wallet)"],
 )
 def test_accepts_well_formed_marker_expressions(markers):
-    assert build_args("gate", "4", "", "", KNOWN, markers, MARKERS)[:2] == ["-m", markers]
+    assert build_args("gate", "4", "", "", KNOWN, markers, MARKERS)[:2] == ["-m", f"({markers}) and not ios"]
 
 
 def test_node_id_with_an_image_digest_is_allowed():

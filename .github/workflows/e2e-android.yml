@@ -21,7 +21,7 @@ on:
         options: [gate, smoke]
         default: gate
       tests:
-        description: 'Optional test node ids under tests/, space separated. Replaces the selection.'
+        description: 'Optional space-separated test node IDs under tests/. Quote an entire ID if it contains spaces. Replaces the selection.'
         type: string
         default: ''
       markers:
