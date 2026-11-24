@@ -7,7 +7,7 @@ license       = "MPL2"
 srcDir        = "src"
 # No `bin`: make builds the client; nimble owns the Nim packages only.
 
-requires "nim == 2.2.10"  # 2.2.4-2.2.8 cannot compile wallet_section/all_tokens
+requires "nim == 2.2.12"  # 2.2.4-2.2.8 cannot compile wallet_section/all_tokens
 
 # The Nim libraries status-go links. These lines must match
 # vendor/status-go/status_go.nimble.
