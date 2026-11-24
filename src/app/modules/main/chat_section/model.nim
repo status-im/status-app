@@ -511,62 +511,39 @@ QtObject:
       updateRole(name)
       updateRoleWithValue(categoryPosition, newCategoryPosition)
 
-  proc updateItemsWithCategoryDetailsById*(
-      self: Model,
-      chats: seq[ChatDto],
-      categoryId: string,
-      newCategoryPosition: int,
-    ) =
-    for ind in 0 ..< self.items.len:
-      let item = self.items[ind]
-      if item.`type` == CATEGORY_TYPE:
-        continue
-      var nowHasCategory = false
-      var found = false
-      for chat in chats:
-        if item.id != chat.id:
-          continue
-        found = true
-        nowHasCategory = chat.categoryId == categoryId
-        let targetPosition = chat.position
-        let targetCategoryId = chat.categoryId
-        let targetCategoryPosition = if nowHasCategory: newCategoryPosition else: -1
-        let targetCategoryOpened = not nowHasCategory
-        updateRolesAndNotify:
-          updateRoleWithValue(position, targetPosition)
-          updateRoleWithValue(categoryId, targetCategoryId)
-          updateRoleWithValue(categoryPosition, targetCategoryPosition)
-          if targetCategoryOpened:
-            updateRoleWithValue(categoryOpened, true)
-          if roles.len > 0:
-            roles.add(ModelRole.Hidden.int) # depends on categoryOpened
-        break
+  proc updateChannelPlacement(self: Model, ind: int, position: int, categoryId: string,
+      categoryPosition: int, categoryOpened: bool) =
+    updateRolesAndNotify:
+      updateRole(position)
+      updateRole(categoryId)
+      updateRole(categoryPosition)
+      updateRole(categoryOpened)
+      if ModelRole.CategoryOpened.int in roles:
+        roles.add(ModelRole.Hidden.int)
 
-  proc removeCategory*(
-      self: Model,
-      categoryId: string,
-      chats: seq[ChatDto]
-    ) =
+  proc reorderChats*(self: Model, updatedChats: seq[ChatDto]) =
+    for chat in updatedChats:
+      let parent = self.getItemById(chat.id)
+      if parent.isNil or parent.isCategory or parent.isThread:
+        continue
+
+      var categoryPosition = -1
+      var categoryOpened = true
+      if chat.categoryId.len > 0:
+        let category = self.getItemById(chat.categoryId)
+        if category.isNil or not category.isCategory:
+          continue
+        categoryPosition = category.categoryPosition
+        categoryOpened = category.categoryOpened
+
+      for ind, item in self.items:
+        if item == parent or (item.isThread and item.parentChatId == parent.id):
+          self.updateChannelPlacement(ind, chat.position, chat.categoryId,
+            categoryPosition, categoryOpened)
+
+  proc removeCategory*(self: Model, categoryId: string, chats: seq[ChatDto]) =
     self.removeItemById(categoryId)
-
-    for ind in 0 ..< self.items.len:
-      let item = self.items[ind]
-      if item.categoryId != categoryId:
-        continue
-
-      for chat in chats:
-        if chat.id != item.id:
-          continue
-
-        let targetPosition = chat.position
-        updateRolesAndNotify:
-          updateRoleWithValue(position, targetPosition)
-          updateRoleWithValue(categoryId, "")
-          updateRoleWithValue(categoryPosition, -1)
-          updateRoleWithValue(categoryOpened, true)
-          if roles.len > 0:
-            roles.add(ModelRole.Hidden.int) # depends on categoryOpened
-        break
+    self.reorderChats(chats)
 
   proc renameCategory*(self: Model, categoryId, name: string) =
     updateItemRolesAndNotify self.getItemIdxById(categoryId):
@@ -608,34 +585,6 @@ QtObject:
       if self.items[ind].isThread and self.items[ind].parentChatId == id:
         updateRolesAndNotify:
           updateRoleWithValue(sortTimestamp, lastMessageTimestamp)
-
-  proc reorderChats*(
-      self: Model,
-      updatedChats: seq[ChatDto],
-    ) =
-    for updatedChat in updatedChats:
-      let ind = self.getItemIdxById(updatedChat.id)
-      if ind == -1:
-        continue
-
-      let categoryChanged = self.items[ind].categoryId != updatedChat.categoryId
-      var targetCategoryPosition = self.items[ind].categoryPosition
-      if categoryChanged:
-        if updatedChat.categoryId == "":
-          targetCategoryPosition = -1
-        else:
-          let category = self.getItemById(updatedChat.categoryId)
-          if category.id == "":
-            continue
-          targetCategoryPosition = category.categoryPosition
-
-      let targetPosition = updatedChat.position
-      let targetCategoryId = updatedChat.categoryId
-      updateRolesAndNotify:
-        updateRoleWithValue(position, targetPosition)
-        if categoryChanged:
-          updateRoleWithValue(categoryId, targetCategoryId)
-          updateRoleWithValue(categoryPosition, targetCategoryPosition)
 
   proc reorderCategoryById*(
       self: Model,
