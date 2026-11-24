@@ -877,10 +877,6 @@ Item {
             tryVerify(() => loader.status === Loader.Ready, 10000)
         }
 
-        function dropTimer(loader) {
-            return findChild(loader, "dropPolicy").d.timer
-        }
-
         function test_aLeftCommunityDropsAfterTheDelay() {
             const loader = wiredLoader({ dropWhenNotShown: true, dropDelay: 50 })
             showSection(loader)
@@ -897,7 +893,7 @@ Item {
 
             loader.appInFront = false
 
-            verify(!dropTimer(loader).running)
+            verify(!findChild(loader, "dropPolicy").dropPending)
             verify(loader.keepLoaded)
         }
 
