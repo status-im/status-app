@@ -9,6 +9,7 @@ import app/modules/main/app_search/module as search_module
 import app/modules/main/app_search/view
 import app/modules/main/app_search/models/[chat_search_model, location_menu_sub_model]
 import app/modules/main/app_search/models/[location_menu_model, location_menu_item, location_menu_sub_item]
+import app_service/common/activity_center
 import app_service/service/message/service as message_service
 import app_service/service/message/dto/[message, thread]
 import app_service/service/chat/service as chat_service
@@ -292,6 +293,7 @@ type
     renamedTo: seq[string]
   MessageUnreadStub = ref object of messages_interface.AccessInterface
     marked: seq[string]
+    rootsMarked: seq[string]
   SectionHarness = ref object of section_module.Module
     activated: seq[string]
     panelClosed: bool
@@ -313,8 +315,14 @@ method onThreadRenamed(self: ContentStub, newName: string) =
 method delete(self: ContentStub) = discard
 method onNotificationsUpdated(self: ContentStub, hasUnreadMessages: bool, notificationsCount: int) = discard
 
+method updateThreadDetails(self: MessageUnreadStub) = discard
+method onChatThreadsLoaded(self: MessageUnreadStub, threads: seq[ThreadDto], listLoaded: bool) = discard
+
 method onMarkMessageAsUnread(self: MessageUnreadStub, messageId: string) =
   self.marked.add(messageId)
+
+method onThreadRootMarkedAsUnread(self: MessageUnreadStub, messageId: string) =
+  self.rootsMarked.add(messageId)
 
 method setActiveItem(self: SectionHarness, itemId: string) =
   self.activated.add(itemId)
@@ -432,32 +440,40 @@ suite "thread search result navigation":
     let parent = section.view.chatsModel().getItemById("parent")
     let thread = section.view.chatsModel().getItemById("thread")
     require(not thread.isNil)
+    service.onAsyncMarkMessageAsUnread($(%* {
+      "chatId": "parent", "messageId": "older-message", "threads": [],
+      "messagesCount": 4, "messagesWithMentionsCount": 2
+    }))
     var marked: MessageMarkMessageAsUnreadArgs
     events.on(SIGNAL_MESSAGE_MARKED_AS_UNREAD) do(e: Args):
       marked = MessageMarkMessageAsUnreadArgs(e)
 
     service.onAsyncMarkMessageAsUnread($(%* {
-      "chatId": "parent", "threadId": "thread", "messageId": "reply",
+      "chatId": "parent", "messageId": "reply",
       "messagesCount": 0, "messagesWithMentionsCount": 0, "error": "",
       "threads": [{"chatId": "parent", "threadId": "thread", "parentMessageId": "root",
-        "name": "Thread", "unviewedMessagesCount": 2, "unviewedMentionsCount": 1}],
-      "sectionUnreadCountsChanged": false
+        "name": "Thread", "unviewedMessagesCount": 2, "unviewedMentionsCount": 1}]
     }))
     require(not marked.isNil)
     check marked.threadId == "thread"
     check thread.hasUnreadMessages
     check thread.notificationsCount == 1
-    check not parent.hasUnreadMessages
-    check section.controller.getChatDetails("parent").unviewedMessagesCount == 0
+    check parent.hasUnreadMessages
+    check parent.notificationsCount == 2
+    check section.controller.getChatDetails("parent").unviewedMessagesCount == 4
     check service.getThreadById("parent", "thread").unviewedMessagesCount == 2
 
-  test "unread markers are routed to their conversation and a shared thread root":
+  test "parent and reply responses reach the right conversation after thread cache eviction":
     let events = createEventEmitter()
     let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    let section = newSectionHarness(service, events)
+    defer: section.delete()
+    section.chatsLoaded = true
+    section.controller.init()
+    service.init()
     service.onAsyncLoadChatThreadsForChats($(%* {
-      "chatIds": ["parent"], "threads": [
-        {"chatId": "parent", "threadId": "thread", "parentMessageId": "root"},
-        {"chatId": "parent", "threadId": "other", "parentMessageId": "other-root"}]
+      "chatIds": ["parent"],
+      "threads": [{"chatId": "parent", "threadId": "root", "parentMessageId": "root", "name": "Thread"}]
     }))
     let parent = MessageUnreadStub()
     let thread = MessageUnreadStub()
@@ -465,9 +481,9 @@ suite "thread search result navigation":
     let parentController = messages_controller.newController(parent, events, "section", "parent",
       false, nil, nil, nil, service, nil, nil)
     let threadController = messages_controller.newController(thread, events, "section", "parent",
-      false, nil, nil, nil, service, nil, nil, "thread")
+      false, nil, nil, nil, service, nil, nil, "root")
     let otherController = messages_controller.newController(other, events, "section", "parent",
-      false, nil, nil, nil, service, nil, nil, "other")
+      false, nil, nil, nil, service, nil, nil, "other-root")
     parentController.init()
     threadController.init()
     otherController.init()
@@ -475,16 +491,41 @@ suite "thread search result navigation":
       parentController.delete()
       threadController.delete()
       otherController.delete()
-    events.emit(SIGNAL_MESSAGE_MARKED_AS_UNREAD,
-      MessageMarkMessageAsUnreadArgs(chatId: "parent", threadId: "thread", messageId: "reply"))
+    service.onAsyncMarkMessageAsUnread($(%* {
+      "chatId": "parent", "messageId": "reply",
+      "threads": [{"chatId": "parent", "threadId": "root", "parentMessageId": "root",
+        "name": "Thread", "unviewedMessagesCount": 1}]
+    }))
     check parent.marked.len == 0
     check thread.marked == @["reply"]
+    check thread.rootsMarked.len == 0
     check other.marked.len == 0
-    events.emit(SIGNAL_MESSAGE_MARKED_AS_UNREAD,
-      MessageMarkMessageAsUnreadArgs(chatId: "parent", messageId: "root"))
+
+    service.chatThreadsByParentIdByChat.del("parent")
+    check service.getThreadById("parent", "root").threadId == ""
+    var notifications: JsonNode
+    events.on(SIGNAL_PARSE_RAW_ACTIVITY_CENTER_NOTIFICATIONS) do(e: Args):
+      notifications = RawActivityCenterNotificationsArgs(e).activityCenterNotifications
+    service.onAsyncMarkMessageAsUnread($(%* {
+      "chatId": "parent", "messageId": "root",
+      "messagesCount": 3, "messagesWithMentionsCount": 1,
+      "activityCenterNotifications": [{"id": "notification"}]
+    }))
     check parent.marked == @["root"]
-    check thread.marked == @["reply", "root"]
+    check thread.marked == @["reply"]
+    check thread.rootsMarked == @["root"]
     check other.marked.len == 0
+    check other.rootsMarked.len == 0
+    check section.controller.getChatDetails("parent").unviewedMessagesCount == 3
+    check notifications == %* [{"id": "notification"}]
+
+    service.onAsyncMarkMessageAsUnread($(%* {
+      "chatId": "parent", "messageId": "another-message", "threads": [],
+      "messagesCount": 2, "messagesWithMentionsCount": 0
+    }))
+    check parent.marked == @["root", "another-message"]
+    check thread.rootsMarked == @["root"]
+    check section.controller.getChatDetails("parent").unviewedMessagesCount == 2
 
   test "an uncached result survives a cached list and opens on an incremental update":
     if THREADS_ENABLED:
