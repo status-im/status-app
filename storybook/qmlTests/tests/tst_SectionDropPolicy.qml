@@ -54,10 +54,10 @@ Item {
             const policy = makePolicy({ shown: true, dropDelay: 60000 })
 
             policy.shown = false
-            verify(policy.d.timer.running)
+            verify(policy.dropPending)
             policy.shown = true
 
-            verify(!policy.d.timer.running)
+            verify(!policy.dropPending)
             verify(policy.keepLoaded)
         }
 
@@ -68,7 +68,7 @@ Item {
 
             policy.shown = false
 
-            verify(!policy.d.timer.running)
+            verify(!policy.dropPending)
             verify(policy.keepLoaded)
         }
 
@@ -78,14 +78,13 @@ Item {
 
             policy.current = false
 
-            verify(policy.d.timer.running)
+            verify(policy.dropPending)
         }
 
         function test_neverWhileShown() {
             const policy = makePolicy({ shown: true, current: true })
 
-            policy.memoryPressure(true)
-            policy.memoryPressure(false)
+            policy.memoryPressure()
 
             verify(policy.keepLoaded)
             compare(policy.droppings, 0)
@@ -98,42 +97,39 @@ Item {
             policy.shown = false
             policy.inBackground = true
 
-            policy.memoryPressure(true)
+            policy.memoryPressure()
 
             verify(policy.keepLoaded)
             compare(policy.droppings, 0)
         }
 
-        function test_pressureDropsAnySectionNotOnScreen() {
-            const policy = makePolicy({ shown: true, current: true, dropDelay: 60000 })
+        function test_pressureDropsASectionTheUserLeft() {
+            const policy = makePolicy({ shown: true, dropDelay: 60000 })
             policy.shown = false
 
-            policy.memoryPressure(true)
+            policy.memoryPressure()
 
             verify(!policy.keepLoaded)
             compare(policy.droppings, 1)
         }
 
-        // Being in the background is no pressure: only the sections the user
-        // left go.
-        function test_aBackgroundTrimSparesTheCurrentSection() {
+        // A system sheet or picker on top (Inactive): not shown, still current.
+        function test_pressureUnderASystemSheetSparesTheCurrentSection() {
             const policy = makePolicy({ shown: true, current: true, dropDelay: 60000 })
             policy.shown = false
 
-            policy.memoryPressure(false)
-            verify(policy.keepLoaded)
+            policy.memoryPressure()
 
-            policy.current = false
-            policy.memoryPressure(false)
-            verify(!policy.keepLoaded)
+            verify(policy.keepLoaded)
+            compare(policy.droppings, 0)
         }
 
         function test_pressureAfterTheDropIsIgnored() {
             const policy = makePolicy({ shown: true, dropDelay: 60000 })
             policy.shown = false
-            policy.memoryPressure(true)
+            policy.memoryPressure()
 
-            policy.memoryPressure(true)
+            policy.memoryPressure()
 
             compare(policy.droppings, 1)
         }
@@ -142,7 +138,7 @@ Item {
             const policy = makePolicy({ shown: true, held: true, dropDelay: 60000 })
 
             policy.shown = false
-            policy.memoryPressure(true)
+            policy.memoryPressure()
 
             verify(policy.keepLoaded)
             compare(policy.heldDrops, 1)
@@ -152,13 +148,13 @@ Item {
         function test_theHoldEndingRestartsTheDelay() {
             const policy = makePolicy({ shown: true, held: true, dropDelay: 60000 })
             policy.shown = false
-            policy.memoryPressure(true)
-            verify(!policy.d.timer.running)
+            policy.memoryPressure()
+            verify(!policy.dropPending)
 
             policy.held = false
 
             verify(policy.keepLoaded, "the delay starts over")
-            verify(policy.d.timer.running)
+            verify(policy.dropPending)
         }
 
         // A hold that comes and goes while the delay runs (a dApp polling)
@@ -177,13 +173,13 @@ Item {
         function test_aDeferredDropRestartsWhenTheHoldEnds() {
             const policy = makePolicy({ shown: true, held: true, dropDelay: 60000 })
             policy.shown = false
-            policy.memoryPressure(true)
+            policy.memoryPressure()
 
             policy.held = false
             policy.held = true
             policy.held = false
 
-            verify(policy.d.timer.running, "one restart for the deferred drop")
+            verify(policy.dropPending, "one restart for the deferred drop")
             compare(policy.heldDrops, 1)
         }
 
@@ -228,13 +224,13 @@ Item {
             const policy = makePolicy({ shown: true, current: true, held: true, dropDelay: 60000 })
             policy.shown = false
             policy.current = false
-            verify(policy.d.timer.running)
+            verify(policy.dropPending)
 
             policy.inBackground = true
-            verify(!policy.d.timer.running)
+            verify(!policy.dropPending)
 
             policy.held = false
-            verify(!policy.d.timer.running, "not even when a hold ends")
+            verify(!policy.dropPending, "not even when a hold ends")
         }
 
         function test_returningRestartsTheDelay() {
@@ -247,7 +243,7 @@ Item {
             policy.inBackground = false
 
             verify(policy.keepLoaded)
-            verify(policy.d.timer.running)
+            verify(policy.dropPending)
         }
 
         // a background trim handled on return finds the current section spared
@@ -257,7 +253,7 @@ Item {
             policy.shown = false
             policy.inBackground = false
 
-            policy.memoryPressure(false)
+            policy.memoryPressure()
 
             verify(policy.keepLoaded)
         }
@@ -265,7 +261,7 @@ Item {
         function test_showingAgainBringsTheUiBack() {
             const policy = makePolicy({ shown: true, dropDelay: 60000 })
             policy.shown = false
-            policy.memoryPressure(true)
+            policy.memoryPressure()
             verify(!policy.keepLoaded)
 
             policy.shown = true

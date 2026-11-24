@@ -22,11 +22,12 @@ public:
     ~SystemUtilsInternal() override;
 
     Q_INVOKABLE QString qtRuntimeVersion() const;
-    // Gives memory back after a section's UI went away: deletes what is
-    // scheduled for deletion, trims the component cache of the context's
-    // engine, collects JS garbage and, on Android, releases the allocator's
-    // free pages.
-    Q_INVOKABLE void releaseMemory(QObject *context);
+    // Gives memory back after a section's UI went away: trims the component
+    // cache of the context's engine, collects JS garbage and, on Android,
+    // releases the allocator's free pages. flushDeletes first deletes what is
+    // scheduled for deletion, for when the event loop will not run again soon
+    // (the way to the background).
+    Q_INVOKABLE void releaseMemory(QObject *context, bool flushDeletes = false);
     // Desktop: relaunch on application destruction, preserving arguments, cwd and environment.
     // The application owner must release backend/single-instance resources before deleting qApp.
     Q_INVOKABLE void restartApplication() const;
@@ -125,10 +126,9 @@ signals:
     // in the background (BACKGROUND, MODERATE, COMPLETE).
     void memoryPressure(bool critical);
 
-    // The app left the front (Suspended or Hidden). Emitted after the QML
-    // handlers of Qt.application.state ran, so a handler here may delete
-    // objects that listen to the state; Android stops the event loop right
-    // after, so it is the last moment to run anything.
+    // The app left the front (Suspended or Hidden). Android stops the event
+    // loop right after, so it is the last moment to run anything. No order
+    // against Qt.application.state handlers is guaranteed.
     void enteringBackground();
 
 private:

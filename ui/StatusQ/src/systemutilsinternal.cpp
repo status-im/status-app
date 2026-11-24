@@ -87,18 +87,14 @@ SystemUtilsInternal::SystemUtilsInternal(QObject *parent)
 
     QObject::connect(filter, &QuitFilter::quit, this, &SystemUtilsInternal::quit);
 
-    // Connected once the event loop runs, after Qt.application connected:
-    // slots run in connection order.
-    QMetaObject::invokeMethod(this, [this] {
-        connect(qGuiApp, &QGuiApplication::applicationStateChanged, this,
-                [this, wasInBackground = false](Qt::ApplicationState state) mutable {
-            const bool inBackground = state == Qt::ApplicationSuspended
-                                      || state == Qt::ApplicationHidden;
-            if (inBackground && !wasInBackground)
-                emit enteringBackground();
-            wasInBackground = inBackground;
-        });
-    }, Qt::QueuedConnection);
+    connect(qGuiApp, &QGuiApplication::applicationStateChanged, this,
+            [this, wasInBackground = false](Qt::ApplicationState state) mutable {
+        const bool inBackground = state == Qt::ApplicationSuspended
+                                  || state == Qt::ApplicationHidden;
+        if (inBackground && !wasInBackground)
+            emit enteringBackground();
+        wasInBackground = inBackground;
+    });
 
 #ifdef Q_OS_ANDROID
     // Register native methods for the density and memory pressure listeners,
@@ -119,6 +115,7 @@ SystemUtilsInternal::SystemUtilsInternal(QObject *parent)
                 qWarning() << "[Android Density] RegisterNatives failed:" << rc;
             }
         }
+        env.checkAndClearExceptions();
 
         clazz = env->FindClass("app/status/mobile/MemoryPressureListener");
         if (clazz) {
@@ -133,6 +130,7 @@ SystemUtilsInternal::SystemUtilsInternal(QObject *parent)
                 qWarning() << "[Android MemoryPressure] RegisterNatives failed:" << rc;
             }
         }
+        env.checkAndClearExceptions();
 
         QJniObject activity = QNativeInterface::QAndroidApplication::context();
         if (activity.isValid()) {
@@ -192,10 +190,10 @@ QString SystemUtilsInternal::qtRuntimeVersion() const {
     return qVersion();
 }
 
-void SystemUtilsInternal::releaseMemory(QObject *context)
+void SystemUtilsInternal::releaseMemory(QObject *context, bool flushDeletes)
 {
-    // what was dropped is only scheduled for deletion until now
-    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    if (flushDeletes)
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     if (auto engine = context ? qmlEngine(context) : nullptr) {
         engine->trimComponentCache();
         engine->collectGarbage();
@@ -1117,6 +1115,8 @@ static void jni_nativeDensityChanged(JNIEnv*, jclass, jfloat density)
 
 static void jni_nativeMemoryPressure(JNIEnv*, jclass, jboolean critical)
 {
+    if (!qApp)
+        return;
     QMetaObject::invokeMethod(qApp, [critical]() {
         if (auto self = s_systemUtilsInternal.load())
             emit self->memoryPressure(critical);

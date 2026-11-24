@@ -1,13 +1,14 @@
 import QtQuick
 
 import StatusQ.Core
+import StatusQ.Core.Utils
 
-/// One memory release pass once dropped UI is gone: 2 s after a request in
-/// the app (a burst coalesces), or synchronously on the way to the background
-/// (SystemUtils.enteringBackground, emitted after every Qt.application.state
-/// handler, so what drops there may be deleted at once), as Android stops the
-/// event loop right after.
-QtObject {
+/// One memory release pass once dropped UI is gone: releaseDelay after a
+/// request in the app (a burst coalesces), or synchronously on the way to the
+/// background (SystemUtils.enteringBackground), as Android stops the event
+/// loop right after. Drops due there must follow appInBackground, which turns
+/// true inside that handler, so they are gone before the pass.
+QObject {
     id: root
 
     /// Handed to SystemUtils.releaseMemory: its engine is trimmed.
@@ -21,6 +22,11 @@ QtObject {
     /// The application state; Qt.application.state unless driven.
     property int appState: Qt.application.state
 
+    property int releaseDelay: 2000
+
+    /// A pass in the app is scheduled.
+    readonly property bool passPending: timer.running
+
     /// A pass ran.
     signal released()
 
@@ -29,46 +35,55 @@ QtObject {
         if (d.appInBackground)
             d.backgroundPassDue = true
         else
-            d.timer.restart()
+            timer.restart()
     }
 
     onAppStateChanged: {
-        if (root.appState === Qt.ApplicationActive || root.appState === Qt.ApplicationInactive)
-            d.appInBackground = false
+        if (root.appState !== Qt.ApplicationActive && root.appState !== Qt.ApplicationInactive)
+            return
+        d.appInBackground = false
+        // a request made in the background got no pass on the way out
+        if (d.backgroundPassDue) {
+            d.backgroundPassDue = false
+            timer.restart()
+        }
     }
 
-    // A QtObject takes no children: the private state is a property.
-    readonly property QtObject d: QtObject {
+    QtObject {
+        id: d
+
         property bool appInBackground: false
         property bool backgroundPassDue: false
 
-        readonly property Timer timer: Timer {
-            interval: 2000
-            onTriggered: d.releaseNow()
-        }
-
-        // After every Qt.application.state handler: what drops here may be
-        // deleted at once.
-        readonly property Connections backgroundEntry: Connections {
-            target: SystemUtils
-
-            function onEnteringBackground() {
-                // a pass still pending is covered by the one on the way out
-                if (d.timer.running) {
-                    d.timer.stop()
-                    d.backgroundPassDue = true
-                }
-                d.appInBackground = true
-                if (d.backgroundPassDue)
-                    d.releaseNow()
-            }
-        }
-
-        function releaseNow() {
-            d.timer.stop()
+        // flushDeletes: the event loop stops right after, so what dropped
+        // there is deleted now rather than at return
+        function releaseNow(flushDeletes) {
+            timer.stop()
             d.backgroundPassDue = false
-            SystemUtils.releaseMemory(root.releaseContext)
+            SystemUtils.releaseMemory(root.releaseContext, flushDeletes)
             root.released()
+        }
+    }
+
+    Timer {
+        id: timer
+
+        interval: root.releaseDelay
+        onTriggered: d.releaseNow(false)
+    }
+
+    Connections {
+        target: SystemUtils
+
+        function onEnteringBackground() {
+            // a pass still pending is covered by the one on the way out
+            if (timer.running) {
+                timer.stop()
+                d.backgroundPassDue = true
+            }
+            d.appInBackground = true
+            if (d.backgroundPassDue)
+                d.releaseNow(true)
         }
     }
 }

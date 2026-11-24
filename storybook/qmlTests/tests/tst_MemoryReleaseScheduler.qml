@@ -33,8 +33,8 @@ Item {
 
         function test_aBurstInFrontIsOnePassLater() {
             const scheduler = makeScheduler()
-            compare(scheduler.d.timer.interval, 2000)
-            scheduler.d.timer.interval = 50
+            compare(scheduler.releaseDelay, 2000)
+            scheduler.releaseDelay = 50
 
             scheduler.request()
             scheduler.request()
@@ -42,19 +42,19 @@ Item {
             compare(scheduler.passes, 0, "nothing at once")
 
             tryCompare(scheduler, "passes", 1)
-            verify(!scheduler.d.timer.running)
+            verify(!scheduler.passPending)
         }
 
         function test_aPendingPassRunsOnTheWayToTheBackground() {
             const scheduler = makeScheduler()
 
             scheduler.request()
-            verify(scheduler.d.timer.running)
+            verify(scheduler.passPending)
 
             SystemUtils.enteringBackground()
 
             compare(scheduler.passes, 1, "synchronously")
-            verify(!scheduler.d.timer.running)
+            verify(!scheduler.passPending)
             verify(scheduler.appInBackground)
         }
 
@@ -72,11 +72,26 @@ Item {
             SystemUtils.enteringBackground()
 
             scheduler.request()
-            verify(!scheduler.d.timer.running)
+            verify(!scheduler.passPending)
             compare(scheduler.passes, 0)
 
             SystemUtils.enteringBackground()
             compare(scheduler.passes, 1)
+        }
+
+        function test_aRequestInTheBackgroundRunsInFrontOnReturn() {
+            const scheduler = makeScheduler()
+            scheduler.appState = Qt.ApplicationSuspended
+            SystemUtils.enteringBackground()
+            scheduler.request()
+
+            scheduler.appState = Qt.ApplicationActive
+
+            verify(scheduler.passPending)
+            compare(scheduler.passes, 0)
+
+            SystemUtils.enteringBackground()
+            compare(scheduler.passes, 1, "one pass, on the way out")
         }
 
         function test_inactiveIsInFront() {
@@ -89,7 +104,7 @@ Item {
 
             verify(!scheduler.appInBackground)
             scheduler.request()
-            verify(scheduler.d.timer.running, "a pass in front comes later")
+            verify(scheduler.passPending, "a pass in front comes later")
         }
 
         function test_activeIsInFront() {
