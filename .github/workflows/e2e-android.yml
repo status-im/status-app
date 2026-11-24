@@ -411,7 +411,7 @@ jobs:
             if ! apps=$(printf 'user = "%s:%s"\n' "$BS_USER" "$BS_KEY" | curl --config - \
               --silent --show-error --fail-with-body \
               "https://api-cloud.browserstack.com/app-automate/recent_group_apps?limit=${limit}&offset=${offset}"); then
-              echo "::error::BrowserStack could not list apps at offset ${offset}."
+              echo "::error::BrowserStack could not list apps at offset ${offset}: ${apps}"
               exit 1
             fi
             if jq -e 'type == "object" and .message == "No results found"' <<< "$apps" > /dev/null; then
@@ -467,10 +467,23 @@ jobs:
           fi
           echo "url=https://app-automate.browserstack.com/dashboard/v2/builds/${build}" >> "$GITHUB_OUTPUT"
           running_sessions() {
-            bs "https://api-cloud.browserstack.com/app-automate/builds/${build}/sessions.json?limit=100" \
-              | jq -r '.[].automation_session | select(.status == "running") | .hashed_id'
+            local attempt sessions
+            for attempt in 1 2 3; do
+              if sessions=$(bs "https://api-cloud.browserstack.com/app-automate/builds/${build}/sessions.json?limit=100" \
+                | jq -er 'if type == "array" then
+                            [.[] | .automation_session | select(.status == "running") | .hashed_id] | join("\n")
+                          else error("expected a session list") end'); then
+                if [[ -n "$sessions" ]]; then printf '%s\n' "$sessions"; fi
+                return 0
+              fi
+              if [[ "$attempt" -lt 3 ]]; then sleep 5; fi
+            done
+            return 1
           }
-          running=$(running_sessions) || true
+          if ! running=$(running_sessions); then
+            echo "::warning::Could not list this run's BrowserStack sessions after three attempts; remaining sessions are unknown."
+            exit 0
+          fi
           if [[ -z "$running" ]]; then
             exit 0
           fi
@@ -480,7 +493,10 @@ jobs:
           done
           # BrowserStack needs a moment to close a session it was told to stop.
           sleep 15
-          left=$(running_sessions | wc -l) || left="unknown"
+          if ! left=$(running_sessions | wc -l); then
+            echo "::warning::Could not verify BrowserStack session cleanup after three attempts; remaining sessions are unknown."
+            exit 0
+          fi
           echo "Sessions still running after the stop: ${left// /}"
           if [[ "${left// /}" != "0" ]]; then
             echo "::warning::${left// /} BrowserStack session(s) of this run are still running; they end at BrowserStack's idle timeout."

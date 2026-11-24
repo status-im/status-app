@@ -36,6 +36,7 @@ class Result:
     skipped: int = 0
     failures: list[Failure] = field(default_factory=list)
     skips: list[Skip] = field(default_factory=list)
+    passed_ids: set[str] = field(default_factory=set)
 
     @property
     def passed(self) -> int:
@@ -57,19 +58,22 @@ def read_junit(path: Path) -> Result:
     for suite in suites:
         for case in suite.iter("testcase"):
             result.total += 1
+            case_id = node_id(case.get("classname", ""), case.get("name", ""))
             bad = case.find("failure")
             if bad is None:
                 bad = case.find("error")
             if bad is not None:
                 result.failed += 1
                 message = (bad.get("message") or bad.text or "").strip().splitlines()
-                result.failures.append(Failure(node_id(case.get("classname", ""), case.get("name", "")), message[0] if message else ""))
+                result.failures.append(Failure(case_id, message[0] if message else ""))
                 continue
             skipped = case.find("skipped")
             if skipped is not None:
                 result.skipped += 1
                 reason = (skipped.get("message") or skipped.text or "").strip().splitlines()
-                result.skips.append(Skip(node_id(case.get("classname", ""), case.get("name", "")), reason[0] if reason else ""))
+                result.skips.append(Skip(case_id, reason[0] if reason else ""))
+            else:
+                result.passed_ids.add(case_id)
     return result
 
 
@@ -138,8 +142,9 @@ def render_summary(
     if result.failures:
         lines += ["", "### Failed tests", "", "| Test | Message |", "|---|---|"]
         lines += [f"| `{_cell(f.node_id)}` | {_cell(f.message)} |" for f in result.failures]
-    failed_ids = {f.node_id for f in result.failures}
-    passed_on_rerun = [node for node in reruns if node not in failed_ids]
+    nonpassing_ids = {f.node_id for f in result.failures} | {s.node_id for s in result.skips}
+    final_passes = result.passed_ids - nonpassing_ids
+    passed_on_rerun = [node for node in reruns if node in final_passes]
     if passed_on_rerun:
         # A pass on the second try is still a pass, so it shows nowhere else.
         lines += ["", "### Passed on a rerun", ""]

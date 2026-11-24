@@ -80,6 +80,7 @@ def app_lookup(tmp_path, jobs):
     curl.write_text(
         r"""#!/bin/bash
 set -eu
+cat >/dev/null
 if [[ "${!#}" =~ /recent_group_apps\?limit=100\&offset=([0-9]+)$ ]]; then
     offset="${BASH_REMATCH[1]}"
     echo "$offset" >> "$CALLS"
@@ -87,6 +88,7 @@ if [[ "${!#}" =~ /recent_group_apps\?limit=100\&offset=([0-9]+)$ ]]; then
         cat "$PAGES/$offset.json"
         exit 0
     fi
+    echo '{"message":"BrowserStack access denied"}'
 fi
 exit 22
 """
@@ -138,3 +140,69 @@ def test_lookup_errors_are_not_reported_as_missing_apps(app_lookup, pages, error
     result, outputs, offsets = app_lookup(pages)
     assert (result.returncode, outputs, offsets) == (1, [], ["0"])
     assert error in result.stdout
+    if not pages:
+        assert "BrowserStack access denied" in result.stdout
+
+
+@pytest.fixture
+def session_cleanup(tmp_path, jobs):
+    curl = tmp_path / "curl"
+    curl.write_text(
+        """#!/bin/bash
+set -eu
+cat >/dev/null
+case "${!#}" in
+    */builds.json*)
+        echo '[{"automation_build":{"name":"e2e-run-identifier","hashed_id":"build"}}]'
+        ;;
+    */builds/build/sessions.json*)
+        echo list >> "$CALLS"
+        attempt=$(grep -c '^list$' "$CALLS")
+        cat "$PAGES/$attempt.json" 2>/dev/null || exit 22
+        ;;
+    */wd/hub/session/session-1)
+        [[ " $* " == *" --request DELETE "* ]]
+        echo stop >> "$CALLS"
+        ;;
+    *) exit 22 ;;
+esac
+"""
+    )
+    curl.chmod(0o755)
+    sleep = tmp_path / "sleep"
+    sleep.write_text("#!/bin/bash\nexit 0\n")
+    sleep.chmod(0o755)
+
+    def cleanup(*pages):
+        for attempt, page in enumerate(pages, start=1):
+            if page is not None:
+                (tmp_path / f"{attempt}.json").write_text(json.dumps(page))
+        calls = tmp_path / "calls"
+        result, _ = run_step(
+            tmp_path, jobs, "e2e", "Find the BrowserStack build and stop its leftover sessions",
+            PATH=f"{tmp_path}:{os.defpath}", PAGES=str(tmp_path), CALLS=str(calls),
+            BROWSERSTACK_BUILD_IDENTIFIER="identifier", BS_USER="fake-user", BS_KEY="fake-key",
+        )
+        return result, calls.read_text().splitlines()
+
+    return cleanup
+
+
+RUNNING = [{"automation_session": {"status": "running", "hashed_id": "session-1"}}]
+
+
+def test_cleanup_retries_before_stopping_leftover_sessions(session_cleanup):
+    result, calls = session_cleanup(None, {}, RUNNING, [])
+    assert result.returncode == 0
+    assert calls == ["list", "list", "list", "stop", "list"]
+    assert "Sessions still running after the stop: 0" in result.stdout
+
+
+@pytest.mark.parametrize("after_stop", [False, True])
+def test_cleanup_warns_when_the_remaining_sessions_are_unknown(session_cleanup, after_stop):
+    result, calls = session_cleanup(*([RUNNING] if after_stop else []))
+    assert result.returncode == 0
+    assert calls == (["list", "stop"] if after_stop else []) + ["list"] * 3
+    assert "::warning::" in result.stdout
+    assert "remaining sessions are unknown" in result.stdout
+    assert "Sessions still running after the stop: 0" not in result.stdout

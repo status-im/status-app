@@ -188,12 +188,30 @@ def test_a_missing_pytest_log_gives_no_reruns(tmp_path):
 
 
 def test_summary_lists_only_the_reruns_that_passed(junit, tmp_path):
+    junit.write_text(
+        JUNIT.replace(
+            'tests="4"',
+            'tests="5"',
+        ).replace(
+            "</testsuite>",
+            '<testcase classname="tests.test_onboarding_import_seed.TestOnboardingImportSeed" '
+            'name="test_import_seed_phrase"/></testsuite>',
+        )
+    )
     log = tmp_path / "pytest.log"
-    log.write_text(PYTEST_LOG)
+    log.write_text(
+        PYTEST_LOG
+        + "[gw0] [ 62%] RERUN tests/test_b.py::test_skip\n"
+        + "[gw1] [ 62%] RERUN tests/test_b.py::test_err\n"
+        + "[gw1] [ 62%] RERUN tests/test_b.py::test_unfinished\n"
+    )
     text = render_summary(read_junit(junit), APP, "abc", True, "1", "", reruns=read_reruns(log))
     section = text.split("### Passed on a rerun")[1].split("###")[0]
     assert "test_import_seed_phrase" in section
     assert "test_bad" not in section
+    assert "test_skip" not in section
+    assert "test_err" not in section
+    assert "test_unfinished" not in section
 
 
 def test_summary_has_no_rerun_section_without_reruns(junit):
