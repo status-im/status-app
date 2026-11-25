@@ -3,10 +3,14 @@ import QtQuick.Controls
 
 import StatusQ.Core
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils as SQUtils
 import StatusQ.Controls
 
 Control {
     id: root
+
+    Accessible.role: Accessible.Button
+    Accessible.name: SQUtils.Utils.formatAccessibleName(root.tooltipText || qsTr("Send"), objectName)
 
     property string limitText
     property string iconName: "arrow-up"
