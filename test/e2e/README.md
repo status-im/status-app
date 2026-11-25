@@ -14,11 +14,11 @@ Keycard tests and tests that open a file dialog have not been run this way yet.
 
 Needs a Linux x86_64 machine with Docker and about 20 GB of disk. Run from the repository root.
 
-1. Build the CI image (`ci/tests.Dockerfile`):
+1. Get the CI image (`ci/tests.Dockerfile`), pulled when it is published and built otherwise:
 
    ```bash
-   docker build --build-arg BASE="$(ci/build-image.sh --image desktop)" \
-     -t status-e2e-tests -f ci/tests.Dockerfile ci
+   ci/build-image.sh --pull tests
+   docker tag "$(ci/build-image.sh --image tests)" status-e2e-tests
    ```
 
 2. Build the plugin. The script downloads the plugin's source and Qt 6.11.0, the Qt of the app:
@@ -67,9 +67,7 @@ Optional argument: plugins directory (`generic/`). Defaults to the plugin just b
 `PLUGIN_SRC` override Qt and plugin sources. Missing tools: macOS — Xcode CLT and CMake; Linux —
 Docker; Windows — VS 2022 (C++), CMake, git.
 
-With Docker running, setup also runs the local Waku fleet (`docker compose -p status-app … up -d` and
-`scan_waku_fleet.py`). Set `E2E_SKIP_WAKU_FLEET=1` to skip; `E2E_WAKU_COMPOSE_PROJECT` overrides the
-compose project name.
+Setup also starts the local Waku fleet. Set `E2E_SKIP_WAKU_FLEET=1` to skip.
 
 ```bash
 source .venv/bin/activate
@@ -92,8 +90,9 @@ export LD_LIBRARY_PATH="$QT_LIBDIR:$ROOT/vendor/status-go/build:$ROOT/vendor/sta
 ```
 
 For a local macOS app built with `make run`, set `QT_PREFIX` to the Qt that `qmake` reports before
-`./scripts/setup-macos.sh`. `AUT_PATH` may be the `.app` bundle. The suite launches
-`Contents/MacOS/nim_status_client`.
+`./scripts/setup-macos.sh`. Set `AUT_PATH` to the `.app` bundle (`bin/StatusDev.app`); the suite
+launches `Contents/MacOS/nim_status_client`. The bare `bin/nim_status_client` crashes after login on
+macOS: system notifications need a bundle.
 
 ---
 
@@ -148,17 +147,21 @@ Requires **Node.js 20.19–20.x or 22+** (`NODE_BIN` if not on `PATH`) and netwo
 
 ## Local Waku fleet (optional)
 
-Local **logos-delivery** instead of `status.prod`. **Docker** must be running (`docker ps`). Setup and
-`run-in-docker.sh` start a fleet for you.
+Local **logos-delivery** instead of `status.prod`. Setup and `run-in-docker.sh` start a fleet for you.
+The nodes are those of `docker-compose.waku.yml`, run from the node's release binary, so no Docker is
+needed. They need libpq (`apt-get install libpq5`, `brew install libpq`); on Windows they run under WSL1.
 
 From **repo root** (manual):
 
 ```bash
-docker compose -p status-app -f ./docker-compose.waku.yml up -d --build --remove-orphans
-python3 test/e2e/scripts/scan_waku_fleet.py --project status-app
+test/e2e/scripts/start-waku-fleet.sh            # Linux, macOS; --stop stops the nodes
 ```
 
-That writes `assets/local-waku-fleets-config.json`. Then, from `test/e2e`:
+```powershell
+powershell -File test\e2e\scripts\start-waku-fleet-windows.ps1
+```
+
+Either way writes `assets/local-waku-fleets-config.json`. Then, from `test/e2e`:
 
 ```bash
 export E2E_LOCAL_WAKU_FLEET=1
