@@ -694,7 +694,8 @@ public final class StatusGoService extends Service {
         // Ensure we can be started from background components (e.g. FCM) without risking
         // ForegroundServiceDidNotStartInTime. We can downgrade/stop later if needed.
         ensureForegroundStarted();
-        if (BootLogin.runsOnStart(ACTION_BOOT_LOGIN.equals(action), intent == null,
+        if (BootLogin.runsOnStart(app.status.mobile.BuildFlags.RESUME_AFTER_RESTART_ENABLED,
+                ACTION_BOOT_LOGIN.equals(action), intent == null,
                 listeners.getRegisteredCallbackCount() > 0)) {
             try {
                 lifecycleExecutor.execute(bootLogin::run);

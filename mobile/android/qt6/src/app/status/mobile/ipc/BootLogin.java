@@ -101,10 +101,11 @@ final class BootLogin {
 
     /**
      * Whether a service start runs the boot login: the boot action, or the system recreating
-     * the service (START_STICKY, null intent) with no UI bound to log in again.
+     * the service (START_STICKY, null intent) with no UI bound to log in again. With the
+     * feature off a system restart leaves an idle foreground service, as before boot login.
      */
-    static boolean runsOnStart(boolean bootAction, boolean stickyRestart, boolean uiBound) {
-        return bootAction || (stickyRestart && !uiBound);
+    static boolean runsOnStart(boolean enabled, boolean bootAction, boolean stickyRestart, boolean uiBound) {
+        return bootAction || (enabled && stickyRestart && !uiBound);
     }
 
     /**

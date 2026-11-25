@@ -257,10 +257,16 @@ public class BootLoginTest {
 
     @Test
     public void runsForTheBootActionAndForASystemRestartWithoutUi() {
-        assertTrue(BootLogin.runsOnStart(true, false, false));
-        assertTrue(BootLogin.runsOnStart(false, true, false));
-        assertFalse(BootLogin.runsOnStart(false, true, true));
-        assertFalse(BootLogin.runsOnStart(false, false, false));
+        assertTrue(BootLogin.runsOnStart(true, true, false, false));
+        assertTrue(BootLogin.runsOnStart(true, false, true, false));
+        assertFalse(BootLogin.runsOnStart(true, false, true, true));
+        assertFalse(BootLogin.runsOnStart(true, false, false, false));
+    }
+
+    @Test
+    public void aSystemRestartWithTheFeatureOffKeepsTheServiceAsOnMaster() {
+        assertFalse(BootLogin.runsOnStart(false, false, true, false));
+        assertFalse(BootLogin.runsOnStart(false, false, true, true));
     }
 
     @Test
