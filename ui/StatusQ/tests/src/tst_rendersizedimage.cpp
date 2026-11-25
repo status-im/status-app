@@ -294,6 +294,62 @@ private slots:
         for (const QSize& seen : std::as_const(sourceSizesAtStatus))
             QCOMPARE(seen, QSize(size, size));
     }
+
+    void maxDecodeDevicePixelRatioCapsDecode()
+    {
+        QQmlComponent component(m_engine);
+        component.setData(QStringLiteral(R"(
+            import QtQuick
+            import StatusQ.Components
+            Window {
+                width: 300; height: 300; visible: true
+                property alias image: img
+                StatusImage { id: img; width: 100; height: 100; source: "%1" }
+            })").arg(QUrl::fromLocalFile(QStringLiteral(ASSETS_DIR "png/status-logo-icon.png"))
+                             .toString()).toUtf8(),
+                          QUrl());
+        std::unique_ptr<QObject> root(component.create());
+        QVERIFY2(root, qPrintable(component.errorString()));
+        auto window = qobject_cast<QQuickWindow*>(root.get());
+        auto image = root->property("image").value<QQuickItem*>();
+        QVERIFY(image);
+        const auto ready = [image] {
+            return image->property("status").toInt() == int(QQuickImageBase::Ready);
+        };
+
+        QCOMPARE(image->property("maxDecodeDevicePixelRatio").toReal(),
+                 RenderSizedImage::defaultMaxDecodeDevicePixelRatio);
+
+        setDevicePixelRatio(window, 3.0);
+        QTRY_VERIFY(ready());
+        QTRY_COMPARE(decodedSize(image).width(), decodeBucket(100 * 2.0));
+
+        // Same capped decode: no reload
+        int statusChanges = 0;
+        QObject::connect(qobject_cast<QQuickImageBase*>(image), &QQuickImageBase::statusChanged,
+                         image, [&statusChanges] { ++statusChanges; });
+        setDevicePixelRatio(window, 2.5);
+        QTest::qWait(50);
+        QCOMPARE(statusChanges, 0);
+        QCOMPARE(decodedSize(image).width(), decodeBucket(100 * 2.0));
+
+        // Below the screen's ratio, including below 1x
+        image->setProperty("maxDecodeDevicePixelRatio", 0.5);
+        QTRY_VERIFY(ready());
+        QTRY_COMPARE(decodedSize(image).width(), decodeBucket(100 * 0.5));
+
+        // 0, negative and NaN mean no cap
+        for (qreal noCap : { 0.0, -1.0, qQNaN() }) {
+            image->setProperty("maxDecodeDevicePixelRatio", 0.5);
+            QTRY_COMPARE(decodedSize(image).width(), decodeBucket(100 * 0.5));
+            QSignalSpy changed(image, SIGNAL(maxDecodeDevicePixelRatioChanged()));
+            image->setProperty("maxDecodeDevicePixelRatio", noCap);
+            QCOMPARE(image->property("maxDecodeDevicePixelRatio").toReal(), 0.0);
+            QTRY_COMPARE(decodedSize(image).width(), decodeBucket(100 * 2.5));
+            image->setProperty("maxDecodeDevicePixelRatio", noCap);
+            QCOMPARE(changed.count(), 1);
+        }
+    }
 };
 
 QTEST_MAIN(TestRenderSizedImage)

@@ -237,7 +237,7 @@ public:
     bool nativeKnown = false;
     bool explicitlySized = false;
     bool vector = false;
-    qreal maxDecodeRatio = 0;
+    qreal maxDecodeRatio = RenderSizedImage::defaultMaxDecodeDevicePixelRatio;
     QSize decodeBox;
 };
 
@@ -303,6 +303,8 @@ qreal RenderSizedImage::maxDecodeDevicePixelRatio() const
 void RenderSizedImage::setMaxDecodeDevicePixelRatio(qreal ratio)
 {
     Q_D(RenderSizedImage);
+    if (!(ratio > 0))
+        ratio = 0;
     if (ratio == d->maxDecodeRatio)
         return;
     d->maxDecodeRatio = ratio;
@@ -473,4 +475,19 @@ void RenderSizedImage::geometryChange(const QRectF& newGeometry, const QRectF& o
         d->explicitlySized = sized;
         emit explicitlySizedChanged();
     }
+}
+
+void RenderSizedImage::itemChange(ItemChange change, const ItemChangeData& value)
+{
+    Q_D(RenderSizedImage);
+    // QQuickImageBase reloads on any DPR change; skip it when the capped decode is the same
+    const bool sameDecode = change == ItemDevicePixelRatioHasChanged && d->renderSized
+            && d->status == Ready
+            && RenderSizedImagePrivate::decodeBoxFor(d->sourcesize,
+                                                     d->decodeRatioFor(value.realValue))
+               == d->decodeBox;
+    if (sameDecode)
+        QQuickItem::itemChange(change, value);
+    else
+        QQuickImage::itemChange(change, value);
 }

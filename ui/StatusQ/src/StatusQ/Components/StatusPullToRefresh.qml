@@ -8,8 +8,8 @@ import StatusQ.Core.Theme
    \inqmlmodule StatusQ.Components
    \brief Pull to refresh for a vertical Flickable, ListView or GridView.
 
-   Emits refreshRequested when the view is dragged down past its top by more than \c threshold and released,
-   unless \c refreshing is true. \c threshold is in units of the view's verticalOvershoot, which grows slower
+   Emits refreshRequested when the view is dragged down past its top by at least \c threshold and released,
+   unless \c refreshing is true. \c threshold is in units of the view's verticalOvershoot (at least 1), which grows slower
    than the finger moves. A drag that starts below the top and continues past it counts as well.
    Shows an indicator over the top of the view during the pull and while \c refreshing is true.
 
@@ -61,8 +61,9 @@ Item {
     QtObject {
         id: d
 
+        readonly property real threshold: root.threshold >= 1 ? root.threshold : 1
         property real pull: 0
-        property real reveal: root.refreshing ? 1 : Math.min(1, d.pull / root.threshold)
+        property real reveal: root.refreshing ? 1 : Math.min(1, d.pull / d.threshold)
 
         Behavior on reveal {
             enabled: !root.flickable.dragging
@@ -103,7 +104,7 @@ Item {
         function onDraggingChanged() {
             if (root.flickable.dragging)
                 return
-            const pulled = d.pull >= root.threshold
+            const pulled = d.pull >= d.threshold
             d.pull = 0
             if (pulled && !root.refreshing && root.flickable.enabled)
                 root.refreshRequested()
