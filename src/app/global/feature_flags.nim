@@ -26,7 +26,6 @@ const DEFAULT_FLAG_MESSAGE_LINK_SHARING_ENABLED = true
 const DEFAULT_FLAG_STATUS_SUPPORT_BOT_ENABLED = true
 const DEFAULT_FLAG_THREADS_ENABLED = false
 const DEFAULT_FLAG_THREADS_ENABLED_V2 = false
-const DEFAULT_FLAG_RESUME_AFTER_RESTART_ENABLED = false
 
 # Compile time feature flags
 const DEFAULT_FLAG_DAPPS_ENABLED  = true
@@ -42,6 +41,7 @@ const DEFAULT_FLAG_SWAP_ENABLED = true
 const DEFAULT_FLAG_PARASWAP_ENABLED = false
 const DEFAULT_FLAG_LIFI_ENABLED = false
 const DEFAULT_FLAG_RELAY_ENABLED = true
+const DEFAULT_FLAG_RESUME_AFTER_RESTART_ENABLED = false
 
 # Public feature flags
 featureFlag("SEND_VIA_PERSONAL_CHAT_ENABLED", DEFAULT_FLAG_SEND_VIA_PERSONAL_CHAT_ENABLED)
@@ -54,7 +54,6 @@ featureFlag("MESSAGE_LINK_SHARING_ENABLED",   DEFAULT_FLAG_MESSAGE_LINK_SHARING_
 featureFlag("STATUS_SUPPORT_BOT_ENABLED",     DEFAULT_FLAG_STATUS_SUPPORT_BOT_ENABLED)
 featureFlag("THREADS_ENABLED",                DEFAULT_FLAG_THREADS_ENABLED)
 featureFlag("THREADS_ENABLED_V2",             DEFAULT_FLAG_THREADS_ENABLED_V2)
-featureFlag("RESUME_AFTER_RESTART_ENABLED",    DEFAULT_FLAG_RESUME_AFTER_RESTART_ENABLED)
 
 featureFlag("DAPPS_ENABLED",                  DEFAULT_FLAG_DAPPS_ENABLED, true)
 featureFlag("BROWSER_ENABLED",                DEFAULT_FLAG_BROWSER_ENABLED, true)
@@ -67,6 +66,7 @@ featureFlag("SWAP_ENABLED",                   DEFAULT_FLAG_SWAP_ENABLED, true)
 featureFlag("PARASWAP_ENABLED",               DEFAULT_FLAG_PARASWAP_ENABLED, true)
 featureFlag("LIFI_ENABLED",                   DEFAULT_FLAG_LIFI_ENABLED, true)
 featureFlag("RELAY_ENABLED",                  DEFAULT_FLAG_RELAY_ENABLED, true)
+featureFlag("RESUME_AFTER_RESTART_ENABLED",   DEFAULT_FLAG_RESUME_AFTER_RESTART_ENABLED, true)
 
 # There is no fallback support for more than one swap/bridge provider.
 # The app uses Relay (if enabled), then LI.FI (if enabled), Paraswap is not an option for now, since the UI doesn't
