@@ -579,6 +579,8 @@ Window {
                 portraitLayout: applicationWindow.portraitLayout
                 allowsAutoLogin: (keyUid) => sessionView.allowsAutoLogin(keyUid)
                 relogin: () => d.startUnrequestedRelogin()
+                holdIntake: () => sessionView.holdIntakeForNextSession()
+                releaseIntake: () => sessionView.releaseIntakeHold()
 
                 onContentLoaded: {
                     splashScreenLoader.active = false

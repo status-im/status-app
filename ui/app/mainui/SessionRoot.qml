@@ -32,6 +32,10 @@ Item {
     // Ends the session for one silent relogin the user didn't request
     // (AutoLoginPolicy.AllowOnce): () => bool, false when it was ignored
     required property var relogin
+    // Links, shares and notification taps wait for the next session: () => void
+    required property var holdIntake
+    // The held ones go to this session: () => void
+    required property var releaseIntake
 
     readonly property bool userLoggedIn: appMainLoader.item !== null
 
@@ -113,6 +117,8 @@ Item {
         enabled: root.featureFlagsStore.resumeAfterRestartEnabled
         secureStorage: appSecureStorage
         relogin: root.relogin
+        holdIntake: root.holdIntake
+        releaseIntake: root.releaseIntake
     }
 
     Component.onDestruction: Global.appIsReady = false

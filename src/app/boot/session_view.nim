@@ -14,6 +14,8 @@ QtObject:
   type SessionView* = ref object of QObject
     host: SessionHost
     phase: SessionPhase
+    holdIntake: proc()
+    releaseIntake: proc()
 
   proc delete*(self: SessionView)
 
@@ -24,6 +26,10 @@ QtObject:
 
   proc delete*(self: SessionView) =
     self.QObject.delete
+
+  proc setIntakeOps*(self: SessionView, hold: proc(), release: proc()) =
+    self.holdIntake = hold
+    self.releaseIntake = release
 
   proc phaseChanged*(self: SessionView) {.signal.}
 
@@ -57,6 +63,15 @@ QtObject:
     ## Ends the session; the next one logs in silently if a credential is stored (to
     ## apply a setting the backend reads at login).
     self.host.requestEnd(AutoLoginPolicy.AllowOnce)
+
+  proc holdIntakeForNextSession*(self: SessionView) {.slot.} =
+    ## Before the session's appReady: links, shares and notification taps wait for the
+    ## next session's appReady (boot-login record refresh relogin).
+    self.holdIntake()
+
+  proc releaseIntakeHold*(self: SessionView) {.slot.} =
+    ## No relogin after all: the held ones go to the current session.
+    self.releaseIntake()
 
   proc retry*(self: SessionView) {.slot.} =
     self.host.retry()

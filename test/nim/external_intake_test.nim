@@ -348,3 +348,42 @@ suite "external_intake pending slot":
     intake.setReady()
     check capture.deepLinks == @["status-app://c/community-id"]
     check not intake.hasPending()
+
+suite "external_intake held during the boot-login record refresh":
+  # The adopt of a session holds the intake (detach) before that session's appReady:
+  # a link or share arriving then reaches either the relogin's next session or, when
+  # no relogin runs, the adopted session.
+
+  test "held, relogin: the next session receives it once":
+    let capture = Capture()
+    let intake = newCapturingIntake(capture)
+    intake.detachSession()  # hold, at adopt
+    intake.setReady()       # the adopted session's appReady
+    intake.submit(urlIntake("status-app://c/community-id"))
+    check capture.deepLinks.len == 0
+
+    intake.detachSession()  # relogin: releaseUi
+    intake.detachSession()  # relogin: dispose
+    intake.attachSession()  # next session built
+    check capture.deepLinks.len == 0
+    intake.setReady()       # next session's appReady
+    intake.setReady()
+    check capture.deepLinks == @["status-app://c/community-id"]
+    check not intake.hasPending()
+
+  test "held, no relogin: released to the adopted session once":
+    let capture = Capture()
+    let intake = newCapturingIntake(capture)
+    intake.detachSession()  # hold, at adopt
+    intake.setReady()       # the adopted session's appReady
+    intake.submit(shareIntake("hello", @[]))
+    check capture.shares.len == 0
+
+    intake.attachSession()  # release
+    intake.setReady()
+    intake.setReady()
+    check capture.shares.len == 1
+    check not intake.hasPending()
+
+    intake.submit(urlIntake("status-app://c/community-id"))
+    check capture.deepLinks == @["status-app://c/community-id"]
