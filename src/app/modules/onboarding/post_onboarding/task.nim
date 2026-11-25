@@ -37,3 +37,33 @@ proc withoutCredentialTasks*(tasks: seq[PostOnboardingTask]): seq[PostOnboarding
   for task in tasks:
     if task.kind != kPostOnboardingTaskSaveBiometrics and task.kind != kPostOnboardingTaskSaveStayLoggedIn:
       result.add(task)
+
+# The post-login tasks of the current login flow. A flow whose login request was rejected
+# and replaced by an adopted login is abandoned: none of its work runs, including the
+# tasks it would queue after the rejection.
+type PostLoginTasks* = object
+  tasks: seq[PostOnboardingTask]
+  abandoned: bool
+
+proc newPostLoginTasks*(): PostLoginTasks =
+  PostLoginTasks()
+
+proc tasks*(self: PostLoginTasks): seq[PostOnboardingTask] =
+  self.tasks
+
+proc startFlow*(self: var PostLoginTasks) =
+  self.tasks = @[]
+  self.abandoned = false
+
+# A new login request: a credential queued by a previous (failed) attempt is never saved.
+proc retryLogin*(self: var PostLoginTasks) =
+  self.tasks = self.tasks.withoutCredentialTasks()
+  self.abandoned = false
+
+proc abandon*(self: var PostLoginTasks) =
+  self.tasks = @[]
+  self.abandoned = true
+
+proc add*(self: var PostLoginTasks, task: PostOnboardingTask) =
+  if not self.abandoned:
+    self.tasks.add(task)

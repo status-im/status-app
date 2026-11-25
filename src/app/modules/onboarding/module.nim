@@ -40,7 +40,7 @@ type
     onboardingFlow: OnboardingFlow
     exportedKeys: KeycardExportedKeysDto
     postOnboardingTasks: seq[PostOnboardingTask]
-    postLoginTasks: seq[PostOnboardingTask]
+    postLoginTasks: PostLoginTasks
     accountsService: accounts_service.Service
     generalService: general_service.Service
     startupLogin: StartupLogin
@@ -69,7 +69,7 @@ proc newModule*[T](
   result.onboardingFlow = OnboardingFlow.Unknown
   result.loginFlow = LoginMethod.Unknown
   result.postOnboardingTasks = newSeq[PostOnboardingTask]()
-  result.postLoginTasks = newSeq[PostOnboardingTask]()
+  result.postLoginTasks = newPostLoginTasks()
   result.accountsService = accountsService
   result.generalService = generalService
   result.events = events
@@ -214,7 +214,7 @@ method inputConnectionStringForBootstrapping*[T](self: Module[T], connectionStri
 
 method finishOnboardingFlow*[T](self: Module[T], flowInt: int, dataJson: string): string =
   self.postOnboardingTasks = newSeq[PostOnboardingTask]()
-  self.postLoginTasks = newSeq[PostOnboardingTask]()
+  self.postLoginTasks.startFlow()
 
   try:
     self.onboardingFlow = OnboardingFlow(flowInt)
@@ -359,8 +359,7 @@ method loginRequested*[T](self: Module[T], keyUid: string, loginFlow: int, dataJ
     self.tmpKeyUid = keyUid
     self.loginFlow = LoginMethod(loginFlow)
 
-    # drop any queued tasks by previous (failed) attempts so a stale credential can never be saved
-    self.postLoginTasks = self.postLoginTasks.withoutCredentialTasks()
+    self.postLoginTasks.retryLogin()
 
     let data = parseJson(dataJson)
     let account = self.controller.getAccountByKeyUid(keyUid)
@@ -428,9 +427,9 @@ method onLoginRequestFailed*[T](self: Module[T], error: string) =
     self.onAccountLoginError(error)
     return
   info "login request rejected, adopting the running login", error, state = $loginState.state, seq = loginState.seq
-  # The rejected request's credential (e.g. a password typed during the boot login) was
-  # never verified: never save it.
-  self.postLoginTasks = self.postLoginTasks.withoutCredentialTasks()
+  # The rejected request's flow (e.g. a password typed during the boot login) never logs
+  # in: none of its post-login work runs, also what it queues after this rejection.
+  self.postLoginTasks.abandon()
   self.view.loginAdopted()
   if adoption == LoginAdoption.AdoptedReplay and self.ignoredNodeLogin.isSome:
     let ignored = self.ignoredNodeLogin.get
@@ -469,8 +468,7 @@ method onMessengerStarted*[T](self: Module[T], err: string) =
   # When converting account to regular, we should not finishAppLoading.
   # The task will convert the account, re-encrypt the database with new password and
   # eventually logout. The user will need to login with a new password.
-  for i in 0..<self.postLoginTasks.len:
-    let task = self.postLoginTasks[i]
+  for task in self.postLoginTasks.tasks:
     if task.kind == kConvertKeycardAccountToRegular:
       return
 
@@ -510,7 +508,7 @@ method onKeycardAccountConverted*[T](self: Module[T], success: bool) =
   # Logged out: the login screen binds the selected profile's settings again.
   self.accountsService.clear()
   if success and not restartRequired:
-    self.postLoginTasks = newSeq[PostOnboardingTask]()
+    self.postLoginTasks.startFlow()
     self.accountsService.clearOpenedAccountsCache()
     discard self.buildLoginAccountsModel()
 
@@ -543,7 +541,7 @@ method requestDeleteMultiaccount*[T](self: Module[T], keyUid: string): string =
   return ""
 
 proc runPostLoginTasks*[T](self: Module[T]) =
-  let tasks = self.postLoginTasks
+  let tasks = self.postLoginTasks.tasks
   for task in tasks:
     case task.kind:
     of kConvertKeycardAccountToRegular:
