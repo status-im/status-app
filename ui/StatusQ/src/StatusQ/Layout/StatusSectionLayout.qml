@@ -188,6 +188,8 @@ LayoutChooser {
 
     function setCurrentIndex(index: int) {
         d.currentIndex = index
+        if (d.portrait)
+            d.portrait.setCurrentIndex(index)
     }
 
     /*!
