@@ -304,6 +304,59 @@ public class BootLoginTest {
     }
 
     @Test
+    public void aSecondTriggerWhileTheReplayRunsInThisProcessIsANoOp() {
+        bootLogin.run();
+        calls.clear();
+
+        assertFalse(bootLogin.run());
+
+        assertEquals("no second login attempt", 0, calls.size());
+        assertEquals(0, notifications);
+        assertEquals(0, recordDeletes);
+        assertEquals(0, stops);
+        assertTrue("first replay still pending", store.containsKey(ATTEMPT_KEY));
+
+        bootLogin.onNodeLogin(NODE_LOGIN_OK);
+        assertFalse(store.containsKey(ATTEMPT_KEY));
+        assertEquals(RECORD, store.get(RECORD_KEY));
+    }
+
+    @Test
+    public void aTriggerAfterTheReplayFailedInThisProcessReplaysAgain() {
+        bootLogin.run();
+        bootLogin.onNodeLogin(NODE_LOGIN_FAILED);
+        store.put(RECORD_KEY, RECORD);
+        calls.clear();
+
+        assertTrue(bootLogin.run());
+
+        assertEquals(2, calls.size());
+    }
+
+    @Test
+    public void aDeliberateStopDuringTheReplayIsNotACrash() {
+        bootLogin.run();
+
+        bootLogin.onStop();
+        dieAndRestart();
+
+        assertFalse(store.containsKey(ATTEMPT_KEY));
+        assertTrue(bootLogin.run());
+        assertEquals(0, notifications);
+        assertEquals(RECORD, store.get(RECORD_KEY));
+    }
+
+    @Test
+    public void aStopWithNoReplayInThisProcessKeepsALeftoverAttempt() {
+        bootLogin.run();
+        dieAndRestart();
+
+        bootLogin.onStop();
+
+        assertTrue(store.containsKey(ATTEMPT_KEY));
+    }
+
+    @Test
     public void aFailedNodeLoginClearsTheAttempt() {
         bootLogin.run();
 

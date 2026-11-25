@@ -18,7 +18,8 @@ import org.json.JSONObject;
  *
  * <p>Crash-loop guard: a persistent marker is set before each replay and cleared when it ends.
  * A replay that finds it still set (the last one ended the process) fails instead, so a
- * record costs at most one crash.
+ * record costs at most one crash. A deliberate stop (ACTION_STOP) clears it, and a second
+ * trigger while a replay runs in this process is a no-op.
  *
  * <p>It also owns the pause rule: logged in with no visible UI means paused, the same state
  * as a backgrounded app (messaging stays on).
@@ -146,6 +147,12 @@ final class BootLogin {
     private final Object lock = new Object();
     /** A boot login sent LoginAccount and its node.login has not arrived yet. */
     private boolean awaitingNodeLogin;
+    /**
+     * A replay marked its attempt in this process and has not ended. A second trigger in the
+     * same process (MY_PACKAGE_REPLACED after BOOT_COMPLETED) must not read that marker as a
+     * crash.
+     */
+    private boolean replaying;
     private final Runnable loginTimeout = () -> {
         if (takeAwaitingNodeLogin()) timedOut();
     };
@@ -215,6 +222,9 @@ final class BootLogin {
             stopUnlessUiBound();
             return false;
         }
+        synchronized (lock) {
+            if (replaying) return false;
+        }
         // The store wipes an entry it cannot decrypt and then reports it absent, so whether
         // there was anything to replay is decided before decrypting.
         final String recordJson;
@@ -269,6 +279,9 @@ final class BootLogin {
             return false;
         }
 
+        synchronized (lock) {
+            replaying = true;
+        }
         records.markAttempt();
         if (!succeeded(statusGo.call("InitializeApplication", args(initRequest.toString())))) {
             fail("InitializeApplication rejected");
@@ -305,9 +318,17 @@ final class BootLogin {
                 fail("node.login error");
                 return;
             }
-            records.clearAttempt();
+            endAttempt();
         }
         if (loggedIn && !ui.visible()) pauser.pauseServices(() -> !ui.visible());
+    }
+
+    /**
+     * ACTION_STOP: a deliberate stop, not a crash, so a replay running in this process clears
+     * its attempt marker and the next boot replays the record again.
+     */
+    void onStop() {
+        if (takeReplaying()) records.clearAttempt();
     }
 
     /** Clears the pending boot login; true when there was one. */
@@ -323,7 +344,7 @@ final class BootLogin {
     private void fail(String reason) {
         log.warn("boot login failed: " + reason);
         records.delete();
-        records.clearAttempt();
+        endAttempt();
         if (!ui.visible()) notifier.bootLoginFailed();
         stopUnlessUiBound();
     }
@@ -336,10 +357,23 @@ final class BootLogin {
     private void timedOut() {
         log.warn("boot login failed: no node.login within " + LOGIN_TIMEOUT_MS + " ms");
         records.delete();
-        records.clearAttempt();
+        endAttempt();
         if (ui.bound()) return;
         notifier.bootLoginFailed();
         stopper.endProcess();
+    }
+
+    private void endAttempt() {
+        takeReplaying();
+        records.clearAttempt();
+    }
+
+    private boolean takeReplaying() {
+        synchronized (lock) {
+            final boolean was = replaying;
+            replaying = false;
+            return was;
+        }
     }
 
     private static String describe(StoreException e) {

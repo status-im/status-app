@@ -747,6 +747,7 @@ public final class StatusGoService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         final String action = intent != null ? intent.getAction() : null;
         if (ACTION_STOP.equals(action)) {
+            bootLogin.onStop();
             stopAndEndProcess();
             return START_NOT_STICKY;
         }
