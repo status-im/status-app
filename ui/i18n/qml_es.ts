@@ -17626,6 +17626,10 @@ al cargar</translation>
         <translation>Tu contraseña se guarda usando el almacenamiento&lt;br/&gt;seguro predeterminado de tu sistema</translation>
     </message>
     <message>
+        <source>Status also signs in by itself after your phone restarts or the app updates, so notifications keep coming.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Secure storage is unavailable on this device.</source>
         <translation>El almacenamiento seguro no está disponible en este dispositivo.</translation>
     </message>

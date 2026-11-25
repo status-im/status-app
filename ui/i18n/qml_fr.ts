@@ -17622,6 +17622,10 @@ avec un retour à la ligne</translation>
         <translation>Votre mot de passe est stocké dans le stockage&lt;br/&gt;sécurisé par défaut de votre système</translation>
     </message>
     <message>
+        <source>Status also signs in by itself after your phone restarts or the app updates, so notifications keep coming.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Secure storage is unavailable on this device.</source>
         <translation>Le stockage sécurisé n’est pas disponible sur cet appareil.</translation>
     </message>
