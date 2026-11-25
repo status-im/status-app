@@ -86,16 +86,24 @@ def ensure_peer_chat_visible(device: DeviceContext, peer) -> ChatPage:
     app = App(device.driver)
     chat_page.dismiss_backup_prompt(timeout=2)
     if not app.click_messages_button():
-        logger.warning("Messages tab did not report a click; falling through to the deep link")
+        logger.warning("Messages tab did not report a click")
     chat_page.dismiss_backup_prompt(timeout=2)
     if chat_page.wait_for_message_input(timeout=3):
+        return _composer_ready(chat_page)
+
+    if chat_page.open_chat_by_suffix(
+        peer.alias or peer.chat_key[-4:],
+        display_name=peer.display_name,
+        timeout=5,
+        allow_unique_row=False,
+    ) and chat_page.wait_for_message_input(timeout=3):
         return _composer_ready(chat_page)
 
     if open_peer_chat_by_deeplink(device, peer):
         return _composer_ready(chat_page)
 
     raise RuntimeError(
-        "Could not open the backend peer's chat: neither the Messages tab nor "
+        "Could not open the backend peer's chat: neither its Messages row nor "
         f"the status-app://p/{peer.public_key[:12]}… deep link reached a composer"
     )
 
