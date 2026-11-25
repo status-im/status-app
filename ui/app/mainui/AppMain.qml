@@ -1184,15 +1184,6 @@ Item {
                 profileLoader.item.setCurrentIndex(StatusSectionLayout.LeftPanel)
         }
 
-        function maybeDisplayIntroduceYourselfPopup() {
-            if (!appMainLocalSettings.introduceYourselfPopupSeen
-                    && appMain.ownContactDetails?.displayName === "") {
-                introduceYourselfPopupComponent.createObject(appMain).open()
-                return true
-            }
-            return false
-        }
-
         function ensName(username) {
             if (!username.endsWith(".stateofus.eth") && !username.endsWith(".eth")) {
                 return "%1.%2".arg(username).arg("stateofus.eth")
@@ -1259,12 +1250,6 @@ Item {
             })
         }
 
-        function maybeDisplayMessagingSectionPopups() {
-            if (d.maybeDisplayIntroduceYourselfPopup())
-                return
-            popupRequestsHandler.maybeDisplayEnableMessageBackupPopup()
-        }
-
         function maybeDisplayEnablePushNotificationsPopup() {
             loginPopupsQueue.schedule("enablePushNotifications",
                                       () => popupRequestsHandler.maybeDisplayEnablePushNotificationsPopup())
@@ -1295,7 +1280,6 @@ Item {
         id: appMainLocalSettings
         category: "AppMainLocalSettings_%1".arg(d.myPublicKey)
         property var whitelistedUnfurledDomains: []
-        property bool introduceYourselfPopupSeen
         property string skinColor  // a name, not a `#rrggbb` value
         property int theme: ThemeUtils.Style.System
         property int fontSize: {
@@ -2343,7 +2327,8 @@ Item {
                     onCurrentIndexChanged: {
                         // We cannot use isMessagingRelatedSectionType here because it is not updated yet
                         if (d.activeSectionType === Constants.appSection.chat || d.activeSectionType === Constants.appSection.community)
-                            loginPopupsQueue.schedule("messagingSection", d.maybeDisplayMessagingSectionPopups)
+                            loginPopupsQueue.schedule("messagingSection",
+                                                      () => popupRequestsHandler.maybeDisplayEnableMessageBackupPopup())
                     }
 
                     // NOTE:
@@ -3380,18 +3365,6 @@ Item {
             onClosed: {
                 savedAddressActivity.close()
             }
-        }
-    }
-
-    Component {
-        id: introduceYourselfPopupComponent
-        IntroduceYourselfPopup {
-            visible: true
-            destroyOnClose: true
-            pubKey: appMain.profileStore.compressedPubKey
-            colorId: appMain.profileStore.colorId
-            onClosed: appMainLocalSettings.introduceYourselfPopupSeen = true
-            onAccepted: Global.changeAppSectionBySectionType(Constants.appSection.profile)
         }
     }
 

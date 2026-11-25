@@ -9305,29 +9305,6 @@ app: %2</translation>
     </message>
 </context>
 <context>
-    <name>IntroduceYourselfPopup</name>
-    <message>
-        <source>Introduce yourself</source>
-        <translation>Preséntate</translation>
-    </message>
-    <message>
-        <source>Your Name</source>
-        <translation>Tu nombre</translation>
-    </message>
-    <message>
-        <source>Add an optional display name and profile picture so others can easily recognise you.</source>
-        <translation>Agrega un nombre para mostrar opcional y una foto de perfil para que otros puedan reconocerte fácilmente.</translation>
-    </message>
-    <message>
-        <source>Skip</source>
-        <translation>Omitir</translation>
-    </message>
-    <message>
-        <source>Edit Profile in Settings</source>
-        <translation>Editar perfil en Configuración</translation>
-    </message>
-</context>
-<context>
     <name>InvitationBubbleView</name>
     <message>
         <source>Verified community invitation</source>

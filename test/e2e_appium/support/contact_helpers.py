@@ -248,7 +248,6 @@ async def establish_contact(
     sender_chat.dismiss_backup_prompt(timeout=2)
     assert sender_app.click_messages_button(), "Sender failed to refresh messages tab"
     sender_chat.dismiss_backup_prompt(timeout=2)
-    sender_chat.dismiss_introduce_prompt(timeout=2)
 
     assert sender_chat.wait_for_new_chat_to_arrive(
         receiver_suffix, display_name=receiver_display, timeout=timeout,
@@ -508,7 +507,6 @@ async def establish_contacts_admin_to_many(
         "Admin failed to refresh messages tab after receiver accepts"
     )
     sender_chat.dismiss_backup_prompt(timeout=2)
-    sender_chat.dismiss_introduce_prompt(timeout=2)
 
     assert sender_chat.wait_for_peer_rows(len(receivers), timeout=timeout), (
         f"Admin never saw chat rows for all of {receiver_suffixes}"

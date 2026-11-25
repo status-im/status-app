@@ -9346,29 +9346,6 @@ app: %2</source>
     </message>
 </context>
 <context>
-    <name>IntroduceYourselfPopup</name>
-    <message>
-        <source>Introduce yourself</source>
-        <translation>Представтеся</translation>
-    </message>
-    <message>
-        <source>Your Name</source>
-        <translation>Ваше ім’я</translation>
-    </message>
-    <message>
-        <source>Add an optional display name and profile picture so others can easily recognise you.</source>
-        <translation>За бажанням додайте відображуване ім’я та фото профілю, щоб інші легко вас упізнавали.</translation>
-    </message>
-    <message>
-        <source>Skip</source>
-        <translation>Пропустити</translation>
-    </message>
-    <message>
-        <source>Edit Profile in Settings</source>
-        <translation>Редагувати профіль у налаштуваннях</translation>
-    </message>
-</context>
-<context>
     <name>InvitationBubbleView</name>
     <message>
         <source>Verified community invitation</source>
