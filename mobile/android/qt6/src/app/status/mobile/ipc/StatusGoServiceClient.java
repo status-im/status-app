@@ -63,7 +63,8 @@ public final class StatusGoServiceClient {
     // Tracks whether this process ever had a live Binder connection to status-go.
     private volatile boolean everConnected = false;
     // The service process went away while the UI was hidden: the service that comes up next
-    // is a fresh, logged-out backend the UI knows nothing about. The frontend restarts once
+    // is a fresh backend the UI knows nothing about (logged out, or logged in by itself through
+    // the boot login when RESUME_AFTER_RESTART_ENABLED is on). The frontend restarts once
     // it is visible again (an activity start from the background is blocked on Android 10+,
     // or brings Status to the front on its own where it is allowed).
     private volatile boolean serviceLostWhileHidden = false;
