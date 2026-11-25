@@ -7,7 +7,6 @@ set -euo pipefail
 : "${PLUGINS:?directory that holds generic/libqmlinspector.so}"
 image="${IMAGE:-status-e2e-tests}"
 state="${STATE:-$HOME/.cache/status-e2e}"
-fleet="${FLEET_PROJECT:-e2e-local-fleet}"
 repo=$(cd "$(dirname "$0")/../../../.." && pwd)
 app_dir=$(cd "$(dirname "$APP")" && pwd)
 plugins=$(cd "$PLUGINS" && pwd)
@@ -18,9 +17,8 @@ mkdir -p "$state"
 docker run --rm --entrypoint "" "$image" cat /etc/passwd > "$state/passwd"
 echo "tester:x:$(id -u):$(id -g):tester:/tmp/home:/bin/bash" >> "$state/passwd"
 
-docker compose -p "$fleet" -f "$repo/docker-compose.waku.yml" up -d
-trap 'docker compose -p "$fleet" -f "$repo/docker-compose.waku.yml" down --remove-orphans' EXIT
-(cd "$repo" && python3 test/e2e/scripts/scan_waku_fleet.py --project "$fleet")
+"$repo/test/e2e/scripts/start-waku-fleet.sh" "$state/waku"
+trap '"$repo/test/e2e/scripts/start-waku-fleet.sh" --stop "$state/waku"' EXIT
 
 docker run --rm --network=host --cap-add=SYS_ADMIN --security-opt=apparmor:unconfined \
   --user "$(id -u):$(id -g)" --entrypoint "" \
