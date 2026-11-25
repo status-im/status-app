@@ -125,6 +125,9 @@ method updateThreadCanView*(self: AccessInterface, canView: bool) {.base.} =
 method setThreadMuted*(self: AccessInterface, interval: int) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method setThreadMutedById*(self: AccessInterface, threadId: string, interval: int) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method canManageThreadById*(self: AccessInterface, threadId: string): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 

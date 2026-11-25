@@ -307,6 +307,7 @@ QtObject {
                 property bool threadMuted: false
                 property real threadMuteTill: 0
                 property int requestedMuteInterval: -1
+                property string requestedMuteThreadId
                 property int loadThreadsRequests: 0
                 readonly property ListModel threadsModel: ListModel {}
                 readonly property bool threadsLoading: false
@@ -314,6 +315,10 @@ QtObject {
 
                 function loadChatThreads() { loadThreadsRequests++ }
                 function setThreadMuted(interval) { requestedMuteInterval = interval }
+                function setThreadMutedById(id, interval) {
+                    requestedMuteThreadId = id
+                    requestedMuteInterval = interval
+                }
 
                 signal messageSuccessfullySent()
                 signal sendingMessageFailed(string error)

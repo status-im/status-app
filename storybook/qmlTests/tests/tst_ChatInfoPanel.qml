@@ -1,5 +1,6 @@
 import QtQuick
 import QtTest
+import utils
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils as SQUtils
 import AppLayouts.Chat.panels
@@ -13,28 +14,6 @@ Item {
     ListModel { id: participants }
 
     QtObject {
-        id: messageModule
-        property var model: null
-        property int chatType: 1
-        property string chatColor: "#4360df"
-        property string chatIcon: ""
-        property bool keepUnread: false
-        property string threadId: ""
-        property string threadName: ""
-        property string threadParentChatName: ""
-        property bool canEditThread: false
-        property bool threadEditPending: false
-        property bool threadDeletePending: false
-        function getChatId() { return "parent" }
-        function canManageThreadById(threadId) { return true }
-    }
-
-    QtObject {
-        id: chatContent
-        readonly property var messagesModule: messageModule
-    }
-
-    QtObject {
         id: testChatSectionModule
         property string requestedChatId
         property string requestedThreadId
@@ -45,7 +24,6 @@ Item {
             })
         }
         function prepareChatContentModuleForChatId(id) { requestedChatId = id }
-        function getChatContentModule() { return chatContent }
     }
 
     Component {
@@ -64,6 +42,7 @@ Item {
     SignalSpy { id: openSpy; signalName: "openThreadRequested" }
     SignalSpy { id: loadSpy; signalName: "loadThreadsRequested" }
     SignalSpy { id: contextMenuSpy; signalName: "contextMenuRequested" }
+    SignalSpy { id: muteSpy; signalName: "threadMuteRequested" }
 
     TestCase {
         name: "ChatInfoPanel"
@@ -236,7 +215,18 @@ Item {
             compare(threads.get(1).archived, true)
         }
 
-        function test_rightClickOpensThreadContextMenu() {
+        function test_rightClickOpensThreadContextMenu_data() {
+            return [
+                { tag: "mute", muted: false, interval: Constants.MutingVariations.For24hr },
+                { tag: "unmute", muted: true, interval: Constants.MutingVariations.Unmuted }
+            ]
+        }
+
+        function test_rightClickOpensThreadContextMenu(data) {
+            testChatSectionModule.requestedChatId = ""
+            muteSpy.target = panel
+            muteSpy.clear()
+            threads.setProperty(1, "muted", data.muted)
             panel.requestedTab = ChatInfoPanel.Threads
             const list = findChild(panel, "chatInfoThreadsList")
             tryCompare(list, "count", 2)
@@ -250,9 +240,29 @@ Item {
             const menu = findChild(panel, "chatInfoThreadContextMenu")
             verify(!!menu)
             tryCompare(menu, "opened", true)
-            tryCompare(testChatSectionModule, "requestedChatId", "parent")
             compare(testChatSectionModule.requestedThreadId, card.threadId)
             compare(openSpy.count, 0)
+            tryCompare(menu, "muted", data.muted)
+            const muteAction = findChild(menu, "threadContextMenu_muteThread")
+            const unmuteAction = findChild(menu, "threadContextMenu_unmuteThread")
+            compare(muteAction.enabled, !data.muted)
+            compare(unmuteAction.enabled, data.muted)
+            if (data.muted)
+                unmuteAction.trigger()
+            else
+                muteAction.muteTriggered(data.interval)
+            compare(testChatSectionModule.requestedChatId, "")
+            compare(muteSpy.count, 1)
+            compare(muteSpy.signalArguments[0][0], card.threadId)
+            compare(muteSpy.signalArguments[0][1], "parent")
+            compare(muteSpy.signalArguments[0][2], data.interval)
+
+            threads.setProperty(1, "muted", !data.muted)
+            tryCompare(menu, "muted", !data.muted)
+
+            panel.chatKey = "another-chat"
+            compare(menu.threadId, "")
+            tryCompare(menu, "opened", false)
         }
 
         function test_touchLongPressOpensThreadContextMenu() {
@@ -272,7 +282,6 @@ Item {
             const menu = findChild(panel, "chatInfoThreadContextMenu")
             verify(!!menu)
             tryCompare(menu, "opened", true)
-            tryCompare(testChatSectionModule, "requestedChatId", "parent")
             compare(testChatSectionModule.requestedThreadId, card.threadId)
             compare(openSpy.count, 0)
         }

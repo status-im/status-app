@@ -195,9 +195,21 @@ Control {
                 font.weight: root.muted ? Font.Normal : Font.DemiBold
             }
 
+            StatusIcon {
+                objectName: "threadCardMutedIcon"
+                Layout.preferredWidth: d.iconSize
+                Layout.preferredHeight: d.iconSize
+                Layout.leftMargin: Theme.halfPadding
+                visible: root.muted
+                icon: "notification-muted"
+                color: Theme.palette.baseColor1
+            }
+
             StatusBadge {
                 objectName: "threadCardUnreadBadge"
                 readonly property bool onlyUnread: !root.muted && root.notificationCount === 0 && root.hasUnreadMessages
+
+                Layout.leftMargin: root.muted ? Theme.halfPadding : 0
                 visible: root.notificationCount > 0 || onlyUnread
                 color: onlyUnread ? Theme.palette.baseColor1 :
                                     root.muted ? Theme.palette.primaryColor2 : Theme.palette.primaryColor1

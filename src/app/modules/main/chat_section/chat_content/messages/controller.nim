@@ -332,8 +332,8 @@ proc getThreadForParentMessage*(self: Controller, parentMessageId: string): Thre
 proc getThread*(self: Controller): lent ThreadDto =
   self.messageService.getThreadById(self.chatId, self.threadId)
 
-proc setThreadMuted*(self: Controller, interval: int) =
-  self.messageService.setThreadMuted(self.chatId, self.threadId, interval)
+proc setThreadMutedById*(self: Controller, threadId: string, interval: int) =
+  self.messageService.setThreadMuted(self.chatId, threadId, interval)
 
 proc getThreadById*(self: Controller, threadId: string): ThreadDto =
   self.messageService.getThreadById(self.chatId, threadId)
