@@ -22,12 +22,18 @@ type
     expecting: bool               # a node.login is the UI's
     expectedSeq: Option[uint64]   # none: unknown (no seq from status-go), the next one is it
     ignoredSeq: Option[uint64]    # the last node.login that wasn't the UI's
+    adopted: bool                 # the expected login is one the UI didn't start
 
 proc initStartupLogin*(state: LoginState, seq: uint64): StartupLogin =
   result = StartupLogin(state: state, knownSeq: seq)
   if state == LoginState.InProgress:
     result.expecting = true
     result.expectedSeq = some(seq)
+    result.adopted = true
+
+# The UI's login is one it adopted (most likely the boot login), not one it requested.
+proc loginAdopted*(self: StartupLogin): bool =
+  self.adopted
 
 proc action*(self: StartupLogin): StartupAction =
   case self.state
@@ -37,6 +43,7 @@ proc action*(self: StartupLogin): StartupAction =
 
 proc requestAccepted*(self: var StartupLogin, seq: Option[uint64]) =
   self.expecting = true
+  self.adopted = false
   self.expectedSeq = seq
   if seq.isSome:
     self.knownSeq = max(self.knownSeq, seq.get)
@@ -66,6 +73,7 @@ proc adoptRunningLogin*(self: var StartupLogin, state: LoginState, seq: uint64):
   self.knownSeq = max(self.knownSeq, seq)
   self.expecting = true
   self.expectedSeq = some(seq)
+  self.adopted = true
   if replay:
     self.ignoredSeq = none(uint64)
     return LoginAdoption.AdoptedReplay

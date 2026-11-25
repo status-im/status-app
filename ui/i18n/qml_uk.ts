@@ -17711,6 +17711,10 @@ to load</source>
         <translation>Ваш пароль зберігається в стандартному&lt;br/&gt;захищеному сховищі вашої системи</translation>
     </message>
     <message>
+        <source>Status also signs in by itself after your phone restarts or the app updates, so notifications keep coming.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Secure storage is unavailable on this device.</source>
         <translation>Захищене сховище недоступне на цьому пристрої.</translation>
     </message>

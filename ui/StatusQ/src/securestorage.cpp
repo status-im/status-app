@@ -20,3 +20,15 @@ void SecureStorage::setService(const QString &service)
     m_service = service;
     emit serviceChanged();
 }
+
+#ifndef Q_OS_ANDROID
+SecureStorage::Status SecureStorage::setBootLoginRecord(const QString &)
+{
+    return StatusNotSupported;
+}
+
+SecureStorage::Status SecureStorage::deleteBootLoginRecord()
+{
+    return StatusNotSupported;
+}
+#endif

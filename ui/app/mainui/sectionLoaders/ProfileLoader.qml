@@ -2,6 +2,7 @@ import QtQml
 import QtQuick
 
 import StatusQ
+import StatusQ.Core.Utils as SQUtils
 
 import utils
 
@@ -129,6 +130,8 @@ StatusSectionLoader {
             isBrowserEnabled:                       Qt.binding(() => root.featureFlagsStore.browserEnabled),
             messageLinkSharingFeatureEnabled:       Qt.binding(() => root.featureFlagsStore.messageLinkSharingEnabled),
             privacyModeFeatureEnabled:              Qt.binding(() => root.featureFlagsStore.privacyModeFeatureEnabled),
+            resumesAfterRestart:                    Qt.binding(() => SQUtils.Utils.isAndroid
+                                                                     && root.featureFlagsStore.resumeAfterRestartEnabled),
             minimizeOnCloseOptionVisible:           Qt.binding(() => root.systemTrayIconAvailable),
             theme:                                  Qt.binding(() => root.theme),
             nativeWindowDpr:                        Qt.binding(() => root.nativeWindowDpr),

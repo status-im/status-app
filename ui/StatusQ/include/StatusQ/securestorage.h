@@ -73,6 +73,12 @@ public:
     // Returns {"status": Status, "credential": QString}. Synchronous, never prompts.
     Q_INVOKABLE QVariantMap getCredential(const QString &account) const;
 
+    // The boot-login record: one per device, kept under its own key (never an account's
+    // credential key) and replayed by the Android status-go service after a phone
+    // restart. Platforms without boot login report StatusNotSupported and store nothing.
+    Q_INVOKABLE Status setBootLoginRecord(const QString &record);
+    Q_INVOKABLE Status deleteBootLoginRecord();
+
 signals:
     void serviceChanged();
     void availableChanged();

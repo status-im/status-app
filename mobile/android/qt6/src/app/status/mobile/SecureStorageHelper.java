@@ -48,6 +48,10 @@ public final class SecureStorageHelper {
     private static final String KEY_CT_PREFIX = "ct_"; // ciphertext
     private static final String KEY_IV_PREFIX = "iv_"; // iv
 
+    // The boot-login record's own entry. Account entries are keyed by key UID ("0x..."),
+    // so this can never collide with an account's credential.
+    public static final String BOOT_LOGIN_RECORD_KEY = "status.bootLoginRecord";
+
     // Status codes (kept in sync with securestorage_android.cpp).
     public static final int STATUS_OK = 1;
     public static final int STATUS_NOT_FOUND = 2;
@@ -212,6 +216,31 @@ public final class SecureStorageHelper {
         }
     }
 
+    /**
+     * Stores the boot-login record written by the UI, stamped with this build's versionCode
+     * so a later version can tell the record came from an older one.
+     */
+    public int setBootLoginRecord(String recordJson) {
+        try {
+            final org.json.JSONObject record = new org.json.JSONObject(recordJson);
+            record.put("versionCode", androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(
+                    mContext.getPackageManager().getPackageInfo(mContext.getPackageName(), 0)));
+            return setCredential(BOOT_LOGIN_RECORD_KEY, record.toString());
+        } catch (Throwable t) {
+            Log.w(TAG, "setBootLoginRecord failed", t);
+            return STATUS_ERROR;
+        }
+    }
+
+    /** On STATUS_OK the record JSON is written to out[0]. */
+    public int getBootLoginRecord(String[] out) {
+        return getCredential(BOOT_LOGIN_RECORD_KEY, out);
+    }
+
+    public int deleteBootLoginRecord() {
+        return deleteCredential(BOOT_LOGIN_RECORD_KEY);
+    }
+
     // ====== Keystore helpers ======
 
     private SecretKey ensureKey() throws Exception {
@@ -285,7 +314,12 @@ public final class SecureStorageHelper {
     // ====== Storage helpers ======
 
     private android.content.SharedPreferences prefs() {
-        return mContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        // Both the UI and :statusgo processes read and write this file, and a SharedPreferences
+        // commit writes the whole per-process map. MODE_MULTI_PROCESS reloads the file when it
+        // changed on disk, which narrows (does not close) the window in which one process commits
+        // a stale map that brings back an entry the other one removed (e.g. the boot-login
+        // record): a reload racing the other process's commit can still lose that commit.
+        return mContext.getSharedPreferences(PREFS_NAME, Context.MODE_MULTI_PROCESS);
     }
 
     /** @throws IllegalArgumentException on malformed Base64 (handled as corruption). */

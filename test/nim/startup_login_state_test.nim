@@ -158,3 +158,28 @@ suite "startup login: a request rejected because another login runs":
     check not startup.admitNodeLogin(some(5'u64))
     check startup.adoptRunningLogin(LoginState.None, seq = 5) == LoginAdoption.AdoptedReplay
     check startup.admitNodeLogin(some(5'u64))
+
+suite "StartupLogin.loginAdopted":
+
+  test "a login in progress at startup is adopted":
+    check initStartupLogin(LoginState.InProgress, seq = 3).loginAdopted
+
+  test "today's startup adopts nothing":
+    check not initStartupLogin(LoginState.None, seq = 3).loginAdopted
+
+  test "the UI's rejected request adopts the running login":
+    var startup = initStartupLogin(LoginState.None, seq = 3)
+    startup.requestAccepted(none(uint64))
+    discard startup.adoptRunningLogin(LoginState.InProgress, seq = 4)
+    check startup.loginAdopted
+
+  test "a rejection that adopts nothing keeps the UI's own login":
+    var startup = initStartupLogin(LoginState.None, seq = 3)
+    check startup.adoptRunningLogin(LoginState.LoggedIn, seq = 3) == LoginAdoption.NotAdopted
+    check not startup.loginAdopted
+
+  test "a login the UI requests after the adopted one failed is the UI's own":
+    var startup = initStartupLogin(LoginState.InProgress, seq = 3)
+    check startup.admitNodeLogin(some(3'u64))
+    startup.requestAccepted(some(4'u64))
+    check not startup.loginAdopted

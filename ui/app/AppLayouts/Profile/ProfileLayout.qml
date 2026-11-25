@@ -74,6 +74,8 @@ StatusSectionLayout {
 
     required property Keychain keychain
     required property SecureStorage secureStorage
+    // Android boot login is on: shown in the "Stay logged in" settings
+    property bool resumesAfterRestart: false
 
     property bool isKeycardEnabled: true
     property bool isBrowserEnabled: true
@@ -357,6 +359,7 @@ StatusSectionLayout {
                 privacyStore: root.privacyStore,
                 keychain: root.keychain,
                 secureStorage: root.secureStorage,
+                resumesAfterRestart: Qt.binding(() => root.resumesAfterRestart),
                 passwordStrengthScoreFunction: root.sharedRootStore.getPasswordStrengthScore,
                 contentWidth: Qt.binding(() => d.contentWidth),
                 sectionTitle: Qt.binding(() => settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.password))

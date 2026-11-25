@@ -18,6 +18,8 @@ Control {
     // false where migration cannot be started (e.g. the login screen): the hint stays,
     // the migrate button is hidden
     property bool migrationActionAllowed: true
+    // Android boot login is on: the stored password also signs in after a phone restart
+    property bool resumesAfterRestart: false
 
     // Migration to the new encryption format in progress (full re-encryption)
     property bool busy: false
@@ -74,6 +76,15 @@ Control {
                          && root.stayLoggedInEnabled
                 onClicked: root.toggleStayLoggedIn(stayLoggedInSwitch.checked)
             }
+        }
+        StatusBaseText {
+            objectName: "resumesAfterRestartText"
+            Layout.fillWidth: true
+            text: qsTr("Status also signs in by itself after your phone restarts or the app updates, so notifications keep coming.")
+            color: Theme.palette.baseColor1
+            font.pixelSize: Theme.additionalTextSize
+            wrapMode: Text.WordWrap
+            visible: root.resumesAfterRestart && root.storageAvailable && !root.keycardProfile
         }
         StatusBaseText {
             objectName: "storageUnavailableText"

@@ -53,6 +53,8 @@ public final class StatusGoService extends Service {
             BuildConfig.APPLICATION_ID + ".ipc.StatusGoService.START";
     public static final String ACTION_STOP =
             BuildConfig.APPLICATION_ID + ".ipc.StatusGoService.STOP";
+    public static final String ACTION_BOOT_LOGIN =
+            BuildConfig.APPLICATION_ID + ".ipc.StatusGoService.BOOT_LOGIN";
 
     private static final String CHANNEL_ID = "statusgo";
     private static final int NOTIFICATION_ID = 4242;
@@ -131,6 +133,40 @@ public final class StatusGoService extends Service {
     }
 
     private StatusNotificationManager notificationManager;
+
+    private final BootLogin bootLogin = new BootLogin(
+            app.status.mobile.BuildFlags.RESUME_AFTER_RESTART_ENABLED,
+            new BootLoginRecordStore(this),
+            keyUid -> {
+                final String[] out = new String[1];
+                final int status = app.status.mobile.SecureStorageHelper.getInstance(this)
+                        .getCredential(keyUid, out);
+                return status == app.status.mobile.SecureStorageHelper.STATUS_OK ? out[0] : null;
+            },
+            StatusGoService::callRpc,
+            stillHidden -> scheduleBackendLifecycleUpdate(false, stillHidden),
+            new BootLogin.Ui() {
+                @Override
+                public boolean visible() {
+                    return uiVisible;
+                }
+
+                @Override
+                public boolean bound() {
+                    return listeners.getRegisteredCallbackCount() > 0;
+                }
+            },
+            this::stopBootLoginService,
+            () -> {});
+
+    /** Nothing to resume after a restart: leave the foreground and stop. */
+    private void stopBootLoginService() {
+        try {
+            stopForeground(true);
+        } catch (Throwable ignored) {}
+        foregroundStarted = false;
+        stopSelf();
+    }
 
     private final SignalTypeResolver signalTypes = new SignalTypeResolver(
             utf8 -> new JSONObject(decode(utf8)).optString("type", ""),
@@ -249,6 +285,7 @@ public final class StatusGoService extends Service {
         if ("node.login".equals(type)) {
             json = decode(utf8);
             maybeStartForegroundFromSignal(json);
+            bootLogin.onNodeLogin(json);
         }
         if (notificationManager.wantsSignal(type)) {
             if (json == null) json = decode(utf8);
@@ -425,9 +462,15 @@ public final class StatusGoService extends Service {
      * list of service names), so argsJson must be: ["<escaped-names-json>"].
      */
     private void scheduleBackendLifecycleUpdate(boolean visible) {
+        scheduleBackendLifecycleUpdate(visible, null);
+    }
+
+    /** As above; the update is dropped when stillWanted no longer holds once it runs. */
+    private void scheduleBackendLifecycleUpdate(boolean visible, BootLogin.Condition stillWanted) {
         final int gen = lifecycleGen.incrementAndGet();
         lifecycleExecutor.execute(() -> {
             if (lifecycleGen.get() != gen) return;
+            if (stillWanted != null && !stillWanted.holds()) return;
             try {
                 final String namesJson = fetchPausableServiceNames();
                 if (namesJson == null) return;
@@ -651,6 +694,15 @@ public final class StatusGoService extends Service {
         // Ensure we can be started from background components (e.g. FCM) without risking
         // ForegroundServiceDidNotStartInTime. We can downgrade/stop later if needed.
         ensureForegroundStarted();
+        if (BootLogin.runsOnStart(app.status.mobile.BuildFlags.RESUME_AFTER_RESTART_ENABLED,
+                ACTION_BOOT_LOGIN.equals(action), intent == null,
+                listeners.getRegisteredCallbackCount() > 0)) {
+            try {
+                lifecycleExecutor.execute(bootLogin::run);
+            } catch (java.util.concurrent.RejectedExecutionException ignored) {
+                // service shutting down; nothing to resume
+            }
+        }
         return START_STICKY;
     }
 

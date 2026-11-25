@@ -20,6 +20,8 @@
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- Boot login: resume the logged-in service after a phone restart. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- Lets the browser hand a downloaded APK to the system installer. -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
@@ -169,6 +171,17 @@
             android:name=".ipc.NotificationReplyReceiver"
             android:exported="false"
             android:process=":statusgo" />
+
+        <!-- Boot login: starts StatusGoService after a phone restart. Not exported: the
+             system still delivers BOOT_COMPLETED, and no other app can reach it. -->
+        <receiver
+            android:name=".ipc.BootCompletedReceiver"
+            android:exported="false"
+            android:process=":statusgo">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
 
         <!-- Separate-process status-go host service -->
         <service

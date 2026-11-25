@@ -46,6 +46,8 @@ dependencies {
     // JVM unit tests for Android-free helpers (see test/). Also run by
     // `make -C mobile ipc-host-tests` without a Gradle project.
     testImplementation 'junit:junit:4.13.2'
+    // android.jar only ships org.json stubs; JVM tests need the real implementation.
+    testImplementation 'org.json:json:20231013'
 }
 
 // Allow overriding qtAndroidDir via environment variable (for different Qt installations)
@@ -57,6 +59,8 @@ def buildVariant = System.getenv("BUILD_VARIANT") ?: "release"
 def bundleIdentifier = System.getenv("BUNDLE_IDENTIFIER") ?: "app.status.mobile"
 // PR builds are profileable (heapprofd/simpleperf/perfetto from the shell), release and fdroid are not.
 def prVariant = buildVariant == "pr"
+// Same switch as the Nim build (mobile/scripts/buildNimStatusClient.sh), default off
+def resumeAfterRestartEnabled = System.getenv("FLAG_RESUME_AFTER_RESTART_ENABLED") == "1"
 
 android {
     /*******************************************************
@@ -132,6 +136,7 @@ android {
         resValue "string", "lib_name", buildVariant == 'release' ? "Status" : "StatusPR"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "boolean", "PR_VARIANT", "${prVariant}"
+        buildConfigField "boolean", "RESUME_AFTER_RESTART_ENABLED", "${resumeAfterRestartEnabled}"
     }
 
     signingConfigs {

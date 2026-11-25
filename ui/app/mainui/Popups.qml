@@ -93,6 +93,7 @@ QtObject {
             // defense-in-depth, and the preference flips off only on a verified-absent
             // result (delete-first ordering: startup trusts credential presence).
             const status = root.secureStorage.deleteCredential(userProfileKeyUid)
+            root.secureStorage.deleteBootLoginRecord()
             if (status === SecureStorage.StatusSuccess
                     || status === SecureStorage.StatusNotFound
                     || status === SecureStorage.StatusNotSupported) {
@@ -366,6 +367,7 @@ QtObject {
             // leftovers as defense-in-depth, but best-effort cleanup is not a
             // substitute for the prerequisite.
             const deleteStatus = root.secureStorage.deleteCredential(root.keycardManagementStore.userProfileKeyUid)
+            root.secureStorage.deleteBootLoginRecord()
             const verifiedAbsent = deleteStatus === SecureStorage.StatusSuccess
                                 || deleteStatus === SecureStorage.StatusNotFound
                                 || deleteStatus === SecureStorage.StatusNotSupported

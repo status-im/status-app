@@ -524,11 +524,15 @@ method requestLocalBackup*[T](self: Module[T], backupImportFileUrl: string) =
 method requestDeleteBiometrics*[T](self: Module[T], account: string) =
   self.view.deleteBiometricsRequested(account)
 
-method requestSaveStayLoggedIn*[T](self: Module[T], account: string, credential: string, enablePreference: bool) =
-  self.view.stayLoggedInSaveRequested(account, credential, enablePreference)
+method requestSaveStayLoggedIn*[T](self: Module[T], account: string, credential: string, enablePreference: bool,
+    bootLoginRecord: string) =
+  self.view.stayLoggedInSaveRequested(account, credential, enablePreference, bootLoginRecord)
 
 method requestDeleteStayLoggedIn*[T](self: Module[T], account: string) =
   self.view.stayLoggedInDeleteRequested(account)
+
+method requestDeleteBootLoginRecord*[T](self: Module[T]) =
+  self.view.bootLoginRecordDeleteRequested()
 
 method requestDeleteMultiaccount*[T](self: Module[T], keyUid: string): string =
   let err = self.controller.deleteMultiaccount(keyUid)
@@ -542,6 +546,13 @@ method requestDeleteMultiaccount*[T](self: Module[T], keyUid: string): string =
 
 proc runPostLoginTasks*[T](self: Module[T]) =
   let tasks = self.postLoginTasks.tasks
+  case bootLoginRecordAfterLogin(tasks, self.startupLogin.loginAdopted):
+  of BootLoginRecordAfterLogin.KeptCurrent:
+    self.view.bootLoginRecordKeepCurrentRequested(self.accountsService.bootLoginRecordForResumedSession())
+  of BootLoginRecordAfterLogin.Removed:
+    self.requestDeleteBootLoginRecord()
+  of BootLoginRecordAfterLogin.DecidedByTasks:
+    discard
   for task in tasks:
     case task.kind:
     of kConvertKeycardAccountToRegular:

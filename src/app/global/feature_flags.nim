@@ -41,6 +41,7 @@ const DEFAULT_FLAG_SWAP_ENABLED = true
 const DEFAULT_FLAG_PARASWAP_ENABLED = false
 const DEFAULT_FLAG_LIFI_ENABLED = false
 const DEFAULT_FLAG_RELAY_ENABLED = true
+const DEFAULT_FLAG_RESUME_AFTER_RESTART_ENABLED = false
 
 # Public feature flags
 featureFlag("SEND_VIA_PERSONAL_CHAT_ENABLED", DEFAULT_FLAG_SEND_VIA_PERSONAL_CHAT_ENABLED)
@@ -65,6 +66,7 @@ featureFlag("SWAP_ENABLED",                   DEFAULT_FLAG_SWAP_ENABLED, true)
 featureFlag("PARASWAP_ENABLED",               DEFAULT_FLAG_PARASWAP_ENABLED, true)
 featureFlag("LIFI_ENABLED",                   DEFAULT_FLAG_LIFI_ENABLED, true)
 featureFlag("RELAY_ENABLED",                  DEFAULT_FLAG_RELAY_ENABLED, true)
+featureFlag("RESUME_AFTER_RESTART_ENABLED",   DEFAULT_FLAG_RESUME_AFTER_RESTART_ENABLED, true)
 
 # There is no fallback support for more than one swap/bridge provider.
 # The app uses Relay (if enabled), then LI.FI (if enabled), Paraswap is not an option for now, since the UI doesn't
@@ -129,6 +131,7 @@ QtObject:
     lifiEnabled: bool
     relayEnabled: bool
     swapProvidersEnabled: bool
+    resumeAfterRestartEnabled: bool
 
   proc setup(self: FeatureFlags) =
     self.QObject.setup()
@@ -152,6 +155,7 @@ QtObject:
     self.lifiEnabled = LIFI_PROVIDER_ENABLED
     self.relayEnabled = RELAY_PROVIDER_ENABLED
     self.swapProvidersEnabled = SWAP_PROVIDER_ENABLED
+    self.resumeAfterRestartEnabled = RESUME_AFTER_RESTART_ENABLED
 
   proc newFeatureFlags*(): FeatureFlags =
     new(result)
@@ -279,3 +283,9 @@ QtObject:
 
   QtProperty[bool] swapProvidersEnabled:
     read = getSwapProvidersEnabled
+
+  proc getResumeAfterRestartEnabled*(self: FeatureFlags): bool {.slot.} =
+    return self.resumeAfterRestartEnabled
+
+  QtProperty[bool] resumeAfterRestartEnabled:
+    read = getResumeAfterRestartEnabled

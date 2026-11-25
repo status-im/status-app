@@ -51,6 +51,7 @@ Window {
         lifiEnabled: featureFlags ? featureFlags.lifiEnabled : false
         relayEnabled: featureFlags ? featureFlags.relayEnabled : false
         swapProvidersEnabled: featureFlags ? featureFlags.swapProvidersEnabled : false
+        resumeAfterRestartEnabled: featureFlags ? featureFlags.resumeAfterRestartEnabled : false
     }
 
     readonly property UtilsStore utilsStore: UtilsStore {}
@@ -172,6 +173,7 @@ Window {
 
     // Quits the app: during a session transition ending the session takes care of it
     function quitApp() : void {
+        bootLoginRecordGuard.quit()
         if (!sessionView.quit())
             Qt.exit(0)
     }
@@ -181,6 +183,19 @@ Window {
         if (SQUtils.Utils.isAndroid) {
             SystemUtils.setAndroidStatusBarIconColor(applicationWindow.appThemeDark)
         }
+    }
+
+    SecureStorage {
+        id: appSecureStorage
+
+        service: "StatusDesktop.AutoLogin"
+    }
+
+    BootLoginRecordGuard {
+        id: bootLoginRecordGuard
+
+        secureStorage: appSecureStorage
+        resumeAfterRestartEnabled: applicationWindow.featureFlagsStore.resumeAfterRestartEnabled
     }
 
     QtObject {
@@ -544,10 +559,13 @@ Window {
 
             anchors.fill: parent
 
+            onLoaded: bootLoginRecordGuard.keepCurrent(item.resumedBootLoginRecord)
+
             sourceComponent: SessionRoot {
                 featureFlagsStore: applicationWindow.featureFlagsStore
                 languageStore: applicationWindow.languageStore
                 utilsStore: applicationWindow.utilsStore
+                secureStorage: appSecureStorage
                 systemTrayIconAvailable: systemTray.available
                 portraitLayout: applicationWindow.portraitLayout
                 allowsAutoLogin: (keyUid) => sessionView.allowsAutoLogin(keyUid)
@@ -559,6 +577,7 @@ Window {
                 }
                 onStoreAppStateRequested: applicationWindow.storeAppState()
                 onSignOutRequested: d.signOut()
+                onBootLoginRecordKeepCurrentRequested: bootLoginRecord => bootLoginRecordGuard.keepCurrent(bootLoginRecord)
             }
         }
 

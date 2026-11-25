@@ -23,6 +23,7 @@ Item {
     required property AppStores.FeatureFlagsStore featureFlagsStore
     required property ProfileStores.LanguageStore languageStore
     required property UtilsStore utilsStore
+    required property SecureStorage secureStorage
     required property bool systemTrayIconAvailable
     required property bool portraitLayout
     // Whether the login screen may log in silently with the stored credential of a profile:
@@ -35,11 +36,17 @@ Item {
     signal storeAppStateRequested()
     // End the session: the next one starts at the login screen
     signal signOutRequested()
+    // An adopted login finished in the login flow (see BootLoginRecordGuard.keepCurrent)
+    signal bootLoginRecordKeepCurrentRequested(string bootLoginRecord)
 
     // Provided by Nim before the session's UI loads (see AppController.initializeQmlContext())
     readonly property bool skipOnboarding: typeof skipOnboardingContextProperty !== "undefined"
                                            ? skipOnboardingContextProperty
                                            : false
+    // The resumed session's boot-login record, "" when none may be kept (see BootLoginRecordGuard)
+    readonly property string resumedBootLoginRecord: typeof resumedBootLoginRecordContextProperty !== "undefined"
+                                                     ? resumedBootLoginRecordContextProperty
+                                                     : ""
 
     function tryGoBack() : bool {
         return !!appMainLoader.item && !!appMainLoader.item.tryGoBack && appMainLoader.item.tryGoBack()
@@ -119,7 +126,7 @@ Item {
         featureFlagsStore: root.featureFlagsStore
         languageStore: root.languageStore
         keychain: appKeychain
-        secureStorage: appSecureStorage
+        secureStorage: root.secureStorage
         systemTrayIconAvailable: root.systemTrayIconAvailable
         utilsStore: root.utilsStore
 
@@ -184,7 +191,7 @@ Item {
             item.featureFlagsStore = root.featureFlagsStore
             item.languageStore = root.languageStore
             item.keychain = appKeychain
-            item.secureStorage = appSecureStorage
+            item.secureStorage = root.secureStorage
             item.lastSelectedProfileKeyUid = Qt.binding(() => localAppSettings.selectedProfileKeyUid)
             item.biometricFlowPending = Qt.binding(() => d.biometricFlowPending)
             // MUST be assigned LAST: enabling triggers the one-shot auto-login
@@ -227,6 +234,9 @@ Item {
         function onNewSessionRequested() : void {
             root.signOutRequested()
         }
+        function onBootLoginRecordKeepCurrentRequested(bootLoginRecord: string) : void {
+            root.bootLoginRecordKeepCurrentRequested(bootLoginRecord)
+        }
     }
 
     Keychain {
@@ -254,12 +264,6 @@ Item {
                 d.moveToAppMain()
             }
         }
-    }
-
-    SecureStorage {
-        id: appSecureStorage
-
-        service: "StatusDesktop.AutoLogin"
     }
 
     Loader {

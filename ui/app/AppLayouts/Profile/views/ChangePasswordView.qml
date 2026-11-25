@@ -28,6 +28,8 @@ SettingsContentBase {
     property PrivacyStore privacyStore
     required property Keychain keychain
     required property SecureStorage secureStorage
+    // Android boot login is on (see StayLoggedInSectionView)
+    property bool resumesAfterRestart: false
 
     // The data was re-encrypted with the new password: log in again
     signal reloginRequested()
@@ -67,6 +69,7 @@ SettingsContentBase {
             // Delete the credential FIRST (startup trusts credential presence), then
             // flip the preference only on verified deletion
             const status = root.secureStorage.deleteCredential(root.privacyStore.keyUid)
+            root.secureStorage.deleteBootLoginRecord()
             if (status !== SecureStorage.StatusSuccess && status !== SecureStorage.StatusNotFound) {
                 Global.displayToastMessage(
                             qsTr("Failed to remove the saved password"),
@@ -259,6 +262,7 @@ SettingsContentBase {
             Layout.fillWidth: true
 
             storageAvailable: root.secureStorage.available
+            resumesAfterRestart: root.resumesAfterRestart
             stayLoggedInEnabled: d.stayLoggedInEnabled
             profileMigrated: d.profileMigrated
             keycardProfile: root.privacyStore.migratedToColdWallet
@@ -425,6 +429,7 @@ SettingsContentBase {
                                 // credential presence, so "preference off + credential
                                 // possibly present" must never be produced here.
                                 const silentDeleteStatus = root.secureStorage.deleteCredential(root.privacyStore.keyUid)
+                                root.secureStorage.deleteBootLoginRecord()
                                 if (silentDeleteStatus === SecureStorage.StatusSuccess
                                         || silentDeleteStatus === SecureStorage.StatusNotFound) {
                                     root.privacyStore.setStayLoggedIn(false)

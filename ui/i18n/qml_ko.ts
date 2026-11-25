@@ -17542,6 +17542,10 @@ to load</source>
         <translation>비밀번호는 시스템의 기본&lt;br/&gt;보안 저장소를 사용하여 저장됩니다</translation>
     </message>
     <message>
+        <source>Status also signs in by itself after your phone restarts or the app updates, so notifications keep coming.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Secure storage is unavailable on this device.</source>
         <translation>이 기기에서는 보안 저장소를 사용할 수 없습니다.</translation>
     </message>

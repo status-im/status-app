@@ -18,6 +18,7 @@ OnboardingStackView {
 
     property bool isProfileMigratedToDEKEncryption: false
     property bool stayLoggedInAvailable: false
+    property bool resumesAfterRestart: false
     property bool biometricsAvailable: false
 
     // functions
@@ -90,6 +91,7 @@ OnboardingStackView {
         CreatePasswordPage {
             passwordStrengthScoreFunction: root.passwordStrengthScoreFunction
             stayLoggedInAvailable: root.stayLoggedInAvailable
+            resumesAfterRestart: root.resumesAfterRestart
             biometricsAvailable: root.biometricsAvailable
 
             onStayLoggedInRequested: (enabled) => root.stayLoggedInRequested(enabled)

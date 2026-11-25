@@ -40,8 +40,11 @@ QtObject:
   proc loginAdopted*(self: View) {.signal.}
   proc saveBiometricsRequested*(self: View, account: string, credential: string) {.signal.}
   proc deleteBiometricsRequested*(self: View, account: string) {.signal.}
-  proc stayLoggedInSaveRequested*(self: View, account: string, credential: string, enablePreference: bool) {.signal.}
+  proc stayLoggedInSaveRequested*(self: View, account: string, credential: string, enablePreference: bool,
+      bootLoginRecord: string) {.signal.}
   proc stayLoggedInDeleteRequested*(self: View, account: string) {.signal.}
+  proc bootLoginRecordDeleteRequested*(self: View) {.signal.}
+  proc bootLoginRecordKeepCurrentRequested*(self: View, bootLoginRecord: string) {.signal.}
 
   ### QtProperties ###
 

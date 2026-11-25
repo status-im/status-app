@@ -41,6 +41,9 @@ Item {
     // The converted profile's databases need a fresh backend: end the session, the next
     // one starts at the login screen
     signal newSessionRequested()
+    // An adopted login (the boot login): keep its boot-login record current (see
+    // BootLoginRecordGuard.keepCurrent)
+    signal bootLoginRecordKeepCurrentRequested(string bootLoginRecord)
 
     OnboardingStore {
         id: defaultOnboardingStore
@@ -55,6 +58,15 @@ Item {
         // at startup never gets here: the resume path opens the session directly.)
         readonly property bool adoptingLogin:
             root.onboardingStore.startupLoginState === Onboarding.LoginState.InProgress
+
+        // The boot-login record follows the "Stay logged in" credential: written next to
+        // it after a login, removed with it. It never holds the DEK (Nim strips it).
+        function storeBootLoginRecord(record) {
+            if (record !== "" && root.featureFlagsStore.resumeAfterRestartEnabled)
+                root.secureStorage.setBootLoginRecord(record)
+            else
+                root.secureStorage.deleteBootLoginRecord()
+        }
     }
 
     Component {
@@ -97,8 +109,10 @@ Item {
             // manual-login error (possibly on another profile) finds nothing to
             // delete.
             const staleAutoLoginKeyUid = onboardingLayout.consumeAutoLoginFailure()
-            if (staleAutoLoginKeyUid !== "" && root.secureStorage)
+            if (staleAutoLoginKeyUid !== "" && root.secureStorage) {
                 root.secureStorage.deleteCredential(staleAutoLoginKeyUid)
+                root.secureStorage.deleteBootLoginRecord()
+            }
 
             // Return to the existing login screen by popping whatever is above it
             // recreating it via unwindToLoginScreen would discard the error state.
@@ -126,7 +140,7 @@ Item {
             root.keychain.deleteCredential(account)
         }
 
-        function onStayLoggedInSaveRequested(account, credential, enablePreference) {
+        function onStayLoggedInSaveRequested(account, credential, enablePreference, bootLoginRecord) {
             // The credential is guaranteed dek-tagged (enforced Nim-side; empty when the
             // preference is OFF, where the task skips the DEK export). The preference
             // survives logout by design: with it ON, an explicit login silently
@@ -142,11 +156,13 @@ Item {
                 // leftover credential.
                 if (root.secureStorage.hasCredential(account) === SecureStorage.StatusSuccess)
                     root.secureStorage.deleteCredential(account)
+                root.secureStorage.deleteBootLoginRecord()
                 return
             }
             // A non-empty credential is only sent when the preference is ON or the
             // onboarding opt-in was taken (enforced Nim-side).
             const status = root.secureStorage.setCredential(account, credential)
+            d.storeBootLoginRecord(status === SecureStorage.StatusSuccess ? bootLoginRecord : "")
             if (!enablePreference)
                 return
             if (status === SecureStorage.StatusSuccess) {
@@ -168,10 +184,21 @@ Item {
             // deletion verifiably succeeded turn the preference off (delete-first
             // ordering; startup trusts credential presence).
             const status = root.secureStorage.deleteCredential(account)
+            root.secureStorage.deleteBootLoginRecord()
             if (status === SecureStorage.StatusSuccess
                     || status === SecureStorage.StatusNotFound
                     || status === SecureStorage.StatusNotSupported)
                 root.onboardingStore.setStayLoggedIn(false)
+        }
+
+        // A login that stored no credential: the previous login's record must not
+        // resume a different profile after a phone restart
+        function onBootLoginRecordDeleteRequested() {
+            root.secureStorage.deleteBootLoginRecord()
+        }
+
+        function onBootLoginRecordKeepCurrentRequested(bootLoginRecord) {
+            root.bootLoginRecordKeepCurrentRequested(bootLoginRecord)
         }
 
         function onKeycardStateChanged() {
@@ -207,6 +234,8 @@ Item {
         adoptingLogin: d.adoptingLogin
 
         privacyModeFeatureEnabled: root.featureFlagsStore.privacyModeFeatureEnabled
+        resumesAfterRestart: SQUtils.Utils.isAndroid
+                             && !!root.featureFlagsStore?.resumeAfterRestartEnabled
 
         onFinished: function(flow, data) {
             const error = root.onboardingStore.finishOnboardingFlow(flow, data)

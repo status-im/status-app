@@ -141,4 +141,31 @@ Item {
             compare(root.toggleArgs.length, 0)
         }
     }
+
+    TestCase {
+        name: "StayLoggedInSectionView_resumesAfterRestart"
+        when: windowShown
+
+        function test_restartHint_data() {
+            return [
+                { tag: "boot login platform", resumes: true, available: true, keycard: false, visible: true },
+                { tag: "no boot login", resumes: false, available: true, keycard: false, visible: false },
+                { tag: "no secure storage", resumes: true, available: false, keycard: false, visible: false },
+                { tag: "keycard profile", resumes: true, available: true, keycard: true, visible: false },
+            ]
+        }
+
+        function test_restartHint(data) {
+            root.availableFlag = data.available
+            root.migratedFlag = true
+            root.keycardFlag = data.keycard
+            const section = createTemporaryObject(sectionComponent, root,
+                                                  { resumesAfterRestart: data.resumes })
+            verify(!!section)
+            const hint = findChild(section, "resumesAfterRestartText")
+            verify(!!hint)
+            compare(hint.visible, data.visible)
+            verify(hint.text.indexOf("restarts") >= 0)
+        }
+    }
 }

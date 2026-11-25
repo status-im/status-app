@@ -1,3 +1,5 @@
+import std/sequtils
+
 type PostOnboardingTaskKind* = enum
   # NOTE: Call from Login page when the keycard was lost and is being replaced.
   kPostOnboardingTaskKeycardReplacement = 0
@@ -67,3 +69,25 @@ proc abandon*(self: var PostLoginTasks) =
 proc add*(self: var PostLoginTasks, task: PostOnboardingTask) =
   if not self.abandoned:
     self.tasks.add(task)
+
+proc loginDecidesBootLoginRecord*(tasks: openArray[PostOnboardingTask]): bool =
+  ## Only the stay-logged-in task writes or removes the boot-login record. After a
+  ## login without it (recovery phrase, onboarding without the opt-in) the record must
+  ## be removed, so a boot login never resumes the previous login's profile.
+  tasks.anyIt(it.kind == kPostOnboardingTaskSaveStayLoggedIn)
+
+type BootLoginRecordAfterLogin* {.pure.} = enum
+  DecidedByTasks  # the stay-logged-in task writes or removes it
+  Removed
+  KeptCurrent     # rewritten as in a resumed session
+
+proc bootLoginRecordAfterLogin*(tasks: openArray[PostOnboardingTask], loginAdopted: bool): BootLoginRecordAfterLogin =
+  ## An adopted login (most likely the boot login) runs none of the UI's post-login
+  ## tasks, yet its record must stay for the next phone restart: kept current under the
+  ## resumed-session rule.
+  if loginAdopted:
+    BootLoginRecordAfterLogin.KeptCurrent
+  elif loginDecidesBootLoginRecord(tasks):
+    BootLoginRecordAfterLogin.DecidedByTasks
+  else:
+    BootLoginRecordAfterLogin.Removed
