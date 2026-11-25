@@ -11,7 +11,7 @@ requires "nim == 2.2.12"  # 2.2.4-2.2.8 cannot compile wallet_section/all_tokens
 
 # The Nim libraries status-go links. These lines must match
 # vendor/status-go/status_go.nimble.
-requires "https://github.com/logos-messaging/nim-sds#8f7fee08f0256c1788089e756182c8be0a621930"
+requires "https://github.com/logos-messaging/nim-sds#ac613a72ae17402e898f3d996651f8746d8b0baf"
 requires "https://github.com/status-im/nim-token-lists#4df3308a32b0f3da18ef0d37d26fa9f1195f8b9e"
 requires "chronos#0de7b335d0ad5557ad5ba71a4b7662f7b201750e"
 
