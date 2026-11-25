@@ -84,7 +84,12 @@ proc init*(self: Controller) =
 
   handlerId = self.events.onWithUUID(SIGNAL_LOGIN_ERROR) do(e: Args):
     let args = LoginErrorArgs(e)
-    self.delegate.onAccountLoginError(args.error)
+    self.delegate.onLoginRequestFailed(args.error)
+  self.connectionIds.add(handlerId)
+
+  handlerId = self.events.onWithUUID(SIGNAL_LOGIN_REQUEST_ACCEPTED) do(e: Args):
+    let args = LoginRequestAcceptedArgs(e)
+    self.delegate.onLoginRequestAccepted(args.seq)
   self.connectionIds.add(handlerId)
 
   handlerId = self.events.onWithUUID(SignalType.DBReEncryptionStarted.event) do(e: Args):

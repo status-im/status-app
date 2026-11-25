@@ -132,6 +132,7 @@ SplitView {
 
             // password signals
             signal accountLoginError(string error, bool wrongPassword)
+            signal loginAdopted()
 
             // (test) error handler
             onAccountLoginError: function (error, wrongPassword) {

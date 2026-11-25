@@ -1,4 +1,6 @@
-from app_service/service/accounts/dto/accounts import LoginState
+import std/options
+from app_service/service/accounts/dto/accounts import LoginState, LOGIN_IN_PROGRESS_ERROR,
+  ALREADY_LOGGED_IN_ERROR
 
 type
   StartupAction* {.pure.} = enum
@@ -6,14 +8,20 @@ type
     WaitForLogin    # in progress: a login the UI didn't start, its node.login decides
     AdoptSession    # logged in: take the resume path
 
-  # The login state the onboarding module read at startup. Its seq tells the UI's own
-  # node.login from a queued one of a login the UI didn't start.
+  # Which node.login belongs to the UI: only the one of the login the UI requested (seq
+  # from its accepted request) or adopted (seq from the login state). Seqs are per
+  # status-go process.
   StartupLogin* = object
-    state: LoginState
-    seq: uint64
+    state: LoginState             # read at startup
+    knownSeq: uint64              # the latest login seq the UI knows of
+    expecting: bool               # a node.login is the UI's
+    expectedSeq: Option[uint64]   # none: unknown (no seq from status-go), the next one is it
 
 proc initStartupLogin*(state: LoginState, seq: uint64): StartupLogin =
-  StartupLogin(state: state, seq: seq)
+  result = StartupLogin(state: state, knownSeq: seq)
+  if state == LoginState.InProgress:
+    result.expecting = true
+    result.expectedSeq = some(seq)
 
 proc action*(self: StartupLogin): StartupAction =
   case self.state
@@ -21,12 +29,34 @@ proc action*(self: StartupLogin): StartupAction =
   of LoginState.InProgress: StartupAction.WaitForLogin
   of LoginState.LoggedIn: StartupAction.AdoptSession
 
-# Whether a node.login belongs to the UI. In progress: only that login's node.login,
-# which ends the wait. Otherwise only a login after the one read at startup.
-proc admitNodeLogin*(self: var StartupLogin, seq: uint64): bool =
-  if self.state == LoginState.InProgress:
-    if seq != self.seq:
-      return false
-    self.state = LoginState.None
+proc requestAccepted*(self: var StartupLogin, seq: Option[uint64]) =
+  self.expecting = true
+  self.expectedSeq = seq
+  if seq.isSome:
+    self.knownSeq = max(self.knownSeq, seq.get)
+
+# A node.login without a seq is admitted, as before seqs.
+proc admitNodeLogin*(self: var StartupLogin, seq: Option[uint64]): bool =
+  if seq.isNone:
+    self.expecting = false
     return true
-  return seq > self.seq
+  if not self.expecting:
+    return false
+  if self.expectedSeq.isSome and self.expectedSeq.get != seq.get:
+    return false
+  self.expecting = false
+  return true
+
+proc isLoginBusyError*(error: string): bool =
+  error == LOGIN_IN_PROGRESS_ERROR or error == ALREADY_LOGGED_IN_ERROR
+
+# The UI's login request was rejected with a login busy error. Adopts the login the
+# state now reports: in progress or logged in, or none after a login the UI didn't know
+# of (it failed since). Its node.login decides.
+proc adoptRunningLogin*(self: var StartupLogin, state: LoginState, seq: uint64): bool =
+  if state == LoginState.None and seq <= self.knownSeq:
+    return false
+  self.knownSeq = max(self.knownSeq, seq)
+  self.expecting = true
+  self.expectedSeq = some(seq)
+  return true

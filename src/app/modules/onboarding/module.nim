@@ -42,6 +42,8 @@ type
     accountsService: accounts_service.Service
     generalService: general_service.Service
     startupLogin: StartupLogin
+    # The last node.login that wasn't the UI's: a login adopted after it arrived replays it.
+    ignoredNodeLogin: Option[tuple[seq: uint64, err: string, account: AccountDto, settings: SettingsDto]]
     # Profiles on the login screen; any other one logging in is new on this device.
     listedKeyUids: Option[HashSet[string]]
     tmpKeyUid: string # TODO: remove this, once we switch fully to new keycard approach
@@ -409,9 +411,34 @@ method onAccountLoginError*[T](self: Module[T], error: string) =
   warn "failed to login", wrongPassword, error
   self.view.accountLoginError(error, wrongPassword)
 
-method onNodeLogin*[T](self: Module[T], seq: uint64, err: string, account: AccountDto, settings: SettingsDto) =
+method onLoginRequestAccepted*[T](self: Module[T], seq: Option[uint64]) =
+  if seq.isNone:
+    warn "login request accepted without a login seq, the next node.login is taken as its own"
+  self.startupLogin.requestAccepted(seq)
+
+method onLoginRequestFailed*[T](self: Module[T], error: string) =
+  if not isLoginBusyError(error):
+    self.onAccountLoginError(error)
+    return
+  # Another login (most likely the boot login) runs or just ran: adopt it instead of
+  # reporting a login error, its node.login decides.
+  let loginState = self.accountsService.fetchLoginState()
+  if not self.startupLogin.adoptRunningLogin(loginState.state, loginState.seq):
+    self.onAccountLoginError(error)
+    return
+  info "login request rejected, adopting the running login", error, state = $loginState.state, seq = loginState.seq
+  self.view.loginAdopted()
+  if self.ignoredNodeLogin.isSome:
+    let ignored = self.ignoredNodeLogin.get
+    self.ignoredNodeLogin = none(tuple[seq: uint64, err: string, account: AccountDto, settings: SettingsDto])
+    self.onNodeLogin(some(ignored.seq), ignored.err, ignored.account, ignored.settings)
+
+method onNodeLogin*[T](self: Module[T], seq: Option[uint64], err: string, account: AccountDto, settings: SettingsDto) =
+  if seq.isNone:
+    warn "node.login without a login seq, taken as the UI's"
   if not self.startupLogin.admitNodeLogin(seq):
-    info "ignoring the node.login of a login the UI didn't start", seq
+    info "ignoring the node.login of a login the UI didn't start", seq = seq.get
+    self.ignoredNodeLogin = some((seq: seq.get, err: err, account: account, settings: settings))
     return
   if err.len != 0:
     self.onAccountLoginError(err)

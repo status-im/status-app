@@ -1,6 +1,6 @@
 {.used.}
 
-import json, strutils
+import json, strutils, options
 import app_service/service/contacts/dto/contacts
 
 include app_service/common/json_utils
@@ -40,6 +40,19 @@ type LoginState* {.pure.} = enum
   None = "none"
   InProgress = "inProgress"
   LoggedIn = "loggedIn"
+
+# The errors status-go rejects a login request with while another login is in progress
+# or a session is logged in. NOTE: Keep in sync with ErrLoginInProgress and
+# ErrAlreadyLoggedIn in vendor/status-go/pkg/backend/login_state.go
+const LOGIN_IN_PROGRESS_ERROR* = "a login is already in progress"
+const ALREADY_LOGGED_IN_ERROR* = "already logged in"
+
+# The login seq of a login response or node.login; none when status-go didn't send one.
+proc toLoginSeq*(jsonObj: JsonNode): Option[uint64] =
+  let seqObj = jsonObj{"seq"}
+  if seqObj == nil or seqObj.kind != JInt:
+    return none(uint64)
+  return some(seqObj.getBiggestInt.uint64)
 
 # seq: the login sequence number of the current or last login, also on its node.login
 type LoginStateDto* = object

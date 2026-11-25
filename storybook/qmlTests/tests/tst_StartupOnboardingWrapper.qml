@@ -127,6 +127,7 @@ Item {
                 }
 
                 signal accountLoginError(string error, bool wrongPassword)
+                signal loginAdopted()
                 signal stayLoggedInSaveRequested(string keyUid, string credential, bool enablePreference)
                 signal stayLoggedInDeleteRequested(string keyUid)
 
@@ -424,6 +425,47 @@ Item {
             const passwordBox = findChild(layout.stack.loginScreen, "passwordBox")
             verify(!!passwordBox)
             compare(passwordBox.validationError, "")
+        }
+
+        // None, then the silent login request is rejected because a login the UI didn't
+        // start (the boot login) runs: the module adopts it. When it fails: the login
+        // screen without an error, no silent retry, and the credential is kept.
+        function test_rejectedSilentLoginAdoptsTheRunningLoginAndKeepsTheCredentialOnFailure() {
+            createWithStoredCredential(Onboarding.LoginState.None)
+            tryVerify(() => layout.autoLoginAttempted)
+            compare(wrapper.onboardingStore.loginRequestedCalls.length, 1)
+
+            wrapper.onboardingStore.loginAdopted()
+            verify(isSplashOnTop(), "the loading screen stays while the adopted login runs")
+
+            wrapper.onboardingStore.accountLoginError("node.login failed", false)
+
+            tryVerify(() => !!layout.stack.loginScreen
+                      && layout.stack.currentItem === layout.stack.loginScreen,
+                      2000, "the login screen must be shown")
+            compare(wrapper.secureStorage.deleteCalls.length, 0)
+            compare(wrapper.secureStorage.creds["uid_1"], "dek:" + root.dummyDekHex)
+            compare(wrapper.onboardingStore.loginRequestedCalls.length, 1)
+
+            const passwordBox = findChild(layout.stack.loginScreen, "passwordBox")
+            verify(!!passwordBox)
+            compare(passwordBox.validationError, "")
+        }
+
+        // The adopted login succeeds: the app opens, the credential is kept.
+        function test_rejectedSilentLoginAdoptsTheRunningLoginOnSuccess() {
+            createWithStoredCredential(Onboarding.LoginState.None)
+            tryVerify(() => layout.autoLoginAttempted)
+            const moveSpy = signalSpy.createObject(wrapper, {
+                target: wrapper, signalName: "requestMoveToAppMain" })
+
+            wrapper.onboardingStore.loginAdopted()
+            wrapper.onboardingStore.appLoaded()
+
+            compare(moveSpy.count, 1)
+            compare(wrapper.onboardingStore.loginRequestedCalls.length, 1)
+            compare(wrapper.secureStorage.deleteCalls.length, 0)
+            compare(wrapper.secureStorage.creds["uid_1"], "dek:" + root.dummyDekHex)
         }
     }
 

@@ -31,6 +31,11 @@ Page {
     // credential must never hijack an e2e run.
     property bool autoLoginEnabled: false
 
+    // A login the UI didn't start is running: no auto-login attempt, and its failure
+    // falls back to the login screen without an error and without a silent "Stay
+    // logged in" retry (that login most likely used the same credential).
+    property bool adoptingLogin: false
+
     // One-shot marker: a failed auto-login must fall back to the normal login screen,
     // never retry (the wrapper also uses it to drop the stale credential on error).
     readonly property alias autoLoginAttempted: d.autoLoginAttempted
@@ -46,11 +51,6 @@ Page {
     }
 
     onAutoLoginEnabledChanged: d.tryAutoLogin()
-
-    // A login the UI didn't start is running: no auto-login attempt, and its failure
-    // falls back to the login screen without an error and without a silent "Stay
-    // logged in" retry (that login most likely used the same credential).
-    property bool adoptingLogin: false
     required property bool privacyModeFeatureEnabled
 
     // list of language/locale codes, e.g. ["cs_CZ","ko","fr"]
@@ -413,6 +413,15 @@ Page {
                 return
             }
             accountsLoadErrorDialog.open()
+        }
+
+        // The UI's own request lost to a login the UI didn't start: that login's
+        // failure is not the UI's (no credential deletion, no error, no retry).
+        function onLoginAdopted() : void {
+            console.info("login request rejected: waiting for the login already running")
+            d.autoLoginPendingKeyUid = ""
+            d.autoLoginErrorPending = false
+            d.adoptedLoginErrorPending = true
         }
     }
 

@@ -1,4 +1,4 @@
-import unittest, json
+import unittest, json, options
 
 import app_service/service/accounts/dto/accounts
 import app/modules/onboarding/startup_login
@@ -29,35 +29,99 @@ suite "toLoginStateDto":
   test "no seq reads as zero":
     check toLoginStateDto(%*{"state": "none"}).seq == 0'u64
 
+suite "toLoginSeq":
+
+  test "reads the seq":
+    check toLoginSeq(%*{"error": "", "seq": 9}) == some(9'u64)
+
+  test "a missing seq is unknown":
+    check toLoginSeq(%*{"error": ""}).isNone
+    check toLoginSeq(%*{"error": "", "seq": "x"}).isNone
+
+suite "login busy errors":
+
+  test "only the exact rejection errors":
+    check isLoginBusyError("a login is already in progress")
+    check isLoginBusyError("already logged in")
+    check not isLoginBusyError("")
+    check not isLoginBusyError("loginAccount failed: a login is already in progress")
+    check not isLoginBusyError("incorrect password provided")
+
 suite "startup login: which node.login belongs to the UI":
 
-  test "none: a stale node.login of a login the UI didn't start is ignored":
+  test "none: nothing requested, every node.login is ignored":
     var startup = initStartupLogin(LoginState.None, seq = 4)
-    check not startup.admitNodeLogin(3)
-    check not startup.admitNodeLogin(4)
+    check not startup.admitNodeLogin(some(3'u64))
+    check not startup.admitNodeLogin(some(4'u64))
+    check not startup.admitNodeLogin(some(5'u64))
 
-  test "none: the node.login of a later login is the UI's":
+  test "only the node.login of the UI's own request is admitted, once":
     var startup = initStartupLogin(LoginState.None, seq = 4)
-    check startup.admitNodeLogin(5)
-    check startup.admitNodeLogin(6)
+    startup.requestAccepted(some(6'u64))
+    check not startup.admitNodeLogin(some(5'u64))
+    check startup.admitNodeLogin(some(6'u64))
+    check not startup.admitNodeLogin(some(6'u64))
+
+  test "a login the UI didn't start, accepted after the read, failing while the UI's own runs, is ignored":
+    var startup = initStartupLogin(LoginState.None, seq = 4)
+    startup.requestAccepted(some(6'u64))
+    check not startup.admitNodeLogin(some(5'u64))
+    check startup.admitNodeLogin(some(6'u64))
 
   test "in progress: only the node.login of that login is adopted":
     var startup = initStartupLogin(LoginState.InProgress, seq = 4)
-    check not startup.admitNodeLogin(3)
-    check startup.admitNodeLogin(4)
+    check not startup.admitNodeLogin(some(3'u64))
+    check not startup.admitNodeLogin(some(5'u64))
+    check startup.admitNodeLogin(some(4'u64))
+    check not startup.admitNodeLogin(some(4'u64))
 
-  test "in progress, then that login ended: only later logins count":
+  test "in progress, then that login ended: the next request's node.login counts":
     var startup = initStartupLogin(LoginState.InProgress, seq = 4)
-    check startup.admitNodeLogin(4)
-    check not startup.admitNodeLogin(4)
-    check startup.admitNodeLogin(5)
+    check startup.admitNodeLogin(some(4'u64))
+    startup.requestAccepted(some(5'u64))
+    check startup.admitNodeLogin(some(5'u64))
 
   test "logged in: the late node.login of the adopted session is ignored":
     var startup = initStartupLogin(LoginState.LoggedIn, seq = 4)
-    check not startup.admitNodeLogin(4)
-    check startup.admitNodeLogin(5)
+    check not startup.admitNodeLogin(some(4'u64))
+    check not startup.admitNodeLogin(some(5'u64))
+
+  test "a node.login without a seq is admitted (status-go without seqs)":
+    var startup = initStartupLogin(LoginState.None, seq = 0)
+    check startup.admitNodeLogin(none(uint64))
+
+  test "a request accepted without a seq admits the next node.login":
+    var startup = initStartupLogin(LoginState.None, seq = 0)
+    startup.requestAccepted(none(uint64))
+    check startup.admitNodeLogin(some(7'u64))
+    check not startup.admitNodeLogin(some(8'u64))
 
   test "startup action per login state":
     check initStartupLogin(LoginState.None, 0).action == StartupAction.ShowOnboarding
     check initStartupLogin(LoginState.InProgress, 1).action == StartupAction.WaitForLogin
     check initStartupLogin(LoginState.LoggedIn, 1).action == StartupAction.AdoptSession
+
+suite "startup login: a request rejected because another login runs":
+
+  test "in progress: adopt that login":
+    var startup = initStartupLogin(LoginState.None, seq = 4)
+    check startup.adoptRunningLogin(LoginState.InProgress, seq = 5)
+    check not startup.admitNodeLogin(some(4'u64))
+    check startup.admitNodeLogin(some(5'u64))
+
+  test "logged in: adopt that login":
+    var startup = initStartupLogin(LoginState.None, seq = 4)
+    check startup.adoptRunningLogin(LoginState.LoggedIn, seq = 5)
+    check startup.admitNodeLogin(some(5'u64))
+
+  test "none, after a login the UI didn't know: adopt it, its failure is pending":
+    var startup = initStartupLogin(LoginState.None, seq = 4)
+    check startup.adoptRunningLogin(LoginState.None, seq = 5)
+    check startup.admitNodeLogin(some(5'u64))
+
+  test "none, nothing new: not adopted":
+    var startup = initStartupLogin(LoginState.None, seq = 4)
+    check not startup.adoptRunningLogin(LoginState.None, seq = 4)
+    startup.requestAccepted(some(5'u64))
+    check startup.admitNodeLogin(some(5'u64))
+    check not startup.adoptRunningLogin(LoginState.None, seq = 5)

@@ -22,6 +22,7 @@ QtObject {
             d.onboardingModuleInst.appShellReady.connect(root.appShellReady)
             d.onboardingModuleInst.appLoaded.connect(root.appLoaded)
             d.onboardingModuleInst.accountLoginError.connect(root.accountLoginError)
+            d.onboardingModuleInst.loginAdopted.connect(root.loginAdopted)
             d.onboardingModuleInst.saveBiometricsRequested.connect(root.saveBiometricsRequested)
             d.onboardingModuleInst.deleteBiometricsRequested.connect(root.deleteBiometricsRequested)
             d.onboardingModuleInst.stayLoggedInSaveRequested.connect(root.stayLoggedInSaveRequested)
@@ -83,6 +84,9 @@ QtObject {
 
     // password
     signal accountLoginError(string error, bool wrongPassword)
+    // The UI's login request was rejected because another login runs; that login was
+    // adopted, its node.login decides
+    signal loginAdopted()
 
     function getPasswordStrengthScore(password: string) : int {
         return d.onboardingModuleInst.getPasswordStrengthScore(password, "") // The second argument is username

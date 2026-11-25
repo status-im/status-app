@@ -35,6 +35,9 @@ QtObject:
   proc appShellReady*(self: View) {.signal.}
   proc appLoaded*(self: View) {.signal.}
   proc accountLoginError*(self: View, error: string, wrongPassword: bool) {.signal.}
+  # The UI's login request was rejected because another login runs: that login was
+  # adopted, its failure is not the UI's login error.
+  proc loginAdopted*(self: View) {.signal.}
   proc saveBiometricsRequested*(self: View, account: string, credential: string) {.signal.}
   proc deleteBiometricsRequested*(self: View, account: string) {.signal.}
   proc stayLoggedInSaveRequested*(self: View, account: string, credential: string, enablePreference: bool) {.signal.}

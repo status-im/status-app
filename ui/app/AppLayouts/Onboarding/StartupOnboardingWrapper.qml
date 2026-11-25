@@ -111,6 +111,12 @@ Item {
             }
         }
 
+        function onLoginAdopted() {
+            const item = onboardingLayout.stack.currentItem
+            if (!item || item.objectName !== "splashScreenV2")
+                onboardingLayout.stack.push(splashScreenV2, { runningProgressAnimation: true }, StackView.Immediate)
+        }
+
         function onSaveBiometricsRequested(account, credential) {
             root.biometricFlowStarted()
             root.keychain.saveCredential(account, credential)

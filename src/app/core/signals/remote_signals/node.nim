@@ -1,4 +1,4 @@
-import json
+import json, options
 
 import base
 
@@ -6,7 +6,7 @@ import ../../../../app_service/service/accounts/dto/[accounts]
 import ../../../../app_service/service/settings/dto/[settings]
 
 type NodeSignal* = ref object of Signal
-  seq*: uint64 # the login sequence number of the login it reports
+  seq*: Option[uint64] # the login seq of the login it reports, none from an older status-go
   error*: string
   account*: AccountDto
   settings*: SettingsDto
@@ -20,7 +20,7 @@ proc fromEvent*(T: type NodeSignal, signalType: SignalType, event: JsonNode): No
 
   let e = event["event"]
 
-  result.seq = e{"seq"}.getBiggestInt.uint64
+  result.seq = toLoginSeq(e)
 
   if e.contains("error"):
     result.error = e["error"].getStr
