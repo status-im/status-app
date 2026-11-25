@@ -115,7 +115,7 @@ Item {
         id: bootLoginRecordRefresh
 
         enabled: root.featureFlagsStore.resumeAfterRestartEnabled
-        secureStorage: appSecureStorage
+        secureStorage: root.secureStorage
         relogin: root.relogin
         holdIntake: root.holdIntake
         releaseIntake: root.releaseIntake
