@@ -24,9 +24,16 @@ fail() {
 
 mkdir -p "$work/node" "$work/logs"
 work=$(CDPATH= cd -- "$work" && pwd)
-# Nodes left by an earlier run hold the ports.
+# Nodes left by an earlier run hold the ports until they have exited.
 pkill -f "$work/node/" 2> /dev/null || true
+for _ in $(seq 50); do
+    pgrep -f "$work/node/" > /dev/null || break
+    sleep 0.2
+done
 [ "$stop" = 0 ] || exit 0
+# Each start begins with empty stores and one node version.
+rm -rf "$work/node" "$work/data"
+mkdir -p "$work/node" "$work/data"
 
 # The node loads libpq at run time, whatever store it uses.
 case "$(uname -s)-$(uname -m)" in
@@ -46,7 +53,7 @@ case "$(uname -s)-$(uname -m)" in
 esac
 
 "$python" "$here/lib/waku_fleet_scripts.py" "$repo/docker-compose.waku.yml" "$work" \
-    --install-dir "$work/node" --log-dir "$work/logs" >&2
+    --install-dir "$work/node" --log-dir "$work/logs" --data-dir "$work/data" >&2
 tag=$(cat "$work/tag.txt")
 name=waku-$tag-$platform.tar.gz
 sha256=$(awk -v name="$name" '$2 == name { print $1 }' "$here/lib/waku-node.sha256")

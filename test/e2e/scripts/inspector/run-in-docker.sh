@@ -17,8 +17,9 @@ mkdir -p "$state"
 docker run --rm --entrypoint "" "$image" cat /etc/passwd > "$state/passwd"
 echo "tester:x:$(id -u):$(id -g):tester:/tmp/home:/bin/bash" >> "$state/passwd"
 
-"$repo/test/e2e/scripts/start-waku-fleet.sh" "$state/waku"
+# Set before the start: a start that fails can leave some nodes running.
 trap '"$repo/test/e2e/scripts/start-waku-fleet.sh" --stop "$state/waku"' EXIT
+"$repo/test/e2e/scripts/start-waku-fleet.sh" "$state/waku"
 
 docker run --rm --network=host --cap-add=SYS_ADMIN --security-opt=apparmor:unconfined \
   --user "$(id -u):$(id -g)" --entrypoint "" \
