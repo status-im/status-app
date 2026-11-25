@@ -176,7 +176,11 @@ Window {
         if (!d.windowShown)
             return
 
-        localAppSettings.visibility = applicationWindow.visibility
+        // closed to the tray or minimized: keep the state the window is shown in
+        if (applicationWindow.visibility === Window.Hidden || applicationWindow.visibility === Window.Minimized)
+            localAppSettings.visibility = d.lastNonMinVisibility !== Window.Hidden ? d.lastNonMinVisibility : Window.Windowed
+        else
+            localAppSettings.visibility = applicationWindow.visibility
         let newRect = Qt.rect(applicationWindow.x, applicationWindow.y,
                               applicationWindow.width, applicationWindow.height)
         localAppSettings.geometry = newRect
