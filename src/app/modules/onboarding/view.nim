@@ -44,6 +44,7 @@ QtObject:
       bootLoginRecord: string) {.signal.}
   proc stayLoggedInDeleteRequested*(self: View, account: string) {.signal.}
   proc bootLoginRecordDeleteRequested*(self: View) {.signal.}
+  proc bootLoginRecordKeepCurrentRequested*(self: View, bootLoginRecord: string) {.signal.}
 
   ### QtProperties ###
 

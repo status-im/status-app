@@ -546,8 +546,13 @@ method requestDeleteMultiaccount*[T](self: Module[T], keyUid: string): string =
 
 proc runPostLoginTasks*[T](self: Module[T]) =
   let tasks = self.postLoginTasks.tasks
-  if not loginDecidesBootLoginRecord(tasks):
+  case bootLoginRecordAfterLogin(tasks, self.startupLogin.loginAdopted):
+  of BootLoginRecordAfterLogin.KeptCurrent:
+    self.view.bootLoginRecordKeepCurrentRequested(self.accountsService.bootLoginRecordForResumedSession())
+  of BootLoginRecordAfterLogin.Removed:
     self.requestDeleteBootLoginRecord()
+  of BootLoginRecordAfterLogin.DecidedByTasks:
+    discard
   for task in tasks:
     case task.kind:
     of kConvertKeycardAccountToRegular:

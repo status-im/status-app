@@ -41,6 +41,9 @@ Item {
     // The converted profile's databases need a fresh backend: end the session, the next
     // one starts at the login screen
     signal newSessionRequested()
+    // An adopted login (the boot login): keep its boot-login record current (see
+    // BootLoginRecordGuard.keepCurrent)
+    signal bootLoginRecordKeepCurrentRequested(string bootLoginRecord)
 
     OnboardingStore {
         id: defaultOnboardingStore
@@ -192,6 +195,10 @@ Item {
         // resume a different profile after a phone restart
         function onBootLoginRecordDeleteRequested() {
             root.secureStorage.deleteBootLoginRecord()
+        }
+
+        function onBootLoginRecordKeepCurrentRequested(bootLoginRecord) {
+            root.bootLoginRecordKeepCurrentRequested(bootLoginRecord)
         }
 
         function onKeycardStateChanged() {

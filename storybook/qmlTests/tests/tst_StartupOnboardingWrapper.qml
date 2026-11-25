@@ -157,6 +157,7 @@ Item {
                 signal stayLoggedInSaveRequested(string keyUid, string credential, bool enablePreference, string bootLoginRecord)
                 signal stayLoggedInDeleteRequested(string keyUid)
                 signal bootLoginRecordDeleteRequested()
+                signal bootLoginRecordKeepCurrentRequested(string bootLoginRecord)
 
                 // Settings wrappers the real store exposes (store-layer rule)
                 property bool stayLoggedIn: false
@@ -578,6 +579,23 @@ Item {
 
             compare(wrapper.secureStorage.bootLoginRecord, "")
             compare(wrapper.secureStorage.creds["uid_1"], "dek:" + root.dummyDekHex)
+        }
+
+        // An adopted login (the boot login) runs no stay-logged-in task: the record is
+        // kept current by the window, under the resumed-session rule
+        function test_adoptedLoginHandsTheRecordOnToKeepItCurrent() {
+            wrapper = createTemporaryObject(wrapperComponent, root)
+            verify(!!wrapper)
+            wrapper.secureStorage.bootLoginRecord = root.dummyRecord
+            const keepSpy = signalSpy.createObject(wrapper, {
+                target: wrapper, signalName: "bootLoginRecordKeepCurrentRequested" })
+
+            wrapper.onboardingStore.bootLoginRecordKeepCurrentRequested(root.dummyRecord)
+
+            compare(keepSpy.count, 1)
+            compare(keepSpy.signalArguments[0][0], root.dummyRecord)
+            compare(wrapper.secureStorage.bootLoginRecord, root.dummyRecord)
+            compare(wrapper.secureStorage.recordDeleteCalls, 0)
         }
 
         function test_flagOffNeverWritesTheRecord() {

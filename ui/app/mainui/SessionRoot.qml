@@ -36,6 +36,8 @@ Item {
     signal storeAppStateRequested()
     // End the session: the next one starts at the login screen
     signal signOutRequested()
+    // An adopted login finished in the login flow (see BootLoginRecordGuard.keepCurrent)
+    signal bootLoginRecordKeepCurrentRequested(string bootLoginRecord)
 
     // Provided by Nim before the session's UI loads (see AppController.initializeQmlContext())
     readonly property bool skipOnboarding: typeof skipOnboardingContextProperty !== "undefined"
@@ -231,6 +233,9 @@ Item {
         }
         function onNewSessionRequested() : void {
             root.signOutRequested()
+        }
+        function onBootLoginRecordKeepCurrentRequested(bootLoginRecord: string) : void {
+            root.bootLoginRecordKeepCurrentRequested(bootLoginRecord)
         }
     }
 

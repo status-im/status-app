@@ -577,6 +577,7 @@ Window {
                 }
                 onStoreAppStateRequested: applicationWindow.storeAppState()
                 onSignOutRequested: d.signOut()
+                onBootLoginRecordKeepCurrentRequested: bootLoginRecord => bootLoginRecordGuard.keepCurrent(bootLoginRecord)
             }
         }
 

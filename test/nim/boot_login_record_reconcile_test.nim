@@ -17,3 +17,17 @@ suite "loginDecidesBootLoginRecord":
   test "onboarding without the opt-in queues only other tasks":
     check not loginDecidesBootLoginRecord(@[PostOnboardingTask(kind: kPostOnboardingTaskSaveBiometrics),
       PostOnboardingTask(kind: kPostOnboardingTaskLocalBackup)])
+
+suite "bootLoginRecordAfterLogin":
+
+  test "the UI's own login with the stay-logged-in task: the task decides":
+    check bootLoginRecordAfterLogin(@[PostOnboardingTask(kind: kPostOnboardingTaskSaveStayLoggedIn)],
+      loginAdopted = false) == BootLoginRecordAfterLogin.DecidedByTasks
+
+  test "the UI's own login without it: removed":
+    check bootLoginRecordAfterLogin(newSeq[PostOnboardingTask](), loginAdopted = false) ==
+      BootLoginRecordAfterLogin.Removed
+
+  test "an adopted login (the boot login) queues no task: its record is kept current":
+    check bootLoginRecordAfterLogin(newSeq[PostOnboardingTask](), loginAdopted = true) ==
+      BootLoginRecordAfterLogin.KeptCurrent
