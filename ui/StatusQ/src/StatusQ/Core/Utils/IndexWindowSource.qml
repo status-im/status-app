@@ -56,6 +56,10 @@ QObject {
     // it held falls off the far end.
     property bool followsStart: false
 
+    // When the reader stays at the start, admit newer rows during an older
+    // page and trim the older side of that page at reveal.
+    property bool keepStartWhileGrowing: false
+
     // The role that identifies a row, for rowForKey() and moveToKey().
     property string keyRole: "key"
 
@@ -132,7 +136,8 @@ QObject {
     // the rows leaving and the rows appearing change the content in one frame.
     function trim() {
         if (d.owedStart > 0) {
-            d.first += d.owedStart
+            if (!(root.keepStartWhileGrowing && root.followsStart && d.first === 0))
+                d.first += d.owedStart
             d.owedStart = 0
         }
 
@@ -211,6 +216,7 @@ QObject {
             d.countBefore = root.sourceRowCount
             d.wasAtSourceEnd = d.last >= root.sourceRowCount - 1
             d.wasAtSourceStart = d.first <= 0
+            d.wasFollowingStart = root.followsStart
 
             // Whether the window was over anything at all. Filling an empty
             // model is not a change to rows the window was showing - there were
@@ -220,9 +226,6 @@ QObject {
         }
 
         function onRowsInserted(parent, first, last) {
-            // Mid-batch the bounds belong to the owed trim, and re-pinning them
-            // would leave it pointing at bounds that had moved. The next insert
-            // picks this up.
             if (!d.wasOverRows)
                 return
 
@@ -233,7 +236,8 @@ QObject {
             // here is what stops the default branch below from sliding the
             // window off the rows that have just arrived - and the row falling
             // off the far end is the oldest one it held, which is right.
-            if (root.followsStart && d.wasAtSourceStart && !root.growing)
+            if (d.wasFollowingStart && d.wasAtSourceStart
+                    && (!root.growing || root.keepStartWhileGrowing))
                 return
 
             // The window covered the source's last row, so it still should.
@@ -299,6 +303,7 @@ QObject {
         // rows at all.
         property bool wasAtSourceEnd: false
         property bool wasAtSourceStart: false
+        property bool wasFollowingStart: false
         property bool wasOverRows: false
 
         // The source's row count before that insert, for how far the new last

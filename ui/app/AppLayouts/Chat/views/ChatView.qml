@@ -237,6 +237,7 @@ Item {
         property string newThreadParentChatId
         property QtObject threadDraft: null
         property string threadDraftError
+        property bool threadDraftNeedsFocus: false
 
         function submitThreadDraft(text, name, startNewThread) {
             if (threadDraft?.pending)
@@ -312,6 +313,7 @@ Item {
             threadPanelRevision++
             root.rootStore.openThreadPanel(threadId, threadName, parentChatId)
             newThreadParentMessageId = ""
+            threadDraftNeedsFocus = false
             // Wait for the right panel page to exist before navigating to it.
             if (root.sectionLayout?.isPortrait)
                 Backpressure.setTimeout(root, 50, () => {
@@ -352,9 +354,8 @@ Item {
         function startThread(parentMessageId) {
             if (newThreadParentMessageId === parentMessageId && newThreadParentChatId === root.activeItemId) {
                 threadPanelRevision++
-                if (root.sectionLayout?.isPortrait)
-                    root.sectionLayout.setCurrentIndex(StatusSectionLayout.RightPanel)
-                rightPanelLoader.item?.newThreadPanel?.chatInput.forceInputActiveFocus()
+                threadDraftNeedsFocus = true
+                Qt.callLater(showThreadDraft)
                 return
             }
             closeThreadPanel()
@@ -362,14 +363,33 @@ Item {
             threadDraft = root.threadReplyStore.getRequest(root.rootStore.chatCommunitySectionModule,
                                                            newThreadParentChatId, parentMessageId)
             threadDraftError = ""
+            threadDraftNeedsFocus = true
             newThreadParentMessageId = parentMessageId
             threadOpenedFromInfo = false
-            if (root.sectionLayout?.isPortrait)
-                root.sectionLayout.setCurrentIndex(StatusSectionLayout.RightPanel)
+            Qt.callLater(showThreadDraft)
+        }
+
+        function showThreadDraft() {
+            const panel = rightPanelLoader.item?.newThreadPanel
+            if (!panel || !newThreadParentMessageId || !threadDraftNeedsFocus)
+                return
+            const layout = root.sectionLayout
+            // The chrome can still be showing a skeleton after the loader finishes.
+            if (layout && (layout.rightPanel !== rightPanelLoader || layout.panelSwitchOngoing))
+                return
+            if (layout?.isPortrait && layout.currentIndex !== StatusSectionLayout.RightPanel) {
+                layout.setCurrentIndex(StatusSectionLayout.RightPanel)
+                return
+            }
+            if (!panel.readyForFocus)
+                return
+            threadDraftNeedsFocus = false
+            panel.chatInput.forceInputActiveFocus()
         }
 
         function closeThreadPanel() {
             newThreadParentMessageId = ""
+            threadDraftNeedsFocus = false
             threadDraft = null
             threadPanelRevision++
             threadNameEditId = ""
@@ -660,10 +680,7 @@ Item {
         }
 
         sourceComponent: d.threadPanelOpen ? threadChatPanelComponent : infoPanelComponent
-        onLoaded: {
-            if (item?.newThreadPanel)
-                Qt.callLater(item.newThreadPanel.chatInput.forceInputActiveFocus)
-        }
+        onLoaded: Qt.callLater(d.showThreadDraft)
     }
 
     Connections {
@@ -927,7 +944,10 @@ Item {
                 Layout.fillHeight: true
                 active: !!d.newThreadParentMessageId
                 visible: active
+                onLoaded: Qt.callLater(d.showThreadDraft)
                 sourceComponent: NewThreadPanel {
+                    focusOnOpen: false
+                    onReadyForFocusChanged: if (readyForFocus) Qt.callLater(d.showThreadDraft)
                     threadsEnabledV2: root.threadsFeatureEnabledV2
                     parentMessageText: threadParent.item?.unparsedText ?? ""
                     initialText: d.threadDraft?.text ?? ""
@@ -1072,6 +1092,15 @@ Item {
         function onCurrentIndexChanged() {
             if (root.sectionLayout.currentIndex !== StatusSectionLayout.LeftPanel)
                 d.requestCenterPanel()
+            Qt.callLater(d.showThreadDraft)
+        }
+
+        function onRightPanelChanged() {
+            Qt.callLater(d.showThreadDraft)
+        }
+
+        function onPanelSwitchEnded() {
+            Qt.callLater(d.showThreadDraft)
         }
 
         function onSwiped(previous, current) {

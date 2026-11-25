@@ -855,25 +855,72 @@ Item {
             tryVerify(() => loader.status === Loader.Ready, 120000)
             const view = harness.findChildByTypePrefix(loader, "ChatView")
             view.threadsFeatureEnabled = true
-            view.sectionLayout.criteria = data.portrait ? [true, true] : [false, false]
-            view.sectionLayout.setCurrentIndex(StatusSectionLayout.CentralPanel)
+            view.showUsersList = false
+            const layout = view.sectionLayout
+            layout.criteria = [data.portrait, true]
+            tryCompare(layout, "isPortrait", data.portrait)
+            layout.setCurrentIndex(StatusSectionLayout.CentralPanel)
+            tryCompare(view.rightPanel, "status", Loader.Null)
             const column = harness.findChildByTypePrefix(view.centerPanel, "ChatColumnView")
             verify(!!column)
             const parentInput = findChild(column, "statusChatInput")
             tryCompare(parentInput, "enabled", true)
-            parentInput.setText("Parent draft")
-            tryCompare(view.chatContentModule.inputAreaModule.preservedProperties, "text", "Parent draft")
             const messagesView = harness.findChildByTypePrefix(column, "ChatMessagesView")
-            const messages = view.chatContentModule.messagesModule.model
+            const messagesModule = view.chatContentModule.messagesModule
+            const messages = messagesModule.model
             const parent = SQUtils.ModelUtils.get(messages, 0)
             verify(!!parent)
-            messagesView.openThread("", "", parent.id)
+            verify(parent.senderId !== view.myPublicKey)
+            let parentView
+            tryVerify(() => {
+                parentView = harness.findAllByTypePrefix(messagesView, "MessageView", [])
+                                    .find(item => item.messageId === parent.id && item.status === Loader.Ready)
+                return !!parentView
+            })
+            parentInput.setText("Parent draft")
+            tryCompare(view.chatContentModule.inputAreaModule.preservedProperties, "text", "Parent draft")
+            parentView.openMessageContextMenu(null, Qt.point(30, 60), "", {
+                openExpanded: !data.portrait,
+                deferCloseOnPressOutside: data.portrait
+            })
+            const menu = findChild(parentView, "MessageContextMenuView")
+            verify(!!menu)
+            tryCompare(menu, "opened", true)
+            let draftReadyOnNavigation = false
+            const recordDraftReadiness = () => {
+                if (layout.currentIndex === StatusSectionLayout.RightPanel)
+                    draftReadyOnNavigation = view.rightPanel.status === Loader.Ready
+            }
+            if (data.portrait) {
+                layout.currentIndexChanged.connect(recordDraftReadiness)
+                // Simulate the section chrome still waiting to attach the loaded panel.
+                layout.rightPanel = null
+                const quickActions = findChild(menu, "messageContextMenu_singleRowActions")
+                verify(!!quickActions)
+                const replyButton = findChild(quickActions, "messageContextMenu_openThread")
+                verify(replyButton?.visible && replyButton.enabled)
+                replyButton.clicked(null)
+            } else {
+                const actions = Array.from({length: menu.count}, (_, index) => menu.actionAt(index))
+                const replyAction = actions.find(action => action?.objectName === "messageContextMenu_openThread")
+                verify(replyAction?.enabled)
+                replyAction.trigger()
+                menu.close()
+            }
             const state = findChild(view, "chatViewInternal")
             compare(state.openThreadId, "")
-            compare(state.newThreadParentMessageId, parent.id)
+            tryCompare(state, "newThreadParentMessageId", parent.id)
             tryCompare(view.rightPanel, "status", Loader.Ready)
             const panel = view.rightPanel.item.newThreadPanel
             verify(!!panel)
+            if (data.portrait) {
+                compare(layout.currentIndex, StatusSectionLayout.CentralPanel)
+                verify(!panel.chatInput.textInput.activeFocus)
+                layout.rightPanel = view.rightPanel
+                tryCompare(layout, "currentIndex", StatusSectionLayout.RightPanel)
+                layout.currentIndexChanged.disconnect(recordDraftReadiness)
+                verify(draftReadyOnNavigation)
+            }
             const preview = findChild(panel, "newThreadParentMessage")
             compare(preview.messageId, parent.id)
             compare(preview.unparsedText, parent.unparsedText)
@@ -895,6 +942,14 @@ Item {
             compare(view.rightPanel.item.newThreadPanel, panel)
             compare(panel.chatInput.getTextWithPublicKeys(), "Thread draft")
             compare(parentInput.getTextWithPublicKeys(), "Parent draft")
+            panel.chatInput.tryFinalizeMessage()
+            tryCompare(view.rootStore, "openThreadId", parent.id)
+            compare(messagesModule.threadCreationRequests, [parent.id])
+            const section = view.rootStore.chatCommunitySectionModule
+            section.prepareChatContentModuleForChatId(parent.id)
+            const sent = section.getChatContentModule().inputAreaModule.sentMessages
+            compare(sent.length, 1)
+            compare(sent[0].text, "Thread draft")
             const close = findChild(view.rightPanel.item, "closeThreadPanelButton")
             close.clicked(null)
             tryCompare(state, "newThreadParentMessageId", "")

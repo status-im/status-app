@@ -5,6 +5,7 @@ import QtTest
 import Storybook.Testing
 
 import StatusQ.Components
+import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ
 
@@ -1050,6 +1051,41 @@ Item {
             const after = messageIdAtViewportTop(view)
             compare(after.key, top.key, "above the reader, who stayed where they were")
             verify(Math.abs(after.offset - top.offset) < 1)
+        }
+
+        function test_messageStaysVisibleWhenReturningToAResizedChatDuringHistoryFetch_data() {
+            return [{tag: "message-before-history", historyFirst: false},
+                    {tag: "message-during-history-reveal", historyFirst: true}]
+        }
+
+        function test_messageStaysVisibleWhenReturningToAResizedChatDuringHistoryFetch(data) {
+            prewarmedPool()
+            fill(messagesA, "a", 40)
+            moduleA.historyLeft = 100
+            moduleA.answerLater = true
+
+            const view = openView()
+            const log = view.chatLogView
+            log.autoRequest = false
+            tryCompare(log, "atBottom", true)
+            verify(log.requestMore(WindowedView.Edge.Top))
+            verify(moduleA.answerOwed)
+
+            // The parent stays alive while the thread is on screen in portrait.
+            view.panelInView = false
+            view.height -= 200
+            tryCompare(log, "atBottom", true)
+            view.panelInView = true
+            if (data.historyFirst) {
+                moduleA.answer()
+                verify(log.busy)
+            }
+            messagesA.insert(0, makeMessage("a", -1))
+            if (!data.historyFirst)
+                moduleA.answer()
+
+            tryVerify(() => !log.busy && log.atBottom && log.keyAtRow(0) === "a--1")
+            compare(log.moreAvailableBottom, false)
         }
 
         // A short chat: the first page of older history is requested while the
