@@ -166,10 +166,13 @@ method load*[T](self: Module[T]): Result[void, string] =
   singletonInstance.setSessionContextProperty("onboardingModule", self.viewVariant)
   self.controller.init()
 
-  let loggedInAccount = self.accountsService.fetchLoggedInAccount()
-  self.resumeLogin = loggedInAccount.isValid()
+  # Read after controller.init subscribed to node.login: a login in progress now
+  # can't finish unseen.
+  let loginState = self.accountsService.fetchLoginState()
+  self.view.setStartupLoginState(loginState.state)
+  self.resumeLogin = loginState.state == LoginState.LoggedIn
   if self.resumeLogin:
-    self.controller.setLoggedInAccount(loggedInAccount)
+    self.controller.setLoggedInAccount(loginState.account)
     self.finishAppLoading2()
     return ok()
 
@@ -404,6 +407,9 @@ method onAccountLoginError*[T](self: Module[T], error: string) =
   self.view.accountLoginError(error, wrongPassword)
 
 method onNodeLogin*[T](self: Module[T], err: string, account: AccountDto, settings: SettingsDto) =
+  if self.resumeLogin:
+    # Adopted at load already; this is the node.login of that same login
+    return
   if err.len != 0:
     self.onAccountLoginError(err)
     return

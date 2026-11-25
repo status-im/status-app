@@ -20,6 +20,9 @@ Item {
 
     readonly property string dummyDekHex: "a".repeat(64)
 
+    // The login state the next wrapper's store reports at startup
+    property int startupLoginState: Onboarding.LoginState.None
+
     LoginAccountsModel {
         id: accountsModel
     }
@@ -110,7 +113,14 @@ Item {
                 function validateLocalPairingConnectionString(connectionString) { return false }
                 function inputConnectionStringForBootstrapping(connectionString) {}
                 function finishOnboardingFlow(flow, data) { return "" }
-                function loginRequested(keyUid, method, data) {}
+                property var loginRequestedCalls: []
+                function loginRequested(keyUid, method, data) {
+                    loginRequestedCalls.push(keyUid)
+                }
+
+                readonly property int startupLoginState: root.startupLoginState
+                signal appShellReady()
+                signal appLoaded()
                 property var selectLoginAccountCalls: []
                 function selectLoginAccount(keyUid) {
                     selectLoginAccountCalls.push(keyUid)
@@ -336,6 +346,99 @@ Item {
 
             compare(wrapper.secureStorage.deleteCalls.length, 0)
             compare(wrapper.onboardingStore.stayLoggedIn, true)
+        }
+    }
+
+    StatusTestCase {
+        name: "StartupOnboardingWrapper_startupLoginState"
+        when: windowShown
+
+        property var wrapper: null
+        property var layout: null
+
+        function cleanup() {
+            wrapper = null
+            layout = null
+            root.startupLoginState = Onboarding.LoginState.None
+        }
+
+        function createWithStoredCredential(loginState) {
+            root.startupLoginState = loginState
+            wrapper = createTemporaryObject(wrapperComponent, root)
+            verify(!!wrapper)
+            layout = findChild(wrapper, "startupOnboardingLayout")
+            verify(!!layout)
+            wrapper.secureStorage.creds["uid_1"] = "dek:" + root.dummyDekHex
+            wrapper.autoLoginEnabled = true
+        }
+
+        function isSplashOnTop() {
+            const item = layout.stack.currentItem
+            return !!item && item.objectName === "splashScreenV2"
+        }
+
+        // None: today's startup, the silent "Stay logged in" login is requested
+        function test_noneRequestsTheSilentLogin() {
+            createWithStoredCredential(Onboarding.LoginState.None)
+
+            tryVerify(() => layout.autoLoginAttempted)
+            compare(wrapper.onboardingStore.loginRequestedCalls.length, 1)
+            compare(wrapper.onboardingStore.loginRequestedCalls[0], "uid_1")
+        }
+
+        // In progress: a login the UI didn't start is running. Loading screen, no
+        // login request; when it succeeds the app opens and the credential is kept.
+        function test_inProgressWaitsAndAdoptsOnSuccess() {
+            createWithStoredCredential(Onboarding.LoginState.InProgress)
+            const moveSpy = signalSpy.createObject(wrapper, {
+                target: wrapper, signalName: "requestMoveToAppMain" })
+
+            tryVerify(() => isSplashOnTop(), 2000, "the loading screen must be shown")
+            verify(!layout.autoLoginAttempted)
+            compare(wrapper.onboardingStore.loginRequestedCalls.length, 0)
+
+            wrapper.onboardingStore.appLoaded()
+
+            compare(moveSpy.count, 1)
+            compare(wrapper.onboardingStore.loginRequestedCalls.length, 0)
+            compare(wrapper.secureStorage.deleteCalls.length, 0)
+            compare(wrapper.secureStorage.creds["uid_1"], "dek:" + root.dummyDekHex)
+        }
+
+        // In progress, then node.login fails: the login screen, no silent retry, no
+        // error shown, and the stored credential is never deleted (the one-shot
+        // failure rule is for logins the UI started).
+        function test_inProgressFailureEndsOnTheLoginScreen() {
+            createWithStoredCredential(Onboarding.LoginState.InProgress)
+            tryVerify(() => isSplashOnTop(), 2000, "the loading screen must be shown")
+
+            wrapper.onboardingStore.accountLoginError("node.login failed", true)
+
+            tryVerify(() => !!layout.stack.loginScreen
+                      && layout.stack.currentItem === layout.stack.loginScreen,
+                      2000, "the login screen must be shown")
+            compare(wrapper.secureStorage.deleteCalls.length, 0)
+            compare(wrapper.secureStorage.creds["uid_1"], "dek:" + root.dummyDekHex)
+            compare(wrapper.onboardingStore.loginRequestedCalls.length, 0)
+
+            const passwordBox = findChild(layout.stack.loginScreen, "passwordBox")
+            verify(!!passwordBox)
+            compare(passwordBox.validationError, "")
+        }
+
+        // Logged in: adopt the running session, no login request
+        function test_loggedInAdoptsTheSession() {
+            createWithStoredCredential(Onboarding.LoginState.LoggedIn)
+            const moveSpy = signalSpy.createObject(wrapper, {
+                target: wrapper, signalName: "requestMoveToAppMain" })
+
+            tryVerify(() => isSplashOnTop(), 2000, "the loading screen must be shown")
+
+            wrapper.onboardingStore.appShellReady()
+
+            tryCompare(moveSpy, "count", 1)
+            compare(wrapper.onboardingStore.loginRequestedCalls.length, 0)
+            compare(wrapper.secureStorage.deleteCalls.length, 0)
         }
     }
 

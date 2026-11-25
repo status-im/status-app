@@ -184,6 +184,8 @@ proc connectionChange*(requestJSON: cstring): cstring {.importc: "ConnectionChan
 
 proc getActiveAccount*(): cstring {.importc: "GetActiveAccount".}
 
+proc getLoginState*(): cstring {.importc: "GetLoginState".}
+
 proc keyUID*(): cstring {.importc: "KeyUID".}
 
 proc startPprof*(address: cstring): cstring {.importc: "StartPprof".}

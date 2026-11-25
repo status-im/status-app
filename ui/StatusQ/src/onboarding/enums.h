@@ -84,6 +84,14 @@ public:
         Failed
     };
 
+    // The login state status-go reported at startup.
+    // NOTE: Keep in sync with LoginState in src/app_service/service/accounts/dto/accounts.nim
+    enum class LoginState {
+        None,
+        InProgress,
+        LoggedIn
+    };
+
     enum class AuthorizationState {
         Idle,
         InProgress,
@@ -107,4 +115,5 @@ private:
     Q_ENUM(ProgressState)
     Q_ENUM(AuthorizationState)
     Q_ENUM(LocalPairingState)
+    Q_ENUM(LoginState)
 };

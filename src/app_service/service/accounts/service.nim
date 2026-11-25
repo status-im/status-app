@@ -613,10 +613,10 @@ QtObject:
   proc delete*(self: Service) =
     self.QObject.delete
 
-  proc fetchLoggedInAccount*(self: Service): AccountDto =
+  proc fetchLoginState*(self: Service): LoginStateDto =
     try:
-      let response = status_account.getActiveAccount()
-      result = toAccountDto(response.result)
+      let response = status_account.getLoginState()
+      result = toLoginStateDto(response.result)
     except Exception as e:
-      error "fetchLoggedInAccount failed", procName="fetchLoggedInAccount", errName = e.name, errDesription = e.msg
-      result = AccountDto()
+      error "fetchLoginState failed", procName="fetchLoginState", errName = e.name, errDesription = e.msg
+      result = LoginStateDto(state: LoginState.None)

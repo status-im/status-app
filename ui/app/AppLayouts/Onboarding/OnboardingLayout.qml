@@ -46,6 +46,10 @@ Page {
     }
 
     onAutoLoginEnabledChanged: d.tryAutoLogin()
+
+    // A login the UI didn't start is running or done: no auto-login attempt, and its
+    // failure falls back to the login screen without an error.
+    property bool adoptingLogin: false
     required property bool privacyModeFeatureEnabled
 
     // list of language/locale codes, e.g. ["cs_CZ","ko","fr"]
@@ -121,6 +125,7 @@ Page {
         property bool autoLoginAttempted
         property string autoLoginPendingKeyUid // set with the attempt, consumed on its failure
         property bool autoLoginErrorPending: false
+        property bool adoptedLoginErrorPending: root.adoptingLogin
 
         // login screen state
         property string selectedProfileKeyId
@@ -180,6 +185,10 @@ Page {
             // main.qml enables auto-login; main.qml logs the real "disabled" reasons.
             if (d.autoLoginAttempted || !root.autoLoginEnabled)
                 return
+            if (root.adoptingLogin) {
+                console.info("auto-login: a login is already running, waiting for it")
+                return
+            }
             if (!root.secureStorage || !root.secureStorage.available) {
                 console.info("auto-login: secure storage unavailable")
                 return
@@ -390,6 +399,11 @@ Page {
             if (d.autoLoginErrorPending) {
                 d.autoLoginErrorPending = false
                 console.info("auto-login: silent attempt failed (", error, ") — falling back to the login screen")
+                return
+            }
+            if (d.adoptedLoginErrorPending) {
+                d.adoptedLoginErrorPending = false
+                console.info("login in progress at startup failed (", error, ") — falling back to the login screen")
                 return
             }
             const loginScreen = onboardingFlow.loginScreen

@@ -291,10 +291,12 @@ proc newAppController*(statusFoundation: StatusFoundation): AppController =
   # Do connections
   result.connect()
 
-  let initialAccount = result.accountsService.fetchLoggedInAccount()
-  result.resumeLogin = initialAccount.isValid()
+  # Logged in: adopt the running session. Otherwise the onboarding module reads the
+  # login state again and waits for a login in progress.
+  let loginState = result.accountsService.fetchLoginState()
+  result.resumeLogin = loginState.state == LoginState.LoggedIn
   if result.resumeLogin:
-    result.accountsService.setLoggedInAccount(initialAccount)
+    result.accountsService.setLoggedInAccount(loginState.account)
 
 proc stopActivity*(self: AppController) =
   ## First step of ending the session (logout), once its UI is released: stops what

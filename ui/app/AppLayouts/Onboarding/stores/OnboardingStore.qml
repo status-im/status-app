@@ -31,6 +31,9 @@ QtObject {
 
     readonly property var loginAccountsModel: d.onboardingModuleInst.loginAccountsModel
 
+    // The login state at startup, cf. enum Onboarding.LoginState
+    readonly property int startupLoginState: d.onboardingModuleInst.startupLoginState
+
     readonly property bool stayLoggedIn: localAccountSettings.stayLoggedIn
 
     function setStayLoggedIn(value) {

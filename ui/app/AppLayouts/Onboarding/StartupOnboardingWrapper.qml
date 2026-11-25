@@ -50,6 +50,10 @@ Item {
         id: d
 
         property bool loginRequestSent: false
+
+        // In progress: wait for its node.login. Logged in: the session is adopted.
+        readonly property bool adoptingLogin:
+            root.onboardingStore.startupLoginState !== Onboarding.LoginState.None
     }
 
     Component {
@@ -193,6 +197,7 @@ Item {
         keychain: root.keychain
         secureStorage: root.secureStorage
         autoLoginEnabled: root.autoLoginEnabled
+        adoptingLogin: d.adoptingLogin
 
         privacyModeFeatureEnabled: root.featureFlagsStore.privacyModeFeatureEnabled
 
@@ -243,6 +248,8 @@ Item {
         }
 
         Component.onCompleted: {
+            if (d.adoptingLogin)
+                onboardingLayout.stack.push(splashScreenV2, { runningProgressAnimation: true }, StackView.Immediate)
             root.contentLoaded()
         }
 
