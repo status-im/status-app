@@ -18,6 +18,7 @@ import org.junit.Test;
 public class BootLoginTest {
     private static final String KEY_UID = "0xkeyuid";
     private static final String RECORD_KEY = "status.bootLoginRecord";
+    private static final String ATTEMPT_KEY = "status.bootLoginAttempt";
     private static final String DEK_HEX = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
     private static final String CREDENTIAL = "dek:" + DEK_HEX;
     private static final String RECORD = "{\"version\":1,\"keyUid\":\"" + KEY_UID + "\","
@@ -57,6 +58,7 @@ public class BootLoginTest {
     /** Only one half of the {iv, ct} pair is stored. */
     private boolean recordHalfPair;
     private boolean credentialHalfPair;
+    private boolean recordWriteFails;
     private final List<String> logs = new ArrayList<>();
     private final Map<String, String> responses = new HashMap<>();
     private boolean uiVisible;
@@ -84,6 +86,7 @@ public class BootLoginTest {
         keyInvalidated = false;
         recordHalfPair = false;
         credentialHalfPair = false;
+        recordWriteFails = false;
         logs.clear();
         responses.clear();
         uiVisible = false;
@@ -100,30 +103,55 @@ public class BootLoginTest {
         bootLogin = newBootLogin(true);
     }
 
+    /** The boot-login record in the secure store, as on the device. */
+    private final BootLogin.RecordStore recordStore = new BootLogin.RecordStore() {
+        @Override
+        public boolean exists() throws BootLogin.StoreException {
+            if (recordHalfPair) throw new BootLogin.StoreException(true);
+            return store.containsKey(RECORD_KEY);
+        }
+
+        @Override
+        public String read() throws BootLogin.StoreException {
+            if (recordUnreadable) throw new BootLogin.StoreException(false);
+            if (keyInvalidated) store.clear();
+            if (recordBlobCorrupt) store.remove(RECORD_KEY);
+            return store.get(RECORD_KEY);
+        }
+
+        @Override
+        public void delete() {
+            recordDeletes++;
+            store.remove(RECORD_KEY);
+        }
+
+        @Override
+        public boolean write(String recordJson) {
+            if (recordWriteFails) return false;
+            store.put(RECORD_KEY, recordJson);
+            return true;
+        }
+
+        @Override
+        public boolean attemptPending() {
+            return store.containsKey(ATTEMPT_KEY);
+        }
+
+        @Override
+        public void markAttempt() {
+            store.put(ATTEMPT_KEY, "1");
+        }
+
+        @Override
+        public void clearAttempt() {
+            store.remove(ATTEMPT_KEY);
+        }
+    };
+
     private BootLogin newBootLogin(boolean enabled) {
         return new BootLogin(
                 enabled,
-                new BootLogin.RecordStore() {
-                    @Override
-                    public boolean exists() throws BootLogin.StoreException {
-                        if (recordHalfPair) throw new BootLogin.StoreException(true);
-                        return store.containsKey(RECORD_KEY);
-                    }
-
-                    @Override
-                    public String read() throws BootLogin.StoreException {
-                        if (recordUnreadable) throw new BootLogin.StoreException(false);
-                        if (keyInvalidated) store.clear();
-                        if (recordBlobCorrupt) store.remove(RECORD_KEY);
-                        return store.get(RECORD_KEY);
-                    }
-
-                    @Override
-                    public void delete() {
-                        recordDeletes++;
-                        store.remove(RECORD_KEY);
-                    }
-                },
+                recordStore,
                 new BootLogin.CredentialSource() {
                     @Override
                     public boolean exists(String keyUid) throws BootLogin.StoreException {
@@ -239,6 +267,89 @@ public class BootLoginTest {
         assertEquals(0, stops);
         assertEquals(0, notifications);
         assertEquals(1, pauses);
+    }
+
+    // ── Crash-loop guard: an attempt that never finished ─────────────────────
+
+    /** The process dies (its timer with it); START_STICKY recreates the service. */
+    private void dieAndRestart() {
+        scheduled = null;
+        calls.clear();
+        bootLogin = newBootLogin(true);
+    }
+
+    @Test
+    public void aBootLoginThatKilledTheProcessFailsTheNextReplayInsteadOfLooping() {
+        bootLogin.run();
+        dieAndRestart();
+
+        assertFalse(bootLogin.run());
+
+        assertEquals("no second login attempt", 0, calls.size());
+        assertFailedOnce();
+        assertFalse("attempt marker cleared", store.containsKey(ATTEMPT_KEY));
+    }
+
+    @Test
+    public void aFinishedBootLoginLetsTheNextRestartReplayAgain() {
+        bootLogin.run();
+        bootLogin.onNodeLogin(NODE_LOGIN_OK);
+        dieAndRestart();
+
+        assertTrue(bootLogin.run());
+
+        assertEquals(2, calls.size());
+        assertEquals(0, notifications);
+        assertEquals(RECORD, store.get(RECORD_KEY));
+    }
+
+    @Test
+    public void aFailedNodeLoginClearsTheAttempt() {
+        bootLogin.run();
+
+        bootLogin.onNodeLogin(NODE_LOGIN_FAILED);
+
+        assertFalse(store.containsKey(ATTEMPT_KEY));
+    }
+
+    @Test
+    public void aRejectedInitializeApplicationClearsTheAttempt() {
+        responses.put("InitializeApplication", "{\"error\":\"bad\"}");
+
+        bootLogin.run();
+
+        assertFalse(store.containsKey(ATTEMPT_KEY));
+    }
+
+    @Test
+    public void aTimedOutBootLoginClearsTheAttempt() {
+        bootLogin.run();
+
+        scheduled.run();
+
+        assertTimedOutOnce();
+        assertFalse(store.containsKey(ATTEMPT_KEY));
+    }
+
+    @Test
+    public void aNewRecordWriteClearsAnUnfinishedAttempt() {
+        bootLogin.run();
+        dieAndRestart();
+
+        assertTrue(BootLogin.writeRecord(recordStore, RECORD));
+
+        assertTrue(bootLogin.run());
+        assertEquals(0, notifications);
+    }
+
+    @Test
+    public void aFailedRecordWriteKeepsTheAttempt() {
+        bootLogin.run();
+        recordWriteFails = true;
+
+        assertFalse(BootLogin.writeRecord(recordStore, RECORD));
+
+        assertTrue(store.containsKey(ATTEMPT_KEY));
     }
 
     // ── Nothing to replay: stop, no notification ─────────────────────────────
@@ -576,8 +687,16 @@ public class BootLoginTest {
 
     // ── Feature flag and service starts ──────────────────────────────────────
 
+    /** A record store for the start checks, which never write or mark an attempt. */
+    private abstract static class StartCheckRecordStore implements BootLogin.RecordStore {
+        @Override public boolean write(String recordJson) { return false; }
+        @Override public boolean attemptPending() { return false; }
+        @Override public void markAttempt() {}
+        @Override public void clearAttempt() {}
+    }
+
     private BootLogin.RecordStore storedRecord() {
-        return new BootLogin.RecordStore() {
+        return new StartCheckRecordStore() {
             @Override
             public boolean exists() throws BootLogin.StoreException {
                 if (recordHalfPair) throw new BootLogin.StoreException(true);
@@ -712,7 +831,7 @@ public class BootLoginTest {
     }
 
     private BootLogin.RecordStore recordIn(HalfPairWipingStore entries) {
-        return new BootLogin.RecordStore() {
+        return new StartCheckRecordStore() {
             @Override
             public boolean exists() throws BootLogin.StoreException {
                 return BootLogin.entryExists(entries, RECORD_KEY);

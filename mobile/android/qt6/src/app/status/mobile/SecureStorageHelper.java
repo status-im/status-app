@@ -51,6 +51,8 @@ public final class SecureStorageHelper {
     // The boot-login record's own entry. Account entries are keyed by key UID ("0x..."),
     // so this can never collide with an account's credential.
     public static final String BOOT_LOGIN_RECORD_KEY = "status.bootLoginRecord";
+    // A boot login attempt of the record is in progress (a plain flag, not a credential).
+    private static final String BOOT_LOGIN_ATTEMPT_KEY = "status.bootLoginAttempt";
 
     // Status codes (kept in sync with securestorage_android.cpp).
     public static final int STATUS_OK = 1;
@@ -235,7 +237,8 @@ public final class SecureStorageHelper {
             final org.json.JSONObject record = new org.json.JSONObject(recordJson);
             record.put("versionCode", androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(
                     mContext.getPackageManager().getPackageInfo(mContext.getPackageName(), 0)));
-            return setCredential(BOOT_LOGIN_RECORD_KEY, record.toString());
+            return app.status.mobile.ipc.BootLoginRecordStore.writeFromUi(mContext, record.toString())
+                    ? STATUS_OK : STATUS_ERROR;
         } catch (Throwable t) {
             Log.w(TAG, "setBootLoginRecord failed", t);
             return STATUS_ERROR;
@@ -249,6 +252,31 @@ public final class SecureStorageHelper {
 
     public int deleteBootLoginRecord() {
         return deleteCredential(BOOT_LOGIN_RECORD_KEY);
+    }
+
+    /** Whether a boot login attempt was started and has not finished. */
+    public boolean hasBootLoginAttempt() {
+        try {
+            return prefs().getBoolean(BOOT_LOGIN_ATTEMPT_KEY, false);
+        } catch (Throwable t) {
+            Log.w(TAG, "hasBootLoginAttempt failed", t);
+            return false;
+        }
+    }
+
+    /** Marks or clears the boot login attempt, synchronously. */
+    public void setBootLoginAttempt(boolean inProgress) {
+        try {
+            final android.content.SharedPreferences.Editor edit = prefs().edit();
+            if (inProgress) {
+                edit.putBoolean(BOOT_LOGIN_ATTEMPT_KEY, true);
+            } else {
+                edit.remove(BOOT_LOGIN_ATTEMPT_KEY);
+            }
+            if (!edit.commit()) Log.w(TAG, "setBootLoginAttempt: commit failed");
+        } catch (Throwable t) {
+            Log.w(TAG, "setBootLoginAttempt failed", t);
+        }
     }
 
     // ====== Keystore helpers ======

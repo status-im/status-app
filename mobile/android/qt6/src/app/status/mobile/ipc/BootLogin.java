@@ -16,6 +16,10 @@ import org.json.JSONObject;
  * one notification unless a UI is visible. There is no retry, and this class never deletes the
  * "Stay logged in" credential (the store itself may wipe one it cannot decrypt).
  *
+ * <p>Crash-loop guard: a persistent marker is set before each replay and cleared when it ends.
+ * A replay that finds it still set (the last one ended the process) fails instead, so a
+ * record costs at most one crash.
+ *
  * <p>It also owns the pause rule: logged in with no visible UI means paused, the same state
  * as a backgrounded app (messaging stays on).
  */
@@ -48,6 +52,17 @@ final class BootLogin {
         String read() throws StoreException;
 
         void delete();
+
+        /** Stores a new record; true when it was stored. */
+        boolean write(String recordJson);
+
+        /** Whether a boot login attempt was started and never finished (the process died). */
+        boolean attemptPending();
+
+        /** Notes a boot login attempt in progress. Persistent, like the record. */
+        void markAttempt();
+
+        void clearAttempt();
     }
 
     /** The prompt-free secure store's presence checks for one entry. */
@@ -150,6 +165,16 @@ final class BootLogin {
     }
 
     /**
+     * The UI's record write. A new record has had no boot login yet, so it also clears an
+     * unfinished attempt left by an older one.
+     */
+    static boolean writeRecord(RecordStore records, String recordJson) {
+        if (!records.write(recordJson)) return false;
+        records.clearAttempt();
+        return true;
+    }
+
+    /**
      * BOOT_COMPLETED: whether to start the service for a boot login. Without a record nothing
      * starts; with the feature off (RESUME_AFTER_RESTART_ENABLED) any record is removed.
      * A corrupt record (an incomplete blob pair) starts it too, so the failure path deletes
@@ -198,6 +223,12 @@ final class BootLogin {
                 stopUnlessUiBound();
                 return false;
             }
+            // Crash-loop guard: the last replay of this record never finished, so it ended
+            // the process (a crash, OOM). Replaying it again would only repeat that.
+            if (records.attemptPending()) {
+                fail("the previous boot login never finished");
+                return false;
+            }
             recordJson = records.read();
         } catch (StoreException e) {
             fail("record " + describe(e));
@@ -238,6 +269,7 @@ final class BootLogin {
             return false;
         }
 
+        records.markAttempt();
         if (!succeeded(statusGo.call("InitializeApplication", args(initRequest.toString())))) {
             fail("InitializeApplication rejected");
             return false;
@@ -268,9 +300,12 @@ final class BootLogin {
         final JSONObject signal = parse(signalJson);
         final JSONObject event = signal == null ? null : signal.optJSONObject("event");
         final boolean loggedIn = event != null && event.optString("error", "").isEmpty();
-        if (takeAwaitingNodeLogin() && !loggedIn) {
-            fail("node.login error");
-            return;
+        if (takeAwaitingNodeLogin()) {
+            if (!loggedIn) {
+                fail("node.login error");
+                return;
+            }
+            records.clearAttempt();
         }
         if (loggedIn && !ui.visible()) pauser.pauseServices(() -> !ui.visible());
     }
@@ -288,6 +323,7 @@ final class BootLogin {
     private void fail(String reason) {
         log.warn("boot login failed: " + reason);
         records.delete();
+        records.clearAttempt();
         if (!ui.visible()) notifier.bootLoginFailed();
         stopUnlessUiBound();
     }
@@ -300,6 +336,7 @@ final class BootLogin {
     private void timedOut() {
         log.warn("boot login failed: no node.login within " + LOGIN_TIMEOUT_MS + " ms");
         records.delete();
+        records.clearAttempt();
         if (ui.bound()) return;
         notifier.bootLoginFailed();
         stopper.endProcess();
