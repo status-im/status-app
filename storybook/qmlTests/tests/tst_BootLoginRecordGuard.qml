@@ -98,6 +98,7 @@ Item {
 
             guard.keepCurrent(currentRecord)
 
+            compare(guard.secureStorage.recordWrites, 1)
             compare(guard.secureStorage.bootLoginRecord, currentRecord)
         }
 

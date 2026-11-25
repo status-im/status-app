@@ -316,8 +316,9 @@ public final class SecureStorageHelper {
     private android.content.SharedPreferences prefs() {
         // Both the UI and :statusgo processes read and write this file, and a SharedPreferences
         // commit writes the whole per-process map. MODE_MULTI_PROCESS reloads the file when it
-        // changed on disk, so neither process commits a stale map that brings back an entry the
-        // other one removed (e.g. the boot-login record).
+        // changed on disk, which narrows (does not close) the window in which one process commits
+        // a stale map that brings back an entry the other one removed (e.g. the boot-login
+        // record): a reload racing the other process's commit can still lose that commit.
         return mContext.getSharedPreferences(PREFS_NAME, Context.MODE_MULTI_PROCESS);
     }
 
