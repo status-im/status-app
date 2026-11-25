@@ -569,6 +569,7 @@ Window {
                 systemTrayIconAvailable: systemTray.available
                 portraitLayout: applicationWindow.portraitLayout
                 allowsAutoLogin: (keyUid) => sessionView.allowsAutoLogin(keyUid)
+                relogin: () => sessionView.relogin()
 
                 onContentLoaded: {
                     splashScreenLoader.active = false

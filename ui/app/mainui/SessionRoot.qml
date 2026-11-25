@@ -29,6 +29,9 @@ Item {
     // Whether the login screen may log in silently with the stored credential of a profile:
     // (keyUid) => bool
     required property var allowsAutoLogin
+    // Ends the session for one silent relogin (AutoLoginPolicy.AllowOnce): () => bool,
+    // false when it was ignored
+    required property var relogin
 
     readonly property bool userLoggedIn: appMainLoader.item !== null
 
@@ -87,8 +90,20 @@ Item {
     }
 
     Component.onCompleted: {
-        if (root.skipOnboarding)
-            d.moveToAppMain()
+        if (!root.skipOnboarding)
+            return
+        // The UI adopted a running session
+        if (bootLoginRecordRefresh.reloginIfRecordFromOtherVersion())
+            return
+        d.moveToAppMain()
+    }
+
+    BootLoginRecordRefresh {
+        id: bootLoginRecordRefresh
+
+        enabled: root.featureFlagsStore.resumeAfterRestartEnabled
+        secureStorage: appSecureStorage
+        relogin: root.relogin
     }
 
     Component.onDestruction: Global.appIsReady = false
