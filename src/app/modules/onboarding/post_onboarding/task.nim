@@ -1,3 +1,5 @@
+import std/sequtils
+
 type PostOnboardingTaskKind* = enum
   # NOTE: Call from Login page when the keycard was lost and is being replaced.
   kPostOnboardingTaskKeycardReplacement = 0
@@ -67,3 +69,9 @@ proc abandon*(self: var PostLoginTasks) =
 proc add*(self: var PostLoginTasks, task: PostOnboardingTask) =
   if not self.abandoned:
     self.tasks.add(task)
+
+proc loginDecidesBootLoginRecord*(tasks: openArray[PostOnboardingTask]): bool =
+  ## Only the stay-logged-in task writes or removes the boot-login record. After a
+  ## login without it (recovery phrase, onboarding without the opt-in) the record must
+  ## be removed, so a boot login never resumes the previous login's profile.
+  tasks.anyIt(it.kind == kPostOnboardingTaskSaveStayLoggedIn)

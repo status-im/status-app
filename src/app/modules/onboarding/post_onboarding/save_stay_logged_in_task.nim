@@ -59,6 +59,7 @@ proc run*(self: SaveStayLoggedInTask, accountsService: accounts_service.Service,
   let loggedInAccount = accountsService.getLoggedInAccount()
   if self.keyUid.len > 0 and self.keyUid != loggedInAccount.keyUid:
     warn "skipping stay-logged-in save, the logged-in account does not match the task's account"
+    onboardingModule.requestDeleteBootLoginRecord()
     return
 
   # Keycard profiles are out of scope for "Stay logged in": a silently readable DEK would
@@ -103,12 +104,14 @@ proc run*(self: SaveStayLoggedInTask, accountsService: accounts_service.Service,
 
   if toStore.len == 0:
     debug "profile not DEK-migrated, stay-logged-in credential not stored"
+    onboardingModule.requestDeleteBootLoginRecord()
     return
 
   # Defense-in-depth shape check on top of the provenance guarantees above; never the
   # primary authorization.
   if not common_utils.isTaggedDekCredential(toStore):
     warn "stay-logged-in credential has an invalid DEK shape, not stored"
+    onboardingModule.requestDeleteBootLoginRecord()
     return
   # The boot-login record follows the credential: written next to it, empty (removed)
   # whenever no credential is stored.

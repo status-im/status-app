@@ -13,6 +13,7 @@ QtObject {
     signal deleteBiometricsRequested(string keyUid)
     signal stayLoggedInSaveRequested(string keyUid, string credential, bool enablePreference, string bootLoginRecord)
     signal stayLoggedInDeleteRequested(string keyUid)
+    signal bootLoginRecordDeleteRequested()
 
     readonly property QtObject d: StatusQUtils.QObject {
         id: d
@@ -27,6 +28,7 @@ QtObject {
             d.onboardingModuleInst.deleteBiometricsRequested.connect(root.deleteBiometricsRequested)
             d.onboardingModuleInst.stayLoggedInSaveRequested.connect(root.stayLoggedInSaveRequested)
             d.onboardingModuleInst.stayLoggedInDeleteRequested.connect(root.stayLoggedInDeleteRequested)
+            d.onboardingModuleInst.bootLoginRecordDeleteRequested.connect(root.bootLoginRecordDeleteRequested)
         }
     }
 

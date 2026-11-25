@@ -188,6 +188,12 @@ Item {
                 root.onboardingStore.setStayLoggedIn(false)
         }
 
+        // A login that stored no credential: the previous login's record must not
+        // resume a different profile after a phone restart
+        function onBootLoginRecordDeleteRequested() {
+            root.secureStorage.deleteBootLoginRecord()
+        }
+
         function onKeycardStateChanged() {
             if (d.loginRequestSent && root.onboardingStore.keycardState === Onboarding.KeycardState.NotEmpty) {
                 // Show the splash screen if it's not already on top (on mobile it's pushed as soon as the login is requested)

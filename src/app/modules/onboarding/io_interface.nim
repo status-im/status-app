@@ -107,6 +107,9 @@ method requestSaveStayLoggedIn*(self: AccessInterface, account: string, credenti
 method requestDeleteStayLoggedIn*(self: AccessInterface, account: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method requestDeleteBootLoginRecord*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method requestLocalBackup*(self: AccessInterface, backupImportFileUrl: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 

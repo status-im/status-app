@@ -156,6 +156,7 @@ Item {
                 signal loginAdopted()
                 signal stayLoggedInSaveRequested(string keyUid, string credential, bool enablePreference, string bootLoginRecord)
                 signal stayLoggedInDeleteRequested(string keyUid)
+                signal bootLoginRecordDeleteRequested()
 
                 // Settings wrappers the real store exposes (store-layer rule)
                 property bool stayLoggedIn: false
@@ -563,6 +564,20 @@ Item {
             wrapper.onboardingStore.accountLoginError("stale dek", false)
 
             compare(wrapper.secureStorage.bootLoginRecord, "")
+        }
+
+        // A login that stores no credential (recovery phrase, a profile not yet
+        // migrated to the DEK scheme) must not leave the previous login's record
+        function test_recordDeleteRequestRemovesOnlyTheRecord() {
+            wrapper = createTemporaryObject(wrapperComponent, root)
+            verify(!!wrapper)
+            wrapper.secureStorage.creds["uid_1"] = "dek:" + root.dummyDekHex
+            wrapper.secureStorage.bootLoginRecord = root.dummyRecord
+
+            wrapper.onboardingStore.bootLoginRecordDeleteRequested()
+
+            compare(wrapper.secureStorage.bootLoginRecord, "")
+            compare(wrapper.secureStorage.creds["uid_1"], "dek:" + root.dummyDekHex)
         }
 
         function test_flagOffNeverWritesTheRecord() {
