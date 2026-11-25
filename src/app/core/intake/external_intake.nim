@@ -37,6 +37,7 @@ type
 
   ExternalIntake* = ref object
     ready: bool
+    sessionDetached: bool
     pendingSlot: Option[ExternalIntakeEvent]
     onDeepLinkUrl*: proc(url: string)
     onBrowserTabUrl*: proc(url: string)
@@ -135,14 +136,20 @@ proc submit*(self: ExternalIntake, event: ExternalIntakeEvent) =
     return
   self.dispatch(event)
 
-proc setNotReady*(self: ExternalIntake) =
+proc detachSession*(self: ExternalIntake) =
   ## The app session that acted on intakes ended (logout): hold them in the pending
-  ## slot again until the next one is ready.
+  ## slot, and ignore setReady, until the next session is attached.
   self.ready = false
+  self.sessionDetached = true
+
+proc attachSession*(self: ExternalIntake) =
+  self.sessionDetached = false
 
 proc setReady*(self: ExternalIntake) =
   ## Called at main-window-ready (after login or onboarding completes).
-  ## Delivers the pending intake, if any.
+  ## Delivers the pending intake, if any. No-op while no session is attached.
+  if self.sessionDetached:
+    return
   self.ready = true
   if self.pendingSlot.isSome:
     let event = self.pendingSlot.get()

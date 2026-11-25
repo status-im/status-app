@@ -323,12 +323,28 @@ suite "external_intake pending slot":
     let capture = Capture()
     let intake = newCapturingIntake(capture)
     intake.setReady()
-    intake.setNotReady()
+    intake.detachSession()
 
     intake.submit(urlIntake("status-app://c/community-id"))
     check capture.deepLinks.len == 0
     check intake.hasPending()
 
+    intake.attachSession()
+    intake.setReady()
+    check capture.deepLinks == @["status-app://c/community-id"]
+    check not intake.hasPending()
+
+  test "ready without a session holds the pending intake for the next session":
+    let capture = Capture()
+    let intake = newCapturingIntake(capture)
+    intake.submit(urlIntake("status-app://c/community-id"))
+
+    intake.detachSession()
+    intake.setReady()
+    check capture.deepLinks.len == 0
+    check intake.hasPending()
+
+    intake.attachSession()
     intake.setReady()
     check capture.deepLinks == @["status-app://c/community-id"]
     check not intake.hasPending()
