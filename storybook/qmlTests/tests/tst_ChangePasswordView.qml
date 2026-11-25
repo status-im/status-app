@@ -111,6 +111,14 @@ Item {
                                                      : SecureStorage.StatusSuccess,
                          credential: value === undefined ? "" : value }
             }
+
+            property string bootLoginRecord: "{\"version\":1}"
+            function deleteBootLoginRecord() {
+                if (bootLoginRecord === "")
+                    return SecureStorage.StatusNotFound
+                bootLoginRecord = ""
+                return SecureStorage.StatusSuccess
+            }
         }
     }
 
@@ -440,6 +448,7 @@ Item {
 
             compare(root.secureStorageMock.deleteCalls.length, 1)
             compare(root.view.privacyStore.stayLoggedIn, data.expectedPref)
+            compare(root.secureStorageMock.bootLoginRecord, "")
         }
 
         // A cancelled authentication leaves the feature enabled and the credential
@@ -455,6 +464,7 @@ Item {
             compare(root.secureStorageMock.deleteCalls.length, 0)
             compare(root.secureStorageMock.creds[root.testKeyUid], "dek:stored-dek-hex")
             compare(root.view.privacyStore.stayLoggedIn, true)
+            compare(root.secureStorageMock.bootLoginRecord, "{\"version\":1}")
         }
 
         // Password change with a stored silent credential: refreshed from the DEK-only
@@ -490,6 +500,23 @@ Item {
 
             compare(root.secureStorageMock.deleteCalls.length, 1)
             compare(root.view.privacyStore.stayLoggedIn, data.expectedPref)
+            compare(root.secureStorageMock.bootLoginRecord, "")
+        }
+
+        function test_restartHint_data() {
+            return [
+                { tag: "boot login on", resumes: true },
+                { tag: "boot login off", resumes: false },
+            ]
+        }
+
+        // The restart hint only shows where a boot login can actually follow
+        function test_restartHint(data) {
+            root.view.resumesAfterRestart = data.resumes
+
+            const hint = findChild(stayLoggedInSection(), "resumesAfterRestartText")
+            verify(!!hint)
+            compare(hint.visible, data.resumes)
         }
 
         // A password change NOT requested through this view's form (e.g. the app-level
