@@ -196,19 +196,25 @@ public final class StatusGoService extends Service {
         throw new BootLogin.StoreException(false);
     }
 
-    /**
-     * Presence at rest. hasCredential wipes a half {iv, ct} pair and reports it absent, so a
-     * half pair is checked first and reported as corrupt.
-     */
+    /** Presence at rest, see BootLogin.entryExists. */
     static boolean secureEntryExists(android.content.Context context, String account)
             throws BootLogin.StoreException {
         final app.status.mobile.SecureStorageHelper store =
                 app.status.mobile.SecureStorageHelper.getInstance(context);
-        if (store.hasIncompletePair(account)) throw new BootLogin.StoreException(true);
-        final int status = store.hasCredential(account);
-        if (status == app.status.mobile.SecureStorageHelper.STATUS_OK) return true;
-        if (status == app.status.mobile.SecureStorageHelper.STATUS_NOT_FOUND) return false;
-        throw new BootLogin.StoreException(false);
+        return BootLogin.entryExists(new BootLogin.EntryStore() {
+            @Override
+            public boolean hasIncompletePair(String entry) {
+                return store.hasIncompletePair(entry);
+            }
+
+            @Override
+            public boolean exists(String entry) throws BootLogin.StoreException {
+                final int status = store.hasCredential(entry);
+                if (status == app.status.mobile.SecureStorageHelper.STATUS_OK) return true;
+                if (status == app.status.mobile.SecureStorageHelper.STATUS_NOT_FOUND) return false;
+                throw new BootLogin.StoreException(false);
+            }
+        }, account);
     }
 
     /** Nothing to resume after a restart: leave the foreground and stop. */

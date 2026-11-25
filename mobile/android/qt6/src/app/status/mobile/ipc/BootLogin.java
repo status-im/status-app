@@ -50,6 +50,24 @@ final class BootLogin {
         void delete();
     }
 
+    /** The prompt-free secure store's presence checks for one entry. */
+    interface EntryStore {
+        /** Whether only one half of the entry's {iv, ct} pair is stored. Read-only. */
+        boolean hasIncompletePair(String account);
+
+        /** Whether the entry is stored; wipes a corrupt entry and reports it absent. */
+        boolean exists(String account) throws StoreException;
+    }
+
+    /**
+     * Presence at rest. The store's own check wipes a half {iv, ct} pair and reports it absent,
+     * so a half pair is checked first and reported as corrupt.
+     */
+    static boolean entryExists(EntryStore store, String account) throws StoreException {
+        if (store.hasIncompletePair(account)) throw new StoreException(true);
+        return store.exists(account);
+    }
+
     interface CredentialSource {
         /** Whether the credential is stored, checked without decrypting it. */
         boolean exists(String keyUid) throws StoreException;

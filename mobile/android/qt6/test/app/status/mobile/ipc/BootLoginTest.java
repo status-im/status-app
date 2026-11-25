@@ -686,4 +686,69 @@ public class BootLoginTest {
         assertFalse(BootLogin.startsOnBoot(false, storedRecord()));
         assertEquals(1, recordDeletes);
     }
+
+    // ── The store's presence check, as the receiver and the service run it ───
+
+    /** A store like SecureStorageHelper: hasCredential wipes a half pair and reports it absent. */
+    private final class HalfPairWipingStore implements BootLogin.EntryStore {
+        boolean halfPair;
+        boolean present;
+        int wipes;
+
+        @Override
+        public boolean hasIncompletePair(String account) {
+            return halfPair;
+        }
+
+        @Override
+        public boolean exists(String account) {
+            if (halfPair) {
+                halfPair = false;
+                wipes++;
+                return false;
+            }
+            return present;
+        }
+    }
+
+    private BootLogin.RecordStore recordIn(HalfPairWipingStore entries) {
+        return new BootLogin.RecordStore() {
+            @Override
+            public boolean exists() throws BootLogin.StoreException {
+                return BootLogin.entryExists(entries, RECORD_KEY);
+            }
+
+            @Override
+            public String read() {
+                return null;
+            }
+
+            @Override
+            public void delete() {
+                recordDeletes++;
+            }
+        };
+    }
+
+    @Test
+    public void bootWithAHalfRecordPairInTheStoreStartsTheBootLoginWithoutWipingIt() {
+        final HalfPairWipingStore entries = new HalfPairWipingStore();
+        entries.halfPair = true;
+
+        assertTrue(BootLogin.startsOnBoot(true, recordIn(entries)));
+        assertEquals("the half pair is left for the failure path", 0, entries.wipes);
+    }
+
+    @Test
+    public void bootWithARecordInTheStoreStartsTheBootLogin() {
+        final HalfPairWipingStore entries = new HalfPairWipingStore();
+        entries.present = true;
+
+        assertTrue(BootLogin.startsOnBoot(true, recordIn(entries)));
+    }
+
+    @Test
+    public void bootWithNothingInTheStoreStartsNothing() {
+        assertFalse(BootLogin.startsOnBoot(true, recordIn(new HalfPairWipingStore())));
+    }
 }
