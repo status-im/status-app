@@ -7,6 +7,7 @@ GlobalBanner 1.0 GlobalBanner.qml
 SplashScreen 1.0 SplashScreen.qml
 Popups 1.0 Popups.qml
 ProfileEncryptionMigrationFlow 1.0 ProfileEncryptionMigrationFlow.qml
+SessionLoadingScreen 1.0 SessionLoadingScreen.qml
 SessionRoot 1.0 SessionRoot.qml
 SessionTransitionView 1.0 SessionTransitionView.qml
 SignOutConfirmationDialog 1.0 SignOutConfirmationDialog.qml
