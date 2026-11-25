@@ -11739,11 +11739,11 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Create Thread</source>
+        <source>Open thread</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Open thread</source>
+        <source>Reply in thread</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

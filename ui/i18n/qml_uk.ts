@@ -11823,12 +11823,12 @@ to load</source>
         <translation>Відповісти</translation>
     </message>
     <message>
-        <source>Create Thread</source>
-        <translation>Створити гілку</translation>
-    </message>
-    <message>
         <source>Open thread</source>
         <translation>Відкрити гілку</translation>
+    </message>
+    <message>
+        <source>Reply in thread</source>
+        <translation type="unfinished">Відповісти в гілці</translation>
     </message>
     <message>
         <source>Edit</source>
