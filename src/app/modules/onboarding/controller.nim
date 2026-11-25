@@ -59,7 +59,7 @@ proc delete*(self: Controller) =
 proc init*(self: Controller) =
   var handlerId = self.events.onWithUUID(SignalType.NodeLogin.event) do(e:Args):
     let signal = NodeSignal(e)
-    self.delegate.onNodeLogin(signal.error, signal.account, signal.settings)
+    self.delegate.onNodeLogin(signal.seq, signal.error, signal.account, signal.settings)
   self.connectionIds.add(handlerId)
 
   handlerId = self.events.onWithUUID(SIGNAL_LOCAL_PAIRING_STATUS_UPDATE) do(e: Args):

@@ -405,10 +405,10 @@ Item {
             compare(wrapper.secureStorage.creds["uid_1"], "dek:" + root.dummyDekHex)
         }
 
-        // In progress, then node.login fails: the login screen, no silent retry, no
-        // error shown, and the stored credential is never deleted (the one-shot
-        // failure rule is for logins the UI started).
-        function test_inProgressFailureEndsOnTheLoginScreen() {
+        // In progress, then node.login fails: the login screen, no silent "Stay logged
+        // in" retry, no error shown, and the stored credential is never deleted (the
+        // one-shot failure rule is for logins the UI started).
+        function test_inProgressFailureEndsOnTheLoginScreenWithoutSilentRetry() {
             createWithStoredCredential(Onboarding.LoginState.InProgress)
             tryVerify(() => isSplashOnTop(), 2000, "the loading screen must be shown")
 
@@ -424,21 +424,6 @@ Item {
             const passwordBox = findChild(layout.stack.loginScreen, "passwordBox")
             verify(!!passwordBox)
             compare(passwordBox.validationError, "")
-        }
-
-        // Logged in: adopt the running session, no login request
-        function test_loggedInAdoptsTheSession() {
-            createWithStoredCredential(Onboarding.LoginState.LoggedIn)
-            const moveSpy = signalSpy.createObject(wrapper, {
-                target: wrapper, signalName: "requestMoveToAppMain" })
-
-            tryVerify(() => isSplashOnTop(), 2000, "the loading screen must be shown")
-
-            wrapper.onboardingStore.appShellReady()
-
-            tryCompare(moveSpy, "count", 1)
-            compare(wrapper.onboardingStore.loginRequestedCalls.length, 0)
-            compare(wrapper.secureStorage.deleteCalls.length, 0)
         }
     }
 

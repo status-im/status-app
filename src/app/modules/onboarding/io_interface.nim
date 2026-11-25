@@ -24,7 +24,7 @@ method cleanupAfterMainTransition*(self: AccessInterface) {.base.} =
 method onMainFailedToLoad*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onNodeLogin*(self: AccessInterface, error: string, account: AccountDto, settings: SettingsDto) {.base.} =
+method onNodeLogin*(self: AccessInterface, seq: uint64, error: string, account: AccountDto, settings: SettingsDto) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method load*(self: AccessInterface): Result[void, string] {.base.} =
@@ -116,6 +116,7 @@ method requestDeleteMultiaccount*(self: AccessInterface, keyUid: string): string
 type
   DelegateInterface* = concept c
     c.onboardingDidLoad()
+    c.onboardingDidAdoptSession()
     c.appReady()
     c.userLoggedIn()
     c.finishAppLoading()

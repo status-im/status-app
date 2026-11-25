@@ -120,6 +120,7 @@ proc runPostOnboardingTasks(self: AppController)
 
 # Startup Module Delegate Interface
 proc onboardingDidLoad*(self: AppController)
+proc onboardingDidAdoptSession*(self: AppController)
 proc userLoggedIn*(self: AppController): string
 proc appReady*(self: AppController)
 proc finishAppLoading*(self: AppController)
@@ -386,6 +387,12 @@ proc initializeQmlContext(self: AppController) =
     singletonInstance.engine.load(newQUrl("qrc:///main.qml"))
 
 proc onboardingDidLoad*(self: AppController) =
+  self.initializeQmlContext()
+
+# The onboarding module read logged in at load: a login in progress at
+# newAppController finished since. Startup takes the resume path.
+proc onboardingDidAdoptSession*(self: AppController) =
+  self.resumeLogin = true
   self.initializeQmlContext()
 
 proc mainDidLoad*(self: AppController) =

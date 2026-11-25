@@ -41,16 +41,21 @@ type LoginState* {.pure.} = enum
   InProgress = "inProgress"
   LoggedIn = "loggedIn"
 
+# seq: the login sequence number of the current or last login, also on its node.login
 type LoginStateDto* = object
   state*: LoginState
+  seq*: uint64
   account*: AccountDto
 
 # Logged in without a usable account reads as none, as GetActiveAccount did.
 proc toLoginStateDto*(jsonObj: JsonNode): LoginStateDto =
   result.state = parseEnum[LoginState](jsonObj{"state"}.getStr, LoginState.None)
+  result.seq = jsonObj{"seq"}.getBiggestInt.uint64
   if result.state != LoginState.LoggedIn:
     return
-  result.account = toAccountDto(jsonObj{"account"})
+  let accountObj = jsonObj{"account"}
+  if accountObj != nil and accountObj.kind == JObject:
+    result.account = toAccountDto(accountObj)
   if not result.account.isValid():
     result.state = LoginState.None
 

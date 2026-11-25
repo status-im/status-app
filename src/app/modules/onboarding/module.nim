@@ -1,6 +1,6 @@
 import nimqml, chronicles, json, strutils, sequtils, sets, options, results
 
-import io_interface, states
+import io_interface, states, startup_login
 import view, controller
 import app/modules/shared_modules/keycard_management/module as keycard_management_module
 
@@ -41,7 +41,7 @@ type
     postLoginTasks: seq[PostOnboardingTask]
     accountsService: accounts_service.Service
     generalService: general_service.Service
-    resumeLogin: bool
+    startupLogin: StartupLogin
     # Profiles on the login screen; any other one logging in is new on this device.
     listedKeyUids: Option[HashSet[string]]
     tmpKeyUid: string # TODO: remove this, once we switch fully to new keycard approach
@@ -169,12 +169,15 @@ method load*[T](self: Module[T]): Result[void, string] =
   # Read after controller.init subscribed to node.login: a login in progress now
   # can't finish unseen.
   let loginState = self.accountsService.fetchLoginState()
-  self.view.setStartupLoginState(loginState.state)
-  self.resumeLogin = loginState.state == LoginState.LoggedIn
-  if self.resumeLogin:
+  self.startupLogin = initStartupLogin(loginState.state, loginState.seq)
+  if self.startupLogin.action == StartupAction.AdoptSession:
+    # The login in progress when the app controller read the state finished since:
+    # take the resume path, main.qml opens straight on the session.
     self.controller.setLoggedInAccount(loginState.account)
+    self.delegate.onboardingDidAdoptSession()
     self.finishAppLoading2()
     return ok()
+  self.view.setStartupLoginState(loginState.state)
 
   let accountsLoaded = self.buildLoginAccountsModel()
 
@@ -406,9 +409,9 @@ method onAccountLoginError*[T](self: Module[T], error: string) =
   warn "failed to login", wrongPassword, error
   self.view.accountLoginError(error, wrongPassword)
 
-method onNodeLogin*[T](self: Module[T], err: string, account: AccountDto, settings: SettingsDto) =
-  if self.resumeLogin:
-    # Adopted at load already; this is the node.login of that same login
+method onNodeLogin*[T](self: Module[T], seq: uint64, err: string, account: AccountDto, settings: SettingsDto) =
+  if not self.startupLogin.admitNodeLogin(seq):
+    info "ignoring the node.login of a login the UI didn't start", seq
     return
   if err.len != 0:
     self.onAccountLoginError(err)

@@ -6,6 +6,7 @@ import ../../../../app_service/service/accounts/dto/[accounts]
 import ../../../../app_service/service/settings/dto/[settings]
 
 type NodeSignal* = ref object of Signal
+  seq*: uint64 # the login sequence number of the login it reports
   error*: string
   account*: AccountDto
   settings*: SettingsDto
@@ -18,6 +19,8 @@ proc fromEvent*(T: type NodeSignal, signalType: SignalType, event: JsonNode): No
     return
 
   let e = event["event"]
+
+  result.seq = e{"seq"}.getBiggestInt.uint64
 
   if e.contains("error"):
     result.error = e["error"].getStr

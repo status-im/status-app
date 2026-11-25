@@ -47,8 +47,9 @@ Page {
 
     onAutoLoginEnabledChanged: d.tryAutoLogin()
 
-    // A login the UI didn't start is running or done: no auto-login attempt, and its
-    // failure falls back to the login screen without an error.
+    // A login the UI didn't start is running: no auto-login attempt, and its failure
+    // falls back to the login screen without an error and without a silent "Stay
+    // logged in" retry (that login most likely used the same credential).
     property bool adoptingLogin: false
     required property bool privacyModeFeatureEnabled
 
@@ -403,7 +404,7 @@ Page {
             }
             if (d.adoptedLoginErrorPending) {
                 d.adoptedLoginErrorPending = false
-                console.info("login in progress at startup failed (", error, ") — falling back to the login screen")
+                console.info("login in progress at startup failed (", error, ") — login screen, no silent retry")
                 return
             }
             const loginScreen = onboardingFlow.loginScreen

@@ -51,9 +51,10 @@ Item {
 
         property bool loginRequestSent: false
 
-        // In progress: wait for its node.login. Logged in: the session is adopted.
+        // A login the UI didn't start is in progress: wait for its node.login. (Logged in
+        // at startup never gets here: the resume path opens the session directly.)
         readonly property bool adoptingLogin:
-            root.onboardingStore.startupLoginState !== Onboarding.LoginState.None
+            root.onboardingStore.startupLoginState === Onboarding.LoginState.InProgress
     }
 
     Component {
