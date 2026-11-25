@@ -172,14 +172,16 @@
             android:exported="false"
             android:process=":statusgo" />
 
-        <!-- Boot login: starts StatusGoService after a phone restart. Not exported: the
-             system still delivers BOOT_COMPLETED, and no other app can reach it. -->
+        <!-- Boot login: starts StatusGoService after a phone restart or an app update. Not
+             exported: the system still delivers BOOT_COMPLETED and MY_PACKAGE_REPLACED, and no
+             other app can reach it. -->
         <receiver
             android:name=".ipc.BootCompletedReceiver"
             android:exported="false"
             android:process=":statusgo">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
 

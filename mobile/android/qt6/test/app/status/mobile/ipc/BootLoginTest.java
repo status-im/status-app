@@ -249,6 +249,20 @@ public class BootLoginTest {
     }
 
     @Test
+    public void replaysARecordWrittenByAnOlderVersionAsIs() throws Exception {
+        store.put(RECORD_KEY, RECORD.replace("\"versionCode\":42", "\"versionCode\":1"));
+
+        assertTrue(bootLogin.run());
+
+        assertEquals(2, calls.size());
+        assertEquals("LoginAccount", calls.get(1).method);
+        assertEquals(DEK_HEX, calls.get(1).singleArg().getString("dek"));
+        assertTrue(store.containsKey(RECORD_KEY));
+        assertEquals(0, notifications);
+        assertEquals(0, stops);
+    }
+
+    @Test
     public void waitsForNodeLoginWithATimeout() {
         bootLogin.run();
 
