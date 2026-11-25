@@ -128,6 +128,46 @@ Item {
             compare(refresh.reloginCalls, 1)
         }
 
+        // On the in-progress adopt path the onboarding flow moves to the app by itself: once
+        // the relogin started the session must not load it, or its contentLoaded ends the
+        // window's loading screen and "Signing out…" shows
+        function test_anAcceptedReloginKeepsTheSessionFromLoadingTheApp_data() {
+            return [
+                { tag: "logged in at start" },
+                { tag: "adopt during an in-progress boot login" }
+            ]
+        }
+
+        function test_anAcceptedReloginKeepsTheSessionFromLoadingTheApp(data) {
+            const refresh = createTemporaryObject(refreshComponent, root)
+            refresh.secureStorage.fromOtherVersion = true
+
+            refresh.adoptStarted(root.record)
+            compare(refresh.reloginStarted, false)
+            ignoreReloginWarning()
+            refresh.adoptFinished()
+            compare(refresh.reloginStarted, true)
+        }
+
+        function test_noOrIgnoredReloginLetsTheSessionLoadTheApp_data() {
+            return [
+                { tag: "this version", fromOtherVersion: false, reloginAccepted: true },
+                { tag: "ignored relogin", fromOtherVersion: true, reloginAccepted: false }
+            ]
+        }
+
+        function test_noOrIgnoredReloginLetsTheSessionLoadTheApp(data) {
+            const refresh = createTemporaryObject(refreshComponent, root,
+                                                  { reloginAccepted: data.reloginAccepted })
+            refresh.secureStorage.fromOtherVersion = data.fromOtherVersion
+
+            refresh.adoptStarted(root.record)
+            if (data.fromOtherVersion)
+                ignoreReloginWarning()
+            refresh.adoptFinished()
+            compare(refresh.reloginStarted, false)
+        }
+
         // The KeptCurrent rewrite removes the version mismatch, so it is read first
         function test_theVersionIsReadBeforeTheKeptCurrentRewrite() {
             const refresh = createTemporaryObject(refreshComponent, root)

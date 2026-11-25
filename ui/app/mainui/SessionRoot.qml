@@ -83,20 +83,19 @@ Item {
 
         readonly property KeycardStateStore keycardStateStore: KeycardStateStore {}
 
+        // Never once the record refresh relogin started: the session is ending
         function moveToAppMain() : void {
+            if (bootLoginRecordRefresh.reloginStarted)
+                return
             d.appMainTriggered = true
         }
 
-        // The adopt has finished: AppController.start() returned, the session is ready
+        // Every adopt path, once the adopt has finished. Logged in at start, the session moves
+        // to the app here; on a boot login still in progress adopted by the login screen, the
+        // onboarding flow moves to it itself.
         function onAdoptFinished() : void {
-            if (!bootLoginRecordRefresh.adoptFinished())
+            if (!bootLoginRecordRefresh.adoptFinished() && root.skipOnboarding)
                 d.moveToAppMain()
-        }
-
-        // The login screen adopted a boot login that was still in progress: the onboarding
-        // flow moves to the app itself unless the relogin is requested
-        function onLoginFlowAdoptFinished() : void {
-            bootLoginRecordRefresh.adoptFinished()
         }
 
         function setAppReady() : void {
@@ -276,7 +275,7 @@ Item {
         // they have finished
         function onBootLoginRecordKeepCurrentRequested(bootLoginRecord: string) : void {
             if (bootLoginRecordRefresh.adoptStarted(bootLoginRecord))
-                Qt.callLater(d.onLoginFlowAdoptFinished)
+                Qt.callLater(d.onAdoptFinished)
         }
     }
 

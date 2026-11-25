@@ -21,6 +21,10 @@ QtObject {
     // () => void: the held ones go to the current session
     required property var releaseIntake
 
+    // True once the relogin was accepted: this session ends and must not load the app (its
+    // contentLoaded would end the window's loading screen and show the session end)
+    readonly property bool reloginStarted: d.reloginStarted
+
     // On every adopt (logged in at start, or a boot login still in progress adopted by the
     // login screen), before its appReady: keeps `record` current. True when the stored record
     // was from another version (read before the rewrite): the intake is held, adoptFinished()
@@ -39,8 +43,10 @@ QtObject {
             return false
         d.reloginPending = false
         console.warn("boot-login record from another app version: relogin to refresh it")
-        if (root.relogin())
+        if (root.relogin()) {
+            d.reloginStarted = true
             return true
+        }
         root.releaseIntake()
         return false
     }
@@ -49,5 +55,6 @@ QtObject {
         id: d
 
         property bool reloginPending: false
+        property bool reloginStarted: false
     }
 }
