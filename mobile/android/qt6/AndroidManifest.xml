@@ -172,11 +172,11 @@
             android:exported="false"
             android:process=":statusgo" />
 
-        <!-- Boot login: starts StatusGoService after a phone restart. Exported so the system
-             can deliver BOOT_COMPLETED, a protected broadcast no app can send. -->
+        <!-- Boot login: starts StatusGoService after a phone restart. Not exported: the
+             system still delivers BOOT_COMPLETED, and no other app can reach it. -->
         <receiver
             android:name=".ipc.BootCompletedReceiver"
-            android:exported="true"
+            android:exported="false"
             android:process=":statusgo">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
