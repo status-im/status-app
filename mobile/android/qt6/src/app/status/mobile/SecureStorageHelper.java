@@ -51,7 +51,9 @@ public final class SecureStorageHelper {
     // The boot-login record's own entry. Account entries are keyed by key UID ("0x..."),
     // so this can never collide with an account's credential.
     public static final String BOOT_LOGIN_RECORD_KEY = "status.bootLoginRecord";
-    // A boot login attempt of the record is in progress (a plain flag, not a credential).
+    // A boot login attempt of the record is in progress (a plain flag, not a credential). It has
+    // its own file, so its commits from :statusgo never rewrite the credential/record map.
+    private static final String ATTEMPT_PREFS_NAME = "StatusBootLoginAttempt";
     private static final String BOOT_LOGIN_ATTEMPT_KEY = "status.bootLoginAttempt";
 
     // Status codes (kept in sync with securestorage_android.cpp).
@@ -257,7 +259,7 @@ public final class SecureStorageHelper {
     /** Whether a boot login attempt was started and has not finished. */
     public boolean hasBootLoginAttempt() {
         try {
-            return prefs().getBoolean(BOOT_LOGIN_ATTEMPT_KEY, false);
+            return attemptPrefs().getBoolean(BOOT_LOGIN_ATTEMPT_KEY, false);
         } catch (Throwable t) {
             Log.w(TAG, "hasBootLoginAttempt failed", t);
             return false;
@@ -267,7 +269,7 @@ public final class SecureStorageHelper {
     /** Marks or clears the boot login attempt, synchronously. */
     public void setBootLoginAttempt(boolean inProgress) {
         try {
-            final android.content.SharedPreferences.Editor edit = prefs().edit();
+            final android.content.SharedPreferences.Editor edit = attemptPrefs().edit();
             if (inProgress) {
                 edit.putBoolean(BOOT_LOGIN_ATTEMPT_KEY, true);
             } else {
@@ -358,6 +360,10 @@ public final class SecureStorageHelper {
         // a stale map that brings back an entry the other one removed (e.g. the boot-login
         // record): a reload racing the other process's commit can still lose that commit.
         return mContext.getSharedPreferences(PREFS_NAME, Context.MODE_MULTI_PROCESS);
+    }
+
+    private android.content.SharedPreferences attemptPrefs() {
+        return mContext.getSharedPreferences(ATTEMPT_PREFS_NAME, Context.MODE_MULTI_PROCESS);
     }
 
     /** @throws IllegalArgumentException on malformed Base64 (handled as corruption). */
