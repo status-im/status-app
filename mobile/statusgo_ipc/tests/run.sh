@@ -13,9 +13,11 @@ for src in "$HERE"/*_test.cpp; do
   "$bin"
 done
 
-# Pure-Java IPC helpers (no Android classes), compiled straight against JUnit 4.
+# Pure-Java IPC helpers (no Android classes), compiled straight against JUnit 4 and
+# org.json (the real implementation; android.jar only ships stubs).
 JAVA_ROOT="$HERE/../../android/qt6"
 JAVA_SOURCES=(
+  "$JAVA_ROOT/src/app/status/mobile/ipc/BootLogin.java"
   "$JAVA_ROOT/src/app/status/mobile/ipc/NotificationReplySignal.java"
   "$JAVA_ROOT/src/app/status/mobile/ipc/SignalEnvelope.java"
   "$JAVA_ROOT/src/app/status/mobile/ipc/SignalFanout.java"
@@ -29,7 +31,14 @@ if [[ -z "${JUNIT_JAR:-}" || -z "${HAMCREST_JAR:-}" ]]; then
   echo "ipc-host-tests: JUnit 4.13.2 / hamcrest-core 1.3 not found; set JUNIT_JAR and HAMCREST_JAR" >&2
   exit 1
 fi
-CP="$JUNIT_JAR:$HAMCREST_JAR"
+if [[ -z "${JSON_JAR:-}" ]]; then
+  JSON_JAR="$(find "$HOME/.gradle/caches" "$HOME/.m2/repository" -name 'json-20231013.jar' 2>/dev/null | head -1)"
+fi
+if [[ -z "${JSON_JAR:-}" ]]; then
+  echo "ipc-host-tests: org.json 20231013 not found; set JSON_JAR" >&2
+  exit 1
+fi
+CP="$JUNIT_JAR:$HAMCREST_JAR:$JSON_JAR"
 mkdir -p "$OUT/java"
 TESTS=()
 while IFS= read -r t; do TESTS+=("$t"); done < <(find "$JAVA_ROOT/test" -name '*Test.java')

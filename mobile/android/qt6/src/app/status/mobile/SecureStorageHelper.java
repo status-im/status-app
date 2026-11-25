@@ -48,6 +48,10 @@ public final class SecureStorageHelper {
     private static final String KEY_CT_PREFIX = "ct_"; // ciphertext
     private static final String KEY_IV_PREFIX = "iv_"; // iv
 
+    // The boot-login record's own entry. Account entries are keyed by key UID ("0x..."),
+    // so this can never collide with an account's credential.
+    public static final String BOOT_LOGIN_RECORD_KEY = "status.bootLoginRecord";
+
     // Status codes (kept in sync with securestorage_android.cpp).
     public static final int STATUS_OK = 1;
     public static final int STATUS_NOT_FOUND = 2;
@@ -210,6 +214,31 @@ public final class SecureStorageHelper {
             Log.w(TAG, "deleteCredential failed", t);
             return STATUS_ERROR;
         }
+    }
+
+    /**
+     * Stores the boot-login record written by the UI, stamped with this build's versionCode
+     * so a later version can tell the record came from an older one.
+     */
+    public int setBootLoginRecord(String recordJson) {
+        try {
+            final org.json.JSONObject record = new org.json.JSONObject(recordJson);
+            record.put("versionCode", androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(
+                    mContext.getPackageManager().getPackageInfo(mContext.getPackageName(), 0)));
+            return setCredential(BOOT_LOGIN_RECORD_KEY, record.toString());
+        } catch (Throwable t) {
+            Log.w(TAG, "setBootLoginRecord failed", t);
+            return STATUS_ERROR;
+        }
+    }
+
+    /** On STATUS_OK the record JSON is written to out[0]. */
+    public int getBootLoginRecord(String[] out) {
+        return getCredential(BOOT_LOGIN_RECORD_KEY, out);
+    }
+
+    public int deleteBootLoginRecord() {
+        return deleteCredential(BOOT_LOGIN_RECORD_KEY);
     }
 
     // ====== Keystore helpers ======

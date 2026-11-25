@@ -46,6 +46,8 @@ dependencies {
     // JVM unit tests for Android-free helpers (see test/). Also run by
     // `make -C mobile ipc-host-tests` without a Gradle project.
     testImplementation 'junit:junit:4.13.2'
+    // android.jar only ships org.json stubs; JVM tests need the real implementation.
+    testImplementation 'org.json:json:20231013'
 }
 
 // Allow overriding qtAndroidDir via environment variable (for different Qt installations)
