@@ -54,6 +54,7 @@ type
     keycardSecureChannelV2*: bool
 
     thirdpartyServicesEnabled*: bool
+    zeroOnboarded*: bool
 
     apiConfig*: APIConfig
 
@@ -83,6 +84,7 @@ proc toJson*(self: CreateAccountRequest): JsonNode =
     "wakuV2EnableStoreConfirmationForMessagesSent": self.wakuV2EnableStoreConfirmationForMessagesSent,
     "wakuV2EnableMissingMessageVerification": self.wakuV2EnableMissingMessageVerification,
     "thirdpartyServicesEnabled": self.thirdpartyServicesEnabled,
+    "zeroOnboarded": self.zeroOnboarded,
   }
 
   if self.logLevel.isSome():

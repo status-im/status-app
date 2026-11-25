@@ -21,4 +21,5 @@ QtObject {
     property bool lifiEnabled
     property bool relayEnabled
     property bool swapProvidersEnabled
+    property bool zeroOnboardingEnabled
 }

@@ -26,6 +26,8 @@ const DEFAULT_FLAG_MESSAGE_LINK_SHARING_ENABLED = true
 const DEFAULT_FLAG_STATUS_SUPPORT_BOT_ENABLED = true
 const DEFAULT_FLAG_THREADS_ENABLED = true
 const DEFAULT_FLAG_THREADS_ENABLED_V2 = false
+# First start without a profile creates one silently; off until the feature is complete
+const DEFAULT_FLAG_ZERO_ONBOARDING = false
 
 # Compile time feature flags
 const DEFAULT_FLAG_DAPPS_ENABLED  = true
@@ -53,6 +55,7 @@ featureFlag("MESSAGE_LINK_SHARING_ENABLED",   DEFAULT_FLAG_MESSAGE_LINK_SHARING_
 featureFlag("STATUS_SUPPORT_BOT_ENABLED",     DEFAULT_FLAG_STATUS_SUPPORT_BOT_ENABLED)
 featureFlag("THREADS_ENABLED",                DEFAULT_FLAG_THREADS_ENABLED)
 featureFlag("THREADS_ENABLED_V2",             DEFAULT_FLAG_THREADS_ENABLED_V2)
+featureFlag("ZERO_ONBOARDING",                DEFAULT_FLAG_ZERO_ONBOARDING)
 
 featureFlag("DAPPS_ENABLED",                  DEFAULT_FLAG_DAPPS_ENABLED, true)
 featureFlag("BROWSER_ENABLED",                DEFAULT_FLAG_BROWSER_ENABLED, true)
@@ -129,6 +132,7 @@ QtObject:
     lifiEnabled: bool
     relayEnabled: bool
     swapProvidersEnabled: bool
+    zeroOnboardingEnabled: bool
 
   proc setup(self: FeatureFlags) =
     self.QObject.setup()
@@ -152,6 +156,7 @@ QtObject:
     self.lifiEnabled = LIFI_PROVIDER_ENABLED
     self.relayEnabled = RELAY_PROVIDER_ENABLED
     self.swapProvidersEnabled = SWAP_PROVIDER_ENABLED
+    self.zeroOnboardingEnabled = ZERO_ONBOARDING
 
   proc newFeatureFlags*(): FeatureFlags =
     new(result)
@@ -279,3 +284,9 @@ QtObject:
 
   QtProperty[bool] swapProvidersEnabled:
     read = getSwapProvidersEnabled
+
+  proc getZeroOnboardingEnabled*(self: FeatureFlags): bool {.slot.} =
+    return self.zeroOnboardingEnabled
+
+  QtProperty[bool] zeroOnboardingEnabled:
+    read = getZeroOnboardingEnabled

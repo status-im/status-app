@@ -46,3 +46,15 @@ proc exportProfileDEK*(keyUID: string, hashedPassword: string): RpcResponse[Json
   except RpcException as e:
     error "error", methodName = "exportProfileDEK", exception=e.msg
     raise newException(RpcException, e.msg)
+
+proc setZeroOnboardedProfilePassword*(keyUID: string, newHashedPassword: string): RpcResponse[JsonNode] =
+  try:
+    let request = %* {
+      "keyUID": keyUID,
+      "newPassword": newHashedPassword,
+    }
+    let response = status_go.setZeroOnboardedProfilePassword($request)
+    result.result = Json.decode(response, JsonNode)
+  except RpcException as e:
+    error "error", methodName = "setZeroOnboardedProfilePassword", exception=e.msg
+    raise newException(RpcException, e.msg)

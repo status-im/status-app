@@ -51,6 +51,7 @@ Window {
         lifiEnabled: featureFlags ? featureFlags.lifiEnabled : false
         relayEnabled: featureFlags ? featureFlags.relayEnabled : false
         swapProvidersEnabled: featureFlags ? featureFlags.swapProvidersEnabled : false
+        zeroOnboardingEnabled: featureFlags ? featureFlags.zeroOnboardingEnabled : false
     }
 
     readonly property UtilsStore utilsStore: UtilsStore {}

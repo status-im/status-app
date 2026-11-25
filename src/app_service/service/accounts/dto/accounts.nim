@@ -13,6 +13,7 @@ type AccountDto* = object
   images*: Images
   colorId*: int
   kdfIterations*: int
+  zeroOnboarded*: bool
 
 type WakuBackedUpProfileDto* = object
   displayName*: string
@@ -29,6 +30,7 @@ proc toAccountDto*(jsonObj: JsonNode): AccountDto =
   discard jsonObj.getProp("key-uid", result.keyUid)
   discard jsonObj.getProp("colorId", result.colorId)
   discard jsonObj.getProp("kdfIterations", result.kdfIterations)
+  discard jsonObj.getProp("zeroOnboarded", result.zeroOnboarded)
 
   var imagesObj: JsonNode
   if jsonObj.getProp("images", imagesObj) and imagesObj.kind == JArray:
