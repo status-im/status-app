@@ -2,9 +2,10 @@
 ## replays after a phone restart. The record must never carry the DEK or the password hash.
 
 import unittest
-import std/json
+import std/[json, strutils]
 
 import app_service/service/accounts/boot_login_record
+import app_service/service/accounts/dto/login_request as login_request_dto
 
 let initRequest = %* {"dataDir": "/data/status", "logEnabled": true}
 let loginRequest = %* {
@@ -31,12 +32,14 @@ suite "buildBootLoginRecord":
     check record["loginRequest"]["apiConfig"] == %* {"apiModules": "wakuext"}
 
   test "never contains the DEK, the password hash or other login secrets":
-    let record = parseJson(buildBootLoginRecord("0xkeyuid", initRequest, loginRequest))
-    let login = record["loginRequest"]
-    check not login.hasKey("dek")
-    check not login.hasKey("password")
-    check not login.hasKey("mnemonic")
-    check not login.hasKey("keycardWhisperPrivateKey")
+    # Built by the real request serializer, so a renamed secret key fails here
+    let request = LoginAccountRequest(keyUID: "0xkeyuid", passwordHash: "secret-password-hash",
+      dek: "secret-dek", mnemonic: "secret-mnemonic",
+      keycardWhisperPrivateKey: "secret-whisper-key").toJson()
+    let record = buildBootLoginRecord("0xkeyuid", initRequest, request)
+    check record.len > 0
+    check "secret-" notin record
+    check parseJson(record)["loginRequest"]["keyUid"].getStr == "0xkeyuid"
 
   test "leaves the caller's request untouched":
     discard buildBootLoginRecord("0xkeyuid", initRequest, loginRequest)
