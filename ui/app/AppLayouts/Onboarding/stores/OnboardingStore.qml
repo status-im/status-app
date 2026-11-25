@@ -31,6 +31,20 @@ QtObject {
 
     readonly property var loginAccountsModel: d.onboardingModuleInst.loginAccountsModel
 
+    // The profile the app created silently; not in loginAccountsModel
+    readonly property string zeroOnboardedKeyUid: d.onboardingModuleInst.zeroOnboardedKeyUid
+    readonly property bool zeroOnboardingAllowed: d.onboardingModuleInst.zeroOnboardingAllowed
+
+    // Listed on the login screen, or the silent profile
+    function canLogIn(keyUid: string) : bool {
+        return keyUid === root.zeroOnboardedKeyUid
+                || !!StatusQUtils.ModelUtils.getByKey(root.loginAccountsModel, "keyUid", keyUid)
+    }
+
+    function startZeroOnboarding() : string {
+        return d.onboardingModuleInst.startZeroOnboarding()
+    }
+
     readonly property bool stayLoggedIn: localAccountSettings.stayLoggedIn
 
     function setStayLoggedIn(value) {

@@ -27,7 +27,7 @@ method onMainFailedToLoad*(self: AccessInterface) {.base.} =
 method onNodeLogin*(self: AccessInterface, error: string, account: AccountDto, settings: SettingsDto) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method load*(self: AccessInterface): Result[void, string] {.base.} =
+method load*(self: AccessInterface, coldStart: bool): Result[void, string] {.base.} =
   ## Err when the backend could not list the profiles (InitializeApplication failed).
   raise newException(ValueError, "No implementation available")
 
@@ -107,6 +107,9 @@ method prepareKeycardModule*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method destroyKeycardModule*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method startZeroOnboarding*(self: AccessInterface): string {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method requestDeleteMultiaccount*(self: AccessInterface, keyUid: string): string {.base.} =

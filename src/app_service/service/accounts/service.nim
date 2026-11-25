@@ -253,19 +253,23 @@ QtObject:
       )
 
   proc buildCreateAccountRequest(password: string, displayName: string, imagePath: string,
-    imageCropRectangle: ImageCropRectangle, thirdpartyServicesEnabled: bool): CreateAccountRequest =
+    imageCropRectangle: ImageCropRectangle, thirdpartyServicesEnabled: bool,
+    zeroOnboarded = false): CreateAccountRequest =
     var request = defaultCreateAccountRequest()
     request.password = hashPassword(password)
     request.displayName = displayName
     request.imagePath = imagePath
     request.imageCropRectangle = imageCropRectangle
     request.thirdpartyServicesEnabled = thirdpartyServicesEnabled
+    request.zeroOnboarded = zeroOnboarded
     return request
 
   proc createAccountAndLogin*(self: Service, password: string, displayName: string,
-    imagePath: string, imageCropRectangle: ImageCropRectangle, thirdpartyServicesEnabled: bool): string =
+    imagePath: string, imageCropRectangle: ImageCropRectangle, thirdpartyServicesEnabled: bool,
+    zeroOnboarded = false): string =
     try:
-      let request = buildCreateAccountRequest(password, displayName, imagePath, imageCropRectangle, thirdpartyServicesEnabled)
+      let request = buildCreateAccountRequest(password, displayName, imagePath, imageCropRectangle,
+        thirdpartyServicesEnabled, zeroOnboarded)
       let response = status_account.createAccountAndLogin(request)
 
       if not response.result.contains("error"):

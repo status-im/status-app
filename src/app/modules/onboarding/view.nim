@@ -17,6 +17,8 @@ QtObject:
       convertKeycardAccountState: ProgressState
       convertKeycardAccountRestartRequired: bool
       keycardModule: QVariant
+      zeroOnboardedKeyUid: string
+      zeroOnboardingAllowed: bool
 
   proc delete*(self: View)
   proc newView*(delegate: io_interface.AccessInterface): View =
@@ -146,6 +148,31 @@ QtObject:
   proc removeLoginAccountItem*(self: View, keyUid: string) =
     self.loginAccountsModel.removeItem(keyUid)
 
+  # Not in the login list: the app opens it without asking
+  proc zeroOnboardedKeyUidChanged*(self: View) {.signal.}
+  proc getZeroOnboardedKeyUid(self: View): string {.slot.} =
+    return self.zeroOnboardedKeyUid
+  proc setZeroOnboardedKeyUid*(self: View, value: string) =
+    if self.zeroOnboardedKeyUid == value:
+      return
+    self.zeroOnboardedKeyUid = value
+    self.zeroOnboardedKeyUidChanged()
+  QtProperty[string] zeroOnboardedKeyUid:
+    read = getZeroOnboardedKeyUid
+    notify = zeroOnboardedKeyUidChanged
+
+  proc zeroOnboardingAllowedChanged*(self: View) {.signal.}
+  proc getZeroOnboardingAllowed(self: View): bool {.slot.} =
+    return self.zeroOnboardingAllowed
+  proc setZeroOnboardingAllowed*(self: View, value: bool) =
+    if self.zeroOnboardingAllowed == value:
+      return
+    self.zeroOnboardingAllowed = value
+    self.zeroOnboardingAllowedChanged()
+  QtProperty[bool] zeroOnboardingAllowed:
+    read = getZeroOnboardingAllowed
+    notify = zeroOnboardingAllowedChanged
+
   proc convertKeycardAccountStateChanged*(self: View) {.signal.}
   proc getConvertKeycardAccountState(self: View): int {.slot.} =
     return self.convertKeycardAccountState.int
@@ -215,6 +242,9 @@ QtObject:
 
   proc destroyKeycardModule(self: View) {.slot.} =
     self.delegate.destroyKeycardModule()
+
+  proc startZeroOnboarding(self: View): string {.slot.} =
+    return self.delegate.startZeroOnboarding()
 
   proc requestDeleteMultiaccount(self: View, keyUid: string): string {.slot.} =
     return self.delegate.requestDeleteMultiaccount(keyUid)

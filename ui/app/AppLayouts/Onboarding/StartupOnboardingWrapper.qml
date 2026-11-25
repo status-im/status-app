@@ -26,6 +26,10 @@ Item {
     property string lastSelectedProfileKeyUid
     property bool biometricFlowPending
 
+    // The profile a silent login at start targets
+    readonly property string autoLoginKeyUid: root.onboardingStore.zeroOnboardedKeyUid
+                                              || root.lastSelectedProfileKeyUid
+
     // Injectable for tests; the default instance is backed by the onboarding module
     // context property, exactly as before.
     property var onboardingStore: defaultOnboardingStore
@@ -57,7 +61,7 @@ Item {
         DidYouKnowSplashScreen {
             objectName: "splashScreenV2"
             readonly property bool backAvailableHint: false
-            property bool runningProgressAnimation
+            property bool runningProgressAnimation: true
             messagesEnabled: true
             infiniteLoading: runningProgressAnimation
         }
@@ -91,8 +95,11 @@ Item {
             // fresh credential. Consume-once with the RECORDED key UID: a later
             // manual-login error (possibly on another profile) finds nothing to
             // delete.
+            // The silent profile's credential is its only key, and a wrong key looks like a
+            // corrupted database: keep both for the next start.
             const staleAutoLoginKeyUid = onboardingLayout.consumeAutoLoginFailure()
-            if (staleAutoLoginKeyUid !== "" && root.secureStorage)
+            if (staleAutoLoginKeyUid !== "" && root.secureStorage
+                    && staleAutoLoginKeyUid !== root.onboardingStore.zeroOnboardedKeyUid)
                 root.secureStorage.deleteCredential(staleAutoLoginKeyUid)
 
             // Return to the existing login screen by popping whatever is above it
@@ -136,6 +143,8 @@ Item {
             // A non-empty credential is only sent when the preference is ON or the
             // onboarding opt-in was taken (enforced Nim-side).
             const status = root.secureStorage.setCredential(account, credential)
+            if (status !== SecureStorage.StatusSuccess)
+                console.warn("stay logged in: saving the credential for", account, "failed (status:", status + ")")
             if (!enablePreference)
                 return
             if (status === SecureStorage.StatusSuccess) {
@@ -192,6 +201,7 @@ Item {
 
         keychain: root.keychain
         secureStorage: root.secureStorage
+        loadingScreen: splashScreenV2
         autoLoginEnabled: root.autoLoginEnabled
 
         privacyModeFeatureEnabled: root.featureFlagsStore.privacyModeFeatureEnabled
@@ -222,9 +232,9 @@ Item {
 
         onNewProfileFlowStarted: root.onboardingStore.selectLoginAccount("")
 
+
         onLoginRequested: function (keyUid, method, data) {
-            let selectedProfile = SQUtils.ModelUtils.getByKey(root.onboardingStore.loginAccountsModel, "keyUid", keyUid)
-            if (!selectedProfile) {
+            if (!root.onboardingStore.canLogIn(keyUid)) {
                 console.error("cannot resolve selected profile")
                 return
             }

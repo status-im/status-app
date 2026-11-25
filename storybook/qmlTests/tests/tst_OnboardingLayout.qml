@@ -104,6 +104,9 @@ Item {
             }
 
             onboardingStore: OnboardingStore {
+                readonly property string zeroOnboardedKeyUid: ""
+                readonly property bool zeroOnboardingAllowed: false
+                function startZeroOnboarding() { return "" }
                 readonly property int keycardState: mockDriver.keycardState // enum Onboarding.KeycardState
                 readonly property string keycardUID: "kc_uid_4"
                 readonly property string keycardKeyUID: "uid_4"

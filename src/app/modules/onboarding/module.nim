@@ -1,4 +1,5 @@
 import nimqml, chronicles, json, strutils, sequtils, sets, options, results
+import std/sysrand, stew/byteutils
 
 import io_interface, states
 import view, controller
@@ -19,6 +20,7 @@ from app_service/service/keycardV2/dto import KeycardEventDto, KeycardExportedKe
 import app/modules/onboarding/post_onboarding/[keycard_replacement_task, keycard_convert_account, save_biometrics_task, save_stay_logged_in_task, local_backup_task]
 
 import models/login_account_item as login_acc_item
+import zero_onboarded_accounts
 
 export io_interface, states
 
@@ -44,6 +46,8 @@ type
     resumeLogin: bool
     # Profiles on the login screen; any other one logging in is new on this device.
     listedKeyUids: Option[HashSet[string]]
+    zeroOnboardedKeyUid: string
+    zeroOnboardingAllowed: bool
     tmpKeyUid: string # TODO: remove this, once we switch fully to new keycard approach
     keycardModule: keycard_management_module.Module[Module[T]]
     events: EventEmitter
@@ -135,6 +139,14 @@ method cleanupAfterMainTransition*[T](self: Module[T]) =
 method onMainFailedToLoad*[T](self: Module[T]) =
   self.view.accountLoginError("Failed to load main module, please restart the app and try again.", wrongPassword = false)
 
+proc setZeroOnboardedKeyUid[T](self: Module[T], keyUid: string) =
+  self.zeroOnboardedKeyUid = keyUid
+  self.view.setZeroOnboardedKeyUid(keyUid)
+
+proc resetFlowTasks[T](self: Module[T]) =
+  self.postOnboardingTasks = newSeq[PostOnboardingTask]()
+  self.postLoginTasks = newSeq[PostOnboardingTask]()
+
 proc buildLoginAccountsModel[T](self: Module[T]): Result[void, string] =
   var openedAccounts: seq[AccountDto]
   try:
@@ -143,10 +155,11 @@ proc buildLoginAccountsModel[T](self: Module[T]): Result[void, string] =
     error "failed to load opened accounts", msg = e.msg
     return err(e.msg)
 
-  if openedAccounts.len > 0:
+  let listed = openedAccounts.listedOnLoginScreen()
+  if listed.len > 0:
     var items: seq[login_acc_item.Item]
-    for i in 0..<openedAccounts.len:
-      let acc = openedAccounts[i]
+    for i in 0..<listed.len:
+      let acc = listed[i]
       items.add(login_acc_item.initItem(
         order = i,
         acc.name,
@@ -159,10 +172,26 @@ proc buildLoginAccountsModel[T](self: Module[T]): Result[void, string] =
       ))
 
     self.view.setLoginAccountsModelItems(items)
+  # The zero-onboarded profile counts too: it is not new on this device.
   self.listedKeyUids = some(openedAccounts.mapIt(it.keyUid).toHashSet())
+  self.setZeroOnboardedKeyUid(openedAccounts.zeroOnboardedKeyUid())
   ok()
 
-method load*[T](self: Module[T]): Result[void, string] =
+proc setZeroOnboardingAllowed[T](self: Module[T], value: bool) =
+  self.zeroOnboardingAllowed = value
+  self.view.setZeroOnboardingAllowed(value)
+
+proc decideZeroOnboarding[T](self: Module[T], coldStart: bool) =
+  let blockedBy = zeroOnboardingBlockedBy(
+    flagEnabled = singletonInstance.featureFlags().getZeroOnboardingEnabled(),
+    testEnvironment = singletonInstance.localAppSettings.getTestEnvironment(),
+    coldStart,
+    profileCount = self.listedKeyUids.map(proc(keyUids: HashSet[string]): int = keyUids.len))
+  if blockedBy.len > 0:
+    info "zero-onboarding disabled", reason = blockedBy
+  self.setZeroOnboardingAllowed(blockedBy.len == 0)
+
+method load*[T](self: Module[T], coldStart: bool): Result[void, string] =
   singletonInstance.setSessionContextProperty("onboardingModule", self.viewVariant)
   self.controller.init()
 
@@ -174,6 +203,7 @@ method load*[T](self: Module[T]): Result[void, string] =
     return ok()
 
   let accountsLoaded = self.buildLoginAccountsModel()
+  self.decideZeroOnboarding(coldStart)
 
   self.delegate.onboardingDidLoad()
   if accountsLoaded.isErr:
@@ -203,8 +233,7 @@ method inputConnectionStringForBootstrapping*[T](self: Module[T], connectionStri
   self.controller.inputConnectionStringForBootstrapping(connectionString)
 
 method finishOnboardingFlow*[T](self: Module[T], flowInt: int, dataJson: string): string =
-  self.postOnboardingTasks = newSeq[PostOnboardingTask]()
-  self.postLoginTasks = newSeq[PostOnboardingTask]()
+  self.resetFlowTasks()
 
   try:
     self.onboardingFlow = OnboardingFlow(flowInt)
@@ -340,6 +369,33 @@ method finishOnboardingFlow*[T](self: Module[T], flowInt: int, dataJson: string)
   except Exception as e:
     error "Error finishing Onboarding Flow", msg = e.msg
     return e.msg
+
+method startZeroOnboarding*[T](self: Module[T]): string =
+  if not self.zeroOnboardingAllowed:
+    return "zero-onboarding is not allowed"
+  self.setZeroOnboardingAllowed(false)
+  self.resetFlowTasks()
+  # Created here like any password profile, so it is marked fresh too
+  self.onboardingFlow = OnboardingFlow.CreateProfileWithPassword
+  self.controller.selectLoginAccount("")
+
+  # Never stored or shown: the stored DEK reopens the profile until the user sets a password.
+  var password: string
+  try:
+    password = urandom(32).toHex()
+  except OSError as e:
+    error "failed to generate the zero-onboarded profile password", msg = e.msg
+    return e.msg
+
+  info "creating a zero-onboarded profile"
+  # The silent user never sees the third-party services toggle
+  let err = self.controller.createAccountAndLogin(password, thirdpartyServicesEnabled = true,
+    zeroOnboarded = true)
+  if err.len > 0:
+    return err
+  # Preference ON: with it OFF, the next DEK login would delete the credential.
+  self.postLoginTasks.add(newSaveStayLoggedInPasswordTask(password, action = StayLoggedInAction.Enable))
+  ""
 
 method setSelectedLoginAccount*[T](self: Module[T], keyUid: string) =
   self.controller.selectLoginAccount(keyUid)
@@ -500,6 +556,8 @@ method requestDeleteMultiaccount*[T](self: Module[T], keyUid: string): string =
   if self.listedKeyUids.isSome:
     self.listedKeyUids.get.excl(keyUid)
   self.view.removeLoginAccountItem(keyUid)
+  if keyUid == self.zeroOnboardedKeyUid:
+    self.setZeroOnboardedKeyUid("")
   return ""
 
 proc runPostLoginTasks*[T](self: Module[T]) =

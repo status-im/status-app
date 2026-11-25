@@ -137,13 +137,15 @@ proc validateLocalPairingConnectionString*(self: Controller, connectionString: s
 proc inputConnectionStringForBootstrapping*(self: Controller, connectionString: string) =
   self.devicesService.inputConnectionStringForBootstrapping(connectionString)
 
-proc createAccountAndLogin*(self: Controller, password: string, thirdpartyServicesEnabled: bool): string =
+proc createAccountAndLogin*(self: Controller, password: string, thirdpartyServicesEnabled: bool,
+    zeroOnboarded = false): string =
   return self.accountsService.createAccountAndLogin(
     password,
     displayName = "",
     imagePath = "",
     ImageCropRectangle(),
     thirdpartyServicesEnabled,
+    zeroOnboarded,
   )
 
 proc restoreAccountAndLogin*(self: Controller, password, mnemonic: string,

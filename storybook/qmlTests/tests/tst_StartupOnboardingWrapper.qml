@@ -3,6 +3,7 @@ import QtTest
 
 import StatusQ
 import StatusQ.TestHelpers
+import StatusQ.Core.Utils as SQUtils
 
 import AppLayouts.Onboarding
 import AppLayouts.Onboarding.stores
@@ -19,9 +20,14 @@ Item {
     height: 700
 
     readonly property string dummyDekHex: "a".repeat(64)
+    property var loginModel: accountsModel
 
     LoginAccountsModel {
         id: accountsModel
+    }
+
+    ListModel {
+        id: emptyModel
     }
 
     Component {
@@ -50,7 +56,8 @@ Item {
             }
 
             secureStorage: SecureStorage {
-                readonly property bool available: true
+                property bool available: true
+                property int getStatus: SecureStorage.StatusSuccess
                 property var creds: ({})
                 property var deleteCalls: []
 
@@ -59,6 +66,8 @@ Item {
                                                         : SecureStorage.StatusNotFound
                 }
                 function getCredential(account) {
+                    if (getStatus !== SecureStorage.StatusSuccess)
+                        return { status: getStatus, credential: "" }
                     const value = creds[account]
                     return { status: value === undefined ? SecureStorage.StatusNotFound
                                                          : SecureStorage.StatusSuccess,
@@ -88,7 +97,7 @@ Item {
             // The storybook stub of OnboardingStore is empty; the API used by the
             // wrapper and layout is declared here (same pattern as tst_OnboardingLayout)
             onboardingStore: OnboardingStore {
-                property var loginAccountsModel: accountsModel
+                property var loginAccountsModel: root.loginModel
 
                 readonly property int keycardState: -1
                 readonly property string keycardUID: ""
@@ -110,7 +119,28 @@ Item {
                 function validateLocalPairingConnectionString(connectionString) { return false }
                 function inputConnectionStringForBootstrapping(connectionString) {}
                 function finishOnboardingFlow(flow, data) { return "" }
-                function loginRequested(keyUid, method, data) {}
+                property var loginRequestedCalls: []
+                function loginRequested(keyUid, method, data) {
+                    loginRequestedCalls.push({ keyUid, method, data })
+                }
+
+                property string zeroOnboardedKeyUid: ""
+                function canLogIn(keyUid) {
+                    return keyUid === zeroOnboardedKeyUid
+                            || !!SQUtils.ModelUtils.getByKey(loginAccountsModel, "keyUid", keyUid)
+                }
+                property bool zeroOnboardingAllowed: false
+                property int startZeroOnboardingCalls: 0
+                function startZeroOnboarding() {
+                    startZeroOnboardingCalls++
+                    return ""
+                }
+                property var deleteMultiaccountCalls: []
+                function deleteMultiaccountRequested(keyUid) {
+                    deleteMultiaccountCalls.push(keyUid)
+                    if (keyUid === zeroOnboardedKeyUid)
+                        zeroOnboardedKeyUid = ""
+                }
                 property var selectLoginAccountCalls: []
                 function selectLoginAccount(keyUid) {
                     selectLoginAccountCalls.push(keyUid)
@@ -135,6 +165,10 @@ Item {
     StatusTestCase {
         name: "StartupOnboardingWrapper_autoLoginFallback"
         when: windowShown
+
+        function init() {
+            root.loginModel = accountsModel
+        }
 
         property var wrapper: null
 
@@ -336,6 +370,172 @@ Item {
 
             compare(wrapper.secureStorage.deleteCalls.length, 0)
             compare(wrapper.onboardingStore.stayLoggedIn, true)
+        }
+    }
+
+    StatusTestCase {
+        name: "StartupOnboardingWrapper_zeroOnboarding"
+        when: windowShown
+
+        readonly property string zeroKeyUid: "uid_zero"
+
+        function init() {
+            root.loginModel = emptyModel
+        }
+
+        // A device whose only profile, if any, is the zero-onboarded one (left out of the login list)
+        function createWrapper(zeroOnboardedKeyUid, zeroOnboardingAllowed) {
+            const wrapper = createTemporaryObject(wrapperComponent, root)
+            verify(!!wrapper)
+            wrapper.onboardingStore.zeroOnboardedKeyUid = zeroOnboardedKeyUid
+            wrapper.onboardingStore.zeroOnboardingAllowed = zeroOnboardingAllowed
+            tryCompare(layoutOf(wrapper), "currentPageName", "WelcomePage")
+            return wrapper
+        }
+
+        function layoutOf(wrapper) {
+            return findChild(wrapper, "startupOnboardingLayout")
+        }
+
+        function test_createsProfileWhenAllowed() {
+            const wrapper = createWrapper("", true)
+            wrapper.autoLoginEnabled = true
+
+            compare(wrapper.onboardingStore.startZeroOnboardingCalls, 1)
+            tryVerify(() => layoutOf(wrapper).stack.currentItem.objectName === "splashScreenV2")
+        }
+
+        function test_noCreationWithoutSecureStorage() {
+            const wrapper = createWrapper("", true)
+            wrapper.secureStorage.available = false
+            wrapper.autoLoginEnabled = true
+
+            compare(wrapper.onboardingStore.startZeroOnboardingCalls, 0)
+            compare(layoutOf(wrapper).currentPageName, "WelcomePage")
+        }
+
+        // Reachable but refusing writes (Linux locked keyring)
+        function test_noCreationWhenStorageRefusesWrites_data() {
+            return [
+                { tag: "unavailable", status: SecureStorage.StatusUnavailable },
+                { tag: "indeterminate", status: SecureStorage.StatusIndeterminate },
+            ]
+        }
+        function test_noCreationWhenStorageRefusesWrites(data) {
+            const wrapper = createWrapper("", true)
+            wrapper.secureStorage.setStatus = data.status
+            wrapper.autoLoginEnabled = true
+
+            compare(wrapper.onboardingStore.startZeroOnboardingCalls, 0)
+            compare(layoutOf(wrapper).currentPageName, "WelcomePage")
+        }
+
+        function test_writeProbeLeavesNothingStored() {
+            const wrapper = createWrapper("", true)
+            wrapper.autoLoginEnabled = true
+
+            compare(wrapper.onboardingStore.startZeroOnboardingCalls, 1)
+            compare(Object.keys(wrapper.secureStorage.creds).length, 0)
+            compare(wrapper.secureStorage.deleteCalls.length, 1)
+        }
+
+        function test_noCreationWhenNotAllowed() {
+            const wrapper = createWrapper("", false)
+            wrapper.autoLoginEnabled = true
+
+            compare(wrapper.onboardingStore.startZeroOnboardingCalls, 0)
+        }
+
+        // A failed creation shows Welcome and is not retried in that run
+        function test_failedCreationFallsBackToWelcomeOnce() {
+            const wrapper = createWrapper("", true)
+            wrapper.autoLoginEnabled = true
+            wrapper.onboardingStore.accountLoginError("creation failed", false)
+            tryCompare(layoutOf(wrapper), "currentPageName", "WelcomePage")
+
+            wrapper.autoLoginEnabled = false
+            wrapper.autoLoginEnabled = true
+            compare(wrapper.onboardingStore.startZeroOnboardingCalls, 1)
+        }
+
+        // Opened although it is not in the login list
+        function test_opensZeroOnboardedProfile() {
+            const wrapper = createWrapper(zeroKeyUid, false)
+            wrapper.secureStorage.creds[zeroKeyUid] = "dek:" + root.dummyDekHex
+            wrapper.autoLoginEnabled = true
+
+            const calls = wrapper.onboardingStore.loginRequestedCalls
+            compare(calls.length, 1)
+            compare(calls[0].keyUid, zeroKeyUid)
+            compare(calls[0].data.dek, root.dummyDekHex)
+            tryVerify(() => layoutOf(wrapper).stack.currentItem.objectName === "splashScreenV2")
+        }
+
+        function test_removesProfileWithUnusableCredential_data() {
+            return [
+                { tag: "not found", status: SecureStorage.StatusSuccess, credential: undefined },
+                { tag: "not supported", status: SecureStorage.StatusNotSupported, credential: undefined },
+                { tag: "not a DEK", status: SecureStorage.StatusSuccess, credential: "password" },
+            ]
+        }
+
+        function test_removesProfileWithUnusableCredential(data) {
+            const wrapper = createWrapper(zeroKeyUid, false)
+            wrapper.secureStorage.getStatus = data.status
+            if (data.credential !== undefined)
+                wrapper.secureStorage.creds[zeroKeyUid] = data.credential
+            wrapper.autoLoginEnabled = true
+
+            const store = wrapper.onboardingStore
+            compare(store.loginRequestedCalls.length, 0)
+            compare(store.deleteMultiaccountCalls, [zeroKeyUid])
+            verify(wrapper.secureStorage.deleteCalls.indexOf(zeroKeyUid) >= 0)
+            compare(layoutOf(wrapper).currentPageName, "WelcomePage")
+
+            // No new zero-onboarded profile in this run
+            store.zeroOnboardingAllowed = true
+            wrapper.autoLoginEnabled = false
+            wrapper.autoLoginEnabled = true
+            compare(store.startZeroOnboardingCalls, 0)
+        }
+
+        // The store may only be locked or unreachable for now
+        function test_keepsProfileWhenStorageUnreachable_data() {
+            return [
+                { tag: "unavailable", status: SecureStorage.StatusUnavailable },
+                { tag: "generic error", status: SecureStorage.StatusGenericError },
+            ]
+        }
+
+        function test_keepsProfileWhenStorageUnreachable(data) {
+            const wrapper = createWrapper(zeroKeyUid, false)
+            wrapper.secureStorage.getStatus = data.status
+            wrapper.autoLoginEnabled = true
+
+            compare(wrapper.onboardingStore.loginRequestedCalls.length, 0)
+            compare(wrapper.onboardingStore.deleteMultiaccountCalls.length, 0)
+            compare(wrapper.secureStorage.deleteCalls.length, 0)
+            compare(layoutOf(wrapper).currentPageName, "WelcomePage")
+        }
+
+        // A wrong key and a corrupted database look the same: never delete on a login error
+        function test_loginErrorOfZeroOnboardedProfile_data() {
+            return [
+                { tag: "wrong key", wrongPassword: true, removed: false },
+                { tag: "transient", wrongPassword: false, removed: false },
+            ]
+        }
+
+        function test_loginErrorOfZeroOnboardedProfile(data) {
+            const wrapper = createWrapper(zeroKeyUid, false)
+            wrapper.secureStorage.creds[zeroKeyUid] = "dek:" + root.dummyDekHex
+            wrapper.autoLoginEnabled = true
+
+            wrapper.onboardingStore.accountLoginError("login failed", data.wrongPassword)
+
+            compare(wrapper.onboardingStore.deleteMultiaccountCalls.length, data.removed ? 1 : 0)
+            compare(wrapper.secureStorage.creds[zeroKeyUid] === undefined, data.removed)
+            tryCompare(layoutOf(wrapper), "currentPageName", "WelcomePage")
         }
     }
 

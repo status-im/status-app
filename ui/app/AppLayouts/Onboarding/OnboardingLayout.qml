@@ -31,6 +31,9 @@ Page {
     // credential must never hijack an e2e run.
     property bool autoLoginEnabled: false
 
+    // Shown while a silent profile is created
+    property Component loadingScreen: null
+
     // One-shot marker: a failed auto-login must fall back to the normal login screen,
     // never retry (the wrapper also uses it to drop the stale credential on error).
     readonly property alias autoLoginAttempted: d.autoLoginAttempted
@@ -46,6 +49,7 @@ Page {
     }
 
     onAutoLoginEnabledChanged: d.tryAutoLogin()
+    onSecureStorageChanged: d.tryAutoLogin()
     required property bool privacyModeFeatureEnabled
 
     // list of language/locale codes, e.g. ["cs_CZ","ko","fr"]
@@ -176,12 +180,24 @@ Page {
         // itself is never logged) — auto-login failures are otherwise invisible: the
         // app just shows the ordinary login screen.
         function tryAutoLogin() : void {
+            if (d.autoLoginAttempted)
+                return
+            const zeroOnboardedKeyUid = root.onboardingStore.zeroOnboardedKeyUid
+            if (zeroOnboardedKeyUid === "" && root.onboardingStore.zeroOnboardingAllowed) {
+                d.tryZeroOnboarding()
+                return
+            }
             // No log for the disabled case: the attempt always runs once before
             // main.qml enables auto-login; main.qml logs the real "disabled" reasons.
-            if (d.autoLoginAttempted || !root.autoLoginEnabled)
+            // After a sign-out the silent profile stays closed until the next start.
+            if (!root.autoLoginEnabled)
                 return
             if (!root.secureStorage || !root.secureStorage.available) {
                 console.info("auto-login: secure storage unavailable")
+                return
+            }
+            if (zeroOnboardedKeyUid !== "") {
+                d.openZeroOnboardedProfile(zeroOnboardedKeyUid)
                 return
             }
 
@@ -215,11 +231,72 @@ Page {
             }
 
             console.info("auto-login: attempting silent login for", keyUid)
+            d.requestDekLogin(keyUid, result.credential)
+        }
+
+        function requestDekLogin(keyUid: string, credential: string) : void {
             d.autoLoginAttempted = true
             d.autoLoginPendingKeyUid = keyUid
             d.autoLoginErrorPending = true
             root.loginRequested(keyUid, Onboarding.LoginMethod.Password,
-                                { dek: result.credential.slice(Constants.keychain.dekPrefix.length) })
+                                { dek: credential.slice(Constants.keychain.dekPrefix.length) })
+        }
+
+        // Needs storage for the credential that reopens the profile. Once per run.
+        function tryZeroOnboarding() : void {
+            if (!root.secureStorage)
+                return
+            if (!root.secureStorage.available) {
+                console.info("zero-onboarding: secure storage unavailable")
+                return
+            }
+            d.autoLoginAttempted = true
+            // available alone doesn't prove writes on Linux (a locked keyring refuses them)
+            const probeAccount = "zero-onboarding-probe"
+            const probeStatus = root.secureStorage.setCredential(probeAccount, "probe")
+            if (probeStatus !== SecureStorage.StatusSuccess) {
+                console.info("zero-onboarding: secure storage refuses writes (status:", probeStatus + ")")
+                return
+            }
+            root.secureStorage.deleteCredential(probeAccount)
+            const error = root.onboardingStore.startZeroOnboarding()
+            if (error !== "") {
+                console.warn("zero-onboarding: creating the profile failed:", error)
+                return
+            }
+            // A login failure falls back to Welcome without an error dialog
+            d.autoLoginErrorPending = true
+            if (root.loadingScreen)
+                onboardingFlow.push(root.loadingScreen, {}, StackView.Immediate)
+        }
+
+        // Definitely missing or unusable credential: the profile goes.
+        // Any other storage failure keeps it for the next start.
+        function openZeroOnboardedProfile(keyUid: string) : void {
+            d.autoLoginAttempted = true
+            const result = root.secureStorage.getCredential(keyUid)
+            const missing = result.status === SecureStorage.StatusNotFound
+                || result.status === SecureStorage.StatusNotSupported
+            const notDek = result.status === SecureStorage.StatusSuccess
+                && !result.credential.startsWith(Constants.keychain.dekPrefix)
+            if (missing || notDek) {
+                console.warn("zero-onboarding: no usable credential for", keyUid, "(status:",
+                             result.status + "), removing the profile")
+                d.removeProfile(keyUid)
+                return
+            }
+            if (result.status !== SecureStorage.StatusSuccess) {
+                console.warn("zero-onboarding: secure storage unreachable (status:", result.status
+                             + "), keeping the profile for the next start")
+                return
+            }
+            console.info("zero-onboarding: opening the profile", keyUid)
+            d.requestDekLogin(keyUid, result.credential)
+        }
+
+        function removeProfile(keyUid: string) : void {
+            root.secureStorage?.deleteCredential(keyUid)
+            root.onboardingStore.deleteMultiaccountRequested(keyUid)
         }
 
         Component.onCompleted: d.tryAutoLogin()
@@ -323,10 +400,7 @@ Page {
         }
 
         onSkippedBiometricFlow: root.skippedBiometricFlow()
-        onDeleteMultiaccountRequested: keyUid => {
-            root.secureStorage?.deleteCredential(keyUid)
-            root.onboardingStore.deleteMultiaccountRequested(keyUid)
-        }
+        onDeleteMultiaccountRequested: keyUid => d.removeProfile(keyUid)
     }
 
     // needs to be on top of the stack

@@ -16,6 +16,7 @@ QtObject:
     migratedToDEKEncryption: bool
 
     # fields which may change during runtime
+    zeroOnboarded: bool
     displayName: string
     preferredName: string
     thumbnailImage: string
@@ -73,6 +74,21 @@ QtObject:
   QtProperty[bool] migratedToColdWallet:
     read = getMigratedToColdWallet
     notify = migratedToColdWalletChanged
+
+  proc zeroOnboardedChanged*(self: UserProfile) {.signal.}
+
+  proc getZeroOnboarded*(self: UserProfile): bool {.slot.} =
+    self.zeroOnboarded
+
+  proc setZeroOnboarded*(self: UserProfile, value: bool) =
+    if self.zeroOnboarded == value:
+      return
+    self.zeroOnboarded = value
+    self.zeroOnboardedChanged()
+
+  QtProperty[bool] zeroOnboarded:
+    read = getZeroOnboarded
+    notify = zeroOnboardedChanged
 
   proc getMigratedToDEKEncryption*(self: UserProfile): bool {.slot.} =
     self.migratedToDEKEncryption

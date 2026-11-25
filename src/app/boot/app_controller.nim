@@ -399,7 +399,7 @@ proc start*(self: AppController, firstSession: bool): Result[void, string] =
   self.devicesService.init()
 
   if not self.resumeLogin:
-    return self.onboardingModule.load()
+    return self.onboardingModule.load(coldStart = firstSession)
   self.initializeQmlContext()
   self.finishAppLoading()
   self.appReady()
@@ -523,6 +523,7 @@ proc buildAndRegisterUserProfile(self: AppController) =
   singletonInstance.userProfile.setThumbnailImage(loggedInAccount.images.thumbnail)
   singletonInstance.userProfile.setLargeImage(loggedInAccount.images.large)
   singletonInstance.userProfile.setCurrentUserStatus(currentUserStatus.statusType.int)
+  singletonInstance.userProfile.setZeroOnboarded(loggedInAccount.zeroOnboarded)
 
   singletonInstance.setSessionContextProperty("userProfile", self.userProfileVariant)
 

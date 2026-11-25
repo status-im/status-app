@@ -83,6 +83,10 @@ SplitView {
         onboardingStore: OnboardingStore {
             id: store
 
+            readonly property string zeroOnboardedKeyUid: ""
+            readonly property bool zeroOnboardingAllowed: false
+            function startZeroOnboarding() { return "" }
+
             property int keycardState: Onboarding.KeycardState.NoPCSCService
             readonly property string keycardUID: "uid_4"
             readonly property string keycardKeyUID: "uid_4"

@@ -189,9 +189,10 @@ Item {
             item.biometricFlowPending = Qt.binding(() => d.biometricFlowPending)
             // MUST be assigned LAST: enabling triggers the one-shot auto-login
             // attempt, which needs the key UID (and storage) already in place.
+            // Assigning the storage may already create a zero-onboarded profile.
             // Decided (and logged) on the Nim side: e2e runs never auto-login, and
             // neither does the login screen after a sign-out or a logout.
-            item.autoLoginEnabled = root.allowsAutoLogin(localAppSettings.selectedProfileKeyUid)
+            item.autoLoginEnabled = root.allowsAutoLogin(item.autoLoginKeyUid)
             root.contentLoaded()
             Backpressure.debounce(root, 750, () => {
                 Qt.callLater(() => QmlCompiler.precompileAll()) // precompile all components after onboarding is loaded to speed up the login flow
