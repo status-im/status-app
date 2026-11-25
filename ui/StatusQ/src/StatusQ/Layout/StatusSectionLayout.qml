@@ -152,6 +152,12 @@ LayoutChooser {
     property string backButtonName
 
     /*!
+        \qmlproperty bool StatusSectionLayout::landscapeBackButtonVisible
+        Controls visibility of the landscape header's back button independently of its text.
+    */
+    property bool landscapeBackButtonVisible: !!backButtonName
+
+    /*!
         \qmlproperty Item StatusSectionLayout::headerContent
         This property holds a reference to the custom header content of
         the header component.
@@ -442,6 +448,7 @@ LayoutChooser {
             showFooter: root.showFooter
             footerSpacing: root.footerSpacing
             backButtonName: root.backButtonName
+            backButtonVisible: root.landscapeBackButtonVisible
             headerContent: root.headerContent
             backgroundColor: root.backgroundColor
             panelsFrozen: root.geometryTransitionOngoing

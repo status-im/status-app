@@ -204,6 +204,7 @@ Item {
 
             property string chatId
             property string chatName
+            property string parentChatId: chatId
 
             readonly property var chatDetails: QtObject {
                 readonly property string id: contentModule.chatId
@@ -226,6 +227,11 @@ Item {
             readonly property var messagesModule: QtObject {
                 readonly property var model: messagesModel
                 readonly property bool loading: false
+                readonly property string threadId: contentModule.parentChatId !== contentModule.chatId ? contentModule.chatId : ""
+                readonly property string threadName: contentModule.chatName
+                readonly property string threadParentChatName: "Contact 0"
+                readonly property bool canEditThread: false
+                readonly property bool threadEditPending: false
 
                 signal messageSuccessfullySent()
                 signal sendingMessageFailed(string error)
@@ -233,7 +239,7 @@ Item {
                 signal scrollToMessage(string messageId)
                 signal moreMessagesLoaded()
 
-                function getChatId() { return contentModule.chatId }
+                function getChatId() { return contentModule.parentChatId }
                 function loadMoreMessages() { moreMessagesLoaded() }
                 function updateKeepUnread(flag) {}
             }
@@ -348,6 +354,36 @@ Item {
             for (let i = 0; i < views.length; ++i)
                 total += views[i].rowCount
             return total
+        }
+
+        function test_directMessageThreadBackOpensParentChat() {
+            harness.active = true
+            const loader = harness.item
+            tryVerify(() => loader.status === Loader.Ready, 60000)
+            const layout = findChild(loader, "sectionChrome")
+            layout.criteria = [false, true]
+            tryCompare(layout, "isPortrait", false)
+
+            const parentId = "chat-0"
+            const threadId = "chat-2"
+            const thread = d.contentModuleFor(threadId)
+            thread.parentChatId = parentId
+            chatsModel.setProperty(2, "isThread", true)
+            d.setActiveChat("chat-1")
+            d.setActiveChat(parentId)
+            d.setActiveChat(threadId)
+
+            const backButton = findChild(layout, "toolBarBackButton")
+            verify(!!backButton)
+            tryCompare(backButton, "visible", true)
+            compare(backButton.icon.name, "arrow-left")
+            compare(backButton.text, "")
+            verify(waitForPolish(layout))
+            mouseClick(backButton)
+            tryCompare(d, "activeChatId", parentId)
+            tryCompare(backButton, "visible", false)
+            verify(layout.tryGoBack())
+            tryCompare(d, "activeChatId", "chat-1")
         }
 
         // waitForRendering waits for the next frame; when the view has
