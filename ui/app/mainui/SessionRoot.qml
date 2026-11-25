@@ -29,8 +29,8 @@ Item {
     // Whether the login screen may log in silently with the stored credential of a profile:
     // (keyUid) => bool
     required property var allowsAutoLogin
-    // Ends the session for one silent relogin (AutoLoginPolicy.AllowOnce): () => bool,
-    // false when it was ignored
+    // Ends the session for one silent relogin the user didn't request
+    // (AutoLoginPolicy.AllowOnce): () => bool, false when it was ignored
     required property var relogin
 
     readonly property bool userLoggedIn: appMainLoader.item !== null

@@ -24,6 +24,12 @@ Control {
     property int phase: SessionTransitionView.Phase.Active
     // "Close Status" on mobile, where the app is not quit from a menu
     property bool isMobile
+    // The user didn't request this session end (a relogin the app started)
+    property bool unrequestedEnd
+
+    // False while an unrequested end runs as usual: the window's loading screen stays in
+    // front. A timeout or failure is always shown.
+    readonly property bool showsProgress: !root.unrequestedEnd || d.failed || d.waiting
 
     signal retryRequested()
     signal quitRequested()

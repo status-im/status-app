@@ -203,6 +203,8 @@ Window {
         property bool splashDismissed: false
         // The ended session's UI is unloaded and the next session's content not shown yet
         property bool awaitingSessionContent: false
+        // A relogin the user didn't request runs: the loading screen stays in front
+        property bool unrequestedRelogin: false
         property double lastShakeShareMs: 0
 
         readonly property bool macOSWindowed: SQUtils.Utils.isMacOS && applicationWindow.visibility !== Window.FullScreen
@@ -235,6 +237,13 @@ Window {
 
         property int lastNonMinVisibility
         property var lastMinimizedScreen: null
+
+        function startUnrequestedRelogin() : bool {
+            d.unrequestedRelogin = true
+            if (!sessionView.relogin())
+                d.unrequestedRelogin = false
+            return d.unrequestedRelogin
+        }
 
         function signOut() : void {
             if (!sessionView.signOut())
@@ -569,11 +578,12 @@ Window {
                 systemTrayIconAvailable: systemTray.available
                 portraitLayout: applicationWindow.portraitLayout
                 allowsAutoLogin: (keyUid) => sessionView.allowsAutoLogin(keyUid)
-                relogin: () => sessionView.relogin()
+                relogin: () => d.startUnrequestedRelogin()
 
                 onContentLoaded: {
                     splashScreenLoader.active = false
                     d.awaitingSessionContent = false
+                    d.unrequestedRelogin = false
                     applicationWindow.contentLoaded()
                 }
                 onStoreAppStateRequested: applicationWindow.storeAppState()
@@ -642,8 +652,10 @@ Window {
 
         SessionTransitionView {
             anchors.fill: parent
-            visible: phase !== SessionTransitionView.Phase.Active || d.awaitingSessionContent
+            visible: (phase !== SessionTransitionView.Phase.Active || d.awaitingSessionContent)
+                     && showsProgress
             phase: sessionView.phase
+            unrequestedEnd: d.unrequestedRelogin
             isMobile: SQUtils.Utils.isMobile
 
             onRetryRequested: sessionView.retry()
