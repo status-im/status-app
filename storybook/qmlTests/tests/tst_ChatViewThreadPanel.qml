@@ -129,6 +129,61 @@ Item {
             messages.canEditThread = canEdit
         }
 
+        function test_centralThreadBackOpensParentChat_data() {
+            return [{tag: "desktop", portrait: false}, {tag: "portrait", portrait: true}]
+        }
+
+        function test_centralThreadBackOpensParentChat(data) {
+            harness.loader.active = true
+            const loader = harness.loader.item
+            tryVerify(() => loader.status === Loader.Ready, 120000)
+            const view = harness.findChildByTypePrefix(loader, "ChatView")
+            const layout = view.sectionLayout
+            layout.criteria = [data.portrait, true]
+            tryCompare(layout, "isPortrait", data.portrait)
+            layout.setCurrentIndex(StatusSectionLayout.CentralPanel)
+            const section = view.rootStore.chatCommunitySectionModule
+            const parentId = view.activeItemId
+            const parentName = view.chatContentModule.chatDetails.name
+            const parentMessages = view.chatContentModule.messagesModule
+            const threadId = SQUtils.ModelUtils.get(parentMessages.model, 0, "id")
+            parentMessages.prepareThreadCreation(threadId)
+
+            let toolbar
+            tryVerify(() => {
+                toolbar = view.headerContent.parent
+                while (toolbar && toolbar.objectName !== "statusToolBar")
+                    toolbar = toolbar.parent
+                return !!toolbar
+            })
+            const backButton = findChild(toolbar, "toolBarBackButton")
+            verify(!!backButton)
+            compare(backButton.visible, data.portrait)
+            section.setActiveItem("channel-0-1")
+            tryCompare(view, "activeItemId", "channel-0-1")
+            section.setActiveItem(threadId)
+            tryCompare(view, "activeItemId", threadId)
+            tryCompare(backButton, "visible", true)
+            compare(backButton.icon.name, "arrow-left")
+            compare(backButton.text, "")
+            const header = harness.findChildByTypePrefix(view.headerContent, "ThreadHeader")
+            verify(!!header)
+            compare(header.parentChatName, "# " + parentName)
+            tryCompare(layout, "geometryTransitionOngoing", false)
+            verify(waitForPolish(view.headerContent))
+            mouseClick(backButton)
+            tryCompare(view, "activeItemId", parentId)
+            tryCompare(backButton, "visible", data.portrait)
+            if (data.portrait) {
+                compare(layout.currentIndex, StatusSectionLayout.CentralPanel)
+                mouseClick(backButton)
+                tryCompare(layout, "currentIndex", StatusSectionLayout.LeftPanel)
+            } else {
+                verify(layout.tryGoBack())
+                tryCompare(view, "activeItemId", "channel-0-1")
+            }
+        }
+
         function test_centralHeaderMuteUsesCurrentThreadModule() {
             harness.loader.active = true
             const loader = harness.loader.item
@@ -409,11 +464,14 @@ Item {
             // Render a populated mock conversation inside the side panel.
             harness.mock.setActiveChat(threadId)
             harness.mock.setActiveChat(parentId)
+            const backButton = findChild(view.sectionLayout, "toolBarBackButton")
+            verify(!!backButton)
             for (let i = 0; i < 8; ++i) {
                 view.showUsersListRequested(data.fromInfo)
                 state.threadOpenedFromInfo = data.fromInfo
                 view.rootStore.openThreadPanel(threadId, "Thread", parentId)
                 tryCompare(view.rightPanel, "status", Loader.Ready)
+                verify(!backButton.visible)
                 tryVerify(() => !!harness.findChildByTypePrefix(view.rightPanel.item, "ChatColumnView"))
                 const column = harness.findChildByTypePrefix(view.rightPanel.item, "ChatColumnView")
                 compare(column.threadId, threadId)

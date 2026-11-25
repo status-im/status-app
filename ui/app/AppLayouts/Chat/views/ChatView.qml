@@ -61,8 +61,17 @@ Item {
     readonly property bool canGoBack: root.sectionLayout?.canGoBack ?? false
 
     readonly property QtObject contentHistory: QtObject {
-        readonly property bool canGoBack: !!d.openThreadId && d.threadOpenedFromInfo
+        readonly property bool canGoBackToParentChat: !!infoMessageStore.threadId && !!infoMessageStore.chatId &&
+                                                       !root.contentLocked && !root.allChannelsAreHiddenBecauseNotPermitted &&
+                                                       (!root.sectionLayout?.isPortrait ||
+                                                        root.sectionLayout.currentIndex === StatusSectionLayout.CentralPanel)
+        readonly property bool canGoBack: canGoBackToParentChat || (!!d.openThreadId && d.threadOpenedFromInfo)
         function tryGoBack() {
+            if (canGoBackToParentChat) {
+                root.subsectionHistory.dropLeaf()
+                root.rootStore.chatCommunitySectionModule.setActiveItem(infoMessageStore.chatId)
+                return true
+            }
             if (!canGoBack)
                 return false
             d.closeThreadPanel()
@@ -148,7 +157,8 @@ Item {
             const m = root.rootStore.chatCommunitySectionModule
             return m && m.activeItem ? m.activeItem.id : ""
         }
-        validateFn: (id) => ModelUtils.indexOf(root.rootStore.chatCommunitySectionModule.model, "itemId", id) >= 0
+        validateFn: (id) => id !== root.activeItemId &&
+                            ModelUtils.indexOf(root.rootStore.chatCommunitySectionModule.model, "itemId", id) >= 0
         onNavigateRequested: (key) => root.rootStore.chatCommunitySectionModule.setActiveItem(key)
     }
 

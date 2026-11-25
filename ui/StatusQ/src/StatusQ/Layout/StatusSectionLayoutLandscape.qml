@@ -157,6 +157,7 @@ Control {
         header component.
     */
     property alias backButtonName: statusToolBar.backButtonName
+    property alias backButtonVisible: statusToolBar.backButtonVisible
 
     /*!
         \qmlproperty Item StatusSectionLayout::headerContent

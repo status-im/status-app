@@ -129,9 +129,11 @@ StatusSectionLoader {
             rightPanelHeaderContent: root.item?.rightPanelHeaderContent ?? null
             subsectionHistory: root.item?.viewSubsectionHistory ?? null
             contentHistory: root.item?.viewContentHistory ?? null
+            landscapeBackButtonVisible: headerGate.up && (contentHistory?.canGoBackToParentChat ?? false)
 
             leftPanelWidthOverride: root.leftPanelWidthOverride
 
+            onBackButtonClicked: tryGoBack()
             onPanelSwitchStarted: d.panelSwitchOngoing = true
             onPanelSwitchEnded: d.panelSwitchOngoing = false
         }

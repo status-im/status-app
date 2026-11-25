@@ -136,6 +136,15 @@ Item {
             verify(!!portrait.item)
         }
 
+        function test_landscapeBackButtonStillFollowsItsLabelByDefault() {
+            const backButton = findChild(loaderOf("StatusSectionLayoutLandscape").item, "toolBarBackButton")
+            verify(!!backButton)
+            verify(!backButton.visible)
+            layout.backButtonName = "Settings"
+            tryCompare(backButton, "visible", true)
+            compare(backButton.text, "Settings")
+        }
+
         // Hiding the section (as AppMain's StackLayout does) destroys nothing.
         function test_hidingTheSectionKeepsTheView() {
             const landscape = loaderOf("StatusSectionLayoutLandscape")
