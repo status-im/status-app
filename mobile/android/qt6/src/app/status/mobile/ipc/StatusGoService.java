@@ -135,12 +135,8 @@ public final class StatusGoService extends Service {
     private StatusNotificationManager notificationManager;
 
     private final BootLogin bootLogin = new BootLogin(
-            () -> {
-                final String[] out = new String[1];
-                final int status = app.status.mobile.SecureStorageHelper.getInstance(this)
-                        .getBootLoginRecord(out);
-                return status == app.status.mobile.SecureStorageHelper.STATUS_OK ? out[0] : null;
-            },
+            app.status.mobile.BuildFlags.RESUME_AFTER_RESTART_ENABLED,
+            new BootLoginRecordStore(this),
             keyUid -> {
                 final String[] out = new String[1];
                 final int status = app.status.mobile.SecureStorageHelper.getInstance(this)
@@ -148,7 +144,7 @@ public final class StatusGoService extends Service {
                 return status == app.status.mobile.SecureStorageHelper.STATUS_OK ? out[0] : null;
             },
             StatusGoService::callRpc,
-            () -> scheduleBackendLifecycleUpdate(false),
+            stillHidden -> scheduleBackendLifecycleUpdate(false, stillHidden),
             new BootLogin.Ui() {
                 @Override
                 public boolean visible() {
@@ -466,9 +462,15 @@ public final class StatusGoService extends Service {
      * list of service names), so argsJson must be: ["<escaped-names-json>"].
      */
     private void scheduleBackendLifecycleUpdate(boolean visible) {
+        scheduleBackendLifecycleUpdate(visible, null);
+    }
+
+    /** As above; the update is dropped when stillWanted no longer holds once it runs. */
+    private void scheduleBackendLifecycleUpdate(boolean visible, BootLogin.Condition stillWanted) {
         final int gen = lifecycleGen.incrementAndGet();
         lifecycleExecutor.execute(() -> {
             if (lifecycleGen.get() != gen) return;
+            if (stillWanted != null && !stillWanted.holds()) return;
             try {
                 final String namesJson = fetchPausableServiceNames();
                 if (namesJson == null) return;
@@ -692,7 +694,8 @@ public final class StatusGoService extends Service {
         // Ensure we can be started from background components (e.g. FCM) without risking
         // ForegroundServiceDidNotStartInTime. We can downgrade/stop later if needed.
         ensureForegroundStarted();
-        if (ACTION_BOOT_LOGIN.equals(action)) {
+        if (BootLogin.runsOnStart(ACTION_BOOT_LOGIN.equals(action), intent == null,
+                listeners.getRegisteredCallbackCount() > 0)) {
             try {
                 lifecycleExecutor.execute(bootLogin::run);
             } catch (java.util.concurrent.RejectedExecutionException ignored) {

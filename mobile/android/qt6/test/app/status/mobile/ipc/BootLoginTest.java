@@ -43,10 +43,41 @@ public class BootLoginTest {
     private String credential;
     private boolean uiVisible;
     private boolean uiBound;
+    private String initResponse;
+    private String loginResponse;
     private final List<Call> calls = new ArrayList<>();
     private int pauses;
+    private BootLogin.Condition pauseCondition;
     private int stops;
+    private int recordDeletes;
     private BootLogin bootLogin;
+
+    private final BootLogin.RecordStore records = new BootLogin.RecordStore() {
+        @Override public String read() { return record; }
+        @Override public boolean exists() { return record != null; }
+        @Override public void delete() { recordDeletes++; record = null; }
+    };
+
+    private BootLogin newBootLogin(boolean enabled) {
+        return new BootLogin(
+                enabled,
+                records,
+                keyUid -> KEY_UID.equals(keyUid) ? credential : null,
+                (method, argsJson) -> {
+                    calls.add(new Call(method, argsJson));
+                    return "InitializeApplication".equals(method) ? initResponse : loginResponse;
+                },
+                stillHidden -> {
+                    pauses++;
+                    pauseCondition = stillHidden;
+                },
+                new BootLogin.Ui() {
+                    @Override public boolean visible() { return uiVisible; }
+                    @Override public boolean bound() { return uiBound; }
+                },
+                () -> stops++,
+                () -> {});
+    }
 
     @Before
     public void setUp() {
@@ -54,23 +85,14 @@ public class BootLoginTest {
         credential = "dek:" + DEK_HEX;
         uiVisible = false;
         uiBound = false;
+        initResponse = "{\"error\":\"\"}";
+        loginResponse = "{\"error\":\"\"}";
         calls.clear();
         pauses = 0;
+        pauseCondition = null;
         stops = 0;
-        bootLogin = new BootLogin(
-                () -> record,
-                keyUid -> KEY_UID.equals(keyUid) ? credential : null,
-                (method, argsJson) -> {
-                    calls.add(new Call(method, argsJson));
-                    return "{\"error\":\"\"}";
-                },
-                () -> pauses++,
-                new BootLogin.Ui() {
-                    @Override public boolean visible() { return uiVisible; }
-                    @Override public boolean bound() { return uiBound; }
-                },
-                () -> stops++,
-                () -> {});
+        recordDeletes = 0;
+        bootLogin = newBootLogin(true);
     }
 
     @Test
@@ -141,26 +163,69 @@ public class BootLoginTest {
     }
 
     @Test
-    public void failedInitSkipsTheLogin() {
-        bootLogin = new BootLogin(
-                () -> record,
-                keyUid -> credential,
-                (method, argsJson) -> {
-                    calls.add(new Call(method, argsJson));
-                    return "{\"error\":\"init failed\"}";
-                },
-                () -> pauses++,
-                new BootLogin.Ui() {
-                    @Override public boolean visible() { return false; }
-                    @Override public boolean bound() { return false; }
-                },
-                () -> stops++,
-                () -> {});
+    public void failedInitSkipsTheLoginAndStops() {
+        initResponse = "{\"error\":\"init failed\"}";
 
         assertFalse(bootLogin.run());
 
         assertEquals(1, calls.size());
         assertEquals("InitializeApplication", calls.get(0).method);
+        assertEquals(1, stops);
+    }
+
+    @Test
+    public void rejectedLoginRequestStops() {
+        loginResponse = "{\"error\":\"invalid request\"}";
+
+        assertFalse(bootLogin.run());
+
+        assertEquals(2, calls.size());
+        assertEquals(1, stops);
+    }
+
+    @Test
+    public void failedLoginDoesNotStopWhileAUiIsBound() {
+        loginResponse = "{\"error\":\"invalid request\"}";
+        uiBound = true;
+
+        assertFalse(bootLogin.run());
+
+        assertEquals(0, stops);
+    }
+
+    @Test
+    public void failedNodeLoginOfABootLoginStops() {
+        assertTrue(bootLogin.run());
+
+        bootLogin.onNodeLogin(NODE_LOGIN_FAILED);
+
+        assertEquals(1, stops);
+    }
+
+    @Test
+    public void failedNodeLoginOfAUiLoginDoesNotStop() {
+        bootLogin.onNodeLogin(NODE_LOGIN_FAILED);
+
+        assertEquals(0, stops);
+    }
+
+    @Test
+    public void successfulNodeLoginOfABootLoginKeepsRunning() {
+        assertTrue(bootLogin.run());
+
+        bootLogin.onNodeLogin(NODE_LOGIN_OK);
+
+        assertEquals(0, stops);
+    }
+
+    @Test
+    public void onlyTheFirstNodeLoginBelongsToTheBootLogin() {
+        assertTrue(bootLogin.run());
+        bootLogin.onNodeLogin(NODE_LOGIN_OK);
+
+        bootLogin.onNodeLogin(NODE_LOGIN_FAILED);
+
+        assertEquals(0, stops);
     }
 
     @Test
@@ -177,6 +242,51 @@ public class BootLoginTest {
         bootLogin.onNodeLogin(NODE_LOGIN_OK);
 
         assertEquals(0, pauses);
+    }
+
+    @Test
+    public void pauseIsDroppedWhenTheUiBecomesVisibleBeforeItRuns() {
+        bootLogin.onNodeLogin(NODE_LOGIN_OK);
+        assertEquals(1, pauses);
+        assertTrue(pauseCondition.holds());
+
+        uiVisible = true;
+
+        assertFalse(pauseCondition.holds());
+    }
+
+    @Test
+    public void runsForTheBootActionAndForASystemRestartWithoutUi() {
+        assertTrue(BootLogin.runsOnStart(true, false, false));
+        assertTrue(BootLogin.runsOnStart(false, true, false));
+        assertFalse(BootLogin.runsOnStart(false, true, true));
+        assertFalse(BootLogin.runsOnStart(false, false, false));
+    }
+
+    @Test
+    public void featureOffRemovesTheRecordInsteadOfLoggingIn() {
+        bootLogin = newBootLogin(false);
+
+        assertFalse(bootLogin.run());
+
+        assertEquals(0, calls.size());
+        assertEquals(1, recordDeletes);
+        assertEquals(1, stops);
+    }
+
+    @Test
+    public void bootCompletedStartsTheServiceOnlyWithARecord() {
+        assertTrue(BootLogin.startsOnBoot(true, records));
+        record = null;
+        assertFalse(BootLogin.startsOnBoot(true, records));
+        assertEquals(0, recordDeletes);
+    }
+
+    @Test
+    public void bootCompletedWithTheFeatureOffRemovesTheRecord() {
+        assertFalse(BootLogin.startsOnBoot(false, records));
+
+        assertEquals(1, recordDeletes);
     }
 
     @Test

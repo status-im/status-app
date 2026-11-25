@@ -59,6 +59,8 @@ def buildVariant = System.getenv("BUILD_VARIANT") ?: "release"
 def bundleIdentifier = System.getenv("BUNDLE_IDENTIFIER") ?: "app.status.mobile"
 // PR builds are profileable (heapprofd/simpleperf/perfetto from the shell), release and fdroid are not.
 def prVariant = buildVariant == "pr"
+// Same switch as the Nim build (mobile/scripts/buildNimStatusClient.sh), default off
+def resumeAfterRestartEnabled = System.getenv("FLAG_RESUME_AFTER_RESTART_ENABLED") == "1"
 
 android {
     /*******************************************************
@@ -134,6 +136,7 @@ android {
         resValue "string", "lib_name", buildVariant == 'release' ? "Status" : "StatusPR"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "boolean", "PR_VARIANT", "${prVariant}"
+        buildConfigField "boolean", "RESUME_AFTER_RESTART_ENABLED", "${resumeAfterRestartEnabled}"
     }
 
     signingConfigs {

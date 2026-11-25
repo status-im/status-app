@@ -22,6 +22,11 @@ final class BootLogin {
     interface RecordStore {
         /** The boot-login record JSON, or null when there is none. */
         String read();
+
+        /** Whether a record is stored, without decrypting it. */
+        boolean exists();
+
+        void delete();
     }
 
     interface CredentialSource {
@@ -34,8 +39,13 @@ final class BootLogin {
         String call(String method, String argsJson);
     }
 
+    interface Condition {
+        boolean holds();
+    }
+
     interface Pauser {
-        void pauseServices();
+        /** Pauses the services unless stillHidden no longer holds when the pause runs. */
+        void pauseServices(Condition stillHidden);
     }
 
     interface Ui {
@@ -52,6 +62,7 @@ final class BootLogin {
         void bootLoginFailed();
     }
 
+    private final boolean enabled;
     private final RecordStore records;
     private final CredentialSource credentials;
     private final StatusGo statusGo;
@@ -60,9 +71,12 @@ final class BootLogin {
     private final Stopper stopper;
     @SuppressWarnings("unused")
     private final Notifier notifier;
+    // The login request was accepted: the next node.login is the boot login's outcome
+    private volatile boolean awaitingNodeLogin;
 
-    BootLogin(RecordStore records, CredentialSource credentials, StatusGo statusGo, Pauser pauser,
+    BootLogin(boolean enabled, RecordStore records, CredentialSource credentials, StatusGo statusGo, Pauser pauser,
             Ui ui, Stopper stopper, Notifier notifier) {
+        this.enabled = enabled;
         this.records = records;
         this.credentials = credentials;
         this.statusGo = statusGo;
@@ -73,11 +87,37 @@ final class BootLogin {
     }
 
     /**
+     * BOOT_COMPLETED: whether to start the service for a boot login. Without a record nothing
+     * starts; with the feature off (RESUME_AFTER_RESTART_ENABLED) any record is removed.
+     */
+    static boolean startsOnBoot(boolean enabled, RecordStore records) {
+        if (!records.exists()) return false;
+        if (!enabled) {
+            records.delete();
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Whether a service start runs the boot login: the boot action, or the system recreating
+     * the service (START_STICKY, null intent) with no UI bound to log in again.
+     */
+    static boolean runsOnStart(boolean bootAction, boolean stickyRestart, boolean uiBound) {
+        return bootAction || (stickyRestart && !uiBound);
+    }
+
+    /**
      * Replays the boot-login record. Returns true when status-go accepted the login request;
-     * the outcome arrives later as node.login. With nothing to replay, the service stops unless
-     * a UI is bound.
+     * the outcome arrives later as node.login. With nothing to replay, or when the login fails,
+     * the service stops unless a UI is bound.
      */
     boolean run() {
+        if (!enabled) {
+            records.delete();
+            stopUnlessUiBound();
+            return false;
+        }
         final JSONObject record = parse(records.read());
         final String keyUid = record == null ? "" : record.optString("keyUid", "");
         final JSONObject initRequest = record == null ? null : record.optJSONObject("initRequest");
@@ -89,22 +129,38 @@ final class BootLogin {
         }
 
         if (!succeeded(statusGo.call("InitializeApplication", args(initRequest.toString())))) {
+            stopUnlessUiBound();
             return false;
         }
         try {
             loginRequest.put("dek", dek);
         } catch (Exception e) {
+            stopUnlessUiBound();
             return false;
         }
-        return succeeded(statusGo.call("LoginAccount", args(loginRequest.toString())));
+        awaitingNodeLogin = true;
+        if (!succeeded(statusGo.call("LoginAccount", args(loginRequest.toString())))) {
+            awaitingNodeLogin = false;
+            stopUnlessUiBound();
+            return false;
+        }
+        return true;
     }
 
-    /** The pause rule, for every node.login: logged in with no visible UI means paused. */
+    /**
+     * For every node.login. The pause rule: logged in with no visible UI means paused. A failed
+     * boot login stops the service unless a UI is bound.
+     */
     void onNodeLogin(String signalJson) {
+        final boolean bootLoginOutcome = awaitingNodeLogin;
+        awaitingNodeLogin = false;
         final JSONObject signal = parse(signalJson);
         final JSONObject event = signal == null ? null : signal.optJSONObject("event");
-        if (event == null || !event.optString("error", "").isEmpty()) return;
-        if (!ui.visible()) pauser.pauseServices();
+        if (event == null || !event.optString("error", "").isEmpty()) {
+            if (bootLoginOutcome) stopUnlessUiBound();
+            return;
+        }
+        if (!ui.visible()) pauser.pauseServices(() -> !ui.visible());
     }
 
     private void stopUnlessUiBound() {
