@@ -567,6 +567,25 @@ Item {
             compare(wrapper.secureStorage.bootLoginRecord, "")
         }
 
+        // After the record refresh relogin (AllowOnce), the silent login's FollowStored save
+        // replaces the record from the other version with this version's
+        function test_silentLoginAfterTheRefreshReloginWritesANewRecord() {
+            wrapper = createTemporaryObject(wrapperComponent, root)
+            verify(!!wrapper)
+            const layout = findChild(wrapper, "startupOnboardingLayout")
+            const oldRecord = JSON.stringify({ version: 1, keyUid: "uid_1", versionCode: 1 })
+            wrapper.secureStorage.creds["uid_1"] = "dek:" + root.dummyDekHex
+            wrapper.secureStorage.bootLoginRecord = oldRecord
+            wrapper.onboardingStore.stayLoggedIn = true
+
+            wrapper.autoLoginEnabled = true
+            tryVerify(() => layout.autoLoginAttempted)
+            wrapper.onboardingStore.stayLoggedInSaveRequested("uid_1", "dek:" + root.dummyDekHex,
+                                                              false, root.dummyRecord)
+
+            compare(wrapper.secureStorage.bootLoginRecord, root.dummyRecord)
+        }
+
         // A login that stores no credential (recovery phrase, a profile not yet
         // migrated to the DEK scheme) must not leave the previous login's record
         function test_recordDeleteRequestRemovesOnlyTheRecord() {
