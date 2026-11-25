@@ -524,8 +524,9 @@ method requestLocalBackup*[T](self: Module[T], backupImportFileUrl: string) =
 method requestDeleteBiometrics*[T](self: Module[T], account: string) =
   self.view.deleteBiometricsRequested(account)
 
-method requestSaveStayLoggedIn*[T](self: Module[T], account: string, credential: string, enablePreference: bool) =
-  self.view.stayLoggedInSaveRequested(account, credential, enablePreference)
+method requestSaveStayLoggedIn*[T](self: Module[T], account: string, credential: string, enablePreference: bool,
+    bootLoginRecord: string) =
+  self.view.stayLoggedInSaveRequested(account, credential, enablePreference, bootLoginRecord)
 
 method requestDeleteStayLoggedIn*[T](self: Module[T], account: string) =
   self.view.stayLoggedInDeleteRequested(account)

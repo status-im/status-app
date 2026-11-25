@@ -281,21 +281,24 @@ proc createAccountFromPrivateKey*(privateKey: string): RpcResponse[JsonNode] =
     error "error doing rpc request", methodName = "createAccountFromPrivateKey", exception=e.msg
     raise newException(RpcException, e.msg)
 
+proc initializeApplicationRequest*(path: string): JsonNode =
+  result = %* {
+    "dataDir": path,
+    "mixpanelAppId": MIXPANEL_APP_ID,
+    "mixpanelToken": MIXPANEL_TOKEN,
+    "sentryDSN": SENTRY_DSN_STATUS_GO,
+    "logEnabled": true,
+    "logDir": status_const.LOGDIR,
+    "logLevel": status_const.getStatusGoLogLevel(),
+    "apiLoggingEnabled": status_const.API_LOGGING,
+    "metricsEnabled": status_const.METRICS_ENABLED,
+    "metricsAddress": status_const.METRICS_ADDRESS,
+    "wakuFleetsConfigFilePath": status_const.WAKU_FLEETS_CONFIG,
+  }
+
 proc openedAccounts*(path: string): RpcResponse[JsonNode] =
   try:
-    let payload = %* {
-      "dataDir": path,
-      "mixpanelAppId": MIXPANEL_APP_ID,
-      "mixpanelToken": MIXPANEL_TOKEN,
-      "sentryDSN": SENTRY_DSN_STATUS_GO,
-      "logEnabled": true,
-      "logDir": status_const.LOGDIR,
-      "logLevel": status_const.getStatusGoLogLevel(),
-      "apiLoggingEnabled": status_const.API_LOGGING,
-      "metricsEnabled": status_const.METRICS_ENABLED,
-      "metricsAddress": status_const.METRICS_ADDRESS,
-      "wakuFleetsConfigFilePath": status_const.WAKU_FLEETS_CONFIG,
-    }
+    let payload = initializeApplicationRequest(path)
     # Do not remove the sleep 700
     # This sleep prevents a crash on intel MacOS
     # with errors like bad flushGen 12 in prepareForSweep; sweepgen 0

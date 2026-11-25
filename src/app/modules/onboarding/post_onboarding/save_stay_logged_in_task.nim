@@ -65,7 +65,7 @@ proc run*(self: SaveStayLoggedInTask, accountsService: accounts_service.Service,
   # bypass the hardware factor the user deliberately chose.
   if loggedInAccount.keycardPairing.len > 0:
     debug "keycard profile — requesting stay-logged-in reconciliation only"
-    onboardingModule.requestSaveStayLoggedIn(loggedInAccount.keyUid, "", false)
+    onboardingModule.requestSaveStayLoggedIn(loggedInAccount.keyUid, "", false, "")
     return
 
   # The user turned the toggle OFF on the login screen: delete the credential (the QML
@@ -76,7 +76,7 @@ proc run*(self: SaveStayLoggedInTask, accountsService: accounts_service.Service,
   # preference stays ON and the next login re-stores the credential.
   if self.action == StayLoggedInAction.Disable:
     onboardingModule.requestDeleteStayLoggedIn(loggedInAccount.keyUid)
-    onboardingModule.requestSaveStayLoggedIn(loggedInAccount.keyUid, "", false)
+    onboardingModule.requestSaveStayLoggedIn(loggedInAccount.keyUid, "", false, "")
     return
 
   let enable = self.action == StayLoggedInAction.Enable
@@ -87,7 +87,7 @@ proc run*(self: SaveStayLoggedInTask, accountsService: accounts_service.Service,
   # emitted — with an empty credential — so the QML handler can lift any auto-login
   # suppression and reconcile away a stale credential.
   if not enable and not singletonInstance.localAccountSettings.getStayLoggedIn():
-    onboardingModule.requestSaveStayLoggedIn(loggedInAccount.keyUid, "", false)
+    onboardingModule.requestSaveStayLoggedIn(loggedInAccount.keyUid, "", false, "")
     return
 
   var toStore: string
@@ -110,4 +110,7 @@ proc run*(self: SaveStayLoggedInTask, accountsService: accounts_service.Service,
   if not common_utils.isTaggedDekCredential(toStore):
     warn "stay-logged-in credential has an invalid DEK shape, not stored"
     return
-  onboardingModule.requestSaveStayLoggedIn(loggedInAccount.keyUid, toStore, enable)
+  # The boot-login record follows the credential: written next to it, empty (removed)
+  # whenever no credential is stored.
+  onboardingModule.requestSaveStayLoggedIn(loggedInAccount.keyUid, toStore, enable,
+    accountsService.bootLoginRecord(loggedInAccount.keyUid))

@@ -7,6 +7,7 @@ import ./dto/accounts as dto_accounts
 import ./dto/generated_accounts as dto_generated_accounts
 import ./dto/login_request
 import ./dto/restore_account_request
+import ./boot_login_record
 
 from ../keycardV2/dto import KeycardExportedKeysDto, KeyDetailsV2
 from ../wallet_account/dto/keypair_dto import ColdWalletTypeStatusKeycard
@@ -485,10 +486,9 @@ QtObject:
       data.error = e.msg
     self.events.emit(SIGNAL_DERIVED_ADDRESSES_FROM_NOT_IMPORTED_MNEMONIC_FETCHED, data)
 
-  proc doLogin(self: Service, account: AccountDto, passwordHash: string, chatPrivateKey: string = "", mnemonic: string = "",
-    walletXPub: string = "", dek: string = "") =
-
-    var request = LoginAccountRequest(
+  proc buildLoginRequest(self: Service, account: AccountDto, passwordHash: string, chatPrivateKey: string = "",
+      mnemonic: string = "", walletXPub: string = "", dek: string = ""): LoginAccountRequest =
+    result = LoginAccountRequest(
       keyUid: account.keyUid,
       kdfIterations: account.kdfIterations,
       passwordHash: passwordHash,
@@ -506,7 +506,11 @@ QtObject:
     )
 
     if main_constants.runtimeLogLevelSet():
-      request.runtimeLogLevel = main_constants.getStatusGoLogLevel()
+      result.runtimeLogLevel = main_constants.getStatusGoLogLevel()
+
+  proc doLogin(self: Service, account: AccountDto, passwordHash: string, chatPrivateKey: string = "", mnemonic: string = "",
+    walletXPub: string = "", dek: string = "") =
+    let request = self.buildLoginRequest(account, passwordHash, chatPrivateKey, mnemonic, walletXPub, dek)
 
     let response = status_account.loginAccount(request)
 
@@ -516,6 +520,23 @@ QtObject:
 
     debug "login request accepted, waiting for node.login signal"
     self.events.emit(SIGNAL_LOGIN_REQUEST_ACCEPTED, LoginRequestAcceptedArgs(seq: toLoginSeq(response.result)))
+
+  proc bootLoginRecord*(self: Service, keyUid: string): string =
+    ## The boot-login record for the logged-in profile, built with the same builders as a
+    ## regular login. Empty when the feature is off or the platform has no boot login.
+    when not defined(android):
+      return ""
+    else:
+      if not RESUME_AFTER_RESTART_ENABLED:
+        return ""
+      let account = self.getLoggedInAccount()
+      if keyUid.len == 0 or account.keyUid != keyUid:
+        return ""
+      var request = self.buildLoginRequest(account, passwordHash = "")
+      if request.kdfIterations == 0:
+        request.kdfIterations = KDF_ITERATIONS
+      return buildBootLoginRecord(keyUid,
+        status_account.initializeApplicationRequest(main_constants.STATUSGODIR), request.toJson())
 
   proc login*(self: Service, account: AccountDto, hashedPassword: string, chatPrivateKey: string = "", mnemonic: string = "",
     walletXPub: string = "", dek: string = "") =

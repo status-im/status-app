@@ -100,7 +100,8 @@ method requestSaveBiometrics*(self: AccessInterface, account: string, credential
 method requestDeleteBiometrics*(self: AccessInterface, account: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method requestSaveStayLoggedIn*(self: AccessInterface, account: string, credential: string, enablePreference: bool) {.base.} =
+method requestSaveStayLoggedIn*(self: AccessInterface, account: string, credential: string, enablePreference: bool,
+    bootLoginRecord: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method requestDeleteStayLoggedIn*(self: AccessInterface, account: string) {.base.} =

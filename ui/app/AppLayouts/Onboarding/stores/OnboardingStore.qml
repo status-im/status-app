@@ -11,7 +11,7 @@ QtObject {
     signal appLoaded()
     signal saveBiometricsRequested(string keyUid, string credential)
     signal deleteBiometricsRequested(string keyUid)
-    signal stayLoggedInSaveRequested(string keyUid, string credential, bool enablePreference)
+    signal stayLoggedInSaveRequested(string keyUid, string credential, bool enablePreference, string bootLoginRecord)
     signal stayLoggedInDeleteRequested(string keyUid)
 
     readonly property QtObject d: StatusQUtils.QObject {
