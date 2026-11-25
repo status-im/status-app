@@ -88,6 +88,7 @@ def ensure_peer_chat_visible(device: DeviceContext, peer) -> ChatPage:
     if not app.click_messages_button():
         logger.warning("Messages tab did not report a click")
     chat_page.dismiss_backup_prompt(timeout=2)
+    dismiss_introduce_yourself(chat_page, timeout=1)
     if chat_page.wait_for_message_input(timeout=3):
         return _composer_ready(chat_page)
 

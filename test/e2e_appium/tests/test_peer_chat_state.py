@@ -20,6 +20,7 @@ def test_recover_peer_chat_prefers_the_messages_row(monkeypatch, row_tapped, row
     calls.open_link.return_value = True
     monkeypatch.setattr(peer_chat_state, "ChatPage", lambda _: chat_page)
     monkeypatch.setattr(peer_chat_state, "App", lambda _: calls.app)
+    monkeypatch.setattr(peer_chat_state, "dismiss_introduce_yourself", calls.dismiss_introduce)
     monkeypatch.setattr(peer_chat_state, "open_peer_chat_by_deeplink", calls.open_link)
 
     assert peer_chat_state.ensure_peer_chat_visible(device, peer) is chat_page
@@ -27,9 +28,12 @@ def test_recover_peer_chat_prefers_the_messages_row(monkeypatch, row_tapped, row
     chat_page.open_chat_by_suffix.assert_called_once_with(
         peer.alias, display_name=peer.display_name, timeout=5, allow_unique_row=False,
     )
+    calls.dismiss_introduce.assert_called_once_with(chat_page, timeout=1)
+    names = [call[0] for call in calls.mock_calls]
+    row_tap = names.index("chat_page.open_chat_by_suffix")
+    assert names.index("dismiss_introduce") < row_tap
     if row_shows_composer:
         calls.open_link.assert_not_called()
     else:
         calls.open_link.assert_called_once_with(device, peer)
-        names = [call[0] for call in calls.mock_calls]
-        assert names.index("chat_page.open_chat_by_suffix") < names.index("open_link")
+        assert row_tap < names.index("open_link")
