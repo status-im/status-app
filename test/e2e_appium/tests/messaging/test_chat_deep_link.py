@@ -19,6 +19,9 @@ def test_one_to_one_chat_link_opens_conversation(peer_chat):
         pytest.skip("Uses the Android Appium deep-link command")
 
     chat_page = ChatPage(driver)
+    if not chat_page.is_portrait_mode():
+        pytest.skip("Requires the portrait Messages layout")
+
     assert App(driver).click_messages_button(), "Messages did not open"
     assert chat_page.is_loaded(), "The Messages list is not visible"
     assert not chat_page.wait_for_message_input(timeout=2), "A conversation is already open"
@@ -35,6 +38,9 @@ def test_one_to_one_chat_link_opens_conversation(peer_chat):
     dismiss_introduce_yourself(chat_page, timeout=1)
     assert chat_page.wait_for_message_input(timeout=10), (
         "The chat link did not open a conversation with a message input"
+    )
+    assert chat_page.is_element_visible(chat_page.locators.TOOLBAR_BACK_BUTTON, timeout=5), (
+        "The conversation did not open in the portrait Messages layout"
     )
     header = GroupChatPage(driver).get_group_name_from_header(timeout=15) or ""
     assert any(name and name in header for name in (peer.display_name, peer.alias)), (
