@@ -244,3 +244,18 @@ SecureStorage::Status SecureStorage::deleteBootLoginRecord()
 
     return convertStatus(status);
 }
+
+bool SecureStorage::isBootLoginRecordFromOtherVersion() const
+{
+    const QJniObject helper = javaHelper();
+    if (!helper.isValid())
+        return false;
+
+    const jboolean fromOtherVersion = helper.callMethod<jboolean>(
+        "isBootLoginRecordFromOtherVersion", "()Z");
+
+    if (javaExceptionRaised())
+        return false;
+
+    return fromOtherVersion;
+}

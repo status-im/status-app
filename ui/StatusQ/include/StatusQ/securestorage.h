@@ -78,6 +78,9 @@ public:
     // restart. Platforms without boot login report StatusNotSupported and store nothing.
     Q_INVOKABLE Status setBootLoginRecord(const QString &record);
     Q_INVOKABLE Status deleteBootLoginRecord();
+    // Whether the stored boot-login record was written by another app version (the app
+    // was updated since). False without a record and on platforms without boot login.
+    Q_INVOKABLE bool isBootLoginRecordFromOtherVersion() const;
 
 signals:
     void serviceChanged();

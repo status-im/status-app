@@ -277,6 +277,27 @@ suite "share_intake_wake":
 
     check sharedTexts == @["pre-login share"]
 
+  test "a share held for the next session reaches it exactly once, never the ending one":
+    # The record refresh relogin holds the intake (detachSession) before the adopted
+    # session's appReady; the share arriving meanwhile goes to the next session.
+    manager.detachSession()
+    manager.appReady()
+
+    statusq_urlscheme_emit_share(urlSchemeEvent.vptr, "shared during the relogin", "[]")
+    drainEvents()
+    check sharedTexts.len == 0
+
+    let nextEvents = createEventEmitter()
+    var nextTexts: seq[string] = @[]
+    nextEvents.on(SIGNAL_EXTERNAL_SHARE_INTAKE) do(e: Args):
+      nextTexts.add(ExternalShareIntakeArgs(e).text)
+    manager.attachSession(nextEvents)
+    manager.appReady()
+    manager.appReady()
+
+    check nextTexts == @["shared during the relogin"]
+    check sharedTexts.len == 0
+
   test "app foregrounding delivers a payload left behind when the wake never arrived":
     # Wake-less fallback for an already-running app: the user backgrounds
     # Status, shares (extension writes the slot, openURL wake fails/dropped),

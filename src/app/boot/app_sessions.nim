@@ -161,6 +161,13 @@ proc newAppSessions*(host: SessionHost, urlsManager: UrlsManager): AppSessions =
     self.exitAtSafePoint(backendLoggedOut)
   ops.hardExit = proc(backend: BackendLogoutStatus) =
     hardExit(backend)
+  self.view.setIntakeOps(
+    hold = proc() = self.urlsManager.detachSession(),
+    release = proc() =
+      # An ending session (a transition runs) leaves them to the next one.
+      if not self.current.isNil and self.host.state == SessionState.Active:
+        self.current.foundation.attachUrlsManager(self.urlsManager)
+        self.current.foundation.appReady())
   host.setOps(ops, proc(): Result[SessionReceivers, string] = self.initializeSession())
   self
 

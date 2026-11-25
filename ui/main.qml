@@ -198,6 +198,12 @@ Window {
         resumeAfterRestartEnabled: applicationWindow.featureFlagsStore.resumeAfterRestartEnabled
     }
 
+    SessionLoadingScreen {
+        id: sessionLoadingScreen
+
+        relogin: () => sessionView.relogin()
+    }
+
     QtObject {
         id: d
         property bool splashDismissed: false
@@ -559,8 +565,6 @@ Window {
 
             anchors.fill: parent
 
-            onLoaded: bootLoginRecordGuard.keepCurrent(item.resumedBootLoginRecord)
-
             sourceComponent: SessionRoot {
                 featureFlagsStore: applicationWindow.featureFlagsStore
                 languageStore: applicationWindow.languageStore
@@ -569,15 +573,18 @@ Window {
                 systemTrayIconAvailable: systemTray.available
                 portraitLayout: applicationWindow.portraitLayout
                 allowsAutoLogin: (keyUid) => sessionView.allowsAutoLogin(keyUid)
+                relogin: () => sessionLoadingScreen.startUnrequestedRelogin()
+                holdIntake: () => sessionView.holdIntakeForNextSession()
+                releaseIntake: () => sessionView.releaseIntakeHold()
+                keepBootLoginRecordCurrent: (record) => bootLoginRecordGuard.keepCurrent(record)
 
                 onContentLoaded: {
-                    splashScreenLoader.active = false
+                    sessionLoadingScreen.sessionContentLoaded()
                     d.awaitingSessionContent = false
                     applicationWindow.contentLoaded()
                 }
                 onStoreAppStateRequested: applicationWindow.storeAppState()
                 onSignOutRequested: d.signOut()
-                onBootLoginRecordKeepCurrentRequested: bootLoginRecord => bootLoginRecordGuard.keepCurrent(bootLoginRecord)
             }
         }
 
@@ -630,6 +637,7 @@ Window {
         Loader {
             id: splashScreenLoader
             anchors.fill: parent
+            active: sessionLoadingScreen.shown
             sourceComponent: DidYouKnowSplashScreen {
                 messagesEnabled: true
                 infiniteLoading: true
@@ -641,8 +649,10 @@ Window {
 
         SessionTransitionView {
             anchors.fill: parent
-            visible: phase !== SessionTransitionView.Phase.Active || d.awaitingSessionContent
+            visible: (phase !== SessionTransitionView.Phase.Active || d.awaitingSessionContent)
+                     && showsProgress
             phase: sessionView.phase
+            unrequestedEnd: sessionLoadingScreen.unrequestedRelogin
             isMobile: SQUtils.Utils.isMobile
 
             onRetryRequested: sessionView.retry()

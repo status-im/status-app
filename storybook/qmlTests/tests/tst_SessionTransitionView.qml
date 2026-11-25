@@ -95,5 +95,26 @@ Item {
                                       isMobile: true })
             compare(findChild(view, "sessionTransitionQuitButton").text, "Close Status")
         }
+
+        function test_requestedEndShowsProgress() {
+            const view = createView({ phase: SessionTransitionView.Phase.Ending })
+            compare(view.showsProgress, true)
+        }
+
+        function test_unrequestedEndLeavesTheLoadingScreenInFront_data() {
+            return [
+                { tag: "ending", phase: SessionTransitionView.Phase.Ending, shows: false },
+                { tag: "active", phase: SessionTransitionView.Phase.Active, shows: false },
+                { tag: "drain timeout", phase: SessionTransitionView.Phase.DrainTimeout, shows: true },
+                { tag: "logout timeout", phase: SessionTransitionView.Phase.LogoutTimeout, shows: true },
+                { tag: "logout failed", phase: SessionTransitionView.Phase.LogoutFailed, shows: true },
+                { tag: "start failed", phase: SessionTransitionView.Phase.StartFailed, shows: true },
+            ]
+        }
+
+        function test_unrequestedEndLeavesTheLoadingScreenInFront(data) {
+            const view = createView({ phase: data.phase, unrequestedEnd: true })
+            compare(view.showsProgress, data.shows)
+        }
     }
 }

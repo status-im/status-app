@@ -134,10 +134,11 @@ QtObject:
   proc attachSession*(self: UrlsManager, events: EventEmitter) =
     ## The app session that receives intakes from now on (once it is ready, appReady()).
     self.events = events
+    self.intake.attachSession()
 
   proc detachSession*(self: UrlsManager) =
     ## The session ended (logout): intakes wait in the pending slot for the next one.
-    self.intake.setNotReady()
+    self.intake.detachSession()
     self.events = nil
 
   proc newUrlsManager*(events: EventEmitter, urlSchemeEvent: UrlSchemeEvent,
@@ -148,6 +149,8 @@ QtObject:
     result.setup(urlSchemeEvent, singleInstance)
     result.events = events
     result.intake = newExternalIntake()
+    if events.isNil:
+      result.intake.detachSession()
     result.intakeSlot = intakeSlot
 
     # A fresh launch can't have an in-flight share flow: drop cached copies a

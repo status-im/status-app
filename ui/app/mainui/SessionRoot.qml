@@ -29,6 +29,16 @@ Item {
     // Whether the login screen may log in silently with the stored credential of a profile:
     // (keyUid) => bool
     required property var allowsAutoLogin
+    // Ends the session for one silent relogin the user didn't request
+    // (AutoLoginPolicy.AllowOnce): () => bool, false when it was ignored
+    required property var relogin
+    // Links, shares and notification taps wait for the next session: () => void
+    required property var holdIntake
+    // The held ones go to this session: () => void
+    required property var releaseIntake
+    // The KeptCurrent rewrite of an adopted login's record (BootLoginRecordGuard.keepCurrent):
+    // (record) => void
+    required property var keepBootLoginRecordCurrent
 
     readonly property bool userLoggedIn: appMainLoader.item !== null
 
@@ -36,8 +46,6 @@ Item {
     signal storeAppStateRequested()
     // End the session: the next one starts at the login screen
     signal signOutRequested()
-    // An adopted login finished in the login flow (see BootLoginRecordGuard.keepCurrent)
-    signal bootLoginRecordKeepCurrentRequested(string bootLoginRecord)
 
     // Provided by Nim before the session's UI loads (see AppController.initializeQmlContext())
     readonly property bool skipOnboarding: typeof skipOnboardingContextProperty !== "undefined"
@@ -75,8 +83,19 @@ Item {
 
         readonly property KeycardStateStore keycardStateStore: KeycardStateStore {}
 
+        // Never once the record refresh relogin started: the session is ending
         function moveToAppMain() : void {
+            if (bootLoginRecordRefresh.reloginStarted)
+                return
             d.appMainTriggered = true
+        }
+
+        // Every adopt path, once the adopt has finished. Logged in at start, the session moves
+        // to the app here; on a boot login still in progress adopted by the login screen, the
+        // onboarding flow moves to it itself.
+        function onAdoptFinished() : void {
+            if (!bootLoginRecordRefresh.adoptFinished() && root.skipOnboarding)
+                d.moveToAppMain()
         }
 
         function setAppReady() : void {
@@ -87,8 +106,26 @@ Item {
     }
 
     Component.onCompleted: {
-        if (root.skipOnboarding)
-            d.moveToAppMain()
+        if (!root.skipOnboarding)
+            return
+        // The UI adopted a running session. This runs within AppController.start()
+        // (engine.load), so the relogin waits until the adopt has finished.
+        if (bootLoginRecordRefresh.adoptStarted(root.resumedBootLoginRecord)) {
+            Qt.callLater(d.onAdoptFinished)
+            return
+        }
+        d.moveToAppMain()
+    }
+
+    BootLoginRecordRefresh {
+        id: bootLoginRecordRefresh
+
+        enabled: root.featureFlagsStore.resumeAfterRestartEnabled
+        secureStorage: root.secureStorage
+        keepCurrent: root.keepBootLoginRecordCurrent
+        relogin: root.relogin
+        holdIntake: root.holdIntake
+        releaseIntake: root.releaseIntake
     }
 
     Component.onDestruction: Global.appIsReady = false
@@ -234,8 +271,11 @@ Item {
         function onNewSessionRequested() : void {
             root.signOutRequested()
         }
+        // Within the login's post-login tasks (before appReady), so the relogin waits until
+        // they have finished
         function onBootLoginRecordKeepCurrentRequested(bootLoginRecord: string) : void {
-            root.bootLoginRecordKeepCurrentRequested(bootLoginRecord)
+            if (bootLoginRecordRefresh.adoptStarted(bootLoginRecord))
+                Qt.callLater(d.onAdoptFinished)
         }
     }
 

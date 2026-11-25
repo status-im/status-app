@@ -31,4 +31,9 @@ SecureStorage::Status SecureStorage::deleteBootLoginRecord()
 {
     return StatusNotSupported;
 }
+
+bool SecureStorage::isBootLoginRecordFromOtherVersion() const
+{
+    return false;
+}
 #endif

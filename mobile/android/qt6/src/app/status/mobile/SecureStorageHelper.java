@@ -252,6 +252,23 @@ public final class SecureStorageHelper {
         return getCredential(BOOT_LOGIN_RECORD_KEY, out);
     }
 
+    /**
+     * Whether the stored boot-login record was written by another versionCode than this
+     * build's (the app was updated since). False without a readable record.
+     */
+    public boolean isBootLoginRecordFromOtherVersion() {
+        try {
+            final String[] out = new String[1];
+            if (getBootLoginRecord(out) != STATUS_OK) return false;
+            return app.status.mobile.ipc.BootLoginRecordVersion.writtenByOtherVersion(out[0],
+                    androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(
+                            mContext.getPackageManager().getPackageInfo(mContext.getPackageName(), 0)));
+        } catch (Throwable t) {
+            Log.w(TAG, "isBootLoginRecordFromOtherVersion failed", t);
+            return false;
+        }
+    }
+
     public int deleteBootLoginRecord() {
         return deleteCredential(BOOT_LOGIN_RECORD_KEY);
     }
