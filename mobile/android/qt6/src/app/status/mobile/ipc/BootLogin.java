@@ -39,6 +39,9 @@ final class BootLogin {
     }
 
     interface CredentialSource {
+        /** Whether the credential is stored, checked without decrypting it. */
+        boolean exists(String keyUid) throws StoreException;
+
         /** The account's "Stay logged in" credential, or null when there is none. */
         String credential(String keyUid) throws StoreException;
     }
@@ -146,15 +149,17 @@ final class BootLogin {
             stopUnlessUiBound();
             return false;
         }
+        // The store wipes an entry it cannot decrypt and then reports it absent, so whether
+        // there was anything to replay is decided before decrypting.
         final String recordJson;
         try {
+            if (!records.exists()) {
+                stopUnlessUiBound();
+                return false;
+            }
             recordJson = records.read();
         } catch (StoreException e) {
             fail();
-            return false;
-        }
-        if (recordJson == null) {
-            stopUnlessUiBound();
             return false;
         }
 
@@ -167,13 +172,22 @@ final class BootLogin {
             return false;
         }
 
-        final String dek;
+        final String credential;
         try {
-            dek = dekFrom(credentials.credential(keyUid));
+            if (!credentials.exists(keyUid)) {
+                stopUnlessUiBound();
+                return false;
+            }
+            credential = credentials.credential(keyUid);
         } catch (StoreException e) {
             fail();
             return false;
         }
+        if (credential == null) {
+            fail();
+            return false;
+        }
+        final String dek = dekFrom(credential);
         if (dek == null) {
             stopUnlessUiBound();
             return false;

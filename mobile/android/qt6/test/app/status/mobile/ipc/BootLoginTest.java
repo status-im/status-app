@@ -49,6 +49,9 @@ public class BootLoginTest {
     private final Map<String, String> store = new HashMap<>();
     private boolean recordUnreadable;
     private boolean credentialUnreadable;
+    /** Undecryptable entries the store wipes and then reports absent (key invalidated). */
+    private boolean recordWipedOnRead;
+    private boolean credentialWipedOnRead;
     private final Map<String, String> responses = new HashMap<>();
     private boolean uiVisible;
     private boolean uiBound;
@@ -69,6 +72,8 @@ public class BootLoginTest {
         store.put(KEY_UID, CREDENTIAL);
         recordUnreadable = false;
         credentialUnreadable = false;
+        recordWipedOnRead = false;
+        credentialWipedOnRead = false;
         responses.clear();
         uiVisible = false;
         uiBound = false;
@@ -95,19 +100,28 @@ public class BootLoginTest {
                     @Override
                     public String read() throws BootLogin.StoreException {
                         if (recordUnreadable) throw new BootLogin.StoreException();
+                        if (recordWipedOnRead) store.remove(RECORD_KEY);
                         return store.get(RECORD_KEY);
                     }
 
                     @Override
                     public void delete() {
                         recordDeletes++;
-public void delete() {
                         store.remove(RECORD_KEY);
                     }
                 },
-                keyUid -> {
-                    if (credentialUnreadable) throw new BootLogin.StoreException();
-                    return store.get(keyUid);
+                new BootLogin.CredentialSource() {
+                    @Override
+                    public boolean exists(String keyUid) {
+                        return store.containsKey(keyUid);
+                    }
+
+                    @Override
+                    public String credential(String keyUid) throws BootLogin.StoreException {
+                        if (credentialUnreadable) throw new BootLogin.StoreException();
+                        if (credentialWipedOnRead) return null;
+                        return store.get(keyUid);
+                    }
                 },
                 (method, argsJson) -> {
                     calls.add(new Call(method, argsJson));
@@ -276,6 +290,26 @@ public void delete() {
     @Test
     public void credentialThatCannotBeDecryptedFails() {
         credentialUnreadable = true;
+
+        assertFalse(bootLogin.run());
+
+        assertEquals(0, calls.size());
+        assertFailedOnce();
+    }
+
+    @Test
+    public void recordWipedAsUndecryptableFails() {
+        recordWipedOnRead = true;
+
+        assertFalse(bootLogin.run());
+
+        assertEquals(0, calls.size());
+        assertFailedOnce();
+    }
+
+    @Test
+    public void credentialWipedAsUndecryptableFails() {
+        credentialWipedOnRead = true;
 
         assertFalse(bootLogin.run());
 
