@@ -1,10 +1,15 @@
 import pytest
 
+from locators.base_locators import BaseLocators
 from pages.app import App
 from pages.messaging.chat_page import ChatPage
 from pages.messaging.group_chat_page import GroupChatPage
 from support.platform import is_android
 from support.screen_identity import dismiss_introduce_yourself
+
+PORTRAIT_LAYOUT = BaseLocators.xpath(
+    "//android.widget.TabWidget[contains(@resource-id, '.StatusSectionLayoutPortrait_')]"
+)
 
 
 @pytest.mark.messaging
@@ -19,11 +24,11 @@ def test_one_to_one_chat_link_opens_conversation(peer_chat):
         pytest.skip("Uses the Android Appium deep-link command")
 
     chat_page = ChatPage(driver)
-    if not chat_page.is_portrait_mode():
-        pytest.skip("Requires the portrait Messages layout")
-
     assert App(driver).click_messages_button(), "Messages did not open"
     assert chat_page.is_loaded(), "The Messages list is not visible"
+    if not chat_page.is_element_visible(PORTRAIT_LAYOUT, timeout=5):
+        pytest.skip("Requires the portrait Messages layout")
+
     assert not chat_page.wait_for_message_input(timeout=2), "A conversation is already open"
 
     driver.execute_script(
