@@ -551,9 +551,13 @@ method updateThreadCanView*(self: Module, canView: bool) =
   self.threadCanView = some(canView)
   self.updateThreadDetails()
 
+method setThreadMutedById*(self: Module, threadId: string, interval: int) =
+  if not THREADS_ENABLED or threadId.len == 0:
+    return
+  self.controller.setThreadMutedById(threadId, interval)
+
 method setThreadMuted*(self: Module, interval: int) =
-  if self.controller.getMyThreadId().len > 0:
-    self.controller.setThreadMuted(interval)
+  self.setThreadMutedById(self.controller.getMyThreadId(), interval)
 
 method canManageThreadById*(self: Module, threadId: string): bool =
   let thread = self.controller.getThreadById(threadId)

@@ -12,6 +12,7 @@ import shared
 import shared.controls
 import AppLayouts.Chat.controls
 import AppLayouts.Chat.popups
+import utils
 
 ColumnLayout {
     id: root
@@ -25,6 +26,8 @@ ColumnLayout {
     property var threadsModel
     property var threadMentionResolver: null
     property var sectionModule
+    property var canManageThread
+    property bool threadChangesPending: false
     property bool threadsLoading
     property bool threadsError
     property Component membersContent
@@ -56,6 +59,9 @@ ColumnLayout {
     signal loadThreadsRequested()
     signal openThreadRequested(string threadId)
     signal renameThreadRequested(string threadId, string threadName, string parentChatId)
+    signal threadMuteRequested(string threadId, string parentChatId, int interval)
+    signal threadFollowRequested(string threadId, string parentChatId, bool followed)
+    signal threadDeleteRequested(string threadId, string parentChatId)
 
     spacing: 0
 
@@ -112,6 +118,12 @@ ColumnLayout {
 
     onChatKeyChanged: {
         if (d.initialized) {
+            d.threadMenuPending = false
+            const menu = threadContextMenuLoader.item
+            if (menu) {
+                menu.threadId = ""
+                menu.close()
+            }
             reset()
             Qt.callLater(d.loadThreadsIfSelected)
         }
@@ -133,6 +145,14 @@ ColumnLayout {
         sourceComponent: ThreadListContextMenu {
             objectName: "chatInfoThreadContextMenu"
             sectionModule: root.sectionModule
+            threadsModel: root.threadsModel
+            canManageThread: root.canManageThread
+            threadChangesPending: root.threadChangesPending
+            onMuteRequested: interval => root.threadMuteRequested(threadId, parentChatId, interval)
+            onUnmuteRequested: root.threadMuteRequested(threadId, parentChatId, Constants.MutingVariations.Unmuted)
+            onFollowRequested: root.threadFollowRequested(threadId, parentChatId, true)
+            onUnfollowRequested: root.threadFollowRequested(threadId, parentChatId, false)
+            onDeleteRequested: root.threadDeleteRequested(threadId, parentChatId)
             onRenameThreadRequested: (threadId, threadName, parentChatId) =>
                 root.renameThreadRequested(threadId, threadName, parentChatId)
         }

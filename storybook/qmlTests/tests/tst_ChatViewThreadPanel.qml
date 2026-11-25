@@ -582,6 +582,13 @@ Item {
             mouseClick(findChild(panel, "chatInfoThreadsTab"))
             compare(panel.currentTab, ChatInfoPanel.Threads)
             verify(!!panel.threadsModel)
+            const messages = view.chatContentModule.messagesModule
+            panel.threadMuteRequested("thread", "another-chat", Constants.MutingVariations.For24hr)
+            compare(messages.requestedMuteThreadId, "")
+            panel.threadMuteRequested("thread", messages.getChatId(), Constants.MutingVariations.For24hr)
+            compare(messages.requestedMuteThreadId, "thread")
+            compare(messages.requestedMuteInterval, Constants.MutingVariations.For24hr)
+
             const header = harness.findChildByTypePrefix(view.headerContent, "ChatHeaderContentView")
             verify(!!header)
             header.showPinsRequested()
@@ -614,7 +621,6 @@ Item {
             search.text = ""
             tryCompare(list, "count", 2)
 
-            const messages = view.chatContentModule.messagesModule
             jumpSpy.target = messages
             tryVerify(() => !!list.itemAtIndex(0))
             const mouseArea = findChild(list.itemAtIndex(0), "pinnedMessagesPopup_delegateMouseArea")

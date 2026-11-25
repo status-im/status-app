@@ -264,6 +264,9 @@ QtObject:
   proc setThreadMuted*(self: View, interval: int) {.slot.} =
     self.delegate.setThreadMuted(interval)
 
+  proc setThreadMutedById*(self: View, threadId: string, interval: int) {.slot.} =
+    self.delegate.setThreadMutedById(threadId, interval)
+
   proc editThread*(self: View, name: string) {.slot.} =
     self.delegate.editThread(name)
 

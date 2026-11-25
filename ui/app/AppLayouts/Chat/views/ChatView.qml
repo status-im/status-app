@@ -671,6 +671,9 @@ Item {
         ChatInfoPanel {
             id: infoPanel
             sectionModule: root.rootStore.chatCommunitySectionModule
+            canManageThread: (threadId, parentChatId) =>
+                infoMessageStore.chatId === parentChatId && infoMessageStore.canManageThreadById(threadId)
+            threadChangesPending: infoMessageStore.threadDeletePending || infoMessageStore.threadEditPending
             headerInToolbar: !!root.sectionLayout?.isPortrait
             visible: rightPanelLoader.status === Loader.Ready
             chatKey: root.chatContentModule?.getMyChatId() ?? ""
@@ -694,6 +697,18 @@ Item {
             }
             onRenameThreadRequested: (threadId, threadName, parentChatId) =>
                 d.renameThreadFromList(threadId, threadName, parentChatId)
+            onThreadMuteRequested: (threadId, parentChatId, interval) => {
+                if (infoMessageStore.chatId === parentChatId)
+                    infoMessageStore.setThreadMutedById(threadId, interval)
+            }
+            onThreadFollowRequested: (threadId, parentChatId, followed) => {
+                if (infoMessageStore.chatId === parentChatId)
+                    infoMessageStore.setThreadFollowedById(threadId, followed)
+            }
+            onThreadDeleteRequested: (threadId, parentChatId) => {
+                if (infoMessageStore.chatId === parentChatId)
+                    infoMessageStore.deleteThreadById(threadId)
+            }
         }
     }
 

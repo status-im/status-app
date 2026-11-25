@@ -1,29 +1,29 @@
 import QtQuick
 
+import QtModelsToolkit
+
 import StatusQ.Core.Utils as SQUtils
-
-import AppLayouts.Chat.stores
-
-import utils
 
 ThreadContextMenu {
     id: root
 
     required property var sectionModule
+    property var threadsModel: null
     property string parentChatId
     property string threadName
-    property var messageModule
+    property var canManageThread
+    property bool threadChangesPending: false
     property bool canManage: false
 
     signal renameThreadRequested(string threadId, string threadName, string parentChatId)
 
     isMobile: SQUtils.Utils.isMobile
     followed: d.followed
-    muted: messageStore.threadMuted
+    muted: threadEntry.item?.muted ?? false
     pinned: false
     pinEnabled: false
     threadLinkToCopyShare: ""
-    deleteEnabled: root.canManage && !messageStore.threadDeletePending && !messageStore.threadEditPending
+    deleteEnabled: root.canManage && !root.threadChangesPending
     editEnabled: root.deleteEnabled
 
     openHandler: function(id) {
@@ -39,15 +39,7 @@ ThreadContextMenu {
             root.parentChatId = item.parentChatId
             root.threadName = item.name
             d.followed = !!item.followed
-            root.sectionModule.prepareChatContentModuleForChatId(root.parentChatId)
-            const contentModule = root.sectionModule.getChatContentModule()
-            if (!contentModule) {
-                console.error("Cannot open thread menu: missing parent chat module", root.parentChatId)
-                root.close()
-                return
-            }
-            root.messageModule = contentModule.messagesModule
-            root.canManage = messageStore.canManageThreadById(root.threadId)
+            root.canManage = root.canManageThread?.(root.threadId, root.parentChatId) ?? false
         } catch (e) {
             console.error("Cannot open thread menu:", id, e)
             root.close()
@@ -55,20 +47,17 @@ ThreadContextMenu {
     }
 
     onMarkAsReadRequested: root.sectionModule.markAllMessagesRead(root.parentChatId, root.threadId)
-    onFollowRequested: messageStore.setThreadFollowedById(root.threadId, true)
-    onUnfollowRequested: messageStore.setThreadFollowedById(root.threadId, false)
-    onDeleteRequested: messageStore.deleteThreadById(root.threadId)
     onEditNameRequested: root.renameThreadRequested(root.threadId, root.threadName, root.parentChatId)
-    onMuteRequested: interval => messageStore.setThreadMuted(interval)
-    onUnmuteRequested: messageStore.setThreadMuted(Constants.MutingVariations.Unmuted)
+
+    ModelEntry {
+        id: threadEntry
+        sourceModel: root.threadsModel
+        key: "key"
+        value: root.threadId
+    }
 
     QtObject {
         id: d
         property bool followed: false
-    }
-
-    MessageStore {
-        id: messageStore
-        messageModule: root.messageModule
     }
 }

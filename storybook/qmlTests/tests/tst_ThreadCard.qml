@@ -77,6 +77,8 @@ Item {
             controlUnderTest.notificationCount = 1
             const title = findChild(controlUnderTest, "threadCardTitle")
             const badge = findChild(controlUnderTest, "threadCardUnreadBadge")
+            const mutedIcon = findChild(controlUnderTest, "threadCardMutedIcon")
+            compare(mutedIcon.visible, true)
             compare(title.color, Theme.palette.directColor5)
             compare(title.font.weight, Font.Normal)
             compare(badge.visible, true)
@@ -84,6 +86,7 @@ Item {
             controlUnderTest.notificationCount = 0
             compare(badge.visible, false)
             controlUnderTest.muted = false
+            compare(mutedIcon.visible, false)
             compare(badge.visible, true)
             compare(badge.value, 0)
             compare(badge.color, Theme.palette.baseColor1)

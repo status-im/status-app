@@ -1414,7 +1414,10 @@ Loader {
                             threadId: threadCard.threadId
                             isMobile: StatusQUtils.Utils.isMobile
                             followed: root.threadFollowed
-                            muted: false
+                            muted: root.threadMuted
+                            muteEnabled: !!root.messageStore
+                            onMuteRequested: interval => root.messageStore.setThreadMutedById(threadId, interval)
+                            onUnmuteRequested: root.messageStore.setThreadMutedById(threadId, Constants.MutingVariations.Unmuted)
                             pinned: false
                             pinEnabled: false
                             threadLinkToCopyShare: ""

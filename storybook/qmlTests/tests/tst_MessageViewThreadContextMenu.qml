@@ -42,6 +42,12 @@ Item {
             followedThreadId = id
             followedValue = followed
         }
+        property string mutedThreadId: ""
+        property int requestedMuteInterval: -1
+        function setThreadMutedById(id, interval) {
+            mutedThreadId = id
+            requestedMuteInterval = interval
+        }
     }
     ChatStores.MessageStore {
         id: messageStoreMock
@@ -169,6 +175,37 @@ Item {
             menu.close()
             root.activePopup.confirmButtonClicked()
             compare(moduleMock.deletedThreadId, "thread")
+        }
+
+        function test_muteToggle_data() {
+            return [
+                { tag: "mute", muted: false, interval: Constants.MutingVariations.For24hr },
+                { tag: "unmute", muted: true, interval: Constants.MutingVariations.Unmuted }
+            ]
+        }
+
+        function test_muteToggle(data) {
+            moduleMock.mutedThreadId = ""
+            moduleMock.requestedMuteInterval = -1
+            const view = createTemporaryObject(viewComponent, root, { threadMuted: data.muted })
+            verify(!!view)
+            tryCompare(view, "status", Loader.Ready)
+            let card
+            tryVerify(() => { card = findChild(view, "messageThreadSummary"); return !!card && card.height > 0 })
+            mouseClick(card, card.width / 2, card.height / 2, Qt.RightButton)
+            let menu
+            tryVerify(() => { menu = findChild(view, "threadSummaryContextMenu"); return !!menu && menu.opened })
+            compare(menu.muted, data.muted)
+            const muteAction = findChild(menu, "threadContextMenu_muteThread")
+            const unmuteAction = findChild(menu, "threadContextMenu_unmuteThread")
+            compare(muteAction.enabled, !data.muted)
+            compare(unmuteAction.enabled, data.muted)
+            if (data.muted)
+                unmuteAction.trigger()
+            else
+                muteAction.muteTriggered(data.interval)
+            compare(moduleMock.mutedThreadId, "thread")
+            compare(moduleMock.requestedMuteInterval, data.interval)
         }
 
         function test_followToggle_data() {
