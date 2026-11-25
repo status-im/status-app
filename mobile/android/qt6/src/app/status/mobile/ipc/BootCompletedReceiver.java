@@ -12,8 +12,9 @@ import app.status.mobile.BuildFlags;
 /**
  * Starts the boot login after a phone restart: StatusGoService in the foreground, which
  * replays the boot-login record (see BootLogin). Without a record nothing starts, so the
- * status-go library is never loaded for a device that has nothing to resume. A build with
- * the feature off removes any record left by a build that had it on.
+ * status-go library is never loaded for a device that has nothing to resume. A corrupt record
+ * (half blob pair) still starts it, so the boot login fails and notifies. A build with the
+ * feature off removes any record left by a build that had it on.
  */
 public final class BootCompletedReceiver extends BroadcastReceiver {
     private static final String TAG = "BootCompletedReceiver";

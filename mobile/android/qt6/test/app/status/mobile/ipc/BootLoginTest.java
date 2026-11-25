@@ -580,6 +580,7 @@ public class BootLoginTest {
         return new BootLogin.RecordStore() {
             @Override
             public boolean exists() throws BootLogin.StoreException {
+                if (recordHalfPair) throw new BootLogin.StoreException(true);
                 if (recordUnreadable) throw new BootLogin.StoreException(false);
                 return store.containsKey(RECORD_KEY);
             }
@@ -646,6 +647,43 @@ public class BootLoginTest {
     public void bootCompletedWithTheFeatureOffRemovesTheRecord() {
         assertFalse(BootLogin.startsOnBoot(false, storedRecord()));
 
+        assertEquals(1, recordDeletes);
+    }
+
+    // ── Boot: whether BOOT_COMPLETED starts the boot login ───────────────────
+
+    @Test
+    public void bootWithNoRecordStartsNothing() {
+        store.remove(RECORD_KEY);
+
+        assertFalse(BootLogin.startsOnBoot(true, storedRecord()));
+    }
+
+    @Test
+    public void bootWithARecordStartsTheBootLogin() {
+        assertTrue(BootLogin.startsOnBoot(true, storedRecord()));
+    }
+
+    @Test
+    public void bootWithAHalfRecordPairStartsTheBootLoginSoItCanFail() {
+        recordHalfPair = true;
+
+        assertTrue(BootLogin.startsOnBoot(true, storedRecord()));
+        assertEquals(0, recordDeletes);
+    }
+
+    @Test
+    public void bootWithAStoreErrorStartsNothing() {
+        recordUnreadable = true;
+
+        assertFalse(BootLogin.startsOnBoot(true, storedRecord()));
+    }
+
+    @Test
+    public void bootWithAHalfRecordPairAndTheFeatureOffRemovesIt() {
+        recordHalfPair = true;
+
+        assertFalse(BootLogin.startsOnBoot(false, storedRecord()));
         assertEquals(1, recordDeletes);
     }
 }
