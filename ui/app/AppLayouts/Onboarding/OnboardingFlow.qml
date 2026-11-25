@@ -51,6 +51,7 @@ OnboardingStackView {
 
     required property bool biometricsAvailable
     property bool stayLoggedInAvailable: false
+    property bool resumesAfterRestart: false
     // stored "Save password" preference of the profile selected on the login screen
     property bool stayLoggedIn: false
     required property bool displayKeycardPromoBanner
@@ -218,6 +219,7 @@ OnboardingStackView {
             isBiometricsLogin: root.biometricsAvailable &&
                                root.isBiometricsLogin(loginScreen.selectedProfileKeyId)
             stayLoggedInAvailable: root.stayLoggedInAvailable
+            resumesAfterRestart: root.resumesAfterRestart
             stayLoggedIn: root.stayLoggedIn
             isProfileMigratedToDEKEncryption: root.isProfileMigratedToDEKEncryption
 
@@ -349,6 +351,7 @@ OnboardingStackView {
         CreateNewProfileFlow {
             passwordStrengthScoreFunction: root.passwordStrengthScoreFunction
             stayLoggedInAvailable: root.stayLoggedInAvailable
+            resumesAfterRestart: root.resumesAfterRestart
             biometricsAvailable: root.biometricsAvailable
 
             onStayLoggedInRequested: (enabled) => root.stayLoggedInRequested(enabled)
@@ -369,6 +372,7 @@ OnboardingStackView {
             isSeedPhraseDuplicate: root.isSeedPhraseDuplicate
             passwordStrengthScoreFunction: root.passwordStrengthScoreFunction
             stayLoggedInAvailable: root.stayLoggedInAvailable
+            resumesAfterRestart: root.resumesAfterRestart
             biometricsAvailable: root.biometricsAvailable
             isProfileMigratedToDEKEncryption: {
                 const keyUid = root.loginScreen ? root.loginScreen.selectedProfileKeyId : ""

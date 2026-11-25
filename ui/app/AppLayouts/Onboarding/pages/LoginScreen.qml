@@ -50,6 +50,8 @@ OnboardingPage {
 
     // "Save password" toggle: secure storage is usable on this device
     property bool stayLoggedInAvailable: false
+    // Android boot login is on (see StayLoggedInSectionView)
+    property bool resumesAfterRestart: false
     // stored "Save password" preference of the selected profile
     property bool stayLoggedIn: false
     property var isProfileMigratedToDEKEncryption: (keyUid) => false // (string keyUid) => bool
@@ -327,6 +329,7 @@ OnboardingPage {
                 Layout.fillWidth: true
                 visible: d.stayLoggedInShown
                 storageAvailable: root.stayLoggedInAvailable
+                resumesAfterRestart: root.resumesAfterRestart
                 profileMigrated: d.selectedProfileMigrated
                 stayLoggedInEnabled: d.stayLoggedInIntent
                 migrationActionAllowed: false

@@ -28,6 +28,8 @@ SettingsContentBase {
     property PrivacyStore privacyStore
     required property Keychain keychain
     required property SecureStorage secureStorage
+    // Android boot login is on (see StayLoggedInSectionView)
+    property bool resumesAfterRestart: false
 
     // The data was re-encrypted with the new password: log in again
     signal reloginRequested()
@@ -260,6 +262,7 @@ SettingsContentBase {
             Layout.fillWidth: true
 
             storageAvailable: root.secureStorage.available
+            resumesAfterRestart: root.resumesAfterRestart
             stayLoggedInEnabled: d.stayLoggedInEnabled
             profileMigrated: d.profileMigrated
             keycardProfile: root.privacyStore.migratedToColdWallet

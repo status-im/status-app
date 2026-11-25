@@ -1194,6 +1194,26 @@ Item {
 
         // "Save password" toggle on the login screen
 
+        function test_createPassword_restartHint_data() {
+            return [
+                { tag: "boot login on", resumes: true },
+                { tag: "boot login off", resumes: false },
+            ]
+        }
+
+        // The restart hint only shows where a boot login can actually follow
+        function test_createPassword_restartHint(data) {
+            verify(!!controlUnderTest)
+            mockDriver.biometricsAvailable = false
+            controlUnderTest.resumesAfterRestart = data.resumes
+
+            navigateToCreatePasswordPage()
+
+            const hint = findChild(controlUnderTest, "resumesAfterRestartText")
+            verify(!!hint)
+            tryCompare(hint, "visible", data.resumes)
+        }
+
         function openLoginScreenWithProfile(keyUid) {
             controlUnderTest.onboardingStore.loginAccountsModel = loginAccountsModel
             controlUnderTest.restartFlow()
@@ -1266,6 +1286,27 @@ Item {
             const migrateButton = findChild(section, "migrateToNewEncryptionButton")
             verify(!!migrateButton)
             compare(migrateButton.visible, false)
+        }
+
+        function test_loginScreen_restartHint_data() {
+            return [
+                { tag: "boot login on", resumes: true },
+                { tag: "boot login off", resumes: false },
+            ]
+        }
+
+        function test_loginScreen_restartHint(data) {
+            mockDriver.profileEncryptionMigrated = true
+            mockDriver.secureStorageAvailable = true
+            controlUnderTest.resumesAfterRestart = data.resumes
+            const page = openLoginScreenWithProfile("uid_1")
+
+            const section = findChild(page, "loginStayLoggedInSection")
+            verify(!!section)
+            tryCompare(section, "visible", true)
+            const hint = findChild(section, "resumesAfterRestartText")
+            verify(!!hint)
+            compare(hint.visible, data.resumes)
         }
 
         function test_loginScreen_stayLoggedIn_followsStoredPreference_data() {

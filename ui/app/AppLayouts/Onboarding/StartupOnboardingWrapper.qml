@@ -221,6 +221,8 @@ Item {
         adoptingLogin: d.adoptingLogin
 
         privacyModeFeatureEnabled: root.featureFlagsStore.privacyModeFeatureEnabled
+        resumesAfterRestart: SQUtils.Utils.isAndroid
+                             && !!root.featureFlagsStore?.resumeAfterRestartEnabled
 
         onFinished: function(flow, data) {
             const error = root.onboardingStore.finishOnboardingFlow(flow, data)

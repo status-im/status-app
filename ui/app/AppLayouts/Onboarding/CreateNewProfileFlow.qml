@@ -7,6 +7,7 @@ OnboardingStackView {
 
     required property var passwordStrengthScoreFunction
     property bool stayLoggedInAvailable: false
+    property bool resumesAfterRestart: false
     property bool biometricsAvailable: false
 
     signal finished(string password)
@@ -16,6 +17,7 @@ OnboardingStackView {
     initialItem: CreatePasswordPage {
         passwordStrengthScoreFunction: root.passwordStrengthScoreFunction
         stayLoggedInAvailable: root.stayLoggedInAvailable
+        resumesAfterRestart: root.resumesAfterRestart
         biometricsAvailable: root.biometricsAvailable
 
         onStayLoggedInRequested: (enabled) => root.stayLoggedInRequested(enabled)

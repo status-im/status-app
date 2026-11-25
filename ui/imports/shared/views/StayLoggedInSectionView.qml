@@ -6,7 +6,6 @@ import StatusQ.Controls
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Components
-import StatusQ.Core.Utils as SQUtils
 
 Control {
     id: root
@@ -19,9 +18,8 @@ Control {
     // false where migration cannot be started (e.g. the login screen): the hint stays,
     // the migrate button is hidden
     property bool migrationActionAllowed: true
-    // Android boot login: the stored password also signs in after a phone restart or an
-    // app update
-    property bool resumesAfterRestart: SQUtils.Utils.isAndroid
+    // Android boot login is on: the stored password also signs in after a phone restart
+    property bool resumesAfterRestart: false
 
     // Migration to the new encryption format in progress (full re-encryption)
     property bool busy: false

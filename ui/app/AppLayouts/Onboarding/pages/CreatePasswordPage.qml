@@ -19,6 +19,8 @@ OnboardingPage {
 
     // Whether the "Stay logged in" opt-in is offered (requires platform secure storage)
     property bool stayLoggedInAvailable: false
+    // Android boot login is on (see StayLoggedInSectionView)
+    property bool resumesAfterRestart: false
     // Whether the biometrics opt-in is offered
     property bool biometricsAvailable: false
 
@@ -67,6 +69,7 @@ OnboardingPage {
                 Layout.fillWidth: true
                 visible: root.stayLoggedInAvailable
                 storageAvailable: root.stayLoggedInAvailable
+                resumesAfterRestart: root.resumesAfterRestart
                 profileMigrated: true // new profiles use the DEK encryption scheme from birth
                 stayLoggedInEnabled: d.stayLoggedIn
                 onToggleStayLoggedIn: (checked) => d.stayLoggedIn = !checked

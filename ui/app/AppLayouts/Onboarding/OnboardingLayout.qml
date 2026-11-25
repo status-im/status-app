@@ -25,6 +25,9 @@ Page {
     // Prompt-free secure storage backing the "Stay logged in" opt-in. Optional:
     // instantiation sites without it (tests, storybook) simply don't offer the opt-in.
     property SecureStorage secureStorage: null
+    // Android boot login is on: the "Stay logged in" section says the password also
+    // signs in after a phone restart
+    property bool resumesAfterRestart: false
 
     // Enables the silent auto-login attempt at startup. Kill-switched off in test
     // environments: the OS secure store is not per-data-dir, so a leftover developer
@@ -259,6 +262,7 @@ Page {
 
         biometricsAvailable: root.keychain.available
         stayLoggedInAvailable: root.secureStorage ? root.secureStorage.available : false
+        resumesAfterRestart: root.resumesAfterRestart
         stayLoggedIn: root.onboardingStore.stayLoggedIn
         isKeycardEnabled: root.isKeycardEnabled
         lastSelectedProfileKeyUid: root.lastSelectedProfileKeyUid
