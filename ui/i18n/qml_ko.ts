@@ -11696,12 +11696,12 @@ to load</source>
         <translation>답장</translation>
     </message>
     <message>
-        <source>Create Thread</source>
-        <translation>스레드 만들기</translation>
-    </message>
-    <message>
         <source>Open thread</source>
         <translation>스레드 열기</translation>
+    </message>
+    <message>
+        <source>Reply in thread</source>
+        <translation type="unfinished">스레드에서 답장</translation>
     </message>
     <message>
         <source>Edit</source>

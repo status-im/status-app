@@ -212,124 +212,75 @@ StatusMenu {
                 }
             }
 
-            StatusFlatRoundButton {
+            MsgActionButton {
                 objectName: "messageContextMenu_replyTo"
                 visible: !root.expanded && !root.disabledForChat
-                Layout.preferredWidth: d.singleRowActionSize
-                Layout.preferredHeight: d.singleRowActionSize
-                type: StatusFlatRoundButton.Type.Quaternary
                 icon.name: "reply"
-                icon.width: d.iconSize
-                icon.height: d.iconSize
-                icon.color: Theme.palette.primaryColor1
                 onClicked: {
                     root.showReplyArea(root.messageSenderId)
                     root.close()
                 }
-                onHoveredChanged: root.hoverChanged(hovered)
             }
 
-            StatusFlatRoundButton {
+            MsgActionButton {
                 objectName: "messageContextMenu_openThread"
                 Accessible.name: openThreadAction.text
                 visible: !root.expanded && d.threadActionVisible
-                Layout.preferredWidth: d.singleRowActionSize
-                Layout.preferredHeight: d.singleRowActionSize
-                type: StatusFlatRoundButton.Type.Quaternary
                 icon.name: "thread"
-                icon.width: d.iconSize
-                icon.height: d.iconSize
-                icon.color: Theme.palette.primaryColor1
                 onClicked: {
                     root.openThread()
                     root.close()
                 }
-                onHoveredChanged: root.hoverChanged(hovered)
             }
 
-            StatusFlatRoundButton {
+            MsgActionButton {
                 objectName: "messageContextMenu_edit"
                 visible: !root.expanded && d.editActionVisible
-                Layout.preferredWidth: d.singleRowActionSize
-                Layout.preferredHeight: d.singleRowActionSize
-                type: StatusFlatRoundButton.Type.Quaternary
                 icon.name: "edit_pencil"
-                icon.width: d.iconSize
-                icon.height: d.iconSize
-                icon.color: Theme.palette.primaryColor1
                 onClicked: {
                     root.editClicked()
                     root.close()
                 }
-                onHoveredChanged: root.hoverChanged(hovered)
             }
 
-            StatusFlatRoundButton {
+            MsgActionButton {
                 objectName: "messageContextMenu_markUnread"
                 visible: !root.expanded && !root.disabledForChat
-                Layout.preferredWidth: d.singleRowActionSize
-                Layout.preferredHeight: d.singleRowActionSize
-                type: StatusFlatRoundButton.Type.Quaternary
                 icon.name: "hide"
-                icon.width: d.iconSize
-                icon.height: d.iconSize
-                icon.color: Theme.palette.primaryColor1
                 onClicked: {
                     root.markMessageAsUnread()
                     root.close()
                 }
-                onHoveredChanged: root.hoverChanged(hovered)
             }
 
-            StatusFlatRoundButton {
+            MsgActionButton {
                 objectName: "messageContextMenu_copy"
                 visible: !root.expanded && (!!root.selectedText || d.canCopyMessage)
-                Layout.preferredWidth: d.singleRowActionSize
-                Layout.preferredHeight: d.singleRowActionSize
-                type: StatusFlatRoundButton.Type.Quaternary
                 icon.name: "copy"
-                icon.width: d.iconSize
-                icon.height: d.iconSize
-                icon.color: Theme.palette.primaryColor1
                 onClicked: {
                     root.copyToClipboard(!!root.selectedText ? root.selectedText : root.unparsedText)
                     root.close()
                 }
-                onHoveredChanged: root.hoverChanged(hovered)
             }
 
-            StatusFlatRoundButton {
+            MsgActionButton {
                 objectName: "messageContextMenu_pin"
                 visible: !root.expanded && d.compactPinActionVisible
-                Layout.preferredWidth: d.singleRowActionSize
-                Layout.preferredHeight: d.singleRowActionSize
-                type: StatusFlatRoundButton.Type.Quaternary
                 icon.name: root.pinnedMessage ? "unpin" : "pin"
-                icon.width: d.iconSize
-                icon.height: d.iconSize
-                icon.color: Theme.palette.primaryColor1
                 onClicked: {
                     if (root.pinnedMessage) root.unpinMessage()
                     else if (!root.canPin) root.pinnedMessagesLimitReached()
                     else root.pinMessage()
                     root.close()
                 }
-                onHoveredChanged: root.hoverChanged(hovered)
             }
 
-            StatusFlatRoundButton {
+            MsgActionButton {
                 objectName: "messageContextMenu_expand"
                 visible: !root.expanded
-                Layout.preferredWidth: d.singleRowActionSize
-                Layout.preferredHeight: d.singleRowActionSize
-                type: StatusFlatRoundButton.Type.Quaternary
                 icon.name: "more"
-                icon.width: d.iconSize
-                icon.height: d.iconSize
-                icon.color: Theme.palette.primaryColor1
                 icon.rotation: d.expandIconRotation
                 onClicked: root.expanded = true
-                onHoveredChanged: root.hoverChanged(hovered)
             }
         }
     }
@@ -360,7 +311,7 @@ StatusMenu {
     MsgCtxAction {
         id: openThreadAction
         objectName: "messageContextMenu_openThread"
-        text: root.hasThread ? qsTr("Open thread") : qsTr("Create Thread")
+        text: root.hasThread ? qsTr("Open thread") : qsTr("Reply in thread")
         icon.name: "thread"
         onTriggered: root.openThread()
         enabled: root.expanded && d.threadActionVisible
@@ -438,5 +389,15 @@ StatusMenu {
         icon.width: d.iconSize
         icon.height: d.iconSize
         fontSettings.pixelSize: root.Theme.primaryTextFontSize
+    }
+
+    component MsgActionButton: StatusFlatRoundButton {
+        Layout.preferredWidth: d.singleRowActionSize
+        Layout.preferredHeight: d.singleRowActionSize
+        type: StatusFlatRoundButton.Type.Quaternary
+        icon.width: d.iconSize
+        icon.height: d.iconSize
+        icon.color: Theme.palette.primaryColor1
+        onHoveredChanged: root.hoverChanged(hovered)
     }
 }

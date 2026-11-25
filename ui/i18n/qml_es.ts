@@ -11757,12 +11757,12 @@ al cargar</translation>
         <translation>Responder</translation>
     </message>
     <message>
-        <source>Create Thread</source>
-        <translation>Crear hilo</translation>
-    </message>
-    <message>
         <source>Open thread</source>
         <translation>Abrir hilo</translation>
+    </message>
+    <message>
+        <source>Reply in thread</source>
+        <translation type="unfinished">Responder en el hilo</translation>
     </message>
     <message>
         <source>Edit</source>

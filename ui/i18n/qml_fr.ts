@@ -11755,12 +11755,12 @@ chargement</translation>
         <translation>Répondre</translation>
     </message>
     <message>
-        <source>Create Thread</source>
-        <translation>Créer un fil</translation>
-    </message>
-    <message>
         <source>Open thread</source>
         <translation>Ouvrir le fil</translation>
+    </message>
+    <message>
+        <source>Reply in thread</source>
+        <translation type="unfinished">Répondre dans le fil</translation>
     </message>
     <message>
         <source>Edit</source>

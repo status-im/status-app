@@ -11818,12 +11818,12 @@ selhalo</translation>
         <translation>Odpovědět</translation>
     </message>
     <message>
-        <source>Create Thread</source>
-        <translation>Vytvořit vlákno</translation>
-    </message>
-    <message>
         <source>Open thread</source>
         <translation>Otevřít vlákno</translation>
+    </message>
+    <message>
+        <source>Reply in thread</source>
+        <translation type="unfinished">Odpovědět ve vlákně</translation>
     </message>
     <message>
         <source>Edit</source>
