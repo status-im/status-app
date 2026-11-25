@@ -9,6 +9,7 @@ from gui.elements.button import Button
 from gui.elements.object import QObject
 from gui.elements.text_edit import TextEdit
 from gui.objects_map import names
+from helpers.chat_helper import skip_message_backup_popup_if_visible
 
 _MESSAGING_TIMEOUT_MSEC = configs.timeouts.MESSAGING_TIMEOUT_SEC * 1000
 
@@ -70,6 +71,7 @@ class SendContactRequest(QObject):
         ), 'Send Contact Request button stayed disabled after filling fields'
         self._send_button.click()
         self.wait_until_hidden()
+        skip_message_backup_popup_if_visible()
 
     @allure.step('Verify resending contact request is blocked')
     def verify_resend_blocked(self, chat_key: str, message: str):
@@ -109,3 +111,4 @@ class SendContactRequestFromProfile(QObject):
     def send(self, message: str):
         self._message_text_edit.set_text_property(message)
         self._send_button.click()
+        skip_message_backup_popup_if_visible()

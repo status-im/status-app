@@ -43,6 +43,24 @@ Item {
             compare(calls, ["a"])
         }
 
+        function test_idleOnlyActionWaitsAndCoalescesWhileBusy() {
+            const queue = createQueue(false)
+            queue.busy = true
+            const calls = []
+            queue.schedule("backup", () => calls.push("first"), true)
+            queue.schedule("backup", () => calls.push("second"), true)
+            compare(calls, [])
+            compare(queue.pendingCount, 1)
+
+            queue.blocked = true
+            queue.busy = false
+            compare(calls, [])
+
+            queue.blocked = false
+            compare(calls, ["second"])
+            compare(queue.pendingCount, 0)
+        }
+
         function test_holdsWhileBlockedAndRunsInOrderOnUnblock() {
             const queue = createQueue(true)
             const calls = []

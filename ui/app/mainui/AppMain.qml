@@ -1255,6 +1255,18 @@ Item {
                                       () => popupRequestsHandler.maybeDisplayEnablePushNotificationsPopup())
         }
 
+        function scheduleMessageBackupPrompt() {
+            if (!messageBackupPromptTriggerLoader.item)
+                return
+
+            popupRequestsHandler.invoke(() => {
+                loginPopupsQueue.schedule("enableMessageBackup", () => {
+                    if (messageBackupPromptTriggerLoader.item)
+                        popupRequestsHandler.maybeDisplayEnableMessageBackupPopup()
+                }, true)
+            })
+        }
+
         function goToSupportChatBot() {
             if (!d.supportBotPublicKey) {
                 console.warn("Unable to resolve the Status support bot chat key")
@@ -1279,6 +1291,9 @@ Item {
     Settings {
         id: appMainLocalSettings
         category: "AppMainLocalSettings_%1".arg(d.myPublicKey)
+        property bool enableMessageBackupPopupSeen: false
+        property int messageBackupVisitCount: 0
+        property bool messageBackupContactRequestCompleted: false
         property var whitelistedUnfurledDomains: []
         property string skinColor  // a name, not a `#rrggbb` value
         property int theme: ThemeUtils.Style.System
@@ -1387,6 +1402,7 @@ Item {
         id: popupRequestsHandler
 
         popupParent: appMain
+        messageBackupSettings: appMainLocalSettings
 
         // Stores:
         rootStore: appMain.rootStore
@@ -2324,13 +2340,6 @@ Item {
                             console.error("AppMain: Unknown section type")
                         }
                     }
-                    onCurrentIndexChanged: {
-                        // We cannot use isMessagingRelatedSectionType here because it is not updated yet
-                        if (d.activeSectionType === Constants.appSection.chat || d.activeSectionType === Constants.appSection.community)
-                            loginPopupsQueue.schedule("messagingSection",
-                                                      () => popupRequestsHandler.maybeDisplayEnableMessageBackupPopup())
-                    }
-
                     // NOTE:
                     // If we ever change stack layout component order we need to updade
                     // Constants.appViewStackIndex accordingly
@@ -2980,6 +2989,28 @@ Item {
         sequence: "Ctrl+,"
         onActivated: globalConns.onAppSectionBySectionTypeChanged(Constants.appSection.profile,
                                                                   Utils.getSettingsSubsectionForSection(d.activeSectionType))
+    }
+
+    Loader {
+        id: messageBackupPromptTriggerLoader
+
+        active: appMain.mainReady && !!d.myPublicKey && !appMainLocalSettings.enableMessageBackupPopupSeen
+
+        sourceComponent: MessageBackupPromptTrigger {
+            settings: appMainLocalSettings
+            sessionReady: appMain.mainReady
+            sectionId: appMain.rootStore.activeSectionId
+            sectionType: d.activeSectionType
+            onPromptRequested: Qt.callLater(d.scheduleMessageBackupPrompt)
+        }
+    }
+
+    Connections {
+        target: messageBackupPromptTriggerLoader.item ? appMain.contactsStore : null
+
+        function onLocalContactRequestCompleted() {
+            messageBackupPromptTriggerLoader.item?.recordSuccessfulContactRequest()
+        }
     }
 
     DeferredActionQueue {
