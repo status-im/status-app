@@ -6,7 +6,10 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $PluginRepo = if ($env:PLUGIN_REPO) { $env:PLUGIN_REPO } else { 'https://github.com/status-im/status-qml-inspector.git' }
-$PluginRef = if ($env:PLUGIN_REF) { $env:PLUGIN_REF } else { 'edbf498b167750d2d08aae8093de07339219a507' }
+$versions = @{}
+Get-Content (Join-Path $PSScriptRoot 'versions.env') | Where-Object { $_ -match '^(\w+)=(.*)$' } | ForEach-Object { $versions[$Matches[1]] = $Matches[2] }
+$PluginRef = if ($env:PLUGIN_REF) { $env:PLUGIN_REF } else { $versions.PLUGIN_REF }
+$QtVersion = $versions.QT_VERSION
 
 function Fail([string]$Message) {
     [Console]::Error.WriteLine("setup: $Message")
@@ -34,7 +37,7 @@ New-Item -ItemType Directory -Force -Path $qtCache | Out-Null
 if ($env:QT_PREFIX) {
     $qt = (Resolve-Path $env:QT_PREFIX).Path
 } else {
-    $qt = Join-Path $qtCache '6.11.0\msvc2022_64'
+    $qt = Join-Path $qtCache "$QtVersion\msvc2022_64"
     if (-not (Test-Path (Join-Path $qt 'lib\cmake\Qt6\Qt6Config.cmake'))) {
         $python = $env:SETUP_PYTHON
         if (-not $python) {
@@ -48,9 +51,10 @@ if ($env:QT_PREFIX) {
         $aqtVenv = Join-Path $qtCache 'aqt-venv'
         if (-not (Test-Path (Join-Path $aqtVenv 'Scripts\aqt.exe'))) {
             & $python -m venv $aqtVenv
-            & (Join-Path $aqtVenv 'Scripts\python.exe') -m pip install --quiet aqtinstall
+            # Not released yet: 3.3.0 does not know where Qt 6.11 for Windows is.
+            & (Join-Path $aqtVenv 'Scripts\python.exe') -m pip install --quiet 'git+https://github.com/miurahr/aqtinstall@5a49f2b391ae8ee1d3c0dd87f8b33c1d49a4deb7'
         }
-        & (Join-Path $aqtVenv 'Scripts\aqt.exe') install-qt windows desktop 6.11.0 win64_msvc2022_64 -O $qtCache --timeout 3000
+        & (Join-Path $aqtVenv 'Scripts\aqt.exe') install-qt windows desktop $QtVersion win64_msvc2022_64 -O $qtCache --timeout 3000
     }
 }
 
@@ -65,6 +69,11 @@ if ($env:PLUGIN_SRC) {
 }
 
 try {
+    # The source is cloned to a new directory each time; an earlier configuration names the old one.
+    foreach ($stale in 'CMakeCache.txt', 'CMakeFiles') {
+        $path = Join-Path $out $stale
+        if (Test-Path $path) { Remove-Item -Recurse -Force $path }
+    }
     cmake -S (Join-Path $src 'qt-plugin\generic-plugin') -B $out -G 'Visual Studio 17 2022' -A x64 `
         "-DCMAKE_PREFIX_PATH=$qt" '-DQMLINSPECTOR_QUICKWIDGETS=OFF'
     cmake --build $out --config Release
