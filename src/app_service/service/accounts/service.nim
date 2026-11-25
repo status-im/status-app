@@ -538,6 +538,14 @@ QtObject:
       return buildBootLoginRecord(keyUid,
         status_account.initializeApplicationRequest(main_constants.STATUSGODIR), request.toJson())
 
+  proc bootLoginRecordForResumedSession*(self: Service): string =
+    ## The record a resumed session keeps current (see resumedSessionKeepsBootLoginRecord).
+    let account = self.getLoggedInAccount()
+    if not resumedSessionKeepsBootLoginRecord(singletonInstance.localAccountSettings.getStayLoggedIn(),
+        keycardProfile = account.keycardPairing.len > 0):
+      return ""
+    self.bootLoginRecord(account.keyUid)
+
   proc login*(self: Service, account: AccountDto, hashedPassword: string, chatPrivateKey: string = "", mnemonic: string = "",
     walletXPub: string = "", dek: string = "") =
     try:

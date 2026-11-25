@@ -559,6 +559,8 @@ Window {
 
             anchors.fill: parent
 
+            onLoaded: bootLoginRecordGuard.keepCurrent(item.resumedBootLoginRecord)
+
             sourceComponent: SessionRoot {
                 featureFlagsStore: applicationWindow.featureFlagsStore
                 languageStore: applicationWindow.languageStore

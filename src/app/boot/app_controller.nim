@@ -379,6 +379,8 @@ proc initializeQmlContext(self: AppController) =
 
   # Expose a lightweight login flag that is available as soon as `main.qml` starts evaluating.
   singletonInstance.setSessionContextProperty("skipOnboardingContextProperty", newQVariant(self.resumeLogin))
+  singletonInstance.setSessionContextProperty("resumedBootLoginRecordContextProperty",
+    newQVariant(if self.resumeLogin: self.accountsService.bootLoginRecordForResumedSession() else: ""))
 
   # Load keycard channel module (available before login for Session API)
   self.keycardChannelModule.load()

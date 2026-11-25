@@ -52,3 +52,14 @@ suite "buildBootLoginRecord":
 
   test "no profile, no record":
     check buildBootLoginRecord("", initRequest, loginRequest) == ""
+
+suite "resumedSessionKeepsBootLoginRecord":
+
+  test "a resumed password profile with Stay logged in on keeps its record current":
+    check resumedSessionKeepsBootLoginRecord(stayLoggedIn = true, keycardProfile = false)
+
+  test "Stay logged in off: no record":
+    check not resumedSessionKeepsBootLoginRecord(stayLoggedIn = false, keycardProfile = false)
+
+  test "a keycard profile never gets a record":
+    check not resumedSessionKeepsBootLoginRecord(stayLoggedIn = true, keycardProfile = true)

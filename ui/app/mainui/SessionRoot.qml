@@ -41,6 +41,10 @@ Item {
     readonly property bool skipOnboarding: typeof skipOnboardingContextProperty !== "undefined"
                                            ? skipOnboardingContextProperty
                                            : false
+    // The resumed session's boot-login record, "" when none may be kept (see BootLoginRecordGuard)
+    readonly property string resumedBootLoginRecord: typeof resumedBootLoginRecordContextProperty !== "undefined"
+                                                     ? resumedBootLoginRecordContextProperty
+                                                     : ""
 
     function tryGoBack() : bool {
         return !!appMainLoader.item && !!appMainLoader.item.tryGoBack && appMainLoader.item.tryGoBack()

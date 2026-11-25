@@ -22,3 +22,9 @@ proc buildBootLoginRecord*(keyUid: string, initRequest: JsonNode, loginRequest: 
     "initRequest": initRequest,
     "loginRequest": login,
   })
+
+proc resumedSessionKeepsBootLoginRecord*(stayLoggedIn: bool, keycardProfile: bool): bool =
+  ## A resumed session (the app adopted a running login, e.g. a boot login) runs no
+  ## post-login tasks, yet must leave a current record for the next phone restart, under
+  ## the same rule as the stay-logged-in task: the preference on, never a keycard profile.
+  stayLoggedIn and not keycardProfile
