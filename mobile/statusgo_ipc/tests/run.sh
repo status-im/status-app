@@ -17,6 +17,7 @@ done
 # org.json (the real implementation; android.jar only ships stubs).
 JAVA_ROOT="$HERE/../../android/qt6"
 JAVA_SOURCES=(
+  "$JAVA_ROOT/src/app/status/mobile/SecureStoreProcess.java"
   "$JAVA_ROOT/src/app/status/mobile/ipc/BootLogin.java"
   "$JAVA_ROOT/src/app/status/mobile/ipc/NotificationReplySignal.java"
   "$JAVA_ROOT/src/app/status/mobile/ipc/SignalEnvelope.java"

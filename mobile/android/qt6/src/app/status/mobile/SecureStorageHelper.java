@@ -69,9 +69,13 @@ public final class SecureStorageHelper {
     }
 
     private final Context mContext;
+    private final int mPrefsMode;
 
     private SecureStorageHelper(Context ctx) {
         this.mContext = ctx;
+        this.mPrefsMode = SecureStoreProcess.reloadsBeforeEveryAccess(android.app.Application.getProcessName())
+                ? Context.MODE_MULTI_PROCESS
+                : Context.MODE_PRIVATE;
     }
 
     /** Keystore reachable and usable (never prompts, never throws). */
@@ -314,7 +318,8 @@ public final class SecureStorageHelper {
     // ====== Storage helpers ======
 
     private android.content.SharedPreferences prefs() {
-        return mContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        // MODE_MULTI_PROCESS in :statusgo: see SecureStoreProcess.reloadsBeforeEveryAccess
+        return mContext.getSharedPreferences(PREFS_NAME, mPrefsMode);
     }
 
     /** @throws IllegalArgumentException on malformed Base64 (handled as corruption). */
