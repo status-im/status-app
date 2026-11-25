@@ -164,9 +164,19 @@ pipeline {
       }
     }
 
+    stage('Driver unit tests') {
+      steps { timeout(5) { dir('test/e2e') {
+        sh 'python3 -m pytest driver/tests -v'
+      } } }
+    }
+
     stage('Plugin') {
       steps { timeout(30) {
-        sh "test/e2e/scripts/inspector/build-plugin.sh ${WORKSPACE_TMP}/qmlinspector"
+        /* build-plugin.sh mounts its sources into a container started on the host's Docker,
+         * so they must live in a path the host shares with this agent container. */
+        withEnv(["TMPDIR=${WORKSPACE_TMP}", "QT_CACHE=${WORKSPACE_TMP}/qt"]) {
+          sh "test/e2e/scripts/inspector/build-plugin.sh ${WORKSPACE_TMP}/qmlinspector"
+        }
       } }
     }
 
