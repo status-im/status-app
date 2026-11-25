@@ -36,6 +36,8 @@ public final class NotificationBuilder {
     private static final String TAG = "NotificationBuilder";
 
     static final String CHANNEL_ID_MESSAGES = "statusgo-messages";
+    /** Service notices such as a failed boot login, kept apart so muting Messages keeps them. */
+    static final String CHANNEL_ID_SERVICE = "statusgo-service";
 
     /** Key for RemoteInput reply text. */
     public static final String REPLY_REMOTE_INPUT_KEY = "reply_text";
@@ -54,6 +56,7 @@ public final class NotificationBuilder {
     private static final int NOTIFICATION_SMALL_ICON = R.drawable.ic_notification_status_logo;
     /** ID for "reply failed" notifications. */
     private static final int REPLY_FAILED_NOTIFICATION_ID = 4243;
+    private static final int BOOT_LOGIN_FAILED_NOTIFICATION_ID = 4244;
 
     /**
      * Notification identity for a conversation. Thread messages get their own stack: the
@@ -86,6 +89,21 @@ public final class NotificationBuilder {
 
 
     // ── Notification channels ─────────────────────────────────────────────────
+
+    /** Ensures the low-importance "Status service" channel exists (Android O+). */
+    private static void createServiceChannel(Context context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
+        NotificationManager nm = (NotificationManager) context.getSystemService(
+                Context.NOTIFICATION_SERVICE);
+        if (nm == null) return;
+        NotificationChannel ch = new NotificationChannel(
+                CHANNEL_ID_SERVICE,
+                "Status service",
+                NotificationManager.IMPORTANCE_LOW
+        );
+        ch.setDescription("Notices about the Status background service");
+        nm.createNotificationChannel(ch);
+    }
 
     /** Ensures the "Messages" notification channel exists (Android O+). */
     public static void createMessagesChannel(Context context) {
@@ -252,6 +270,30 @@ public final class NotificationBuilder {
             NotificationManagerCompat.from(context).notify(REPLY_FAILED_NOTIFICATION_ID, builder.build());
         } catch (Throwable t) {
             Log.w(TAG, "postReplyFailed failed", t);
+        }
+    }
+
+    // ── Boot-login-failed notification ────────────────────────────────────────
+
+    /** Tells the user a boot login failed; tapping it opens the app normally. */
+    public static void postBootLoginFailed(Context context) {
+        if (context == null) return;
+        try {
+            createServiceChannel(context);
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID_SERVICE)
+                    .setSmallIcon(NOTIFICATION_SMALL_ICON)
+                    .setContentTitle(context.getString(R.string.notification_boot_login_failed))
+                    .setPriority(NotificationCompat.PRIORITY_LOW)
+                    .setAutoCancel(true);
+            Intent intent = buildTapIntent(context, null);
+            if (intent != null) {
+                builder.setContentIntent(PendingIntent.getActivity(
+                        context, BOOT_LOGIN_FAILED_NOTIFICATION_ID, intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE));
+            }
+            NotificationManagerCompat.from(context).notify(BOOT_LOGIN_FAILED_NOTIFICATION_ID, builder.build());
+        } catch (Throwable t) {
+            Log.w(TAG, "postBootLoginFailed failed", t);
         }
     }
 

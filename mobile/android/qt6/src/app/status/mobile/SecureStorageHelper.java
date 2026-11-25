@@ -51,6 +51,10 @@ public final class SecureStorageHelper {
     // The boot-login record's own entry. Account entries are keyed by key UID ("0x..."),
     // so this can never collide with an account's credential.
     public static final String BOOT_LOGIN_RECORD_KEY = "status.bootLoginRecord";
+    // A boot login attempt of the record is in progress (a plain flag, not a credential). It has
+    // its own file, so its commits from :statusgo never rewrite the credential/record map.
+    private static final String ATTEMPT_PREFS_NAME = "StatusBootLoginAttempt";
+    private static final String BOOT_LOGIN_ATTEMPT_KEY = "status.bootLoginAttempt";
 
     // Status codes (kept in sync with securestorage_android.cpp).
     public static final int STATUS_OK = 1;
@@ -203,6 +207,16 @@ public final class SecureStorageHelper {
         }
     }
 
+    /** Whether exactly one half of the {iv, ct} pair is stored. Read-only: wipes nothing. */
+    public boolean hasIncompletePair(String account) {
+        try {
+            return prefs().contains(KEY_IV_PREFIX + account) != prefs().contains(KEY_CT_PREFIX + account);
+        } catch (Throwable t) {
+            Log.w(TAG, "hasIncompletePair failed", t);
+            return false;
+        }
+    }
+
     /** Remove the stored blob for an account. */
     public int deleteCredential(String account) {
         try {
@@ -225,7 +239,8 @@ public final class SecureStorageHelper {
             final org.json.JSONObject record = new org.json.JSONObject(recordJson);
             record.put("versionCode", androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(
                     mContext.getPackageManager().getPackageInfo(mContext.getPackageName(), 0)));
-            return setCredential(BOOT_LOGIN_RECORD_KEY, record.toString());
+            return app.status.mobile.ipc.BootLoginRecordStore.writeFromUi(mContext, record.toString())
+                    ? STATUS_OK : STATUS_ERROR;
         } catch (Throwable t) {
             Log.w(TAG, "setBootLoginRecord failed", t);
             return STATUS_ERROR;
@@ -239,6 +254,31 @@ public final class SecureStorageHelper {
 
     public int deleteBootLoginRecord() {
         return deleteCredential(BOOT_LOGIN_RECORD_KEY);
+    }
+
+    /** Whether a boot login attempt was started and has not finished. */
+    public boolean hasBootLoginAttempt() {
+        try {
+            return attemptPrefs().getBoolean(BOOT_LOGIN_ATTEMPT_KEY, false);
+        } catch (Throwable t) {
+            Log.w(TAG, "hasBootLoginAttempt failed", t);
+            return false;
+        }
+    }
+
+    /** Marks or clears the boot login attempt, synchronously. */
+    public void setBootLoginAttempt(boolean inProgress) {
+        try {
+            final android.content.SharedPreferences.Editor edit = attemptPrefs().edit();
+            if (inProgress) {
+                edit.putBoolean(BOOT_LOGIN_ATTEMPT_KEY, true);
+            } else {
+                edit.remove(BOOT_LOGIN_ATTEMPT_KEY);
+            }
+            if (!edit.commit()) Log.w(TAG, "setBootLoginAttempt: commit failed");
+        } catch (Throwable t) {
+            Log.w(TAG, "setBootLoginAttempt failed", t);
+        }
     }
 
     // ====== Keystore helpers ======
@@ -320,6 +360,10 @@ public final class SecureStorageHelper {
         // a stale map that brings back an entry the other one removed (e.g. the boot-login
         // record): a reload racing the other process's commit can still lose that commit.
         return mContext.getSharedPreferences(PREFS_NAME, Context.MODE_MULTI_PROCESS);
+    }
+
+    private android.content.SharedPreferences attemptPrefs() {
+        return mContext.getSharedPreferences(ATTEMPT_PREFS_NAME, Context.MODE_MULTI_PROCESS);
     }
 
     /** @throws IllegalArgumentException on malformed Base64 (handled as corruption). */

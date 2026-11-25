@@ -2,4 +2,5 @@
 <full-backup-content>
     <exclude domain="sharedpref" path="QtAT_Keychain.xml" />
     <exclude domain="sharedpref" path="StatusSecureStorage.xml" />
+    <exclude domain="sharedpref" path="StatusBootLoginAttempt.xml" />
 </full-backup-content>

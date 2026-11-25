@@ -12,6 +12,15 @@ import org.json.JSONObject;
  * prompt-free secure store and calls status-go's InitializeApplication and LoginAccount. It
  * never builds a login request itself.
  *
+ * <p>A failed boot login deletes the record, stops the service unless a UI is bound and posts
+ * one notification unless a UI is visible. There is no retry, and this class never deletes the
+ * "Stay logged in" credential (the store itself may wipe one it cannot decrypt).
+ *
+ * <p>Crash-loop guard: a persistent marker is set before each replay and cleared when it ends.
+ * A replay that finds it still set (the last one ended the process) fails instead, so a
+ * record costs at most one crash. A deliberate stop (ACTION_STOP) clears it, and a second
+ * trigger while a replay runs in this process is a no-op.
+ *
  * <p>It also owns the pause rule: logged in with no visible UI means paused, the same state
  * as a backgrounded app (messaging stays on).
  */
@@ -19,19 +28,68 @@ final class BootLogin {
     private static final String DEK_PREFIX = "dek:";
     private static final int DEK_HEX_LENGTH = 64;
 
-    interface RecordStore {
-        /** The boot-login record JSON, or null when there is none. */
-        String read();
+    /**
+     * How long a boot login waits for node.login after LoginAccount. LoginAccount includes
+     * opening the database, so the first boot login after an app update runs the migrations,
+     * which can take minutes on a low-end device with a large database.
+     */
+    static final long LOGIN_TIMEOUT_MS = 5 * 60_000L;
 
-        /** Whether a record is stored, without decrypting it. */
-        boolean exists();
+    /** The secure store cannot give the entry: a backend error, or a corrupt entry. */
+    static final class StoreException extends Exception {
+        /** True for a corrupt entry (an incomplete blob pair), false for a store error. */
+        final boolean corrupt;
+
+        StoreException(boolean corrupt) {
+            this.corrupt = corrupt;
+        }
+    }
+
+    interface RecordStore {
+        /** Whether the record is stored, checked without decrypting it. */
+        boolean exists() throws StoreException;
+
+        /** The boot-login record JSON, or null when there is none. */
+        String read() throws StoreException;
 
         void delete();
+
+        /** Stores a new record; true when it was stored. */
+        boolean write(String recordJson);
+
+        /** Whether a boot login attempt was started and never finished (the process died). */
+        boolean attemptPending();
+
+        /** Notes a boot login attempt in progress. Persistent, like the record. */
+        void markAttempt();
+
+        void clearAttempt();
+    }
+
+    /** The prompt-free secure store's presence checks for one entry. */
+    interface EntryStore {
+        /** Whether only one half of the entry's {iv, ct} pair is stored. Read-only. */
+        boolean hasIncompletePair(String account);
+
+        /** Whether the entry is stored; wipes a corrupt entry and reports it absent. */
+        boolean exists(String account) throws StoreException;
+    }
+
+    /**
+     * Presence at rest. The store's own check wipes a half {iv, ct} pair and reports it absent,
+     * so a half pair is checked first and reported as corrupt.
+     */
+    static boolean entryExists(EntryStore store, String account) throws StoreException {
+        if (store.hasIncompletePair(account)) throw new StoreException(true);
+        return store.exists(account);
     }
 
     interface CredentialSource {
+        /** Whether the credential is stored, checked without decrypting it. */
+        boolean exists(String keyUid) throws StoreException;
+
         /** The account's "Stay logged in" credential, or null when there is none. */
-        String credential(String keyUid);
+        String credential(String keyUid) throws StoreException;
     }
 
     interface StatusGo {
@@ -56,10 +114,23 @@ final class BootLogin {
 
     interface Stopper {
         void stop();
+
+        /** Stops the service and ends its process, as ACTION_STOP does. */
+        void endProcess();
     }
 
     interface Notifier {
         void bootLoginFailed();
+    }
+
+    interface Scheduler {
+        void schedule(Runnable task, long delayMs);
+
+        void cancel(Runnable task);
+    }
+
+    interface Logger {
+        void warn(String message);
     }
 
     private final boolean enabled;
@@ -69,13 +140,25 @@ final class BootLogin {
     private final Pauser pauser;
     private final Ui ui;
     private final Stopper stopper;
-    @SuppressWarnings("unused")
     private final Notifier notifier;
-    // The login request was accepted: the next node.login is the boot login's outcome
-    private volatile boolean awaitingNodeLogin;
+    private final Scheduler scheduler;
+    private final Logger log;
+
+    private final Object lock = new Object();
+    /** A boot login sent LoginAccount and its node.login has not arrived yet. */
+    private boolean awaitingNodeLogin;
+    /**
+     * A replay marked its attempt in this process and has not ended. A second trigger in the
+     * same process (MY_PACKAGE_REPLACED after BOOT_COMPLETED) must not read that marker as a
+     * crash.
+     */
+    private boolean replaying;
+    private final Runnable loginTimeout = () -> {
+        if (takeAwaitingNodeLogin()) timedOut();
+    };
 
     BootLogin(boolean enabled, RecordStore records, CredentialSource credentials, StatusGo statusGo, Pauser pauser,
-            Ui ui, Stopper stopper, Notifier notifier) {
+            Ui ui, Stopper stopper, Notifier notifier, Scheduler scheduler, Logger log) {
         this.enabled = enabled;
         this.records = records;
         this.credentials = credentials;
@@ -84,14 +167,34 @@ final class BootLogin {
         this.ui = ui;
         this.stopper = stopper;
         this.notifier = notifier;
+        this.scheduler = scheduler;
+        this.log = log;
+    }
+
+    /**
+     * The UI's record write. A new record has had no boot login yet, so it also clears an
+     * unfinished attempt left by an older one.
+     */
+    static boolean writeRecord(RecordStore records, String recordJson) {
+        if (!records.write(recordJson)) return false;
+        records.clearAttempt();
+        return true;
     }
 
     /**
      * BOOT_COMPLETED: whether to start the service for a boot login. Without a record nothing
      * starts; with the feature off (RESUME_AFTER_RESTART_ENABLED) any record is removed.
+     * A corrupt record (an incomplete blob pair) starts it too, so the failure path deletes
+     * the record and notifies instead of the boot doing nothing.
      */
     static boolean startsOnBoot(boolean enabled, RecordStore records) {
-        if (!records.exists()) return false;
+        boolean stored;
+        try {
+            stored = records.exists();
+        } catch (StoreException e) {
+            stored = e.corrupt;
+        }
+        if (!stored) return false;
         if (!enabled) {
             records.delete();
             return false;
@@ -110,8 +213,8 @@ final class BootLogin {
 
     /**
      * Replays the boot-login record. Returns true when status-go accepted the login request;
-     * the outcome arrives later as node.login. With nothing to replay, or when the login fails,
-     * the service stops unless a UI is bound.
+     * the outcome arrives later as node.login. With nothing to replay, the service stops unless
+     * a UI is bound.
      */
     boolean run() {
         if (!enabled) {
@@ -119,49 +222,162 @@ final class BootLogin {
             stopUnlessUiBound();
             return false;
         }
-        final JSONObject record = parse(records.read());
+        synchronized (lock) {
+            if (replaying) return false;
+        }
+        // The store wipes an entry it cannot decrypt and then reports it absent, so whether
+        // there was anything to replay is decided before decrypting.
+        final String recordJson;
+        try {
+            if (!records.exists()) {
+                stopUnlessUiBound();
+                return false;
+            }
+            // Crash-loop guard: the last replay of this record never finished, so it ended
+            // the process (a crash, OOM). Replaying it again would only repeat that.
+            if (records.attemptPending()) {
+                fail("the previous boot login never finished");
+                return false;
+            }
+            recordJson = records.read();
+        } catch (StoreException e) {
+            fail("record " + describe(e));
+            return false;
+        }
+        if (recordJson == null) {
+            fail("record undecryptable (the store wiped it)");
+            return false;
+        }
+
+        final JSONObject record = parse(recordJson);
         final String keyUid = record == null ? "" : record.optString("keyUid", "");
         final JSONObject initRequest = record == null ? null : record.optJSONObject("initRequest");
         final JSONObject loginRequest = record == null ? null : record.optJSONObject("loginRequest");
-        final String dek = keyUid.isEmpty() ? null : dekFrom(credentials.credential(keyUid));
-        if (initRequest == null || loginRequest == null || dek == null) {
+        if (keyUid.isEmpty() || initRequest == null || loginRequest == null) {
+            fail("corrupt record");
+            return false;
+        }
+
+        final String credential;
+        try {
+            if (!credentials.exists(keyUid)) {
+                stopUnlessUiBound();
+                return false;
+            }
+            credential = credentials.credential(keyUid);
+        } catch (StoreException e) {
+            fail("credential " + describe(e));
+            return false;
+        }
+        if (credential == null) {
+            fail("credential undecryptable (the store wiped it)");
+            return false;
+        }
+        final String dek = dekFrom(credential);
+        if (dek == null) {
             stopUnlessUiBound();
             return false;
         }
 
+        synchronized (lock) {
+            replaying = true;
+        }
+        records.markAttempt();
         if (!succeeded(statusGo.call("InitializeApplication", args(initRequest.toString())))) {
-            stopUnlessUiBound();
+            fail("InitializeApplication rejected");
             return false;
         }
         try {
             loginRequest.put("dek", dek);
         } catch (Exception e) {
-            stopUnlessUiBound();
+            fail("cannot add the DEK to the login request");
             return false;
         }
-        awaitingNodeLogin = true;
+
+        synchronized (lock) {
+            awaitingNodeLogin = true;
+        }
+        scheduler.schedule(loginTimeout, LOGIN_TIMEOUT_MS);
         if (!succeeded(statusGo.call("LoginAccount", args(loginRequest.toString())))) {
-            awaitingNodeLogin = false;
-            stopUnlessUiBound();
+            if (takeAwaitingNodeLogin()) fail("LoginAccount rejected");
             return false;
         }
         return true;
     }
 
     /**
-     * For every node.login. The pause rule: logged in with no visible UI means paused. A failed
-     * boot login stops the service unless a UI is bound.
+     * For every node.login: ends a pending boot login (an error fails it), then applies the
+     * pause rule: logged in with no visible UI means paused.
      */
     void onNodeLogin(String signalJson) {
-        final boolean bootLoginOutcome = awaitingNodeLogin;
-        awaitingNodeLogin = false;
         final JSONObject signal = parse(signalJson);
         final JSONObject event = signal == null ? null : signal.optJSONObject("event");
-        if (event == null || !event.optString("error", "").isEmpty()) {
-            if (bootLoginOutcome) stopUnlessUiBound();
-            return;
+        final boolean loggedIn = event != null && event.optString("error", "").isEmpty();
+        if (takeAwaitingNodeLogin()) {
+            if (!loggedIn) {
+                fail("node.login error");
+                return;
+            }
+            endAttempt();
         }
-        if (!ui.visible()) pauser.pauseServices(() -> !ui.visible());
+        if (loggedIn && !ui.visible()) pauser.pauseServices(() -> !ui.visible());
+    }
+
+    /**
+     * ACTION_STOP: a deliberate stop, not a crash, so a replay running in this process clears
+     * its attempt marker and the next boot replays the record again.
+     */
+    void onStop() {
+        if (takeReplaying()) records.clearAttempt();
+    }
+
+    /** Clears the pending boot login; true when there was one. */
+    private boolean takeAwaitingNodeLogin() {
+        synchronized (lock) {
+            if (!awaitingNodeLogin) return false;
+            awaitingNodeLogin = false;
+        }
+        scheduler.cancel(loginTimeout);
+        return true;
+    }
+
+    private void fail(String reason) {
+        log.warn("boot login failed: " + reason);
+        records.delete();
+        endAttempt();
+        if (!ui.visible()) notifier.bootLoginFailed();
+        stopUnlessUiBound();
+    }
+
+    /**
+     * No node.login in time. status-go may still finish the login inside this process, so
+     * with no UI the process ends rather than live on half logged in behind the failure
+     * notification. A bound UI gets the late node.login and handles it.
+     */
+    private void timedOut() {
+        log.warn("boot login failed: no node.login within " + LOGIN_TIMEOUT_MS + " ms");
+        records.delete();
+        endAttempt();
+        if (ui.bound()) return;
+        notifier.bootLoginFailed();
+        stopper.endProcess();
+    }
+
+    private void endAttempt() {
+        takeReplaying();
+        records.clearAttempt();
+    }
+
+    private boolean takeReplaying() {
+        synchronized (lock) {
+            final boolean was = replaying;
+            replaying = false;
+            return was;
+        }
+    }
+
+    private static String describe(StoreException e) {
+        return e.corrupt ? "undecryptable (incomplete blob pair)" : "store error";
     }
 
     private void stopUnlessUiBound() {

@@ -32,6 +32,7 @@ import org.json.JSONObject;
 
 import app.status.mobile.BuildConfig;
 import app.status.mobile.R;
+import app.status.mobile.ipc.notifications.NotificationBuilder;
 import app.status.mobile.ipc.notifications.StatusNotificationManager;
 import im.status.mobileui.PushNotificationHelper;
 
@@ -137,11 +138,18 @@ public final class StatusGoService extends Service {
     private final BootLogin bootLogin = new BootLogin(
             app.status.mobile.BuildFlags.RESUME_AFTER_RESTART_ENABLED,
             new BootLoginRecordStore(this),
-            keyUid -> {
-                final String[] out = new String[1];
-                final int status = app.status.mobile.SecureStorageHelper.getInstance(this)
-                        .getCredential(keyUid, out);
-                return status == app.status.mobile.SecureStorageHelper.STATUS_OK ? out[0] : null;
+            new BootLogin.CredentialSource() {
+                @Override
+                public boolean exists(String keyUid) throws BootLogin.StoreException {
+                    return secureEntryExists(StatusGoService.this, keyUid);
+                }
+
+                @Override
+                public String credential(String keyUid) throws BootLogin.StoreException {
+                    final String[] out = new String[1];
+                    return secureEntry(app.status.mobile.SecureStorageHelper.getInstance(
+                            StatusGoService.this).getCredential(keyUid, out), out);
+                }
             },
             StatusGoService::callRpc,
             stillHidden -> scheduleBackendLifecycleUpdate(false, stillHidden),
@@ -156,8 +164,58 @@ public final class StatusGoService extends Service {
                     return listeners.getRegisteredCallbackCount() > 0;
                 }
             },
-            this::stopBootLoginService,
-            () -> {});
+            new BootLogin.Stopper() {
+                @Override
+                public void stop() {
+                    stopBootLoginService();
+                }
+
+                @Override
+                public void endProcess() {
+                    stopAndEndProcess();
+                }
+            },
+            () -> NotificationBuilder.postBootLoginFailed(this),
+            new BootLogin.Scheduler() {
+                @Override
+                public void schedule(Runnable task, long delayMs) {
+                    mainHandler.postDelayed(task, delayMs);
+                }
+
+                @Override
+                public void cancel(Runnable task) {
+                    mainHandler.removeCallbacks(task);
+                }
+            },
+            message -> Log.w(TAG, message));
+
+    /** A secure-store read as BootLogin sees it: the value, null when absent, or a throw. */
+    static String secureEntry(int status, String[] out) throws BootLogin.StoreException {
+        if (status == app.status.mobile.SecureStorageHelper.STATUS_OK) return out[0];
+        if (status == app.status.mobile.SecureStorageHelper.STATUS_NOT_FOUND) return null;
+        throw new BootLogin.StoreException(false);
+    }
+
+    /** Presence at rest, see BootLogin.entryExists. */
+    static boolean secureEntryExists(android.content.Context context, String account)
+            throws BootLogin.StoreException {
+        final app.status.mobile.SecureStorageHelper store =
+                app.status.mobile.SecureStorageHelper.getInstance(context);
+        return BootLogin.entryExists(new BootLogin.EntryStore() {
+            @Override
+            public boolean hasIncompletePair(String entry) {
+                return store.hasIncompletePair(entry);
+            }
+
+            @Override
+            public boolean exists(String entry) throws BootLogin.StoreException {
+                final int status = store.hasCredential(entry);
+                if (status == app.status.mobile.SecureStorageHelper.STATUS_OK) return true;
+                if (status == app.status.mobile.SecureStorageHelper.STATUS_NOT_FOUND) return false;
+                throw new BootLogin.StoreException(false);
+            }
+        }, account);
+    }
 
     /** Nothing to resume after a restart: leave the foreground and stop. */
     private void stopBootLoginService() {
@@ -166,6 +224,13 @@ public final class StatusGoService extends Service {
         } catch (Throwable ignored) {}
         foregroundStarted = false;
         stopSelf();
+    }
+
+    /** Leaves the foreground, stops and ends the service process. */
+    private void stopAndEndProcess() {
+        stopBootLoginService();
+        // Mirrors the force-kill of the UI process in StatusQtActivity.onDestroy.
+        android.os.Process.killProcess(android.os.Process.myPid());
     }
 
     private final SignalTypeResolver signalTypes = new SignalTypeResolver(
@@ -682,13 +747,8 @@ public final class StatusGoService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         final String action = intent != null ? intent.getAction() : null;
         if (ACTION_STOP.equals(action)) {
-            try {
-                stopForeground(true);
-            } catch (Throwable ignored) {}
-            foregroundStarted = false;
-            stopSelf();
-            // Mirrors the force-kill of the UI process in StatusQtActivity.onDestroy.
-            android.os.Process.killProcess(android.os.Process.myPid());
+            bootLogin.onStop();
+            stopAndEndProcess();
             return START_NOT_STICKY;
         }
         // Ensure we can be started from background components (e.g. FCM) without risking
