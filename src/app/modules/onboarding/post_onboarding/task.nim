@@ -31,3 +31,9 @@ type PostOnboardingTask* = ref object of RootObj
 
 proc kind*(self: PostOnboardingTask): PostOnboardingTaskKind =
   return self.kind
+
+# The tasks that save a credential typed for a login (biometrics, "Stay logged in").
+proc withoutCredentialTasks*(tasks: seq[PostOnboardingTask]): seq[PostOnboardingTask] =
+  for task in tasks:
+    if task.kind != kPostOnboardingTaskSaveBiometrics and task.kind != kPostOnboardingTaskSaveStayLoggedIn:
+      result.add(task)

@@ -105,23 +105,56 @@ suite "startup login: a request rejected because another login runs":
 
   test "in progress: adopt that login":
     var startup = initStartupLogin(LoginState.None, seq = 4)
-    check startup.adoptRunningLogin(LoginState.InProgress, seq = 5)
+    check startup.adoptRunningLogin(LoginState.InProgress, seq = 5) == LoginAdoption.Adopted
     check not startup.admitNodeLogin(some(4'u64))
     check startup.admitNodeLogin(some(5'u64))
 
   test "logged in: adopt that login":
     var startup = initStartupLogin(LoginState.None, seq = 4)
-    check startup.adoptRunningLogin(LoginState.LoggedIn, seq = 5)
+    check startup.adoptRunningLogin(LoginState.LoggedIn, seq = 5) == LoginAdoption.Adopted
     check startup.admitNodeLogin(some(5'u64))
 
   test "none, after a login the UI didn't know: adopt it, its failure is pending":
     var startup = initStartupLogin(LoginState.None, seq = 4)
-    check startup.adoptRunningLogin(LoginState.None, seq = 5)
+    check startup.adoptRunningLogin(LoginState.None, seq = 5) == LoginAdoption.Adopted
     check startup.admitNodeLogin(some(5'u64))
 
   test "none, nothing new: not adopted":
     var startup = initStartupLogin(LoginState.None, seq = 4)
-    check not startup.adoptRunningLogin(LoginState.None, seq = 4)
+    check startup.adoptRunningLogin(LoginState.None, seq = 4) == LoginAdoption.NotAdopted
     startup.requestAccepted(some(5'u64))
     check startup.admitNodeLogin(some(5'u64))
-    check not startup.adoptRunningLogin(LoginState.None, seq = 5)
+    check startup.adoptRunningLogin(LoginState.None, seq = 5) == LoginAdoption.NotAdopted
+
+  test "logged in, a login whose node.login was already admitted: not adopted, nothing would arrive":
+    var startup = initStartupLogin(LoginState.None, seq = 4)
+    startup.requestAccepted(some(5'u64))
+    check startup.admitNodeLogin(some(5'u64))
+    check startup.adoptRunningLogin(LoginState.LoggedIn, seq = 5) == LoginAdoption.NotAdopted
+    check startup.adoptRunningLogin(LoginState.LoggedIn, seq = 3) == LoginAdoption.NotAdopted
+
+  test "already logged in by a login whose node.login was ignored: adopted, replayed exactly once":
+    var startup = initStartupLogin(LoginState.None, seq = 4)
+    check not startup.admitNodeLogin(some(5'u64))
+    check startup.adoptRunningLogin(LoginState.LoggedIn, seq = 5) == LoginAdoption.AdoptedReplay
+    check startup.admitNodeLogin(some(5'u64))
+    check not startup.admitNodeLogin(some(5'u64))
+
+  test "logged in, seq not newer, but its node.login was ignored: adopted with a replay":
+    var startup = initStartupLogin(LoginState.None, seq = 4)
+    check not startup.admitNodeLogin(some(4'u64))
+    check startup.adoptRunningLogin(LoginState.LoggedIn, seq = 4) == LoginAdoption.AdoptedReplay
+    check startup.admitNodeLogin(some(4'u64))
+
+  test "a stale ignored node.login is not replayed":
+    var startup = initStartupLogin(LoginState.None, seq = 4)
+    check not startup.admitNodeLogin(some(3'u64))
+    check startup.adoptRunningLogin(LoginState.LoggedIn, seq = 5) == LoginAdoption.Adopted
+    check not startup.admitNodeLogin(some(3'u64))
+    check startup.admitNodeLogin(some(5'u64))
+
+  test "none after an ignored failed login: adopted with a replay of its failure":
+    var startup = initStartupLogin(LoginState.None, seq = 4)
+    check not startup.admitNodeLogin(some(5'u64))
+    check startup.adoptRunningLogin(LoginState.None, seq = 5) == LoginAdoption.AdoptedReplay
+    check startup.admitNodeLogin(some(5'u64))

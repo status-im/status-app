@@ -28,6 +28,8 @@ logScope:
 const IS_MOBILE = defined(ios) or defined(android)
 
 type
+  IgnoredNodeLogin = tuple[seq: uint64, err: string, account: AccountDto, settings: SettingsDto]
+
   Module*[T: io_interface.DelegateInterface] = ref object of io_interface.AccessInterface
     delegate: T
     view: View
@@ -43,7 +45,7 @@ type
     generalService: general_service.Service
     startupLogin: StartupLogin
     # The last node.login that wasn't the UI's: a login adopted after it arrived replays it.
-    ignoredNodeLogin: Option[tuple[seq: uint64, err: string, account: AccountDto, settings: SettingsDto]]
+    ignoredNodeLogin: Option[IgnoredNodeLogin]
     # Profiles on the login screen; any other one logging in is new on this device.
     listedKeyUids: Option[HashSet[string]]
     tmpKeyUid: string # TODO: remove this, once we switch fully to new keycard approach
@@ -358,9 +360,7 @@ method loginRequested*[T](self: Module[T], keyUid: string, loginFlow: int, dataJ
     self.loginFlow = LoginMethod(loginFlow)
 
     # drop any queued tasks by previous (failed) attempts so a stale credential can never be saved
-    self.postLoginTasks = self.postLoginTasks.filterIt(
-      it.kind != kPostOnboardingTaskSaveBiometrics and
-      it.kind != kPostOnboardingTaskSaveStayLoggedIn)
+    self.postLoginTasks = self.postLoginTasks.withoutCredentialTasks()
 
     let data = parseJson(dataJson)
     let account = self.controller.getAccountByKeyUid(keyUid)
@@ -423,14 +423,18 @@ method onLoginRequestFailed*[T](self: Module[T], error: string) =
   # Another login (most likely the boot login) runs or just ran: adopt it instead of
   # reporting a login error, its node.login decides.
   let loginState = self.accountsService.fetchLoginState()
-  if not self.startupLogin.adoptRunningLogin(loginState.state, loginState.seq):
+  let adoption = self.startupLogin.adoptRunningLogin(loginState.state, loginState.seq)
+  if adoption == LoginAdoption.NotAdopted:
     self.onAccountLoginError(error)
     return
   info "login request rejected, adopting the running login", error, state = $loginState.state, seq = loginState.seq
+  # The rejected request's credential (e.g. a password typed during the boot login) was
+  # never verified: never save it.
+  self.postLoginTasks = self.postLoginTasks.withoutCredentialTasks()
   self.view.loginAdopted()
-  if self.ignoredNodeLogin.isSome:
+  if adoption == LoginAdoption.AdoptedReplay and self.ignoredNodeLogin.isSome:
     let ignored = self.ignoredNodeLogin.get
-    self.ignoredNodeLogin = none(tuple[seq: uint64, err: string, account: AccountDto, settings: SettingsDto])
+    self.ignoredNodeLogin = none(IgnoredNodeLogin)
     self.onNodeLogin(some(ignored.seq), ignored.err, ignored.account, ignored.settings)
 
 method onNodeLogin*[T](self: Module[T], seq: Option[uint64], err: string, account: AccountDto, settings: SettingsDto) =
