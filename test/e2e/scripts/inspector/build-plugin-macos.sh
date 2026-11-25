@@ -3,7 +3,8 @@
 # usage: build-plugin-macos.sh <output directory>
 # Result: <output directory>/plugins/generic/libqmlinspector.dylib
 #
-# With no QT_PREFIX, installs Qt 6.11.0 (the Qt of the CI .app) and points the
+# With no QT_PREFIX, takes the Qt of the CI .app (QTDIR when it is that version,
+# a download otherwise) and points the
 # plugin at Contents/Frameworks inside that bundle. For a local app built with
 # the Qt from `qmake`, pass that prefix and the plugin keeps those library paths:
 #   QT_PREFIX="$(qmake -query QT_INSTALL_PREFIX)" build-plugin-macos.sh /tmp/qmlinspector
@@ -16,7 +17,9 @@ if [ $# -ne 1 ]; then
   exit 2
 fi
 PLUGIN_REPO="${PLUGIN_REPO:-https://github.com/status-im/status-qml-inspector.git}"
-PLUGIN_REF="${PLUGIN_REF:-edbf498b167750d2d08aae8093de07339219a507}"
+versions="$(cd "$(dirname "$0")" && pwd)/versions.env"
+PLUGIN_REF="${PLUGIN_REF:-$(sed -n 's/^PLUGIN_REF=//p' "$versions")}"
+qt_version=$(sed -n 's/^QT_VERSION=//p' "$versions")
 out=$(mkdir -p "$1" && cd "$1" && pwd)
 qt_cache="${QT_CACHE:-$HOME/.cache/status-e2e-qt}"
 mkdir -p "$qt_cache"
@@ -34,15 +37,18 @@ bundle=0
 if [ -n "${QT_PREFIX:-}" ]; then
   qt=$(cd "$QT_PREFIX" && pwd)
 else
-  qt="$qt_cache/6.11.0/macos"
+  qt="$qt_cache/$qt_version/macos"
   bundle=1
-  if [ ! -f "$qt/lib/cmake/Qt6/Qt6Config.cmake" ]; then
+  # QTDIR, which the app's own build uses, saves the download when it is the same version.
+  if [ -n "${QTDIR:-}" ] && [ "$("$QTDIR/bin/qmake" -query QT_VERSION 2> /dev/null || true)" = "$qt_version" ]; then
+    qt=$(cd "$QTDIR" && pwd)
+  elif [ ! -f "$qt/lib/cmake/Qt6/Qt6Config.cmake" ]; then
     venv="$qt_cache/aqt-venv"
     if [ ! -x "$venv/bin/aqt" ]; then
       python3 -m venv "$venv"
       "$venv/bin/pip" install -q aqtinstall
     fi
-    "$venv/bin/aqt" install-qt mac desktop 6.11.0 clang_64 -O "$qt_cache" --timeout 3000
+    "$venv/bin/aqt" install-qt mac desktop "$qt_version" clang_64 -O "$qt_cache" --timeout 3000
   fi
 fi
 
@@ -50,6 +56,8 @@ generator="Unix Makefiles"
 if command -v ninja >/dev/null 2>&1; then
   generator="Ninja"
 fi
+# The source is cloned to a new directory each time; an earlier configuration names the old one.
+rm -rf "$out/CMakeCache.txt" "$out/CMakeFiles"
 cmake -S "$src/qt-plugin/generic-plugin" -B "$out" -G "$generator" \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_PREFIX_PATH="$qt" \
