@@ -1738,7 +1738,7 @@ Item {
             id: bannersLayout
 
             enabled: !localAppSettings.testEnvironment
-                     && (d.activeSectionType !== Constants.appSection.homePage && d.activeSectionType !== Constants.appSection.loadingSection)
+                     && d.activeSectionType !== Constants.appSection.loadingSection
             visible: enabled
 
             Layout.fillWidth: true
