@@ -2,13 +2,11 @@
 set -euo pipefail
 
 here=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
-SETUP_ROOT=$(CDPATH= cd -- "$here/.." && pwd)
+SETUP_ROOT=$(CDPATH= cd -- "$here/../.." && pwd)
 # shellcheck source=setup-common.sh
 . "$here/setup-common.sh"
 # shellcheck source=ensure-dotenv.sh
 . "$here/ensure-dotenv.sh"
-# shellcheck source=start-waku-fleet.sh
-. "$here/start-waku-fleet.sh"
 cd "$SETUP_ROOT"
 
 platform=${SETUP_PLATFORM:?}
@@ -74,6 +72,10 @@ plugins=${1:-$out/plugins}
 create_venv "$py" "$plugins"
 if [ -f .env ]; then set -a; # shellcheck disable=SC1091
 . ./.env; set +a; fi
-start_waku_fleet "$SETUP_ROOT/.venv/bin/python"
+if [ "${E2E_SKIP_WAKU_FLEET:-}" = 1 ]; then
+    echo "setup: E2E_SKIP_WAKU_FLEET=1, skipping local Waku fleet" >&2
+elif ! SETUP_PYTHON="$SETUP_ROOT/.venv/bin/python" "$here/../start-waku-fleet.sh"; then
+    echo "setup: no local Waku fleet; the tests with two instances need it" >&2
+fi
 echo "setup: activate with: source .venv/bin/activate"
 echo "setup: INSPECTOR_PLUGINS=$plugins"

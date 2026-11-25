@@ -78,26 +78,14 @@ if (-not (Select-String -Path $dotenv -Pattern '^WALLET_TEST_USER_SEED=.+$' -Qui
     [Console]::Error.WriteLine('setup: set WALLET_TEST_USER_SEED in .env (Jenkins credential wallet-test-user-seed)')
 }
 
-$skipWaku = $env:E2E_SKIP_WAKU_FLEET -eq '1'
-if (-not $skipWaku -and (Get-Command docker -ErrorAction SilentlyContinue)) {
-    try { docker info *> $null } catch { $skipWaku = $true }
-}
-if ($skipWaku) {
+if ($env:E2E_SKIP_WAKU_FLEET -eq '1') {
     [Console]::Error.WriteLine('setup: skipping local Waku fleet')
-} elseif (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
-    [Console]::Error.WriteLine('setup: docker not found, skipping Waku fleet')
 } else {
-    $repo = Split-Path $Root -Parent | Split-Path -Parent
-    $project = if ($env:E2E_WAKU_COMPOSE_PROJECT) { $env:E2E_WAKU_COMPOSE_PROJECT } else { 'status-app' }
-    $compose = Join-Path $repo 'docker-compose.waku.yml'
-    if (-not (Test-Path $compose)) { Fail "missing $compose" }
-    [Console]::Error.WriteLine("setup: starting Waku fleet (project=$project)")
-    docker compose -p $project -f $compose up -d --build --remove-orphans
-    Push-Location $repo
-    try {
-        & (Join-Path $Root '.venv\Scripts\python.exe') (Join-Path $repo 'test\e2e\scripts\scan_waku_fleet.py') --project $project
-    } finally {
-        Pop-Location
+    # In its own process: the script exits when the fleet cannot start.
+    & (Get-Process -Id $PID).Path -NoProfile -File (Join-Path $PSScriptRoot 'start-waku-fleet-windows.ps1') `
+        -Python (Join-Path $Root '.venv\Scripts\python.exe')
+    if ($LASTEXITCODE -ne 0) {
+        [Console]::Error.WriteLine('setup: no local Waku fleet; the tests with two instances need it')
     }
 }
 
