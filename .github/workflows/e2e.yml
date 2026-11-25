@@ -1,0 +1,99 @@
+name: e2e
+
+# The desktop suite (test/e2e) against the Linux, Windows or macOS build of a
+# run of the CI workflow. It does not fail the caller yet.
+on:
+  workflow_call:
+    inputs:
+      os:
+        description: linux, windows or macos.
+        type: string
+        required: true
+      run-id:
+        description: The run whose builds are tested.
+        type: string
+        required: true
+
+permissions:
+  contents: read
+  actions: read
+  packages: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  e2e:
+    name: tests
+    runs-on: ${{ fromJSON('{"linux":"ubuntu-24.04","windows":"windows-2022","macos":"macos-26"}')[inputs.os] }}
+    timeout-minutes: 90
+    continue-on-error: true
+    env:
+      BUILD: ${{ fromJSON('{"linux":"*-linux-x86_64.tar.gz","windows":"*-windows-x86_64.7z","macos":"*-macos-aarch64.dmg"}')[inputs.os] }}
+      # On Windows Bash needs the scripts with LF endings.
+      GIT_CONFIG_COUNT: 2
+      GIT_CONFIG_KEY_0: core.longpaths
+      GIT_CONFIG_VALUE_0: 'true'
+      GIT_CONFIG_KEY_1: core.autocrlf
+      GIT_CONFIG_VALUE_1: 'false'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Driver unit tests
+        if: ${{ inputs.os == 'linux' }}
+        working-directory: test/e2e
+        run: |
+          python3 -m venv "$RUNNER_TEMP/driver-venv"
+          "$RUNNER_TEMP/driver-venv/bin/pip" install --quiet pytest
+          "$RUNNER_TEMP/driver-venv/bin/python" -m pytest driver/tests -v
+      # The built plugin is under a megabyte; building it downloads Qt.
+      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        id: plugin
+        with:
+          path: ${{ runner.temp }}/qmlinspector/plugins
+          key: e2e-plugin-${{ inputs.os }}-${{ hashFiles('test/e2e/scripts/inspector/**') }}
+      - name: Plugin
+        if: ${{ steps.plugin.outputs.cache-hit != 'true' }}
+        run: test/e2e/scripts/ci/plugin.sh "$RUNNER_TEMP/qmlinspector"
+      # Saved here, not at the end of the job: failed tests would leave it unsaved.
+      - uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        if: ${{ steps.plugin.outputs.cache-hit != 'true' }}
+        with:
+          path: ${{ runner.temp }}/qmlinspector/plugins
+          key: ${{ steps.plugin.outputs.cache-primary-key }}
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          run-id: ${{ inputs.run-id }}
+          github-token: ${{ github.token }}
+          pattern: ${{ env.BUILD }}
+          path: ${{ runner.temp }}/pkg
+          merge-multiple: true
+      - name: Critical tests
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$RUNNER_OS" = Linux ]; then
+            echo "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin || echo "No GHCR login."
+          fi
+          test/e2e/scripts/ci/run.sh "$RUNNER_TEMP/pkg" "$RUNNER_TEMP/qmlinspector/plugins" \
+            -m critical -v --reruns=1 --timeout=300 -o timeout_func_only=true --disable-warnings \
+            --junitxml=junit.xml --alluredir=./allure-results
+      # Logs, reports and failure screenshots only: the app data of a run is hundreds of megabytes.
+      - name: Upload results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: e2e-${{ inputs.os }}-results
+          path: |
+            test/e2e/local_run_results/**/*.log
+            test/e2e/local_run_results/**/screenshot_*.png
+            test/e2e/junit.xml
+            test/e2e/allure-results/
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Failure summary
+        if: ${{ !cancelled() }}
+        run: |
+          "$(command -v python3 || command -v python)" test/e2e/scripts/ci/failure_summary.py
