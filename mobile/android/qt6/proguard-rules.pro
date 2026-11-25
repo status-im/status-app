@@ -19,7 +19,8 @@
 # openAccessibilitySettings, restartApplication), KeyboardUtil
 # (requestKeyboardShow, start), StatusBarUtil (setStatusBarIconColor),
 # ShareUtils (sharePaths), MediaStoreHelper (insertImageFromPath);
-# RegisterNatives on DensityListener, ShakeDetector and KeyboardUtil
+# RegisterNatives on DensityListener, MemoryPressureListener, ShakeDetector
+# and KeyboardUtil
 # (nativeOnKeyboardHeightChanged).
 -keep class app.status.mobile.StatusQtActivity { *; }
 -keep class app.status.mobile.KeyboardUtil { *; }
@@ -27,6 +28,7 @@
 -keep class app.status.mobile.ShareUtils { *; }
 -keep class app.status.mobile.MediaStoreHelper { *; }
 -keep class app.status.mobile.DensityListener { *; }
+-keep class app.status.mobile.MemoryPressureListener { *; }
 -keep class app.status.mobile.ShakeDetector { *; }
 # AudioUtils constructs this listener and calls start/stop through JNI.
 -keep class app.status.mobile.SilentModeListener { *; }
