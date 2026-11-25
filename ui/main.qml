@@ -173,9 +173,7 @@ Window {
 
     // Quits the app: during a session transition ending the session takes care of it
     function quitApp() : void {
-        // Quit keeps the "Stay logged in" credential (the next open logs in silently and
-        // writes a new boot-login record) but must not resume after a phone restart.
-        bootLoginRecordStorage.deleteBootLoginRecord()
+        bootLoginRecordGuard.quit()
         if (!sessionView.quit())
             Qt.exit(0)
     }
@@ -188,7 +186,16 @@ Window {
     }
 
     SecureStorage {
-        id: bootLoginRecordStorage
+        id: appSecureStorage
+
+        service: "StatusDesktop.AutoLogin"
+    }
+
+    BootLoginRecordGuard {
+        id: bootLoginRecordGuard
+
+        secureStorage: appSecureStorage
+        resumeAfterRestartEnabled: applicationWindow.featureFlagsStore.resumeAfterRestartEnabled
     }
 
     QtObject {
@@ -556,6 +563,7 @@ Window {
                 featureFlagsStore: applicationWindow.featureFlagsStore
                 languageStore: applicationWindow.languageStore
                 utilsStore: applicationWindow.utilsStore
+                secureStorage: appSecureStorage
                 systemTrayIconAvailable: systemTray.available
                 portraitLayout: applicationWindow.portraitLayout
                 allowsAutoLogin: (keyUid) => sessionView.allowsAutoLogin(keyUid)

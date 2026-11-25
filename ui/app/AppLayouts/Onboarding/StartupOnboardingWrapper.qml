@@ -271,10 +271,6 @@ Item {
         Component.onCompleted: {
             if (d.adoptingLogin)
                 onboardingLayout.stack.push(splashScreenV2, { runningProgressAnimation: true }, StackView.Immediate)
-
-            // Feature off: no boot login may follow a phone restart
-            if (!root.featureFlagsStore.resumeAfterRestartEnabled && root.secureStorage)
-                root.secureStorage.deleteBootLoginRecord()
             root.contentLoaded()
         }
 

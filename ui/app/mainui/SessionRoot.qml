@@ -23,6 +23,7 @@ Item {
     required property AppStores.FeatureFlagsStore featureFlagsStore
     required property ProfileStores.LanguageStore languageStore
     required property UtilsStore utilsStore
+    required property SecureStorage secureStorage
     required property bool systemTrayIconAvailable
     required property bool portraitLayout
     // Whether the login screen may log in silently with the stored credential of a profile:
@@ -119,7 +120,7 @@ Item {
         featureFlagsStore: root.featureFlagsStore
         languageStore: root.languageStore
         keychain: appKeychain
-        secureStorage: appSecureStorage
+        secureStorage: root.secureStorage
         systemTrayIconAvailable: root.systemTrayIconAvailable
         utilsStore: root.utilsStore
 
@@ -184,7 +185,7 @@ Item {
             item.featureFlagsStore = root.featureFlagsStore
             item.languageStore = root.languageStore
             item.keychain = appKeychain
-            item.secureStorage = appSecureStorage
+            item.secureStorage = root.secureStorage
             item.lastSelectedProfileKeyUid = Qt.binding(() => localAppSettings.selectedProfileKeyUid)
             item.biometricFlowPending = Qt.binding(() => d.biometricFlowPending)
             // MUST be assigned LAST: enabling triggers the one-shot auto-login
@@ -254,12 +255,6 @@ Item {
                 d.moveToAppMain()
             }
         }
-    }
-
-    SecureStorage {
-        id: appSecureStorage
-
-        service: "StatusDesktop.AutoLogin"
     }
 
     Loader {

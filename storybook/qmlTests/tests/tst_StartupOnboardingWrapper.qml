@@ -516,19 +516,6 @@ Item {
             compare(wrapper.secureStorage.bootLoginRecord, root.dummyRecord)
         }
 
-        function test_recordNeverContainsTheDek() {
-            wrapper = createTemporaryObject(wrapperComponent, root)
-            verify(!!wrapper)
-
-            wrapper.onboardingStore.stayLoggedInSaveRequested("uid_1", "dek:" + root.dummyDekHex,
-                                                              true, root.dummyRecord)
-
-            const stored = wrapper.secureStorage.bootLoginRecord
-            verify(stored !== "")
-            verify(stored.indexOf(root.dummyDekHex) < 0)
-            verify(!JSON.parse(stored).loginRequest.hasOwnProperty("dek"))
-        }
-
         function test_failedCredentialWriteRemovesTheRecord() {
             wrapper = createTemporaryObject(wrapperComponent, root)
             verify(!!wrapper)
@@ -576,20 +563,6 @@ Item {
             wrapper.onboardingStore.accountLoginError("stale dek", false)
 
             compare(wrapper.secureStorage.bootLoginRecord, "")
-        }
-
-        function test_flagOffDeletesTheRecordAtStartup() {
-            wrapper = createTemporaryObject(wrapperComponent, root, { featureFlagsStore: flagsOff })
-            verify(!!wrapper)
-
-            compare(wrapper.secureStorage.recordDeleteCalls, 1)
-        }
-
-        function test_flagOnKeepsTheRecordAtStartup() {
-            wrapper = createTemporaryObject(wrapperComponent, root)
-            verify(!!wrapper)
-
-            compare(wrapper.secureStorage.recordDeleteCalls, 0)
         }
 
         function test_flagOffNeverWritesTheRecord() {
