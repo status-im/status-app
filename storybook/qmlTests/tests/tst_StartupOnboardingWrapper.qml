@@ -19,6 +19,17 @@ Item {
     height: 700
 
     readonly property string dummyDekHex: "a".repeat(64)
+    readonly property string dummyRecord: JSON.stringify({
+        version: 1, keyUid: "uid_1",
+        initRequest: { dataDir: "/data" },
+        loginRequest: { keyUid: "uid_1", kdfIterations: 3200 } })
+
+    QtObject {
+        id: flagsOff
+        readonly property bool keycardEnabled: false
+        readonly property bool privacyModeFeatureEnabled: false
+        readonly property bool resumeAfterRestartEnabled: false
+    }
 
     // The login state the next wrapper's store reports at startup
     property int startupLoginState: Onboarding.LoginState.None
@@ -36,6 +47,7 @@ Item {
             featureFlagsStore: QtObject {
                 readonly property bool keycardEnabled: false
                 readonly property bool privacyModeFeatureEnabled: false
+                readonly property bool resumeAfterRestartEnabled: true
             }
             languageStore: QtObject {
                 readonly property var availableLanguages: ["en"]
@@ -84,6 +96,20 @@ Item {
                     delete creds[account]
                     return SecureStorage.StatusSuccess
                 }
+
+                property string bootLoginRecord: ""
+                property int recordDeleteCalls: 0
+                function setBootLoginRecord(record) {
+                    bootLoginRecord = record
+                    return SecureStorage.StatusSuccess
+                }
+                function deleteBootLoginRecord() {
+                    recordDeleteCalls++
+                    if (bootLoginRecord === "")
+                        return SecureStorage.StatusNotFound
+                    bootLoginRecord = ""
+                    return SecureStorage.StatusSuccess
+                }
             }
 
             lastSelectedProfileKeyUid: "uid_1"
@@ -128,7 +154,7 @@ Item {
 
                 signal accountLoginError(string error, bool wrongPassword)
                 signal loginAdopted()
-                signal stayLoggedInSaveRequested(string keyUid, string credential, bool enablePreference)
+                signal stayLoggedInSaveRequested(string keyUid, string credential, bool enablePreference, string bootLoginRecord)
                 signal stayLoggedInDeleteRequested(string keyUid)
 
                 // Settings wrappers the real store exposes (store-layer rule)
@@ -212,14 +238,14 @@ Item {
             const store = wrapper.onboardingStore
 
             wrapper.secureStorage.setStatus = SecureStorage.StatusUnavailable
-            store.stayLoggedInSaveRequested("uid_1", "dek:" + root.dummyDekHex, true)
+            store.stayLoggedInSaveRequested("uid_1", "dek:" + root.dummyDekHex, true, "")
             compare(store.stayLoggedIn, false)
             compare(store.suppressionCalls.length, 1)
             compare(store.suppressionCalls[0].keyUid, "uid_1")
             compare(store.suppressionCalls[0].value, false)
 
             wrapper.secureStorage.setStatus = SecureStorage.StatusSuccess
-            store.stayLoggedInSaveRequested("uid_1", "dek:" + root.dummyDekHex, true)
+            store.stayLoggedInSaveRequested("uid_1", "dek:" + root.dummyDekHex, true, "")
             compare(store.stayLoggedIn, true)
             compare(wrapper.secureStorage.creds["uid_1"], "dek:" + root.dummyDekHex)
         }
@@ -271,7 +297,7 @@ Item {
             wrapper.onboardingStore.stayLoggedIn = true
             wrapper.secureStorage.creds["uid_1"] = "dek:" + root.dummyDekHex
 
-            wrapper.onboardingStore.stayLoggedInSaveRequested("uid_1", "", false)
+            wrapper.onboardingStore.stayLoggedInSaveRequested("uid_1", "", false, "")
 
             compare(wrapper.secureStorage.creds["uid_1"], undefined)
         }
@@ -283,7 +309,7 @@ Item {
             verify(!!wrapper)
 
             wrapper.secureStorage.creds["uid_1"] = "dek:" + root.dummyDekHex
-            wrapper.onboardingStore.stayLoggedInSaveRequested("uid_1", "", false)
+            wrapper.onboardingStore.stayLoggedInSaveRequested("uid_1", "", false, "")
 
             compare(wrapper.secureStorage.creds["uid_1"], undefined)
             compare(wrapper.onboardingStore.stayLoggedIn, false)
@@ -306,7 +332,7 @@ Item {
             wrapper.secureStorage.setStatus = SecureStorage.StatusIndeterminate
             wrapper.secureStorage.deleteStatus = data.deleteStatus
 
-            wrapper.onboardingStore.stayLoggedInSaveRequested("uid_1", "dek:" + root.dummyDekHex, true)
+            wrapper.onboardingStore.stayLoggedInSaveRequested("uid_1", "dek:" + root.dummyDekHex, true, "")
 
             compare(wrapper.secureStorage.deleteCalls.length, 1)
             compare(wrapper.onboardingStore.stayLoggedIn, data.enabled)
@@ -343,7 +369,7 @@ Item {
             wrapper.onboardingStore.stayLoggedIn = true
             wrapper.secureStorage.setStatus = SecureStorage.StatusIndeterminate
 
-            wrapper.onboardingStore.stayLoggedInSaveRequested("uid_1", "dek:" + root.dummyDekHex, false)
+            wrapper.onboardingStore.stayLoggedInSaveRequested("uid_1", "dek:" + root.dummyDekHex, false, "")
 
             compare(wrapper.secureStorage.deleteCalls.length, 0)
             compare(wrapper.onboardingStore.stayLoggedIn, true)
@@ -466,6 +492,115 @@ Item {
             compare(wrapper.onboardingStore.loginRequestedCalls.length, 1)
             compare(wrapper.secureStorage.deleteCalls.length, 0)
             compare(wrapper.secureStorage.creds["uid_1"], "dek:" + root.dummyDekHex)
+        }
+    }
+
+    StatusTestCase {
+        name: "StartupOnboardingWrapper_bootLoginRecord"
+        when: windowShown
+
+        property var wrapper: null
+
+        function cleanup() {
+            wrapper = null
+        }
+
+        function test_loginWithStayLoggedInWritesTheRecord() {
+            wrapper = createTemporaryObject(wrapperComponent, root)
+            verify(!!wrapper)
+
+            wrapper.onboardingStore.stayLoggedInSaveRequested("uid_1", "dek:" + root.dummyDekHex,
+                                                              true, root.dummyRecord)
+
+            compare(wrapper.secureStorage.creds["uid_1"], "dek:" + root.dummyDekHex)
+            compare(wrapper.secureStorage.bootLoginRecord, root.dummyRecord)
+        }
+
+        function test_recordNeverContainsTheDek() {
+            wrapper = createTemporaryObject(wrapperComponent, root)
+            verify(!!wrapper)
+
+            wrapper.onboardingStore.stayLoggedInSaveRequested("uid_1", "dek:" + root.dummyDekHex,
+                                                              true, root.dummyRecord)
+
+            const stored = wrapper.secureStorage.bootLoginRecord
+            verify(stored !== "")
+            verify(stored.indexOf(root.dummyDekHex) < 0)
+            verify(!JSON.parse(stored).loginRequest.hasOwnProperty("dek"))
+        }
+
+        function test_failedCredentialWriteRemovesTheRecord() {
+            wrapper = createTemporaryObject(wrapperComponent, root)
+            verify(!!wrapper)
+            wrapper.secureStorage.bootLoginRecord = root.dummyRecord
+            wrapper.secureStorage.setStatus = SecureStorage.StatusGenericError
+
+            wrapper.onboardingStore.stayLoggedInSaveRequested("uid_1", "dek:" + root.dummyDekHex,
+                                                              true, root.dummyRecord)
+
+            compare(wrapper.secureStorage.bootLoginRecord, "")
+        }
+
+        // "Stay logged in" off, or a keycard profile: the request carries no credential
+        function test_stayLoggedInOffRemovesTheRecord() {
+            wrapper = createTemporaryObject(wrapperComponent, root)
+            verify(!!wrapper)
+            wrapper.secureStorage.bootLoginRecord = root.dummyRecord
+
+            wrapper.onboardingStore.stayLoggedInSaveRequested("uid_1", "", false, "")
+
+            compare(wrapper.secureStorage.bootLoginRecord, "")
+        }
+
+        // Keycard conversion, or the login-screen toggle turned off
+        function test_stayLoggedInDeleteRequestRemovesTheRecord() {
+            wrapper = createTemporaryObject(wrapperComponent, root)
+            verify(!!wrapper)
+            wrapper.secureStorage.creds["uid_1"] = "dek:" + root.dummyDekHex
+            wrapper.secureStorage.bootLoginRecord = root.dummyRecord
+
+            wrapper.onboardingStore.stayLoggedInDeleteRequested("uid_1")
+
+            compare(wrapper.secureStorage.bootLoginRecord, "")
+        }
+
+        function test_failedAutoLoginRemovesTheRecord() {
+            wrapper = createTemporaryObject(wrapperComponent, root)
+            verify(!!wrapper)
+            const layout = findChild(wrapper, "startupOnboardingLayout")
+            wrapper.secureStorage.creds["uid_1"] = "dek:" + root.dummyDekHex
+            wrapper.secureStorage.bootLoginRecord = root.dummyRecord
+
+            wrapper.autoLoginEnabled = true
+            tryVerify(() => layout.autoLoginAttempted)
+            wrapper.onboardingStore.accountLoginError("stale dek", false)
+
+            compare(wrapper.secureStorage.bootLoginRecord, "")
+        }
+
+        function test_flagOffDeletesTheRecordAtStartup() {
+            wrapper = createTemporaryObject(wrapperComponent, root, { featureFlagsStore: flagsOff })
+            verify(!!wrapper)
+
+            compare(wrapper.secureStorage.recordDeleteCalls, 1)
+        }
+
+        function test_flagOnKeepsTheRecordAtStartup() {
+            wrapper = createTemporaryObject(wrapperComponent, root)
+            verify(!!wrapper)
+
+            compare(wrapper.secureStorage.recordDeleteCalls, 0)
+        }
+
+        function test_flagOffNeverWritesTheRecord() {
+            wrapper = createTemporaryObject(wrapperComponent, root, { featureFlagsStore: flagsOff })
+            verify(!!wrapper)
+
+            wrapper.onboardingStore.stayLoggedInSaveRequested("uid_1", "dek:" + root.dummyDekHex,
+                                                              true, root.dummyRecord)
+
+            compare(wrapper.secureStorage.creds["uid_1"], "dek:" + root.dummyDekHex)
+            compare(wrapper.secureStorage.bootLoginRecord, "")
         }
     }
 

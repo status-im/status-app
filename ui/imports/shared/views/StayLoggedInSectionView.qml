@@ -6,6 +6,7 @@ import StatusQ.Controls
 import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Components
+import StatusQ.Core.Utils as SQUtils
 
 Control {
     id: root
@@ -18,6 +19,9 @@ Control {
     // false where migration cannot be started (e.g. the login screen): the hint stays,
     // the migrate button is hidden
     property bool migrationActionAllowed: true
+    // Android boot login: the stored password also signs in after a phone restart or an
+    // app update
+    property bool resumesAfterRestart: SQUtils.Utils.isAndroid
 
     // Migration to the new encryption format in progress (full re-encryption)
     property bool busy: false
@@ -74,6 +78,15 @@ Control {
                          && root.stayLoggedInEnabled
                 onClicked: root.toggleStayLoggedIn(stayLoggedInSwitch.checked)
             }
+        }
+        StatusBaseText {
+            objectName: "resumesAfterRestartText"
+            Layout.fillWidth: true
+            text: qsTr("Status also signs in by itself after your phone restarts or the app updates, so notifications keep coming.")
+            color: Theme.palette.baseColor1
+            font.pixelSize: Theme.additionalTextSize
+            wrapMode: Text.WordWrap
+            visible: root.resumesAfterRestart && root.storageAvailable && !root.keycardProfile
         }
         StatusBaseText {
             objectName: "storageUnavailableText"

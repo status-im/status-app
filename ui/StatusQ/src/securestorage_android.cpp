@@ -207,3 +207,40 @@ QVariantMap SecureStorage::getCredential(const QString &account) const
 
     return result(convertStatus(status));
 }
+
+SecureStorage::Status SecureStorage::setBootLoginRecord(const QString &record)
+{
+    const QJniObject helper = javaHelper();
+    if (!helper.isValid())
+        return StatusUnavailable;
+
+    const jint status = helper.callMethod<jint>(
+        "setBootLoginRecord",
+        "(Ljava/lang/String;)I",
+        QJniObject::fromString(record).object<jstring>());
+
+    if (javaExceptionRaised())
+        return StatusGenericError;
+
+    if (status != kStatusOk)
+        qWarning() << "SecureStorage: setBootLoginRecord failed, code=" << status;
+
+    return convertStatus(status);
+}
+
+SecureStorage::Status SecureStorage::deleteBootLoginRecord()
+{
+    const QJniObject helper = javaHelper();
+    if (!helper.isValid())
+        return StatusUnavailable;
+
+    const jint status = helper.callMethod<jint>("deleteBootLoginRecord", "()I");
+
+    if (javaExceptionRaised())
+        return StatusGenericError;
+
+    if (status != kStatusOk && status != kStatusNotFound)
+        qWarning() << "SecureStorage: deleteBootLoginRecord failed, code=" << status;
+
+    return convertStatus(status);
+}

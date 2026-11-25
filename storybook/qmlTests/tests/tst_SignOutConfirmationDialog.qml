@@ -29,6 +29,12 @@ Item {
                     root.callLog.push("delete:" + account)
                     return deleteStatus
                 }
+
+                property int recordDeleteCalls: 0
+                function deleteBootLoginRecord() {
+                    recordDeleteCalls++
+                    return SecureStorage.StatusSuccess
+                }
             }
             keyUid: "key-uid-1"
 
@@ -100,6 +106,18 @@ Item {
 
             if (!data.signsOut)
                 tryVerify(() => !dialog.opened) // session kept; dialog dismissed for retry
+        }
+
+        // A signed-out profile must not resume after a phone restart
+        function test_confirmRemovesTheBootLoginRecord() {
+            dialog = createTemporaryObject(dialogComponent, root)
+            verify(!!dialog)
+            dialog.open()
+            tryVerify(() => dialog.opened)
+
+            dialog.confirmButtonClicked()
+
+            compare(dialog.secureStorage.recordDeleteCalls, 1)
         }
     }
 }

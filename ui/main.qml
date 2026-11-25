@@ -51,6 +51,7 @@ Window {
         lifiEnabled: featureFlags ? featureFlags.lifiEnabled : false
         relayEnabled: featureFlags ? featureFlags.relayEnabled : false
         swapProvidersEnabled: featureFlags ? featureFlags.swapProvidersEnabled : false
+        resumeAfterRestartEnabled: featureFlags ? featureFlags.resumeAfterRestartEnabled : false
     }
 
     readonly property UtilsStore utilsStore: UtilsStore {}
@@ -172,6 +173,9 @@ Window {
 
     // Quits the app: during a session transition ending the session takes care of it
     function quitApp() : void {
+        // Quit keeps the "Stay logged in" credential (the next open logs in silently and
+        // writes a new boot-login record) but must not resume after a phone restart.
+        bootLoginRecordStorage.deleteBootLoginRecord()
         if (!sessionView.quit())
             Qt.exit(0)
     }
@@ -181,6 +185,10 @@ Window {
         if (SQUtils.Utils.isAndroid) {
             SystemUtils.setAndroidStatusBarIconColor(applicationWindow.appThemeDark)
         }
+    }
+
+    SecureStorage {
+        id: bootLoginRecordStorage
     }
 
     QtObject {

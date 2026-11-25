@@ -335,6 +335,7 @@ Page {
         onSkippedBiometricFlow: root.skippedBiometricFlow()
         onDeleteMultiaccountRequested: keyUid => {
             root.secureStorage?.deleteCredential(keyUid)
+            root.secureStorage?.deleteBootLoginRecord()
             root.onboardingStore.deleteMultiaccountRequested(keyUid)
         }
     }

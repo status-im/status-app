@@ -33,6 +33,7 @@ ConfirmationDialog {
         // stored a credential; a store THIS process merely cannot reach (e.g. an
         // unsigned dev build) reports Unavailable and is handled below.
         const status = root.secureStorage.deleteCredential(root.keyUid)
+        root.secureStorage.deleteBootLoginRecord()
         const deletionVerified = status === SecureStorage.StatusSuccess
                               || status === SecureStorage.StatusNotFound
                               || status === SecureStorage.StatusNotSupported
