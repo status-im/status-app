@@ -172,6 +172,9 @@ Window {
     function storeAppState() : void {
         if (SQUtils.Utils.isMobile) // no point in storing geometry or visibility
             return
+        // background launch: keep the stored state until the window is shown
+        if (!d.windowShown)
+            return
 
         localAppSettings.visibility = applicationWindow.visibility
         let newRect = Qt.rect(applicationWindow.x, applicationWindow.y,
@@ -201,6 +204,7 @@ Window {
         // Started hidden in the tray, until the user shows the window or the login completes
         property bool inBackgroundLaunch: false
         property int lastApplicationState: Qt.ApplicationInactive
+        property bool windowShown: false
 
         readonly property bool macOSWindowed: SQUtils.Utils.isMacOS && applicationWindow.visibility !== Window.FullScreen
 
@@ -360,6 +364,8 @@ Window {
     Connections {
         target: applicationWindow
         function onVisibilityChanged(visibility) {
+            if (visibility !== Window.Hidden)
+                d.windowShown = true
             if (visibility === Window.Minimized) {
                 d.lastMinimizedScreen = applicationWindow.screen
                 return
@@ -448,7 +454,8 @@ Window {
             const state = Application.state
             const reopened = state === Qt.ApplicationActive && d.lastApplicationState === Qt.ApplicationActive
             d.lastApplicationState = state
-            if (reopened && SQUtils.Utils.isMacOS && !applicationWindow.visible)
+            if (reopened && SQUtils.Utils.isMacOS && !applicationWindow.visible
+                    && applicationWindow.featureFlagsStore.resumeAfterRestartEnabled)
                 applicationWindow.makeStatusAppActive()
         }
     }
