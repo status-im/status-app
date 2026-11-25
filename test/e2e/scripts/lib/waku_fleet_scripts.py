@@ -70,7 +70,7 @@ def nodes(compose_text):
     }
 
 
-def node_script(service, args, names, install_dir, log_dir):
+def node_script(service, args, names, install_dir, log_dir, data_dir):
     binary, flags = args[0], args[1:]
     kept = []
     for flag in flags:
@@ -78,6 +78,8 @@ def node_script(service, args, names, install_dir, log_dir):
             continue
         for name in names:
             flag = flag.replace(f'/dns4/{name}/', '/ip4/127.0.0.1/')
+        # In a container /tmp is the node's own; here the stores get the fleet's directory.
+        flag = flag.replace('sqlite:///tmp/', f'sqlite://{data_dir}/')
         kept.append(flag)
     name = binary.rsplit('/', 1)[-1]
     lines = [
@@ -114,6 +116,7 @@ def main():
     parser.add_argument('out', type=pathlib.Path)
     parser.add_argument('--install-dir', default='/opt/waku', help='where the node binary is unpacked')
     parser.add_argument('--log-dir', default='/tmp', help='where the nodes write their logs')
+    parser.add_argument('--data-dir', default='/tmp', help='where the store nodes keep their messages')
     parser.add_argument('--wsl', action='store_true', help='also write install.sh for a Debian or Ubuntu under WSL')
     args = parser.parse_args()
 
@@ -128,7 +131,7 @@ def main():
         (args.out / name).write_text(text, encoding='utf-8', newline='\n')
 
     for service, node_args in services.items():
-        write(f'{service}.sh', node_script(service, node_args, services, args.install_dir, args.log_dir))
+        write(f'{service}.sh', node_script(service, node_args, services, args.install_dir, args.log_dir, args.data_dir))
     if args.wsl:
         write('install.sh', install_script(args.install_dir))
     write('services.txt', '\n'.join(services) + '\n')
