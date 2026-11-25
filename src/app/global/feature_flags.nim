@@ -26,6 +26,7 @@ const DEFAULT_FLAG_MESSAGE_LINK_SHARING_ENABLED = true
 const DEFAULT_FLAG_STATUS_SUPPORT_BOT_ENABLED = true
 const DEFAULT_FLAG_THREADS_ENABLED = false
 const DEFAULT_FLAG_THREADS_ENABLED_V2 = false
+const DEFAULT_FLAG_RESUME_AFTER_RESTART_ENABLED = false
 
 # Compile time feature flags
 const DEFAULT_FLAG_DAPPS_ENABLED  = true
@@ -53,6 +54,7 @@ featureFlag("MESSAGE_LINK_SHARING_ENABLED",   DEFAULT_FLAG_MESSAGE_LINK_SHARING_
 featureFlag("STATUS_SUPPORT_BOT_ENABLED",     DEFAULT_FLAG_STATUS_SUPPORT_BOT_ENABLED)
 featureFlag("THREADS_ENABLED",                DEFAULT_FLAG_THREADS_ENABLED)
 featureFlag("THREADS_ENABLED_V2",             DEFAULT_FLAG_THREADS_ENABLED_V2)
+featureFlag("RESUME_AFTER_RESTART_ENABLED",    DEFAULT_FLAG_RESUME_AFTER_RESTART_ENABLED)
 
 featureFlag("DAPPS_ENABLED",                  DEFAULT_FLAG_DAPPS_ENABLED, true)
 featureFlag("BROWSER_ENABLED",                DEFAULT_FLAG_BROWSER_ENABLED, true)
@@ -129,6 +131,7 @@ QtObject:
     lifiEnabled: bool
     relayEnabled: bool
     swapProvidersEnabled: bool
+    resumeAfterRestartEnabled: bool
 
   proc setup(self: FeatureFlags) =
     self.QObject.setup()
@@ -152,6 +155,7 @@ QtObject:
     self.lifiEnabled = LIFI_PROVIDER_ENABLED
     self.relayEnabled = RELAY_PROVIDER_ENABLED
     self.swapProvidersEnabled = SWAP_PROVIDER_ENABLED
+    self.resumeAfterRestartEnabled = RESUME_AFTER_RESTART_ENABLED
 
   proc newFeatureFlags*(): FeatureFlags =
     new(result)
@@ -279,3 +283,9 @@ QtObject:
 
   QtProperty[bool] swapProvidersEnabled:
     read = getSwapProvidersEnabled
+
+  proc getResumeAfterRestartEnabled*(self: FeatureFlags): bool {.slot.} =
+    return self.resumeAfterRestartEnabled
+
+  QtProperty[bool] resumeAfterRestartEnabled:
+    read = getResumeAfterRestartEnabled

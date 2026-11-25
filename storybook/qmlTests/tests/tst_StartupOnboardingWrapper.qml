@@ -33,6 +33,7 @@ Item {
             featureFlagsStore: QtObject {
                 readonly property bool keycardEnabled: false
                 readonly property bool privacyModeFeatureEnabled: false
+                property bool resumeAfterRestartEnabled: false
             }
             languageStore: QtObject {
                 readonly property var availableLanguages: ["en"]
@@ -323,6 +324,51 @@ Item {
             loginScreen.onboardingCreateProfileFlowRequested()
             tryVerify(() => store.selectLoginAccountCalls.length > 0)
             compare(store.selectLoginAccountCalls[store.selectLoginAccountCalls.length - 1], "")
+        }
+
+        // Background launch: the window stays hidden only when the flag is on, the
+        // launch argument was given, a tray exists and the silent login started
+        // (a stored credential for the last-used profile)
+        function test_backgroundLaunchKeepsWindowHidden_data() {
+            return [
+                { tag: "all met", flag: true, arg: true, credential: true, tray: true, hidden: true },
+                { tag: "flag off", flag: false, arg: true, credential: true, tray: true, hidden: false },
+                { tag: "no argument", flag: true, arg: false, credential: true, tray: true, hidden: false },
+                { tag: "no credential", flag: true, arg: true, credential: false, tray: true, hidden: false },
+                { tag: "no tray", flag: true, arg: true, credential: true, tray: false, hidden: false },
+            ]
+        }
+
+        function test_backgroundLaunchKeepsWindowHidden(data) {
+            wrapper = createTemporaryObject(wrapperComponent, root, {
+                backgroundLaunchRequested: data.arg,
+                systemTrayAvailable: data.tray
+            })
+            verify(!!wrapper)
+            wrapper.featureFlagsStore.resumeAfterRestartEnabled = data.flag
+            if (data.credential)
+                wrapper.secureStorage.creds["uid_1"] = "dek:" + root.dummyDekHex
+
+            wrapper.autoLoginEnabled = true
+
+            compare(wrapper.keepWindowHidden, data.hidden)
+        }
+
+        // A hidden login screen would be useless: a failed silent login shows the window
+        function test_backgroundLaunchFailedSilentLoginShowsWindow() {
+            wrapper = createTemporaryObject(wrapperComponent, root, {
+                backgroundLaunchRequested: true,
+                systemTrayAvailable: true
+            })
+            verify(!!wrapper)
+            wrapper.featureFlagsStore.resumeAfterRestartEnabled = true
+            wrapper.secureStorage.creds["uid_1"] = "dek:" + root.dummyDekHex
+
+            wrapper.autoLoginEnabled = true
+            verify(wrapper.keepWindowHidden)
+
+            wrapper.onboardingStore.accountLoginError("stale dek", false)
+            verify(!wrapper.keepWindowHidden)
         }
 
         // Without an opt-in the preference is already ON; next login reconciles
