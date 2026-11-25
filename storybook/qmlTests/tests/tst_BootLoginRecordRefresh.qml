@@ -32,18 +32,30 @@ Item {
     TestCase {
         name: "BootLoginRecordRefresh"
 
-        function test_recordFromOtherVersionRequestsOneRelogin() {
+        function ignoreReloginWarning() {
+            ignoreWarning(new RegExp("boot-login record from another app version"))
+        }
+
+        function test_recordFromOtherVersionRequestsOneReloginOnceTheAdoptFinished() {
             const refresh = createTemporaryObject(refreshComponent, root)
             refresh.secureStorage.fromOtherVersion = true
 
-            compare(refresh.reloginIfRecordFromOtherVersion(), true)
+            compare(refresh.adoptStarted(), true)
+            compare(refresh.reloginCalls, 0)
+
+            ignoreReloginWarning()
+            compare(refresh.adoptFinished(), true)
+            compare(refresh.reloginCalls, 1)
+
+            compare(refresh.adoptFinished(), false)
             compare(refresh.reloginCalls, 1)
         }
 
         function test_recordFromThisVersionRequestsNoRelogin() {
             const refresh = createTemporaryObject(refreshComponent, root)
 
-            compare(refresh.reloginIfRecordFromOtherVersion(), false)
+            compare(refresh.adoptStarted(), false)
+            compare(refresh.adoptFinished(), false)
             compare(refresh.reloginCalls, 0)
         }
 
@@ -51,7 +63,8 @@ Item {
             const refresh = createTemporaryObject(refreshComponent, root, { enabled: false })
             refresh.secureStorage.fromOtherVersion = true
 
-            compare(refresh.reloginIfRecordFromOtherVersion(), false)
+            compare(refresh.adoptStarted(), false)
+            compare(refresh.adoptFinished(), false)
             compare(refresh.reloginCalls, 0)
         }
 
@@ -60,7 +73,9 @@ Item {
                                                   { reloginAccepted: false })
             refresh.secureStorage.fromOtherVersion = true
 
-            compare(refresh.reloginIfRecordFromOtherVersion(), false)
+            compare(refresh.adoptStarted(), true)
+            ignoreReloginWarning()
+            compare(refresh.adoptFinished(), false)
             compare(refresh.reloginCalls, 1)
         }
     }

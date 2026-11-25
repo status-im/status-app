@@ -82,6 +82,12 @@ Item {
             d.appMainTriggered = true
         }
 
+        // The adopt has finished: AppController.start() returned, the session is ready
+        function onAdoptFinished() : void {
+            if (!bootLoginRecordRefresh.adoptFinished())
+                d.moveToAppMain()
+        }
+
         function setAppReady() : void {
             Global.appIsReady = true
             d.appIsReady = true
@@ -92,9 +98,12 @@ Item {
     Component.onCompleted: {
         if (!root.skipOnboarding)
             return
-        // The UI adopted a running session
-        if (bootLoginRecordRefresh.reloginIfRecordFromOtherVersion())
+        // The UI adopted a running session. This runs within AppController.start()
+        // (engine.load), so the relogin waits until the adopt has finished.
+        if (bootLoginRecordRefresh.adoptStarted()) {
+            Qt.callLater(d.onAdoptFinished)
             return
+        }
         d.moveToAppMain()
     }
 

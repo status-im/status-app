@@ -14,10 +14,25 @@ QtObject {
     // () => bool: requests the relogin; false when it was ignored
     required property var relogin
 
-    // True when the relogin was requested: the adopted session's UI is not loaded then.
-    function reloginIfRecordFromOtherVersion() : bool {
-        return root.enabled
-                && root.secureStorage.isBootLoginRecordFromOtherVersion()
-                && root.relogin()
+    // When the UI adopts a session. True when the record is from another version: the
+    // adopted session's UI is not loaded, adoptFinished() follows.
+    function adoptStarted() : bool {
+        d.reloginPending = root.enabled && root.secureStorage.isBootLoginRecordFromOtherVersion()
+        return d.reloginPending
+    }
+
+    // Once the adopt has finished, never from within it. True when the relogin was requested.
+    function adoptFinished() : bool {
+        if (!d.reloginPending)
+            return false
+        d.reloginPending = false
+        console.warn("boot-login record from another app version: relogin to refresh it")
+        return root.relogin()
+    }
+
+    readonly property QtObject _d: QtObject {
+        id: d
+
+        property bool reloginPending: false
     }
 }
