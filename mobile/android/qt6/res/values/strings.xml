@@ -5,4 +5,5 @@
     <string name="notification_reply_failed">Reply could not be sent</string>
     <string name="notification_accept_contact_request">Accept</string>
     <string name="notification_reject_contact_request">Reject</string>
+    <string name="notification_boot_login_failed">Status couldn\'t resume, tap to open</string>
 </resources>

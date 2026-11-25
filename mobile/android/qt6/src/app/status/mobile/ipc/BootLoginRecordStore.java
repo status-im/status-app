@@ -13,15 +13,14 @@ final class BootLoginRecordStore implements BootLogin.RecordStore {
     }
 
     @Override
-    public String read() {
-        final String[] out = new String[1];
-        final int status = store().getBootLoginRecord(out);
-        return status == SecureStorageHelper.STATUS_OK ? out[0] : null;
+    public boolean exists() throws BootLogin.StoreException {
+        return StatusGoService.secureEntryExists(store().hasCredential(SecureStorageHelper.BOOT_LOGIN_RECORD_KEY));
     }
 
     @Override
-    public boolean exists() {
-        return store().hasCredential(SecureStorageHelper.BOOT_LOGIN_RECORD_KEY) == SecureStorageHelper.STATUS_OK;
+    public String read() throws BootLogin.StoreException {
+        final String[] out = new String[1];
+        return StatusGoService.secureEntry(store().getBootLoginRecord(out), out);
     }
 
     @Override

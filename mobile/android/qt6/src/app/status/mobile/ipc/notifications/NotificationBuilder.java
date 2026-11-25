@@ -54,6 +54,7 @@ public final class NotificationBuilder {
     private static final int NOTIFICATION_SMALL_ICON = R.drawable.ic_notification_status_logo;
     /** ID for "reply failed" notifications. */
     private static final int REPLY_FAILED_NOTIFICATION_ID = 4243;
+    private static final int BOOT_LOGIN_FAILED_NOTIFICATION_ID = 4244;
 
     /**
      * Notification identity for a conversation. Thread messages get their own stack: the
@@ -252,6 +253,30 @@ public final class NotificationBuilder {
             NotificationManagerCompat.from(context).notify(REPLY_FAILED_NOTIFICATION_ID, builder.build());
         } catch (Throwable t) {
             Log.w(TAG, "postReplyFailed failed", t);
+        }
+    }
+
+    // ── Boot-login-failed notification ────────────────────────────────────────
+
+    /** Tells the user a boot login failed; tapping it opens the app normally. */
+    public static void postBootLoginFailed(Context context) {
+        if (context == null) return;
+        try {
+            createMessagesChannel(context);
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID_MESSAGES)
+                    .setSmallIcon(NOTIFICATION_SMALL_ICON)
+                    .setContentTitle(context.getString(R.string.notification_boot_login_failed))
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                    .setAutoCancel(true);
+            Intent intent = buildTapIntent(context, null);
+            if (intent != null) {
+                builder.setContentIntent(PendingIntent.getActivity(
+                        context, BOOT_LOGIN_FAILED_NOTIFICATION_ID, intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE));
+            }
+            NotificationManagerCompat.from(context).notify(BOOT_LOGIN_FAILED_NOTIFICATION_ID, builder.build());
+        } catch (Throwable t) {
+            Log.w(TAG, "postBootLoginFailed failed", t);
         }
     }
 

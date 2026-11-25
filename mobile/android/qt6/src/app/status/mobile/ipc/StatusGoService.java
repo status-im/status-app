@@ -32,6 +32,7 @@ import org.json.JSONObject;
 
 import app.status.mobile.BuildConfig;
 import app.status.mobile.R;
+import app.status.mobile.ipc.notifications.NotificationBuilder;
 import app.status.mobile.ipc.notifications.StatusNotificationManager;
 import im.status.mobileui.PushNotificationHelper;
 
@@ -137,11 +138,19 @@ public final class StatusGoService extends Service {
     private final BootLogin bootLogin = new BootLogin(
             app.status.mobile.BuildFlags.RESUME_AFTER_RESTART_ENABLED,
             new BootLoginRecordStore(this),
-            keyUid -> {
-                final String[] out = new String[1];
-                final int status = app.status.mobile.SecureStorageHelper.getInstance(this)
-                        .getCredential(keyUid, out);
-                return status == app.status.mobile.SecureStorageHelper.STATUS_OK ? out[0] : null;
+            new BootLogin.CredentialSource() {
+                @Override
+                public boolean exists(String keyUid) throws BootLogin.StoreException {
+                    return secureEntryExists(app.status.mobile.SecureStorageHelper.getInstance(
+                            StatusGoService.this).hasCredential(keyUid));
+                }
+
+                @Override
+                public String credential(String keyUid) throws BootLogin.StoreException {
+                    final String[] out = new String[1];
+                    return secureEntry(app.status.mobile.SecureStorageHelper.getInstance(
+                            StatusGoService.this).getCredential(keyUid, out), out);
+                }
             },
             StatusGoService::callRpc,
             stillHidden -> scheduleBackendLifecycleUpdate(false, stillHidden),
@@ -157,7 +166,31 @@ public final class StatusGoService extends Service {
                 }
             },
             this::stopBootLoginService,
-            () -> {});
+            () -> NotificationBuilder.postBootLoginFailed(this),
+            new BootLogin.Scheduler() {
+                @Override
+                public void schedule(Runnable task, long delayMs) {
+                    mainHandler.postDelayed(task, delayMs);
+                }
+
+                @Override
+                public void cancel(Runnable task) {
+                    mainHandler.removeCallbacks(task);
+                }
+            });
+
+    /** A secure-store read as BootLogin sees it: the value, null when absent, or a throw. */
+    static String secureEntry(int status, String[] out) throws BootLogin.StoreException {
+        if (status == app.status.mobile.SecureStorageHelper.STATUS_OK) return out[0];
+        if (status == app.status.mobile.SecureStorageHelper.STATUS_NOT_FOUND) return null;
+        throw new BootLogin.StoreException();
+    }
+
+    static boolean secureEntryExists(int status) throws BootLogin.StoreException {
+        if (status == app.status.mobile.SecureStorageHelper.STATUS_OK) return true;
+        if (status == app.status.mobile.SecureStorageHelper.STATUS_NOT_FOUND) return false;
+        throw new BootLogin.StoreException();
+    }
 
     /** Nothing to resume after a restart: leave the foreground and stop. */
     private void stopBootLoginService() {
