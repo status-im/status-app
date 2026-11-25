@@ -11,6 +11,9 @@ QtObject {
 
     required property bool enabled
     required property SecureStorage secureStorage
+    // (record) => void: the KeptCurrent rewrite of an adopted login's record
+    // (BootLoginRecordGuard.keepCurrent), which stamps this version's versionCode
+    required property var keepCurrent
     // () => bool: requests the relogin; false when it was ignored
     required property var relogin
     // () => void: links, shares and notification taps wait for the next session's appReady
@@ -18,11 +21,13 @@ QtObject {
     // () => void: the held ones go to the current session
     required property var releaseIntake
 
-    // When the UI adopts a session, before its appReady. True when the record is from another
-    // version: the adopted session's UI is not loaded, the intake is held, adoptFinished()
+    // On every adopt (logged in at start, or a boot login still in progress adopted by the
+    // login screen), before its appReady: keeps `record` current. True when the stored record
+    // was from another version (read before the rewrite): the intake is held, adoptFinished()
     // follows.
-    function adoptStarted() : bool {
+    function adoptStarted(record: string) : bool {
         d.reloginPending = root.enabled && root.secureStorage.isBootLoginRecordFromOtherVersion()
+        root.keepCurrent(record)
         if (d.reloginPending)
             root.holdIntake()
         return d.reloginPending

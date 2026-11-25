@@ -568,8 +568,6 @@ Window {
 
             anchors.fill: parent
 
-            onLoaded: bootLoginRecordGuard.keepCurrent(item.resumedBootLoginRecord)
-
             sourceComponent: SessionRoot {
                 featureFlagsStore: applicationWindow.featureFlagsStore
                 languageStore: applicationWindow.languageStore
@@ -581,6 +579,7 @@ Window {
                 relogin: () => d.startUnrequestedRelogin()
                 holdIntake: () => sessionView.holdIntakeForNextSession()
                 releaseIntake: () => sessionView.releaseIntakeHold()
+                keepBootLoginRecordCurrent: (record) => bootLoginRecordGuard.keepCurrent(record)
 
                 onContentLoaded: {
                     splashScreenLoader.active = false
@@ -590,7 +589,6 @@ Window {
                 }
                 onStoreAppStateRequested: applicationWindow.storeAppState()
                 onSignOutRequested: d.signOut()
-                onBootLoginRecordKeepCurrentRequested: bootLoginRecord => bootLoginRecordGuard.keepCurrent(bootLoginRecord)
             }
         }
 

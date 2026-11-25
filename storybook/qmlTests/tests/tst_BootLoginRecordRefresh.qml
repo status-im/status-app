@@ -17,6 +17,7 @@ Item {
             property int holdIntakeCalls: 0
             property int releaseIntakeCalls: 0
             property int holdCallsAtRelogin: -1
+            property var keptRecords: []
 
             enabled: true
             secureStorage: SecureStorage {
@@ -30,10 +31,17 @@ Item {
                 holdCallsAtRelogin = holdIntakeCalls
                 return reloginAccepted
             }
+            // The KeptCurrent rewrite stamps this version's versionCode into the record
+            keepCurrent: (record) => {
+                keptRecords.push(record)
+                secureStorage.fromOtherVersion = false
+            }
             holdIntake: () => holdIntakeCalls++
             releaseIntake: () => releaseIntakeCalls++
         }
     }
+
+    readonly property string record: JSON.stringify({ version: 1, keyUid: "uid_1", versionCode: 2 })
 
     TestCase {
         name: "BootLoginRecordRefresh"
@@ -46,7 +54,7 @@ Item {
             const refresh = createTemporaryObject(refreshComponent, root)
             refresh.secureStorage.fromOtherVersion = true
 
-            compare(refresh.adoptStarted(), true)
+            compare(refresh.adoptStarted(root.record), true)
             compare(refresh.reloginCalls, 0)
 
             ignoreReloginWarning()
@@ -61,7 +69,7 @@ Item {
             const refresh = createTemporaryObject(refreshComponent, root)
             refresh.secureStorage.fromOtherVersion = true
 
-            refresh.adoptStarted()
+            refresh.adoptStarted(root.record)
             compare(refresh.holdIntakeCalls, 1)
 
             ignoreReloginWarning()
@@ -76,7 +84,7 @@ Item {
                                                   { reloginAccepted: false })
             refresh.secureStorage.fromOtherVersion = true
 
-            refresh.adoptStarted()
+            refresh.adoptStarted(root.record)
             ignoreReloginWarning()
             refresh.adoptFinished()
             compare(refresh.holdIntakeCalls, 1)
@@ -95,16 +103,62 @@ Item {
                                                   { enabled: data.enabled })
             refresh.secureStorage.fromOtherVersion = data.fromOtherVersion
 
-            refresh.adoptStarted()
+            refresh.adoptStarted(root.record)
             refresh.adoptFinished()
             compare(refresh.holdIntakeCalls, 0)
             compare(refresh.releaseIntakeCalls, 0)
         }
 
+        // Logged in at start (SessionRoot opens on the session) and the in-progress boot
+        // login adopted by the login screen (onboarding KeptCurrent) take the same path
+        function test_everyAdoptPathRefreshesARecordFromOtherVersion_data() {
+            return [
+                { tag: "logged in at start" },
+                { tag: "adopt during an in-progress boot login" }
+            ]
+        }
+
+        function test_everyAdoptPathRefreshesARecordFromOtherVersion(data) {
+            const refresh = createTemporaryObject(refreshComponent, root)
+            refresh.secureStorage.fromOtherVersion = true
+
+            compare(refresh.adoptStarted(root.record), true)
+            ignoreReloginWarning()
+            compare(refresh.adoptFinished(), true)
+            compare(refresh.reloginCalls, 1)
+        }
+
+        // The KeptCurrent rewrite removes the version mismatch, so it is read first
+        function test_theVersionIsReadBeforeTheKeptCurrentRewrite() {
+            const refresh = createTemporaryObject(refreshComponent, root)
+            refresh.secureStorage.fromOtherVersion = true
+
+            compare(refresh.adoptStarted(root.record), true)
+            compare(refresh.keptRecords, [root.record])
+            compare(refresh.secureStorage.fromOtherVersion, false)
+        }
+
+        function test_theAdoptKeepsTheRecordCurrent_data() {
+            return [
+                { tag: "this version", enabled: true, fromOtherVersion: false },
+                { tag: "other version", enabled: true, fromOtherVersion: true },
+                { tag: "flag off", enabled: false, fromOtherVersion: true }
+            ]
+        }
+
+        function test_theAdoptKeepsTheRecordCurrent(data) {
+            const refresh = createTemporaryObject(refreshComponent, root,
+                                                  { enabled: data.enabled })
+            refresh.secureStorage.fromOtherVersion = data.fromOtherVersion
+
+            refresh.adoptStarted(root.record)
+            compare(refresh.keptRecords, [root.record])
+        }
+
         function test_recordFromThisVersionRequestsNoRelogin() {
             const refresh = createTemporaryObject(refreshComponent, root)
 
-            compare(refresh.adoptStarted(), false)
+            compare(refresh.adoptStarted(root.record), false)
             compare(refresh.adoptFinished(), false)
             compare(refresh.reloginCalls, 0)
         }
@@ -113,7 +167,7 @@ Item {
             const refresh = createTemporaryObject(refreshComponent, root, { enabled: false })
             refresh.secureStorage.fromOtherVersion = true
 
-            compare(refresh.adoptStarted(), false)
+            compare(refresh.adoptStarted(root.record), false)
             compare(refresh.adoptFinished(), false)
             compare(refresh.reloginCalls, 0)
         }
@@ -123,7 +177,7 @@ Item {
                                                   { reloginAccepted: false })
             refresh.secureStorage.fromOtherVersion = true
 
-            compare(refresh.adoptStarted(), true)
+            compare(refresh.adoptStarted(root.record), true)
             ignoreReloginWarning()
             compare(refresh.adoptFinished(), false)
             compare(refresh.reloginCalls, 1)

@@ -36,6 +36,9 @@ Item {
     required property var holdIntake
     // The held ones go to this session: () => void
     required property var releaseIntake
+    // The KeptCurrent rewrite of an adopted login's record (BootLoginRecordGuard.keepCurrent):
+    // (record) => void
+    required property var keepBootLoginRecordCurrent
 
     readonly property bool userLoggedIn: appMainLoader.item !== null
 
@@ -43,8 +46,6 @@ Item {
     signal storeAppStateRequested()
     // End the session: the next one starts at the login screen
     signal signOutRequested()
-    // An adopted login finished in the login flow (see BootLoginRecordGuard.keepCurrent)
-    signal bootLoginRecordKeepCurrentRequested(string bootLoginRecord)
 
     // Provided by Nim before the session's UI loads (see AppController.initializeQmlContext())
     readonly property bool skipOnboarding: typeof skipOnboardingContextProperty !== "undefined"
@@ -92,6 +93,12 @@ Item {
                 d.moveToAppMain()
         }
 
+        // The login screen adopted a boot login that was still in progress: the onboarding
+        // flow moves to the app itself unless the relogin is requested
+        function onLoginFlowAdoptFinished() : void {
+            bootLoginRecordRefresh.adoptFinished()
+        }
+
         function setAppReady() : void {
             Global.appIsReady = true
             d.appIsReady = true
@@ -104,7 +111,7 @@ Item {
             return
         // The UI adopted a running session. This runs within AppController.start()
         // (engine.load), so the relogin waits until the adopt has finished.
-        if (bootLoginRecordRefresh.adoptStarted()) {
+        if (bootLoginRecordRefresh.adoptStarted(root.resumedBootLoginRecord)) {
             Qt.callLater(d.onAdoptFinished)
             return
         }
@@ -116,6 +123,7 @@ Item {
 
         enabled: root.featureFlagsStore.resumeAfterRestartEnabled
         secureStorage: root.secureStorage
+        keepCurrent: root.keepBootLoginRecordCurrent
         relogin: root.relogin
         holdIntake: root.holdIntake
         releaseIntake: root.releaseIntake
@@ -264,8 +272,11 @@ Item {
         function onNewSessionRequested() : void {
             root.signOutRequested()
         }
+        // Within the login's post-login tasks (before appReady), so the relogin waits until
+        // they have finished
         function onBootLoginRecordKeepCurrentRequested(bootLoginRecord: string) : void {
-            root.bootLoginRecordKeepCurrentRequested(bootLoginRecord)
+            if (bootLoginRecordRefresh.adoptStarted(bootLoginRecord))
+                Qt.callLater(d.onLoginFlowAdoptFinished)
         }
     }
 
