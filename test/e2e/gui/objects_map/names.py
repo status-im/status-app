@@ -404,16 +404,6 @@ pinnedMessagesPanel_unpin = {"container": statusDesktop_mainWindow_overlay, "obj
 chatToolbar_infoButton = {"container": statusDesktop_mainWindow, "objectName": "membersButton",
                           "type": "StatusFlatRoundButton", "visible": True}
 
-# Introduce Yourself popup
-introduceYourselfPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "IntroduceYourselfPopup",
-                          "type": "PopupItem", "visible": True}
-introduceYourselfSkipButton = {"container": introduceYourselfPopup,
-                               "objectName": "introduceSkipStatusFlatButton", "type": "StatusFlatButton",
-                               "visible": True}
-introduceYourselfEditProfileButton = {"container": introduceYourselfPopup,
-                                      "objectName": "introduceEditStatusFlatButton", "type": "StatusButton",
-                                      "visible": True}
-
 """ Settings """
 
 # Send Contact Request

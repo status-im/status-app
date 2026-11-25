@@ -15,7 +15,6 @@ from helpers.chat_helper import (
     chat_contains_message_text,
     close_activity_center_if_visible,
     latest_message_text,
-    skip_intro_if_visible,
     skip_message_backup_popup_if_visible,
 )
 from helpers.multiple_instances_helper import (
@@ -96,7 +95,6 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
 
         with step(f'User {user_three.name}, accept contact request from {user_one.name} via activity center'):
             switch_to_aut(aut_three, main_window)
-            skip_intro_if_visible()
             activity_center = main_window.left_panel.open_activity_center()
             request = activity_center.find_contact_request_in_list(user_one.name, configs.timeouts.APP_LOAD_TIMEOUT_MSEC)
             activity_center.accept_contact_request(request)
@@ -336,7 +334,6 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
             with step(f'Check that {user_three.name} is not a member of a group'):
                 switch_to_aut(aut_three, main_window)
                 skip_message_backup_popup_if_visible()
-                skip_intro_if_visible()
                 close_activity_center_if_visible()
                 main_window.left_panel.open_messages_screen()
                 assert driver.wait_until(lambda: group_chat_new_name in messages_screen.left_panel.get_chats_names,

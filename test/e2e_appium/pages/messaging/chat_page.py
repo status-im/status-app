@@ -35,7 +35,6 @@ class ChatPage(BasePage):
         return False
 
     def is_loaded(self, timeout: int | None = 15) -> bool:
-        self.dismiss_introduce_prompt(timeout=2)
         return self._ensure_chat_list_visible(timeout=timeout)
 
     def open_chat(self, display_name: str) -> bool:
@@ -213,7 +212,6 @@ class ChatPage(BasePage):
         keyboard layouts; the button can be unclickable on first render
         or behind the keyboard in portrait.
         """
-        self.dismiss_introduce_prompt(timeout=2)
         if not self.qt_safe_input(
             self.locators.MESSAGE_INPUT,
             message,
@@ -483,21 +481,6 @@ class ChatPage(BasePage):
         except Exception as exc:
             self.logger.warning("visibility cost line not written: %s", exc)
 
-    def dismiss_introduce_prompt(self, timeout: int | None = 2) -> bool:
-        element = self.find_element_safe(self.locators.INTRODUCE_SKIP_BUTTON, timeout=timeout)
-        if not element:
-            return False
-        try:
-            element.click()
-            return True
-        except Exception as e:
-            self.logger.debug(f"dismiss_introduce_prompt direct click failed: {e}")
-            try:
-                return self.try_click(self.locators.INTRODUCE_SKIP_BUTTON, timeout=timeout)
-            except Exception as e2:
-                self.logger.debug(f"dismiss_introduce_prompt click also failed: {e2}")
-                return False
-
     def dismiss_backup_prompt(self, timeout: int | None = 2) -> bool:
         element = self.find_element_safe(self.locators.BACKUP_SKIP_BUTTON, timeout=timeout)
         if not element:
@@ -574,7 +557,6 @@ class ChatPage(BasePage):
 
         _REFRESH_INTERVAL = 30  # seconds between nav-toggle refreshes
 
-        self.dismiss_introduce_prompt(timeout=2)
         self.dismiss_backup_prompt(timeout=2)
         self._ensure_chat_list_visible()
 
@@ -593,7 +575,6 @@ class ChatPage(BasePage):
                     "Nav-toggling to refresh chat list while waiting for '%s'",
                     chat_identifier,
                 )
-                self.dismiss_introduce_prompt(timeout=1)
                 self.dismiss_backup_prompt(timeout=1)
                 try:
                     # Bare nav both ways: this bounce only exists to force a
@@ -609,7 +590,6 @@ class ChatPage(BasePage):
                         self.logger.debug("Nav-toggle: messages leg missed")
                 except Exception as exc:
                     self.logger.debug("Nav-toggle refresh failed: %s", exc)
-                self.dismiss_introduce_prompt(timeout=1)
                 self.dismiss_backup_prompt(timeout=1)
                 self._ensure_chat_list_visible(timeout=5)
                 last_refresh = time.time()

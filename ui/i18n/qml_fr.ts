@@ -9300,29 +9300,6 @@ app&#xa0;: %2</translation>
     </message>
 </context>
 <context>
-    <name>IntroduceYourselfPopup</name>
-    <message>
-        <source>Introduce yourself</source>
-        <translation>Présentez-vous</translation>
-    </message>
-    <message>
-        <source>Your Name</source>
-        <translation>Votre nom</translation>
-    </message>
-    <message>
-        <source>Add an optional display name and profile picture so others can easily recognise you.</source>
-        <translation>Ajoutez un nom public et une photo de profil facultatifs pour que les autres puissent facilement vous reconnaître.</translation>
-    </message>
-    <message>
-        <source>Skip</source>
-        <translation>Ignorer</translation>
-    </message>
-    <message>
-        <source>Edit Profile in Settings</source>
-        <translation>Modifier le profil dans les paramètres</translation>
-    </message>
-</context>
-<context>
     <name>InvitationBubbleView</name>
     <message>
         <source>Verified community invitation</source>

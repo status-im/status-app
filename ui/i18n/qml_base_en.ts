@@ -9289,29 +9289,6 @@ app: %2</source>
     </message>
 </context>
 <context>
-    <name>IntroduceYourselfPopup</name>
-    <message>
-        <source>Introduce yourself</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Your Name</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Add an optional display name and profile picture so others can easily recognise you.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Skip</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Edit Profile in Settings</source>
-        <translation type="unfinished"></translation>
-    </message>
-</context>
-<context>
     <name>InvitationBubbleView</name>
     <message>
         <source>Verified community invitation</source>
