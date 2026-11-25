@@ -8,9 +8,19 @@ import seaqt/qquickwindow
 import seaqt/qguiapplication
 import seaqt/QtCore/gen_qnamespace
 from seaqt/qqmlapplicationengine import rootObjects
+import app_window_activity
 
 proc app_isActive*(): bool =
   QGuiApplication.applicationState() == ApplicationStateEnum.ApplicationActive
+
+proc app_isInUse*(engine: QQmlApplicationEngine): bool =
+  ## Active and the main window shown, see app_window_activity.isInUse.
+  let appActive = app_isActive()
+  for topObj in engine.seaqt.rootObjects():
+    if topObj.objectName() == "mainWindow" and topObj.inherits("QQuickWindow"):
+      let win = gen_qwindow_types.QWindow(h: topObj.h, owned: false)
+      return isInUse(appActive, int(win.visibility()))
+  appActive
 
 proc app_makeItActive*(engine: QQmlApplicationEngine) =
   ## Brings the main QQuickWindow to the front and requests focus.
