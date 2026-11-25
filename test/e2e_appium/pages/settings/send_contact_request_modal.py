@@ -2,6 +2,7 @@ from typing import Optional
 
 from ..base_page import BasePage
 from locators.settings.send_contact_request_locators import SendContactRequestLocators
+from support.screen_identity import dismiss_backup_modal
 
 
 class SendContactRequestModal(BasePage):
@@ -31,6 +32,9 @@ class SendContactRequestModal(BasePage):
         ):
             self.logger.error("Send button not enabled after waiting")
             return False
-        return self.try_click(self.locators.SEND_BUTTON)
+        if not self.try_click(self.locators.SEND_BUTTON):
+            return False
+        dismiss_backup_modal(self)
+        return True
 
 

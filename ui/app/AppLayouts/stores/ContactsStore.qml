@@ -10,6 +10,7 @@ QtObject {
     id: root
 
     signal contactInfoRequestFinished(string publicKey, bool ok)
+    signal localContactRequestCompleted()
     signal profileShowcaseAccountsByAddressFetched(string accounts)
 
     readonly property QtObject _d: QtObject {
@@ -26,6 +27,7 @@ QtObject {
             contactsModuleInst.trustStatusRemoved.connect(root.trustStatusRemoved)
             contactsModuleInst.contactRemoved.connect(root.contactRemoved)
             contactsModuleInst.contactInfoRequestFinished.connect(root.contactInfoRequestFinished)
+            contactsModuleInst.localContactRequestCompleted.connect(root.localContactRequestCompleted)
             contactsModuleInst.profileShowcaseAccountsByAddressFetched.connect((accounts) => {
                 root.profileShowcaseAccountsByAddressFetched(accounts)
             })

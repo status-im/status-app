@@ -22,11 +22,11 @@ import utils
 
 import MobileUI
 
-// Public API for this object are ONLY `stores` + the main `popupParent`
 QtObject {
     id: root
 
     required property Item popupParent
+    required property QtObject messageBackupSettings
 
     // Stores definition:
     required property AppStores.RootStore rootStore
@@ -58,7 +58,6 @@ QtObject {
     readonly property var appMainLocalSettings: Settings {
         id: appMainLocalSettings
         category: "AppMainLocalSettings_%1".arg(userProfile.pubKey)
-        property bool enableMessageBackupPopupSeen
         property bool enablePushNotificationsFreshInstallSeen
         property bool enablePushNotificationsDontAskAgain
         property string enablePushNotificationsLastShownVersion
@@ -195,21 +194,30 @@ QtObject {
         onOpenThirdpartyServicesArticleRequested: Global.requestOpenLink(Constants.statusThirdpartyServicesArticle)
     }
 
+    property var messageBackupPopup: null
+
     readonly property Component enableMessageBackupPopupComponent: Component {
         EnableMessageBackupPopup {
-            visible: true
             destroyOnClose: true
-            onClosed: appMainLocalSettings.enableMessageBackupPopupSeen = true
+            onClosed: {
+                root.messageBackupSettings.enableMessageBackupPopupSeen = true
+                root.messageBackupPopup = null
+            }
             onAccepted: root.devicesStore.setMessagesBackupEnabled(true)
         }
     }
 
     function maybeDisplayEnableMessageBackupPopup() {
-        if (!appMainLocalSettings.enableMessageBackupPopupSeen && !root.devicesStore.messagesBackupEnabled) {
-            enableMessageBackupPopupComponent.createObject(popupParent).open()
-            return true
-        }
-        return false
+        if (root.messageBackupPopup || root.messageBackupSettings.enableMessageBackupPopupSeen ||
+                root.devicesStore.messagesBackupEnabled)
+            return false
+
+        root.messageBackupPopup = enableMessageBackupPopupComponent.createObject(popupParent)
+        if (!root.messageBackupPopup)
+            return false
+
+        root.messageBackupPopup.open()
+        return true
     }
 
     readonly property Component enablePushNotificationsPopupComponent: Component {

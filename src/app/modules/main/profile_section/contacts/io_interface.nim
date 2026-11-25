@@ -95,6 +95,9 @@ method requestContactInfo*(self: AccessInterface, publicKey: string) {.base.} =
 method onContactInfoRequestFinished*(self: AccessInterface, publicKey: string, ok: bool) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method onLocalContactRequestCompleted*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method shareUserUrlWithData*(self: AccessInterface, pubkey: string): string {.base.} =
   raise newException(ValueError, "No implementation available")
 
