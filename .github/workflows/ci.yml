@@ -76,7 +76,7 @@ jobs:
           else
             code=false
           fi
-          if grep -qE '^test/e2e/|^ci/tests\.Dockerfile$|^docker-compose\.waku\.yml$|^\.github/workflows/ci\.yml$' <<< "$files"; then
+          if grep -qE '^test/e2e/|^ci/(tests\.Dockerfile|Dockerfile|build-image\.sh|start-session-keyring\.sh)$|^docker-compose\.waku\.yml$|^\.github/workflows/ci\.yml$' <<< "$files"; then
             e2e=true
           else
             e2e=false
@@ -293,6 +293,15 @@ jobs:
     timeout-minutes: 60
     steps:
       - *checkout
+      # Jenkins builds ci/tests.Dockerfile without BASE, so its default must name the current image.
+      - name: Test image base is current
+        run: |
+          base="$(sed -nE 's/^ARG BASE=(.*)$/\1/p' ci/tests.Dockerfile)"
+          image="$(ci/build-image.sh --image desktop)"
+          if [ "$base" != "$image" ]; then
+            echo "::error file=ci/tests.Dockerfile::BASE defaults to $base, but ci/Dockerfile now builds $image"
+            exit 1
+          fi
       - name: Fetch submodules
         run: scripts/ci-fetch-submodules.sh
       # linuxdeployqt and appimagetool are AppImages: without FUSE they unpack and run.
@@ -338,6 +347,12 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
+      - name: Driver unit tests
+        working-directory: test/e2e
+        run: |
+          python3 -m venv "$RUNNER_TEMP/driver-venv"
+          "$RUNNER_TEMP/driver-venv/bin/pip" install --quiet pytest
+          "$RUNNER_TEMP/driver-venv/bin/python" -m pytest driver/tests -v
       - name: Plugin version
         id: plugin
         run: echo "ref=$(sed -nE 's/^PLUGIN_REF="\$\{PLUGIN_REF:-([0-9a-f]+)\}"$/\1/p' test/e2e/scripts/inspector/build-plugin.sh)" >> "$GITHUB_OUTPUT"
@@ -371,8 +386,6 @@ jobs:
           docker build --build-arg "BASE=$(ci/build-image.sh --image desktop)" \
             -t status-e2e-tests -f ci/tests.Dockerfile ci
       - name: Critical tests
-        env:
-          WALLET_TEST_USER_SEED: ${{ secrets.WALLET_TEST_USER_SEED }}
         run: |
           APP="$RUNNER_TEMP/aut/squashfs-root/AppRun" PLUGINS="$RUNNER_TEMP/qmlinspector/plugins" \
             test/e2e/scripts/inspector/run-in-docker.sh -m critical -v --reruns=1 --timeout=300 \
@@ -382,8 +395,10 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: e2e-linux-results
+          # Not all of local_run_results: it holds the app's profiles, hundreds of MB.
           path: |
-            test/e2e/local_run_results/
+            test/e2e/junit.xml
+            test/e2e/local_run_results/*.log
             test/e2e/allure-results/
           if-no-files-found: warn
           retention-days: 7
