@@ -354,6 +354,38 @@ Item {
             compare(wrapper.keepWindowHidden, data.hidden)
         }
 
+        // Silent login not allowed (e2e, after sign-out): the window shows
+        function test_backgroundLaunchSilentLoginNotAllowedShowsWindow() {
+            wrapper = createTemporaryObject(wrapperComponent, root, {
+                backgroundLaunchRequested: true,
+                systemTrayIconAvailable: true
+            })
+            verify(!!wrapper)
+            wrapper.featureFlagsStore.resumeAfterRestartEnabled = true
+            wrapper.secureStorage.creds["uid_1"] = "dek:" + root.dummyDekHex
+
+            wrapper.autoLoginEnabled = false
+
+            verify(!wrapper.keepWindowHidden)
+        }
+
+        // The tray going away while hidden shows the window: never unreachable
+        function test_backgroundLaunchTrayLostShowsWindow() {
+            wrapper = createTemporaryObject(wrapperComponent, root, {
+                backgroundLaunchRequested: true,
+                systemTrayIconAvailable: true
+            })
+            verify(!!wrapper)
+            wrapper.featureFlagsStore.resumeAfterRestartEnabled = true
+            wrapper.secureStorage.creds["uid_1"] = "dek:" + root.dummyDekHex
+            wrapper.autoLoginEnabled = true
+            verify(wrapper.keepWindowHidden)
+
+            wrapper.systemTrayIconAvailable = false
+
+            verify(!wrapper.keepWindowHidden)
+        }
+
         // A hidden login screen would be useless: a failed silent login shows the window
         function test_backgroundLaunchFailedSilentLoginShowsWindow() {
             wrapper = createTemporaryObject(wrapperComponent, root, {
