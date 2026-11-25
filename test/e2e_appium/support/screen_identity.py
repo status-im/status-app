@@ -105,18 +105,34 @@ def topmost_overlay(page, object_names: tuple[str, ...]) -> str | None:
         page.logger.warning("Could not read the page source to find the top overlay: %s", exc)
         return None
 
+    has_focus_attr = False
+    last_listed = None
     for node in root.iter():
+        resource_id = node.get("resource-id") or node.get("name") or ""
+        if node.get("focused") is not None:
+            has_focus_attr = True
+        for name in object_names:
+            # Containers are often not elements on iOS; their children carry
+            # the overlay's name inside their path.
+            if name in resource_id:
+                last_listed = name
         if node.get("focused") != "true":
             continue
-        resource_id = node.get("resource-id") or ""
         for name in object_names:
             if name in resource_id:
                 return name
+    # XCUITest trees carry no focus attribute; there a later sibling is
+    # drawn above an earlier one, so the last listed dialog is on top.
+    if not has_focus_attr:
+        return last_listed
     return None
 
 
 def overlay_locator(object_name: str) -> tuple:
-    return ("xpath", f"//*[contains(@resource-id,'{object_name}')]")
+    return (
+        "xpath",
+        f"//*[contains(@resource-id,'{object_name}') or contains(@name,'{object_name}')]",
+    )
 
 
 def dismiss_stacked_overlays(page, overlays, max_rounds: int = 4):

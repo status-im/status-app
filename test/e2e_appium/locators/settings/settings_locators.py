@@ -1,4 +1,4 @@
-from ..base_locators import BaseLocators
+from ..base_locators import BaseLocators, object_name_pred
 
 
 class SettingsLocators(BaseLocators):
@@ -6,7 +6,7 @@ class SettingsLocators(BaseLocators):
     # TODO: Replace fallbacks with accessibility_id/tid
 
     LEFT_PANEL_CONTAINER = BaseLocators.xpath(
-        "//*[contains(@resource-id, 'Settings')] | //*[@content-desc='Settings']"
+        f"//*[{object_name_pred('Settings')}] | //*[@content-desc='Settings']"
     )
 
     # SettingsList.qml sets objectName: model.subsection + "-MenuItem"; backUpSeed subsection is 19

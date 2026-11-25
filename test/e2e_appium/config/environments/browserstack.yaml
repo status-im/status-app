@@ -86,6 +86,7 @@ devices:
       capabilities:
         platformName: "iOS"
         automationName: "XCUITest"
+        autoAcceptAlerts: true
         platformVersion: "16"
         deviceName: "iPad 10th"
     - id: "ipad_air_6th_gen_ios_18"
@@ -94,6 +95,7 @@ devices:
       capabilities:
         platformName: "iOS"
         automationName: "XCUITest"
+        autoAcceptAlerts: true
         platformVersion: "18"
         deviceName: "iPad Air (6th generation)"
     - id: "iphone_15_ios_17"
@@ -102,6 +104,7 @@ devices:
       capabilities:
         platformName: "iOS"
         automationName: "XCUITest"
+        autoAcceptAlerts: true
         platformVersion: "17"
         deviceName: "iPhone 15"
 

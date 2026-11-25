@@ -1,4 +1,4 @@
-from ..base_locators import BaseLocators
+from ..base_locators import BaseLocators, object_name_pred
 
 
 class SavedAddressesLocators(BaseLocators):
@@ -14,7 +14,7 @@ class SavedAddressesLocators(BaseLocators):
         "SavedAddressActivityPopup"
     )
     POPUP_MENU_BUTTON_GENERIC = BaseLocators.xpath(
-        "//*[contains(@resource-id,'SavedAddressActivityPopup')]//*[contains(@resource-id, 'savedAddressView_Delegate_menuButton_')]"
+        f"//*[{object_name_pred('SavedAddressActivityPopup')}]//*[{object_name_pred('savedAddressView_Delegate_menuButton_')}]"
     )
     @staticmethod
     def row_by_name(name: str) -> tuple:

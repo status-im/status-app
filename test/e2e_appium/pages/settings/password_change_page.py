@@ -1,6 +1,7 @@
 from typing import Optional
 
 from ..base_page import BasePage
+from support.platform import is_ios
 from locators.settings.password_change_locators import PasswordChangeLocators
 from .change_password_modal import ChangePasswordModal
 
@@ -11,6 +12,12 @@ class PasswordChangePage(BasePage):
         self.locators = PasswordChangeLocators()
 
     def is_loaded(self, timeout: Optional[int] = 10) -> bool:
+        # On iOS "Enter current password" is only the field's placeholder,
+        # never an accessible label, so the input itself is the anchor.
+        if is_ios(self.driver):
+            return self.is_element_visible(
+                self.locators.CURRENT_PASSWORD_INPUT, timeout=timeout
+            )
         if not self.is_element_visible(
             self.locators.CURRENT_PASSWORD_CONTAINER, timeout=timeout
         ):

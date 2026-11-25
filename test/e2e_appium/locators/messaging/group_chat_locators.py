@@ -13,7 +13,7 @@ locators are marked `# TODO: verify objectName` and use a fallback xpath that
 needs on-device verification. Fix these as the relevant QML gets objectName'd.
 """
 
-from ..base_locators import BaseLocators
+from ..base_locators import BaseLocators, object_name_pred
 
 
 class GroupChatLocators(BaseLocators):
@@ -71,9 +71,7 @@ class GroupChatLocators(BaseLocators):
         "removeFromGroup_StatusItem"
     )
     # Any member row in the UserListPanel — used to count current members.
-    MEMBER_PANEL_ROW_ANY = BaseLocators.xpath(
-        "//*[contains(@resource-id,'StatusMemberListItem')]"
-    )
+    MEMBER_PANEL_ROW_ANY = BaseLocators.object_name_contains("StatusMemberListItem")
 
     # Composer placeholder shown when a removed/non-member opens a group:
     # the input switches to this text and sending is disabled.
@@ -92,7 +90,7 @@ class GroupChatLocators(BaseLocators):
         """
         escaped = member_identity.replace("'", "\\'")
         return BaseLocators.xpath(
-            "//*[contains(@resource-id,'StatusMemberListItem')]"
+            f"//*[{object_name_pred('StatusMemberListItem')}]"
             f"[contains(@content-desc,\"{escaped}\")]"
         )
 
@@ -179,7 +177,7 @@ class GroupChatLocators(BaseLocators):
         """
         escaped = compressed_pubkey.replace("'", "\\'")
         return BaseLocators.xpath(
-            f"//*[contains(@resource-id,'statusMemberListItem-{escaped}')]"
+            f"//*[{object_name_pred(f'statusMemberListItem-{escaped}')}]"
         )
 
     @staticmethod
@@ -192,7 +190,7 @@ class GroupChatLocators(BaseLocators):
         """
         escaped = display_name.replace("'", "\\'")
         return BaseLocators.xpath(
-            "//*[contains(@resource-id,'statusMemberListItem')]"
+            f"//*[{object_name_pred('statusMemberListItem')}]"
             f"[contains(@content-desc,\"{escaped}\") or contains(@text,\"{escaped}\")]"
         )
 
@@ -214,8 +212,8 @@ class GroupChatLocators(BaseLocators):
     #
     # The xpath alternation covers both surfaces.
     ANY_MEMBER_LIST_ITEM = BaseLocators.xpath(
-        "//*[contains(@resource-id,'ContactListItemDelegate')]"
-        " | //*[contains(@resource-id,'statusMemberListItem-')]"
+        f"//*[{object_name_pred('ContactListItemDelegate')}]"
+        f" | //*[{object_name_pred('statusMemberListItem-')}]"
     )
 
     @staticmethod
@@ -232,7 +230,7 @@ class GroupChatLocators(BaseLocators):
         """
         escaped = display_name.replace("'", "\\'")
         return BaseLocators.xpath(
-            f"//*[contains(@resource-id,'contactCheckbox-{escaped}')]"
+            f"//*[{object_name_pred(f'contactCheckbox-{escaped}')}]"
         )
 
     # ------------------------------------------------------------------
@@ -252,7 +250,7 @@ class GroupChatLocators(BaseLocators):
         """
         escaped = group_name.replace("'", "\\'")
         return BaseLocators.xpath(
-            "//*[contains(@resource-id,'StatusDraggableListItem')]"
+            f"//*[{object_name_pred('StatusDraggableListItem')}]"
             f"[contains(@text,\"{escaped}\") or contains(@content-desc,\"{escaped}\")"
             f" or contains(@resource-id,\"{escaped}\")]"
         )

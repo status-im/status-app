@@ -52,6 +52,7 @@ class TestChatManagementBackend(PeerChatBase):
             )
 
     @pytest.mark.spec("SC-DM-06")
+    @pytest.mark.xfail_ios("status-app#22805: chat list rows are not in the iOS accessibility tree")
     async def test_peer_close_chat_leaves_phone_chat_row(self) -> None:
         """The other participant closing the chat does not close ours."""
         marker = _unique_message("peer_close")
@@ -85,6 +86,7 @@ class TestChatManagementBackend(PeerChatBase):
             )
 
     @pytest.mark.spec("SC-DM-07")
+    @pytest.mark.xfail_ios("status-app#22805: chat list rows are not in the iOS accessibility tree")
     async def test_clear_history_empties_chat_but_keeps_it_listed(self) -> None:
         """Clearing on the phone empties the chat and keeps it in the list."""
         marker = _unique_message("clear_hist")
@@ -124,6 +126,7 @@ class TestChatManagementBackend(PeerChatBase):
             )
 
     @pytest.mark.spec("SC-DM-06")
+    @pytest.mark.xfail_ios("status-app#22805: chat list rows are not in the iOS accessibility tree")
     async def test_close_chat_removes_it_from_the_chat_list(self) -> None:
         """Closing on the phone removes the row."""
         marker = _unique_message("close_chat")
