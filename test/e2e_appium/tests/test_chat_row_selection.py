@@ -72,6 +72,19 @@ def test_a_row_named_after_the_peer_wins_over_exclusion():
 
 @pytest.mark.gate
 @pytest.mark.component
+@pytest.mark.parametrize(
+    ("identifier", "expected"),
+    [
+        ("Burlywood Valuable Tayra", ("xpath", f'//*[@resource-id="{PEER.resource_id}"]')),
+        ("Unlisted Peer", None),
+    ],
+)
+def test_strict_selection_requires_a_matching_row(identifier, expected):
+    assert _page(BOT, PEER)._find_chat_row(identifier, allow_unique_row=False) == expected
+
+
+@pytest.mark.gate
+@pytest.mark.component
 def test_peer_row_count_ignores_the_bot():
     page = _page(BOT, PEER, OTHER)
     assert page.wait_for_peer_rows(2, timeout=1) is True
