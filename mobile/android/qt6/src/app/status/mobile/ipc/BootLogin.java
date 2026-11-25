@@ -12,6 +12,9 @@ import org.json.JSONObject;
  * prompt-free secure store and calls status-go's InitializeApplication and LoginAccount. It
  * never builds a login request itself.
  *
+ * <p>A failed boot login deletes the record, stops the service unless a UI is bound and posts
+ * one notification. There is no retry, and the "Stay logged in" credential is never touched.
+ *
  * <p>It also owns the pause rule: logged in with no visible UI means paused, the same state
  * as a backgrounded app (messaging stays on).
  */
@@ -19,19 +22,25 @@ final class BootLogin {
     private static final String DEK_PREFIX = "dek:";
     private static final int DEK_HEX_LENGTH = 64;
 
-    interface RecordStore {
-        /** The boot-login record JSON, or null when there is none. */
-        String read();
+    /** How long a boot login waits for node.login after LoginAccount. */
+    static final long LOGIN_TIMEOUT_MS = 60_000L;
 
-        /** Whether a record is stored, without decrypting it. */
-        boolean exists();
+    /** The secure store holds the entry but cannot decrypt it. */
+    static final class StoreException extends Exception {}
+
+    interface RecordStore {
+        /** Whether the record is stored, checked without decrypting it. */
+        boolean exists() throws StoreException;
+
+        /** The boot-login record JSON, or null when there is none. */
+        String read() throws StoreException;
 
         void delete();
     }
 
     interface CredentialSource {
         /** The account's "Stay logged in" credential, or null when there is none. */
-        String credential(String keyUid);
+        String credential(String keyUid) throws StoreException;
     }
 
     interface StatusGo {
@@ -62,6 +71,12 @@ final class BootLogin {
         void bootLoginFailed();
     }
 
+    interface Scheduler {
+        void schedule(Runnable task, long delayMs);
+
+        void cancel(Runnable task);
+    }
+
     private final boolean enabled;
     private final RecordStore records;
     private final CredentialSource credentials;
@@ -69,13 +84,18 @@ final class BootLogin {
     private final Pauser pauser;
     private final Ui ui;
     private final Stopper stopper;
-    @SuppressWarnings("unused")
     private final Notifier notifier;
-    // The login request was accepted: the next node.login is the boot login's outcome
-    private volatile boolean awaitingNodeLogin;
+    private final Scheduler scheduler;
+
+    private final Object lock = new Object();
+    /** A boot login sent LoginAccount and its node.login has not arrived yet. */
+    private boolean awaitingNodeLogin;
+    private final Runnable loginTimeout = () -> {
+        if (takeAwaitingNodeLogin()) fail();
+    };
 
     BootLogin(boolean enabled, RecordStore records, CredentialSource credentials, StatusGo statusGo, Pauser pauser,
-            Ui ui, Stopper stopper, Notifier notifier) {
+            Ui ui, Stopper stopper, Notifier notifier, Scheduler scheduler) {
         this.enabled = enabled;
         this.records = records;
         this.credentials = credentials;
@@ -84,6 +104,7 @@ final class BootLogin {
         this.ui = ui;
         this.stopper = stopper;
         this.notifier = notifier;
+        this.scheduler = scheduler;
     }
 
     /**
@@ -91,7 +112,13 @@ final class BootLogin {
      * starts; with the feature off (RESUME_AFTER_RESTART_ENABLED) any record is removed.
      */
     static boolean startsOnBoot(boolean enabled, RecordStore records) {
-        if (!records.exists()) return false;
+        boolean stored;
+        try {
+            stored = records.exists();
+        } catch (StoreException e) {
+            return false;
+        }
+        if (!stored) return false;
         if (!enabled) {
             records.delete();
             return false;
@@ -110,8 +137,8 @@ final class BootLogin {
 
     /**
      * Replays the boot-login record. Returns true when status-go accepted the login request;
-     * the outcome arrives later as node.login. With nothing to replay, or when the login fails,
-     * the service stops unless a UI is bound.
+     * the outcome arrives later as node.login. With nothing to replay, the service stops unless
+     * a UI is bound.
      */
     boolean run() {
         if (!enabled) {
@@ -119,49 +146,90 @@ final class BootLogin {
             stopUnlessUiBound();
             return false;
         }
-        final JSONObject record = parse(records.read());
+        final String recordJson;
+        try {
+            recordJson = records.read();
+        } catch (StoreException e) {
+            fail();
+            return false;
+        }
+        if (recordJson == null) {
+            stopUnlessUiBound();
+            return false;
+        }
+
+        final JSONObject record = parse(recordJson);
         final String keyUid = record == null ? "" : record.optString("keyUid", "");
         final JSONObject initRequest = record == null ? null : record.optJSONObject("initRequest");
         final JSONObject loginRequest = record == null ? null : record.optJSONObject("loginRequest");
-        final String dek = keyUid.isEmpty() ? null : dekFrom(credentials.credential(keyUid));
-        if (initRequest == null || loginRequest == null || dek == null) {
+        if (keyUid.isEmpty() || initRequest == null || loginRequest == null) {
+            fail();
+            return false;
+        }
+
+        final String dek;
+        try {
+            dek = dekFrom(credentials.credential(keyUid));
+        } catch (StoreException e) {
+            fail();
+            return false;
+        }
+        if (dek == null) {
             stopUnlessUiBound();
             return false;
         }
 
         if (!succeeded(statusGo.call("InitializeApplication", args(initRequest.toString())))) {
-            stopUnlessUiBound();
+            fail();
             return false;
         }
         try {
             loginRequest.put("dek", dek);
         } catch (Exception e) {
-            stopUnlessUiBound();
+            fail();
             return false;
         }
-        awaitingNodeLogin = true;
+
+        synchronized (lock) {
+            awaitingNodeLogin = true;
+        }
+        scheduler.schedule(loginTimeout, LOGIN_TIMEOUT_MS);
         if (!succeeded(statusGo.call("LoginAccount", args(loginRequest.toString())))) {
-            awaitingNodeLogin = false;
-            stopUnlessUiBound();
+            if (takeAwaitingNodeLogin()) fail();
             return false;
         }
         return true;
     }
 
     /**
-     * For every node.login. The pause rule: logged in with no visible UI means paused. A failed
-     * boot login stops the service unless a UI is bound.
+     * For every node.login: ends a pending boot login (an error fails it), then applies the
+     * pause rule: logged in with no visible UI means paused.
      */
     void onNodeLogin(String signalJson) {
-        final boolean bootLoginOutcome = awaitingNodeLogin;
-        awaitingNodeLogin = false;
         final JSONObject signal = parse(signalJson);
         final JSONObject event = signal == null ? null : signal.optJSONObject("event");
-        if (event == null || !event.optString("error", "").isEmpty()) {
-            if (bootLoginOutcome) stopUnlessUiBound();
+        final boolean loggedIn = event != null && event.optString("error", "").isEmpty();
+        if (takeAwaitingNodeLogin() && !loggedIn) {
+            fail();
             return;
         }
-        if (!ui.visible()) pauser.pauseServices(() -> !ui.visible());
+        if (loggedIn && !ui.visible()) pauser.pauseServices(() -> !ui.visible());
+    }
+
+    /** Clears the pending boot login; true when there was one. */
+    private boolean takeAwaitingNodeLogin() {
+        synchronized (lock) {
+            if (!awaitingNodeLogin) return false;
+            awaitingNodeLogin = false;
+        }
+        scheduler.cancel(loginTimeout);
+        return true;
+    }
+
+    private void fail() {
+        records.delete();
+        notifier.bootLoginFailed();
+        stopUnlessUiBound();
     }
 
     private void stopUnlessUiBound() {
