@@ -10,8 +10,9 @@ public final class BootLoginTrigger {
 
     private BootLoginTrigger() {}
 
-    public static boolean startsBootLogin(String action, boolean recordStored) {
-        return recordStored
-                && (ACTION_BOOT_COMPLETED.equals(action) || ACTION_MY_PACKAGE_REPLACED.equals(action));
+    /** recordStored runs only for a trigger: it removes a record when the feature is off. */
+    public static boolean startsBootLogin(String action, BootLogin.Condition recordStored) {
+        return (ACTION_BOOT_COMPLETED.equals(action) || ACTION_MY_PACKAGE_REPLACED.equals(action))
+                && recordStored.holds();
     }
 }

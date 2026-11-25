@@ -22,7 +22,7 @@ public final class BootCompletedReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if (intent == null) return;
-        if (!BootLoginTrigger.startsBootLogin(intent.getAction(), BootLogin.startsOnBoot(
+        if (!BootLoginTrigger.startsBootLogin(intent.getAction(), () -> BootLogin.startsOnBoot(
                 BuildFlags.RESUME_AFTER_RESTART_ENABLED, new BootLoginRecordStore(context)))) {
             return;
         }
