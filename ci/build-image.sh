@@ -64,7 +64,7 @@ case "$action" in
       tools="$tools && \"\$JAVA_HOME/bin/java\" -version && test -d \"\$ANDROID_NDK_ROOT\""
     fi
     if [ "$name" = tests ]; then
-      tools='command -v Xvfb fluxbox gnome-keyring-daemon && python3 --version && node --version'
+      tools='command -v Xvfb && command -v fluxbox && command -v gnome-keyring-daemon && python3 --version && node --version'
     fi
     docker run --rm --platform linux/amd64 --entrypoint "" "$image" bash -c "$tools"
     ;;

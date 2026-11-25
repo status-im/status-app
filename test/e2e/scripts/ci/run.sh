@@ -54,10 +54,13 @@ case "$(uname -s)" in
         "$scripts/start-waku-fleet.sh" "$tmp/waku"
         # On the runner's 1024x768 screen four of the fourteen critical tests fail.
         # The mode is taken by number: the display's colour depth is not one a mode string can name.
-        brew install --quiet displayplacer
-        screen=$(displayplacer list | awk '/Persistent screen id:/ { print $4; exit }')
-        mode=$(displayplacer list | awk '/res:1920x1080 hz:60/ { sub(":", "", $2); print $2; exit }')
-        displayplacer "id:$screen mode:$mode origin:(0,0) degree:0"
+        # Without that mode the run goes on at the runner's own screen size.
+        brew install --quiet displayplacer \
+            && screen=$(displayplacer list | awk '/Persistent screen id:/ { print $4; exit }') \
+            && mode=$(displayplacer list | awk '/res:1920x1080 hz:60/ { sub(":", "", $2); print $2; exit }') \
+            && [ -n "$mode" ] \
+            && displayplacer "id:$screen mode:$mode origin:(0,0) degree:0" \
+            || echo "::warning::The screen was not switched to 1920x1080; some tests need that size."
         native_tests "$(ls -d "$tmp"/aut/*.app)" .venv/bin/python "$@"
         ;;
     *)
