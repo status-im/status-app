@@ -32,7 +32,6 @@ type
     TrustStatus
     OnlineStatus
     IsCategory
-    LoaderActive
     Locked
     RequiresPermissions
     CanPost
@@ -138,7 +137,6 @@ QtObject:
       ModelRole.TrustStatus.int:"trustStatus",
       ModelRole.OnlineStatus.int:"onlineStatus",
       ModelRole.IsCategory.int:"isCategory",
-      ModelRole.LoaderActive.int:"loaderActive",
       ModelRole.Locked.int:"locked",
       ModelRole.RequiresPermissions.int:"requiresPermissions",
       ModelRole.CanPost.int:"canPost",
@@ -215,8 +213,6 @@ QtObject:
       result = newQVariant(item.onlineStatus.int)
     of ModelRole.IsCategory:
       result = newQVariant(item.isCategory)
-    of ModelRole.LoaderActive:
-      result = newQVariant(item.loaderActive)
     of ModelRole.Locked:
       result = newQVariant(item.locked)
     of ModelRole.RequiresPermissions:
@@ -397,8 +393,6 @@ QtObject:
       if self.items[ind].active != isChannelToSetActive:
         updateRolesAndNotify:
           updateRoleWithValue(active, isChannelToSetActive)
-          if isChannelToSetActive:
-            updateRoleWithValue(loaderActive, true)
           if roles.len > 0:
             roles.add(ModelRole.Hidden.int) # depends on active
 
@@ -660,11 +654,6 @@ QtObject:
       return
 
     return self.items[index].toJsonNode()
-
-  proc disableChatLoader*(self: Model, chatId: string) =
-    updateItemRolesAndNotify self.getItemIdxById(chatId):
-      updateRoleWithValue(loaderActive, false)
-      updateRoleWithValue(active, false)
 
   proc updateMissingEncryptionKey*(self: Model, id: string, missingEncryptionKey: bool) =
     updateItemRolesAndNotify self.getItemIdxById(id):

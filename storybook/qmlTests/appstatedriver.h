@@ -15,8 +15,18 @@ public:
 
     Q_INVOKABLE void setActive(bool active)
     {
-        QWindowSystemInterface::handleApplicationStateChanged(
-            active ? Qt::ApplicationActive : Qt::ApplicationInactive, true);
+        setState(active ? Qt::ApplicationActive : Qt::ApplicationInactive);
+    }
+
+    Q_INVOKABLE void setSuspended()
+    {
+        setState(Qt::ApplicationSuspended);
+    }
+
+private:
+    void setState(Qt::ApplicationState state)
+    {
+        QWindowSystemInterface::handleApplicationStateChanged(state, true);
         QWindowSystemInterface::flushWindowSystemEvents();
         QCoreApplication::processEvents();
     }

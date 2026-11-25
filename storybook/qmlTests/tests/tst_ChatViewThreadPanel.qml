@@ -45,6 +45,8 @@ Item {
             harness.mock.categoriesCount = 1
             harness.mock.channelsPerCategory = 3
             harness.mock.messagesPerChannel = 20
+            // a section starts on the channel list, whatever an earlier test left
+            harness.mock.sectionModule.viewState.shownPanel = StatusSectionLayout.LeftPanel
             harness.mock.install()
         }
 

@@ -2557,6 +2557,15 @@ Item {
                         releaseContext: appMain
                     }
 
+                    Connections {
+                        target: SystemUtils
+
+                        function onMemoryPressure(critical) {
+                            for (let i = 0; i < communityRepeater.count; ++i)
+                                communityRepeater.itemAt(i)?.memoryPressure(critical)
+                        }
+                    }
+
                     Repeater {
                         id: communityRepeater
 
@@ -2578,20 +2587,14 @@ Item {
                             // build the chrome only for the selected community
                             // (known before anything is visible, so the startup
                             // section pre-builds its skeletons under the cover)
-                            // and keep it for every visited one
+                            // and keep it while the section is loaded
                             chromeNeeded: active
                                           || model.id === appMain.rootStore.activeSectionId
 
-                            active: false
-                            // Do not unload section data from the memory in order not
-                            // to reset scroll, not send text input and etc during the
-                            // sections switching
-                            Binding on active {
-                                when: appMain.mainReady
-                                      && sectionId === appMain.rootStore.activeSectionId
-                                value: true
-                                restoreMode: Binding.RestoreNone
-                            }
+                            active: appMain.mainReady && keepLoaded
+                            sectionCurrent: sectionId === appMain.rootStore.activeSectionId
+                            appInFront: !memoryRelease.appInBackground
+                            onUiReleased: memoryRelease.request()
 
                             userUID: d.myPublicKey
                             sectionName: "community_%1".arg(sectionId)

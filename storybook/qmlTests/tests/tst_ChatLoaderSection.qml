@@ -50,7 +50,6 @@ Item {
                     type: Constants.chatType.oneToOne,
                     muted: false,
                     active: false,
-                    loaderActive: false,
                     blocked: false,
                     hasUnreadMessages: false,
                     notificationsCount: 0,
@@ -162,8 +161,6 @@ Item {
             for (let i = 0; i < chatsModel.count; ++i) {
                 const isActive = chatsModel.get(i).itemId === id
                 chatsModel.setProperty(i, "active", isActive)
-                if (isActive)
-                    chatsModel.setProperty(i, "loaderActive", true)
             }
             d.activeChatId = id
             sectionModuleMock.activeItem = ({ id: id })

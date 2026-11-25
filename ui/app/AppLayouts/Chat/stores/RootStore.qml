@@ -236,6 +236,14 @@ QtObject {
         mainModule.setActiveSectionById(communityId);
     }
 
+    // The portrait panel shown, kept by the backend so it outlives the
+    // section's UI
+    readonly property int shownPanel: chatCommunitySectionModule?.viewState.shownPanel ?? 0
+
+    function setShownPanel(panel: int) {
+        chatCommunitySectionModule.viewState.shownPanel = panel
+    }
+
     function openThreadPanel(threadId, threadName, parentChatId) {
         chatCommunitySectionModule.openThreadPanel(threadId, threadName, parentChatId)
     }

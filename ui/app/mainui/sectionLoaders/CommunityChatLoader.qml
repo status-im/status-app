@@ -3,6 +3,7 @@ import QtQuick
 import SortFilterProxyModel
 
 import StatusQ
+import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils as SQUtils
 import StatusQ.Core.Backpressure
@@ -62,8 +63,52 @@ StatusSectionLoader {
     required property bool isPortraitMode
     property bool navToMsgDetails: root.rootStore.navToMsgDetails
 
+    /// The community section is the current one.
+    property bool sectionCurrent: false
+
+    /// The app is in front: Inactive (a system sheet on top) still is,
+    /// Suspended is not.
+    property bool appInFront: Qt.application.state === Qt.ApplicationActive
+                              || Qt.application.state === Qt.ApplicationInactive
+
+    /// Mobile gives the UI back while it is not on screen (SectionDropPolicy);
+    /// desktop keeps it from the first visit on.
+    property bool dropWhenNotShown: SQUtils.Utils.isMobile
+    property alias dropDelay: dropPolicy.dropDelay
+
+    /// Whether the section's UI should exist.
+    readonly property bool keepLoaded: root.dropWhenNotShown ? dropPolicy.keepLoaded
+                                                             : d.visited || root.sectionCurrent
+
+    /// The section's UI went away (a Drop).
+    signal uiReleased()
+
     signal openAppSearchRequested(string chatId, string threadId)
     signal supportBotChatRequested()
+
+    LoggingCategory {
+        id: dropLog
+        name: "status.community.drop"
+        defaultLogLevel: LoggingCategory.Warning
+    }
+
+    SectionDropPolicy {
+        id: dropPolicy
+        objectName: "dropPolicy"
+
+        shown: root.sectionCurrent && root.appInFront
+        current: root.sectionCurrent
+        inBackground: !root.appInFront
+        // unsaved settings edits live only in the UI
+        held: root.item?.currentIndex === d.settingsViewIndex
+    }
+
+    /// The system is short of memory (SystemUtils.memoryPressure).
+    function memoryPressure(critical) {
+        dropPolicy.memoryPressure(critical)
+    }
+
+    onKeepLoadedChanged: console.info(dropLog, root.sectionId, keepLoaded ? "kept" : "dropped")
 
     // Back-navigation contract for AppMain's back chain. The chrome is
     // interactive while the section item still incubates, so the loader must
@@ -113,6 +158,8 @@ StatusSectionLoader {
         anchors.fill: parent
         active: root.chromeNeeded
 
+        onLoaded: d.restoreShownPanel()
+
         sourceComponent: StatusSectionLayout {
             objectName: "sectionChrome"
 
@@ -134,6 +181,21 @@ StatusSectionLoader {
 
             onPanelSwitchStarted: d.panelSwitchOngoing = true
             onPanelSwitchEnded: d.panelSwitchOngoing = false
+        }
+    }
+
+    // The panel shown is part of the section's view state: it outlives the UI.
+    // The right panel (a thread, the members) comes back as the chat.
+    Connections {
+        target: chromeLoader.item
+
+        function onCurrentIndexChanged() {
+            const panel = Math.min(chromeLoader.item.currentIndex, StatusSectionLayout.CentralPanel)
+
+            if (d.chatRootStore)
+                d.chatRootStore.setShownPanel(panel)
+            else
+                d.unsavedShownPanel = panel
         }
     }
 
@@ -261,6 +323,23 @@ StatusSectionLoader {
         property int pendingSettingsSubsection: -1
         property bool showUsersPanel: root.accountSettingsStore.showUsersList
         property int pendingViewIndex: -1
+        readonly property int channelsViewIndex: 0
+        readonly property int settingsViewIndex: 1
+        property bool visited: false
+        property bool uiStarted: false
+        // chosen while there were no stores to keep it
+        property int unsavedShownPanel: -1
+
+        function restoreShownPanel() {
+            if (!chromeLoader.item || !d.chatRootStore)
+                return
+            if (d.unsavedShownPanel !== -1) {
+                d.chatRootStore.setShownPanel(d.unsavedShownPanel)
+                d.unsavedShownPanel = -1
+                return
+            }
+            chromeLoader.item.setCurrentIndex(d.chatRootStore.shownPanel)
+        }
 
         // The view switch may arrive while the section still incubates —
         // queue it and replay on load, like the settings subsection below
@@ -322,9 +401,12 @@ StatusSectionLoader {
     function loadSection() {
         if (!root.active)
             return
+        d.visited = true
         if (!!root.item)
             return
+        d.uiStarted = true
         d.createStores()
+        d.restoreShownPanel()
         setSource(d.url, {
             isChatView:                     false,
             visible:                        false,
@@ -380,6 +462,10 @@ StatusSectionLoader {
             return
         }
         d.clearStores()
+        if (d.uiStarted) {
+            d.uiStarted = false
+            root.uiReleased()
+        }
     }
 
     Component.onCompleted: {
@@ -392,12 +478,12 @@ StatusSectionLoader {
         function onSwitchToCommunitySettings(communityId) {
             if (communityId !== root.sectionId)
                 return
-            d.openCommunityView(1) // Settings
+            d.openCommunityView(d.settingsViewIndex)
         }
         function onSwitchToCommunityChannelsView(communityId) {
             if (communityId !== root.sectionId)
                 return
-            d.openCommunityView(0) // Channels
+            d.openCommunityView(d.channelsViewIndex)
         }
         function onSwitchToCommunitySettingsSubsection(communityId, subsection, subsectionItem) {
             if (communityId !== root.sectionId)

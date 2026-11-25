@@ -142,7 +142,6 @@ SplitView {
                     type: Constants.chatType.oneToOne,
                     muted: false,
                     active: false,
-                    loaderActive: false,
                     blocked: false,
                     hasUnreadMessages: i % 7 === 0,
                     notificationsCount: i % 7 === 0 ? (i % 3) + 1 : 0,
@@ -259,8 +258,6 @@ SplitView {
             for (let i = 0; i < chatsModel.count; ++i) {
                 const isActive = chatsModel.get(i).itemId === id
                 chatsModel.setProperty(i, "active", isActive)
-                if (isActive)
-                    chatsModel.setProperty(i, "loaderActive", true)
             }
             d.activeChatId = id
             sectionModuleMock.activeItem = ({ id: id, type: Constants.chatType.oneToOne })

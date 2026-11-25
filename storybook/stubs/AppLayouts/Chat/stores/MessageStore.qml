@@ -32,6 +32,22 @@ QtObject {
     readonly property bool threadMuted: messageModule?.threadMuted ?? false
     readonly property real threadMuteTill: messageModule?.threadMuteTill ?? 0
 
+    // Where the reader was in the chat (thread "") and in its threads, kept by
+    // the backend, as {read(threadId), write(threadId, record), takeJump()}
+    // over the chat the store shows now; null without a chat. A record is an
+    // opaque string, "" for none. takeJump() is a message to jump to that no
+    // view took yet.
+    function readingPositions() {
+        const positions = root.messageModule?.readingPositions ?? null
+        if (!positions)
+            return null
+        return {
+            read: threadId => positions.getRecord(threadId),
+            write: (threadId, record) => positions.setRecord(threadId, record),
+            takeJump: () => positions.takeJump()
+        }
+    }
+
     function setThreadMuted(interval) {
         if (messageModule && messageModule.setThreadMuted)
             messageModule.setThreadMuted(interval)

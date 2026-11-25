@@ -112,7 +112,30 @@ Item {
             signal threadCreationFailed()
 
             function getChatId() { return moduleMock.mockChatId }
+
+            // the messages the backend was asked to load and scroll to
+            property var jumpCalls: []
+            function jumpToMessage(messageId) { jumpCalls.push(messageId) }
             function updateKeepUnread(flag) {}
+
+            // the backend's per-chat record of where the reader was
+            readonly property var readingPositions: QtObject {
+                property var records: ({})
+                property string jump
+
+                function takeJump() {
+                    const id = jump
+                    jump = ""
+                    return id
+                }
+                function getRecord(threadId) { return records[threadId] ?? "" }
+                function setRecord(threadId, record) {
+                    if (record)
+                        records[threadId] = record
+                    else
+                        delete records[threadId]
+                }
+            }
 
             // the messages this chat was asked to stop editing
             property var editModeOffCalls: []
@@ -285,6 +308,11 @@ Item {
             moduleA.messagesModule.keepUnread = false
             moduleA.messagesModule.editModeOffCalls = []
             moduleB.messagesModule.editModeOffCalls = []
+            moduleA.messagesModule.readingPositions.records = {}
+            moduleB.messagesModule.readingPositions.records = {}
+            moduleT.messagesModule.readingPositions.records = {}
+            moduleA.messagesModule.readingPositions.jump = ""
+            moduleA.messagesModule.jumpCalls = []
         }
 
         function cleanup() {
@@ -557,6 +585,215 @@ Item {
                 return !!after && after.key === before.key
                         && Math.abs(after.offset - before.offset) < 1
             }, 5000, "back where the reader was in chat a")
+        }
+
+        function windowKeys(view) {
+            const lv = view.chatLogView
+            return { first: lv.keyAtRow(0), last: lv.keyAtRow(lv.rowCount - 1) }
+        }
+
+        function recordOf(module) {
+            const json = module.messagesModule.readingPositions.getRecord("")
+            return json ? JSON.parse(json) : null
+        }
+
+        // The section's UI is dropped and built again: the backend keeps the
+        // record, and the new view rebuilds the same window around it.
+        function test_theReadingPositionOutlivesTheView() {
+            prewarmedPool()
+            const view = openView()
+            const lv = view.chatLogView
+
+            lv.contentY = Math.max(0, lv.contentHeight - lv.height * 2.5)
+            waitForRendering(lv)
+            const before = messageIdAtViewportTop(view)
+            const windowBefore = windowKeys(view)
+            verify(!!before)
+
+            view.visible = false
+            view.destroy()
+
+            tryVerify(() => !!recordOf(moduleA), 1000, "recorded in the backend")
+            const record = recordOf(moduleA)
+            compare(record.key, before.key)
+            compare(record.firstKey, windowBefore.first)
+            compare(record.lastKey, windowBefore.last)
+
+            const rebuilt = openView()
+            const rlv = rebuilt.chatLogView
+
+            tryVerify(() => {
+                const after = messageIdAtViewportTop(rebuilt)
+                return !rlv.busy && !!after && after.key === before.key
+                        && Math.abs(after.offset - before.offset) < 1
+            }, 5000, "back where the reader was")
+            compare(windowKeys(rebuilt).first, windowBefore.first, "the same window")
+        }
+
+        function test_leavingTheForegroundRecordsThePosition() {
+            prewarmedPool()
+            const view = openView()
+            const lv = view.chatLogView
+
+            lv.contentY = Math.max(0, lv.contentHeight - lv.height * 2.5)
+            waitForRendering(lv)
+            const before = messageIdAtViewportTop(view)
+            verify(!recordOf(moduleA))
+
+            appState.setSuspended()
+
+            const record = recordOf(moduleA)
+            verify(!!record)
+            compare(record.key, before.key)
+        }
+
+        // focus lost on desktop: no drop can follow, nothing to record
+        function test_anInactiveAppRecordsNothing() {
+            prewarmedPool()
+            const view = openView()
+            const lv = view.chatLogView
+
+            lv.contentY = Math.max(0, lv.contentHeight - lv.height * 2.5)
+            waitForRendering(lv)
+
+            appState.setActive(false)
+
+            verify(!recordOf(moduleA))
+        }
+
+        function test_aRecordWhoseWindowEdgeIsGoneCentresOnItsMessage() {
+            prewarmedPool()
+            moduleA.messagesModule.readingPositions.setRecord("", JSON.stringify(
+                { key: "a-100", offset: 0, firstKey: "a-gone", lastKey: "a-150" }))
+
+            const view = openView()
+            const lv = view.chatLogView
+
+            tryVerify(() => {
+                const after = messageIdAtViewportTop(view)
+                return !lv.busy && !!after && after.key === "a-100"
+            }, 5000, "at the recorded message")
+            const row = lv.rowForKey("a-100")
+            verify(row > lv.rowCount / 4 && row < lv.rowCount * 3 / 4, "centred in the window")
+        }
+
+        // recorded in a taller view: the window from the recorded first row
+        // no longer reaches the message
+        function test_aRecordedWindowThatMissesItsMessageCentresOnIt() {
+            prewarmedPool()
+            moduleA.messagesModule.readingPositions.setRecord("", JSON.stringify(
+                { key: "a-130", offset: 0, firstKey: "a-50", lastKey: "a-149" }))
+
+            const view = openView({ height: 300 })
+            const lv = view.chatLogView
+
+            tryVerify(() => {
+                const after = messageIdAtViewportTop(view)
+                return !lv.busy && !!after && after.key === "a-130"
+            }, 5000, "at the recorded message")
+        }
+
+        // A jump asked for while the view did not exist (a dropped section
+        // built again for a search result, a notification...) beats the record.
+        function test_aPendingJumpBeatsTheRecordedPosition() {
+            prewarmedPool()
+            moduleA.messagesModule.readingPositions.setRecord("", JSON.stringify({ atBottom: true }))
+            moduleA.messagesModule.readingPositions.jump = "a-120"
+
+            const view = openView()
+            const lv = view.chatLogView
+
+            tryVerify(() => {
+                if (lv.busy)
+                    return false
+                const row = lv.rowForKey("a-120")
+                const offset = row >= 0 ? lv.viewportOffsetToRow(row) : NaN
+                return !isNaN(offset) && Math.abs(offset) < lv.height
+            }, 5000, "the jump target is on screen")
+            compare(moduleA.messagesModule.readingPositions.jump, "", "the jump is taken")
+        }
+
+        // the store still loads the target's page: the jump lands with it
+        function test_aJumpToAMessageStillLoadingLandsWhenItArrives() {
+            prewarmedPool()
+            const module = moduleA.messagesModule
+            module.loading = true
+            module.readingPositions.jump = "a-200"
+
+            const view = createTemporaryObject(viewComp, root, { rowPool: pool })
+            verify(!!view)
+            const lv = view.chatLogView
+            compare(module.readingPositions.jump, "", "the jump is taken")
+
+            messagesA.append(makeMessage("a", 200))
+            module.loading = false
+
+            tryVerify(() => {
+                if (lv.busy)
+                    return false
+                const row = lv.rowForKey("a-200")
+                const offset = row >= 0 ? lv.viewportOffsetToRow(row) : NaN
+                return !isNaN(offset) && Math.abs(offset) < lv.height
+            }, 5000, "the jump target is on screen")
+            compare(module.jumpCalls.length, 0)
+        }
+
+        // the target left the model before the view was built: the backend
+        // is asked to bring it back
+        function test_aJumpToAMessageNoLongerLoadedAsksTheBackend() {
+            prewarmedPool()
+            const module = moduleA.messagesModule
+            module.readingPositions.jump = "a-gone"
+
+            openView()
+
+            compare(module.jumpCalls, ["a-gone"])
+        }
+
+        // the section loaded but not on screen: the jump waits for the view
+        // to be shown
+        function test_aJumpToAHiddenViewLandsWhenShown() {
+            prewarmedPool()
+            const view = openView()
+            const lv = view.chatLogView
+            view.visible = false
+            tryVerify(() => lv.rowCount === 0)
+
+            moduleA.messagesModule.readingPositions.jump = "a-120"
+            moduleA.messagesModule.scrollToMessage(120)
+            view.visible = true
+
+            tryVerify(() => {
+                if (lv.busy)
+                    return false
+                const row = lv.rowForKey("a-120")
+                const offset = row >= 0 ? lv.viewportOffsetToRow(row) : NaN
+                return !isNaN(offset) && Math.abs(offset) < lv.height
+            }, 5000, "the jump target is on screen")
+        }
+
+        // handled by a live view, the jump is not taken again on the next open
+        function test_aJumpHandledByTheViewIsNotRepeated() {
+            prewarmedPool()
+            const view = openView()
+            moduleA.messagesModule.readingPositions.jump = "a-120"
+
+            moduleA.messagesModule.scrollToMessage(120)
+
+            compare(moduleA.messagesModule.readingPositions.jump, "")
+        }
+
+        function test_aRecordWhoseMessageIsGoneOpensAtTheNewest() {
+            prewarmedPool()
+            moduleA.messagesModule.readingPositions.setRecord("", JSON.stringify(
+                { key: "a-gone", offset: 0, firstKey: "a-90", lastKey: "a-150" }))
+
+            const view = openView()
+            const lv = view.chatLogView
+
+            compare(lv.keyAtRow(0), "a-0", "the newest message")
+            verify(lv.atBottom)
+            verify(!recordOf(moduleA), "the stale record is forgotten")
         }
 
         // The model resets in place: the window must not keep bounds that lie

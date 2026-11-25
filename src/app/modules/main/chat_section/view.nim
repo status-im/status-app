@@ -1,6 +1,6 @@
 import nimqml, json, sequtils, strutils
 import model as chats_model
-import item, active_item
+import item, active_item, view_state
 import ../../shared_models/user_model as user_model
 import ../../shared_models/message_model as member_msg_model
 import ../../shared_models/token_permissions_model
@@ -15,6 +15,8 @@ QtObject:
       modelVariant: QVariant
       activeItem: ActiveItem
       activeItemVariant: QVariant
+      viewState: ViewState
+      viewStateVariant: QVariant
       tmpChatId: string # shouldn't be used anywhere except in prepareChatContentModuleForChatId/getChatContentModule procs
       contactRequestsModel: user_model.Model
       contactRequestsModelVariant: QVariant
@@ -55,6 +57,8 @@ QtObject:
     result.editCategoryChannelsVariant = newQVariant(result.editCategoryChannelsModel)
     result.activeItem = newActiveItem()
     result.activeItemVariant = newQVariant(result.activeItem)
+    result.viewState = newViewState()
+    result.viewStateVariant = newQVariant(result.viewState)
     result.contactRequestsModel = user_model.newModel()
     result.contactRequestsModelVariant = newQVariant(result.contactRequestsModel)
     result.loadingHistoryMessagesInProgress = false
@@ -137,6 +141,11 @@ QtObject:
   QtProperty[QVariant] activeItem:
     read = getActiveItem
     notify = activeItemChanged
+
+  proc getViewState(self: View): QVariant {.slot.} =
+    return self.viewStateVariant
+  QtProperty[QVariant] viewState:
+    read = getViewState
 
   proc activeItemSet*(self: View, item: ChatItem) =
     self.activeItem.setActiveItemData(item)

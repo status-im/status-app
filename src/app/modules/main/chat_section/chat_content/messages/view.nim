@@ -3,7 +3,7 @@ import ../../../../shared_models/message_model
 import ../../../../shared_models/message_item
 import ../../../../../../app_service/service/chat/dto/chat
 import ../../../../shared_models/thread_model as thread_model
-import io_interface
+import io_interface, reading_positions
 
 QtObject:
   type
@@ -33,6 +33,8 @@ QtObject:
       chatType: int
       loading: bool
       keepUnread: bool
+      readingPositions: ReadingPositions
+      readingPositionsVariant: QVariant
 
   proc delete*(self: View)
   proc newView*(delegate: io_interface.AccessInterface, threadId: string = ""): View =
@@ -50,6 +52,8 @@ QtObject:
     result.chatType = ChatType.Unknown.int
     result.loading = false
     result.keepUnread = false
+    result.readingPositions = newReadingPositions()
+    result.readingPositionsVariant = newQVariant(result.readingPositions)
 
   proc load*(self: View) =
     self.delegate.viewDidLoad()
@@ -61,6 +65,14 @@ QtObject:
     return self.modelVariant
   QtProperty[QVariant] model:
     read = getModel
+
+  proc readingPositions*(self: View): ReadingPositions =
+    return self.readingPositions
+
+  proc getReadingPositions(self: View): QVariant {.slot.} =
+    return self.readingPositionsVariant
+  QtProperty[QVariant] readingPositions:
+    read = getReadingPositions
 
   proc hasThreadsModel*(self: View): bool =
     not self.threads.isNil
