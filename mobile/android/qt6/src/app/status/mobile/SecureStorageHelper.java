@@ -203,6 +203,16 @@ public final class SecureStorageHelper {
         }
     }
 
+    /** Whether exactly one half of the {iv, ct} pair is stored. Read-only: wipes nothing. */
+    public boolean hasIncompletePair(String account) {
+        try {
+            return prefs().contains(KEY_IV_PREFIX + account) != prefs().contains(KEY_CT_PREFIX + account);
+        } catch (Throwable t) {
+            Log.w(TAG, "hasIncompletePair failed", t);
+            return false;
+        }
+    }
+
     /** Remove the stored blob for an account. */
     public int deleteCredential(String account) {
         try {

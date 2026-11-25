@@ -49,9 +49,15 @@ public class BootLoginTest {
     private final Map<String, String> store = new HashMap<>();
     private boolean recordUnreadable;
     private boolean credentialUnreadable;
-    /** Undecryptable entries the store wipes and then reports absent (key invalidated). */
-    private boolean recordWipedOnRead;
-    private boolean credentialWipedOnRead;
+    /** An undecryptable blob: the store wipes that one entry, then reports it absent. */
+    private boolean recordBlobCorrupt;
+    private boolean credentialBlobCorrupt;
+    /** The store key is invalidated: the first decrypt wipes every entry (wipeAll). */
+    private boolean keyInvalidated;
+    /** Only one half of the {iv, ct} pair is stored. */
+    private boolean recordHalfPair;
+    private boolean credentialHalfPair;
+    private final List<String> logs = new ArrayList<>();
     private final Map<String, String> responses = new HashMap<>();
     private boolean uiVisible;
     private boolean uiBound;
@@ -60,6 +66,7 @@ public class BootLoginTest {
     private BootLogin.Condition pauseCondition;
     private int recordDeletes;
     private int stops;
+    private int processEnds;
     private int notifications;
     private Runnable scheduled;
     private long scheduledDelayMs;
@@ -72,8 +79,12 @@ public class BootLoginTest {
         store.put(KEY_UID, CREDENTIAL);
         recordUnreadable = false;
         credentialUnreadable = false;
-        recordWipedOnRead = false;
-        credentialWipedOnRead = false;
+        recordBlobCorrupt = false;
+        credentialBlobCorrupt = false;
+        keyInvalidated = false;
+        recordHalfPair = false;
+        credentialHalfPair = false;
+        logs.clear();
         responses.clear();
         uiVisible = false;
         uiBound = false;
@@ -82,6 +93,7 @@ public class BootLoginTest {
         pauseCondition = null;
         recordDeletes = 0;
         stops = 0;
+        processEnds = 0;
         notifications = 0;
         scheduled = null;
         scheduledDelayMs = -1;
@@ -93,14 +105,16 @@ public class BootLoginTest {
                 enabled,
                 new BootLogin.RecordStore() {
                     @Override
-                    public boolean exists() {
+                    public boolean exists() throws BootLogin.StoreException {
+                        if (recordHalfPair) throw new BootLogin.StoreException(true);
                         return store.containsKey(RECORD_KEY);
                     }
 
                     @Override
                     public String read() throws BootLogin.StoreException {
-                        if (recordUnreadable) throw new BootLogin.StoreException();
-                        if (recordWipedOnRead) store.remove(RECORD_KEY);
+                        if (recordUnreadable) throw new BootLogin.StoreException(false);
+                        if (keyInvalidated) store.clear();
+                        if (recordBlobCorrupt) store.remove(RECORD_KEY);
                         return store.get(RECORD_KEY);
                     }
 
@@ -112,14 +126,15 @@ public class BootLoginTest {
                 },
                 new BootLogin.CredentialSource() {
                     @Override
-                    public boolean exists(String keyUid) {
+                    public boolean exists(String keyUid) throws BootLogin.StoreException {
+                        if (credentialHalfPair) throw new BootLogin.StoreException(true);
                         return store.containsKey(keyUid);
                     }
 
                     @Override
                     public String credential(String keyUid) throws BootLogin.StoreException {
-                        if (credentialUnreadable) throw new BootLogin.StoreException();
-                        if (credentialWipedOnRead) return null;
+                        if (credentialUnreadable) throw new BootLogin.StoreException(false);
+                        if (credentialBlobCorrupt) store.remove(keyUid);
                         return store.get(keyUid);
                     }
                 },
@@ -135,7 +150,10 @@ public class BootLoginTest {
                     @Override public boolean visible() { return uiVisible; }
                     @Override public boolean bound() { return uiBound; }
                 },
-                () -> stops++,
+                new BootLogin.Stopper() {
+                    @Override public void stop() { stops++; }
+                    @Override public void endProcess() { processEnds++; }
+                },
                 () -> notifications++,
                 new BootLogin.Scheduler() {
                     @Override
@@ -148,15 +166,33 @@ public class BootLoginTest {
                     public void cancel(Runnable task) {
                         if (scheduled == task) scheduled = null;
                     }
-                });
+                },
+                logs::add);
     }
 
     private void assertFailedOnce() {
-        assertNull("boot-login record deleted", store.get(RECORD_KEY));
         assertEquals("credential untouched", CREDENTIAL, store.get(KEY_UID));
+        assertFailedOnceWhateverTheCredential();
+    }
+
+    private void assertFailedOnceWhateverTheCredential() {
+        assertNull("boot-login record deleted", store.get(RECORD_KEY));
         assertEquals(1, stops);
         assertEquals(1, notifications);
         assertNull("no timeout left pending", scheduled);
+    }
+
+    private void assertTimedOutOnce() {
+        assertNull("boot-login record deleted", store.get(RECORD_KEY));
+        assertEquals("credential untouched", CREDENTIAL, store.get(KEY_UID));
+        assertEquals(1, notifications);
+        assertEquals(1, processEnds);
+    }
+
+    private void assertLoggedOnce(String phrase) {
+        int n = 0;
+        for (String line : logs) if (line.contains(phrase)) n++;
+        assertEquals(logs.toString(), 1, n);
     }
 
     private void assertNothingToReplay() {
@@ -189,7 +225,7 @@ public class BootLoginTest {
         bootLogin.run();
 
         assertEquals(BootLogin.LOGIN_TIMEOUT_MS, scheduledDelayMs);
-        assertEquals(60_000L, BootLogin.LOGIN_TIMEOUT_MS);
+        assertEquals(5 * 60_000L, BootLogin.LOGIN_TIMEOUT_MS);
     }
 
     @Test
@@ -299,7 +335,7 @@ public class BootLoginTest {
 
     @Test
     public void recordWipedAsUndecryptableFails() {
-        recordWipedOnRead = true;
+        recordBlobCorrupt = true;
 
         assertFalse(bootLogin.run());
 
@@ -309,12 +345,82 @@ public class BootLoginTest {
 
     @Test
     public void credentialWipedAsUndecryptableFails() {
-        credentialWipedOnRead = true;
+        credentialBlobCorrupt = true;
+
+        assertFalse(bootLogin.run());
+
+        assertEquals(0, calls.size());
+        assertNull("the store wiped the undecryptable credential", store.get(KEY_UID));
+        assertFailedOnceWhateverTheCredential();
+    }
+
+    @Test
+    public void invalidatedStoreKeyFailsAndTheStoreWipesTheCredentialToo() {
+        keyInvalidated = true;
+
+        assertFalse(bootLogin.run());
+
+        assertEquals(0, calls.size());
+        assertNull("wipeAll took the credential with it", store.get(KEY_UID));
+        assertFailedOnceWhateverTheCredential();
+    }
+
+    @Test
+    public void halfRecordPairFails() {
+        recordHalfPair = true;
 
         assertFalse(bootLogin.run());
 
         assertEquals(0, calls.size());
         assertFailedOnce();
+    }
+
+    @Test
+    public void halfCredentialPairFails() {
+        credentialHalfPair = true;
+
+        assertFalse(bootLogin.run());
+
+        assertEquals(0, calls.size());
+        assertNull(store.get(RECORD_KEY));
+        assertEquals(1, stops);
+        assertEquals(1, notifications);
+    }
+
+    @Test
+    public void storeErrorIsLoggedAsAStoreError() {
+        recordUnreadable = true;
+
+        bootLogin.run();
+
+        assertLoggedOnce("store error");
+        assertLoggedOnce("boot login failed");
+    }
+
+    @Test
+    public void wipedEntryIsLoggedAsUndecryptable() {
+        recordBlobCorrupt = true;
+
+        bootLogin.run();
+
+        assertLoggedOnce("undecryptable");
+        assertEquals(0, countLogs("store error"));
+    }
+
+    @Test
+    public void halfPairIsLoggedAsUndecryptable() {
+        credentialHalfPair = true;
+
+        bootLogin.run();
+
+        assertLoggedOnce("undecryptable");
+        assertEquals(0, countLogs("store error"));
+    }
+
+    private int countLogs(String phrase) {
+        int n = 0;
+        for (String line : logs) if (line.contains(phrase)) n++;
+        return n;
     }
 
     @Test
@@ -358,14 +464,13 @@ public class BootLoginTest {
     }
 
     @Test
-    public void noNodeLoginBeforeTheTimeoutFails() {
+    public void timeoutWithNoUiDeletesTheRecordNotifiesAndEndsTheProcess() {
         bootLogin.run();
         final Runnable timeout = scheduled;
 
         timeout.run();
 
-        scheduled = null;
-        assertFailedOnce();
+        assertTimedOutOnce();
     }
 
     @Test
@@ -377,8 +482,50 @@ public class BootLoginTest {
         bootLogin.onNodeLogin(NODE_LOGIN_FAILED);
         timeout.run();
 
-        scheduled = null;
-        assertFailedOnce();
+        assertTimedOutOnce();
+    }
+
+    @Test
+    public void timeoutWithAUiBoundNeitherEndsTheProcessNorNotifies() {
+        uiBound = true;
+        bootLogin.run();
+        final Runnable timeout = scheduled;
+
+        timeout.run();
+
+        assertEquals(0, processEnds);
+        assertEquals(0, stops);
+        assertEquals(0, notifications);
+        assertNull("boot-login record deleted", store.get(RECORD_KEY));
+        assertEquals(CREDENTIAL, store.get(KEY_UID));
+    }
+
+    @Test
+    public void lateSuccessAfterTheTimeoutWithAUiBoundIsLeftToTheUi() {
+        uiBound = true;
+        uiVisible = true;
+        bootLogin.run();
+        scheduled.run();
+
+        bootLogin.onNodeLogin(NODE_LOGIN_OK);
+
+        assertEquals(0, processEnds);
+        assertEquals(0, stops);
+        assertEquals(0, notifications);
+        assertEquals(0, pauses);
+    }
+
+    @Test
+    public void failureWhileAUiIsVisibleDoesNotNotify() {
+        uiBound = true;
+        uiVisible = true;
+        responses.put("LoginAccount", "{\"error\":\"bad request\"}");
+
+        bootLogin.run();
+
+        assertEquals(0, notifications);
+        assertEquals(0, stops);
+        assertNull(store.get(RECORD_KEY));
     }
 
     @Test
@@ -433,7 +580,7 @@ public class BootLoginTest {
         return new BootLogin.RecordStore() {
             @Override
             public boolean exists() throws BootLogin.StoreException {
-                if (recordUnreadable) throw new BootLogin.StoreException();
+                if (recordUnreadable) throw new BootLogin.StoreException(false);
                 return store.containsKey(RECORD_KEY);
             }
 

@@ -141,8 +141,7 @@ public final class StatusGoService extends Service {
             new BootLogin.CredentialSource() {
                 @Override
                 public boolean exists(String keyUid) throws BootLogin.StoreException {
-                    return secureEntryExists(app.status.mobile.SecureStorageHelper.getInstance(
-                            StatusGoService.this).hasCredential(keyUid));
+                    return secureEntryExists(StatusGoService.this, keyUid);
                 }
 
                 @Override
@@ -165,7 +164,17 @@ public final class StatusGoService extends Service {
                     return listeners.getRegisteredCallbackCount() > 0;
                 }
             },
-            this::stopBootLoginService,
+            new BootLogin.Stopper() {
+                @Override
+                public void stop() {
+                    stopBootLoginService();
+                }
+
+                @Override
+                public void endProcess() {
+                    stopAndEndProcess();
+                }
+            },
             () -> NotificationBuilder.postBootLoginFailed(this),
             new BootLogin.Scheduler() {
                 @Override
@@ -177,19 +186,29 @@ public final class StatusGoService extends Service {
                 public void cancel(Runnable task) {
                     mainHandler.removeCallbacks(task);
                 }
-            });
+            },
+            message -> Log.w(TAG, message));
 
     /** A secure-store read as BootLogin sees it: the value, null when absent, or a throw. */
     static String secureEntry(int status, String[] out) throws BootLogin.StoreException {
         if (status == app.status.mobile.SecureStorageHelper.STATUS_OK) return out[0];
         if (status == app.status.mobile.SecureStorageHelper.STATUS_NOT_FOUND) return null;
-        throw new BootLogin.StoreException();
+        throw new BootLogin.StoreException(false);
     }
 
-    static boolean secureEntryExists(int status) throws BootLogin.StoreException {
+    /**
+     * Presence at rest. hasCredential wipes a half {iv, ct} pair and reports it absent, so a
+     * half pair is checked first and reported as corrupt.
+     */
+    static boolean secureEntryExists(android.content.Context context, String account)
+            throws BootLogin.StoreException {
+        final app.status.mobile.SecureStorageHelper store =
+                app.status.mobile.SecureStorageHelper.getInstance(context);
+        if (store.hasIncompletePair(account)) throw new BootLogin.StoreException(true);
+        final int status = store.hasCredential(account);
         if (status == app.status.mobile.SecureStorageHelper.STATUS_OK) return true;
         if (status == app.status.mobile.SecureStorageHelper.STATUS_NOT_FOUND) return false;
-        throw new BootLogin.StoreException();
+        throw new BootLogin.StoreException(false);
     }
 
     /** Nothing to resume after a restart: leave the foreground and stop. */
@@ -199,6 +218,13 @@ public final class StatusGoService extends Service {
         } catch (Throwable ignored) {}
         foregroundStarted = false;
         stopSelf();
+    }
+
+    /** Leaves the foreground, stops and ends the service process. */
+    private void stopAndEndProcess() {
+        stopBootLoginService();
+        // Mirrors the force-kill of the UI process in StatusQtActivity.onDestroy.
+        android.os.Process.killProcess(android.os.Process.myPid());
     }
 
     private final SignalTypeResolver signalTypes = new SignalTypeResolver(
@@ -715,13 +741,7 @@ public final class StatusGoService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         final String action = intent != null ? intent.getAction() : null;
         if (ACTION_STOP.equals(action)) {
-            try {
-                stopForeground(true);
-            } catch (Throwable ignored) {}
-            foregroundStarted = false;
-            stopSelf();
-            // Mirrors the force-kill of the UI process in StatusQtActivity.onDestroy.
-            android.os.Process.killProcess(android.os.Process.myPid());
+            stopAndEndProcess();
             return START_NOT_STICKY;
         }
         // Ensure we can be started from background components (e.g. FCM) without risking

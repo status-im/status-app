@@ -13,7 +13,8 @@ import org.json.JSONObject;
  * never builds a login request itself.
  *
  * <p>A failed boot login deletes the record, stops the service unless a UI is bound and posts
- * one notification. There is no retry, and the "Stay logged in" credential is never touched.
+ * one notification unless a UI is visible. There is no retry, and this class never deletes the
+ * "Stay logged in" credential (the store itself may wipe one it cannot decrypt).
  *
  * <p>It also owns the pause rule: logged in with no visible UI means paused, the same state
  * as a backgrounded app (messaging stays on).
@@ -22,11 +23,22 @@ final class BootLogin {
     private static final String DEK_PREFIX = "dek:";
     private static final int DEK_HEX_LENGTH = 64;
 
-    /** How long a boot login waits for node.login after LoginAccount. */
-    static final long LOGIN_TIMEOUT_MS = 60_000L;
+    /**
+     * How long a boot login waits for node.login after LoginAccount. LoginAccount includes
+     * opening the database, so the first boot login after an app update runs the migrations,
+     * which can take minutes on a low-end device with a large database.
+     */
+    static final long LOGIN_TIMEOUT_MS = 5 * 60_000L;
 
-    /** The secure store holds the entry but cannot decrypt it. */
-    static final class StoreException extends Exception {}
+    /** The secure store cannot give the entry: a backend error, or a corrupt entry. */
+    static final class StoreException extends Exception {
+        /** True for a corrupt entry (an incomplete blob pair), false for a store error. */
+        final boolean corrupt;
+
+        StoreException(boolean corrupt) {
+            this.corrupt = corrupt;
+        }
+    }
 
     interface RecordStore {
         /** Whether the record is stored, checked without decrypting it. */
@@ -68,6 +80,9 @@ final class BootLogin {
 
     interface Stopper {
         void stop();
+
+        /** Stops the service and ends its process, as ACTION_STOP does. */
+        void endProcess();
     }
 
     interface Notifier {
@@ -80,6 +95,10 @@ final class BootLogin {
         void cancel(Runnable task);
     }
 
+    interface Logger {
+        void warn(String message);
+    }
+
     private final boolean enabled;
     private final RecordStore records;
     private final CredentialSource credentials;
@@ -89,16 +108,17 @@ final class BootLogin {
     private final Stopper stopper;
     private final Notifier notifier;
     private final Scheduler scheduler;
+    private final Logger log;
 
     private final Object lock = new Object();
     /** A boot login sent LoginAccount and its node.login has not arrived yet. */
     private boolean awaitingNodeLogin;
     private final Runnable loginTimeout = () -> {
-        if (takeAwaitingNodeLogin()) fail();
+        if (takeAwaitingNodeLogin()) timedOut();
     };
 
     BootLogin(boolean enabled, RecordStore records, CredentialSource credentials, StatusGo statusGo, Pauser pauser,
-            Ui ui, Stopper stopper, Notifier notifier, Scheduler scheduler) {
+            Ui ui, Stopper stopper, Notifier notifier, Scheduler scheduler, Logger log) {
         this.enabled = enabled;
         this.records = records;
         this.credentials = credentials;
@@ -108,18 +128,21 @@ final class BootLogin {
         this.stopper = stopper;
         this.notifier = notifier;
         this.scheduler = scheduler;
+        this.log = log;
     }
 
     /**
      * BOOT_COMPLETED: whether to start the service for a boot login. Without a record nothing
      * starts; with the feature off (RESUME_AFTER_RESTART_ENABLED) any record is removed.
+     * A corrupt record (an incomplete blob pair) starts it too, so the failure path deletes
+     * the record and notifies instead of the boot doing nothing.
      */
     static boolean startsOnBoot(boolean enabled, RecordStore records) {
         boolean stored;
         try {
             stored = records.exists();
         } catch (StoreException e) {
-            return false;
+            stored = e.corrupt;
         }
         if (!stored) return false;
         if (!enabled) {
@@ -159,7 +182,11 @@ final class BootLogin {
             }
             recordJson = records.read();
         } catch (StoreException e) {
-            fail();
+            fail("record " + describe(e));
+            return false;
+        }
+        if (recordJson == null) {
+            fail("record undecryptable (the store wiped it)");
             return false;
         }
 
@@ -168,7 +195,7 @@ final class BootLogin {
         final JSONObject initRequest = record == null ? null : record.optJSONObject("initRequest");
         final JSONObject loginRequest = record == null ? null : record.optJSONObject("loginRequest");
         if (keyUid.isEmpty() || initRequest == null || loginRequest == null) {
-            fail();
+            fail("corrupt record");
             return false;
         }
 
@@ -180,11 +207,11 @@ final class BootLogin {
             }
             credential = credentials.credential(keyUid);
         } catch (StoreException e) {
-            fail();
+            fail("credential " + describe(e));
             return false;
         }
         if (credential == null) {
-            fail();
+            fail("credential undecryptable (the store wiped it)");
             return false;
         }
         final String dek = dekFrom(credential);
@@ -194,13 +221,13 @@ final class BootLogin {
         }
 
         if (!succeeded(statusGo.call("InitializeApplication", args(initRequest.toString())))) {
-            fail();
+            fail("InitializeApplication rejected");
             return false;
         }
         try {
             loginRequest.put("dek", dek);
         } catch (Exception e) {
-            fail();
+            fail("cannot add the DEK to the login request");
             return false;
         }
 
@@ -209,7 +236,7 @@ final class BootLogin {
         }
         scheduler.schedule(loginTimeout, LOGIN_TIMEOUT_MS);
         if (!succeeded(statusGo.call("LoginAccount", args(loginRequest.toString())))) {
-            if (takeAwaitingNodeLogin()) fail();
+            if (takeAwaitingNodeLogin()) fail("LoginAccount rejected");
             return false;
         }
         return true;
@@ -224,7 +251,7 @@ final class BootLogin {
         final JSONObject event = signal == null ? null : signal.optJSONObject("event");
         final boolean loggedIn = event != null && event.optString("error", "").isEmpty();
         if (takeAwaitingNodeLogin() && !loggedIn) {
-            fail();
+            fail("node.login error");
             return;
         }
         if (loggedIn && !ui.visible()) pauser.pauseServices(() -> !ui.visible());
@@ -240,10 +267,28 @@ final class BootLogin {
         return true;
     }
 
-    private void fail() {
+    private void fail(String reason) {
+        log.warn("boot login failed: " + reason);
         records.delete();
-        notifier.bootLoginFailed();
+        if (!ui.visible()) notifier.bootLoginFailed();
         stopUnlessUiBound();
+    }
+
+    /**
+     * No node.login in time. status-go may still finish the login inside this process, so
+     * with no UI the process ends rather than live on half logged in behind the failure
+     * notification. A bound UI gets the late node.login and handles it.
+     */
+    private void timedOut() {
+        log.warn("boot login failed: no node.login within " + LOGIN_TIMEOUT_MS + " ms");
+        records.delete();
+        if (ui.bound()) return;
+        notifier.bootLoginFailed();
+        stopper.endProcess();
+    }
+
+    private static String describe(StoreException e) {
+        return e.corrupt ? "undecryptable (incomplete blob pair)" : "store error";
     }
 
     private void stopUnlessUiBound() {

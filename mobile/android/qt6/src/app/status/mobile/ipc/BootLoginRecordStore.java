@@ -14,7 +14,7 @@ final class BootLoginRecordStore implements BootLogin.RecordStore {
 
     @Override
     public boolean exists() throws BootLogin.StoreException {
-        return StatusGoService.secureEntryExists(store().hasCredential(SecureStorageHelper.BOOT_LOGIN_RECORD_KEY));
+        return StatusGoService.secureEntryExists(context, SecureStorageHelper.BOOT_LOGIN_RECORD_KEY);
     }
 
     @Override
