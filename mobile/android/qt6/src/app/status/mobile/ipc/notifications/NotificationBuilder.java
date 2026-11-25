@@ -36,6 +36,8 @@ public final class NotificationBuilder {
     private static final String TAG = "NotificationBuilder";
 
     static final String CHANNEL_ID_MESSAGES = "statusgo-messages";
+    /** Service notices such as a failed boot login, kept apart so muting Messages keeps them. */
+    static final String CHANNEL_ID_SERVICE = "statusgo-service";
 
     /** Key for RemoteInput reply text. */
     public static final String REPLY_REMOTE_INPUT_KEY = "reply_text";
@@ -87,6 +89,21 @@ public final class NotificationBuilder {
 
 
     // ── Notification channels ─────────────────────────────────────────────────
+
+    /** Ensures the low-importance "Status service" channel exists (Android O+). */
+    private static void createServiceChannel(Context context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
+        NotificationManager nm = (NotificationManager) context.getSystemService(
+                Context.NOTIFICATION_SERVICE);
+        if (nm == null) return;
+        NotificationChannel ch = new NotificationChannel(
+                CHANNEL_ID_SERVICE,
+                "Status service",
+                NotificationManager.IMPORTANCE_LOW
+        );
+        ch.setDescription("Notices about the Status background service");
+        nm.createNotificationChannel(ch);
+    }
 
     /** Ensures the "Messages" notification channel exists (Android O+). */
     public static void createMessagesChannel(Context context) {
@@ -262,11 +279,11 @@ public final class NotificationBuilder {
     public static void postBootLoginFailed(Context context) {
         if (context == null) return;
         try {
-            createMessagesChannel(context);
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID_MESSAGES)
+            createServiceChannel(context);
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID_SERVICE)
                     .setSmallIcon(NOTIFICATION_SMALL_ICON)
                     .setContentTitle(context.getString(R.string.notification_boot_login_failed))
-                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                    .setPriority(NotificationCompat.PRIORITY_LOW)
                     .setAutoCancel(true);
             Intent intent = buildTapIntent(context, null);
             if (intent != null) {
