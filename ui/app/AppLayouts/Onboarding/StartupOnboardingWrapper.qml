@@ -27,14 +27,14 @@ Item {
     property bool biometricFlowPending
     // Background launch (desktop): the app was started with the launch argument
     property bool backgroundLaunchRequested
-    property bool systemTrayAvailable
+    property bool systemTrayIconAvailable
 
     // The window stays hidden while the background launch's silent login runs. Without
     // a silent login or a tray the window shows: a hidden login screen would be useless.
     readonly property bool keepWindowHidden: !!root.featureFlagsStore
                                              && root.featureFlagsStore.resumeAfterRestartEnabled
                                              && root.backgroundLaunchRequested
-                                             && root.systemTrayAvailable
+                                             && root.systemTrayIconAvailable
                                              && onboardingLayout.autoLoginAttempted
                                              && !d.autoLoginFailed
 

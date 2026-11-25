@@ -192,7 +192,7 @@ Item {
             item.lastSelectedProfileKeyUid = Qt.binding(() => localAppSettings.selectedProfileKeyUid)
             item.biometricFlowPending = Qt.binding(() => d.biometricFlowPending)
             item.backgroundLaunchRequested = root.backgroundLaunchRequested
-            item.systemTrayAvailable = Qt.binding(() => root.systemTrayIconAvailable)
+            item.systemTrayIconAvailable = Qt.binding(() => root.systemTrayIconAvailable)
             // MUST be assigned LAST: enabling triggers the one-shot auto-login
             // attempt, which needs the key UID (and storage) already in place.
             // Decided (and logged) on the Nim side: e2e runs never auto-login, and

@@ -342,7 +342,7 @@ Item {
         function test_backgroundLaunchKeepsWindowHidden(data) {
             wrapper = createTemporaryObject(wrapperComponent, root, {
                 backgroundLaunchRequested: data.arg,
-                systemTrayAvailable: data.tray
+                systemTrayIconAvailable: data.tray
             })
             verify(!!wrapper)
             wrapper.featureFlagsStore.resumeAfterRestartEnabled = data.flag
@@ -358,7 +358,7 @@ Item {
         function test_backgroundLaunchFailedSilentLoginShowsWindow() {
             wrapper = createTemporaryObject(wrapperComponent, root, {
                 backgroundLaunchRequested: true,
-                systemTrayAvailable: true
+                systemTrayIconAvailable: true
             })
             verify(!!wrapper)
             wrapper.featureFlagsStore.resumeAfterRestartEnabled = true
