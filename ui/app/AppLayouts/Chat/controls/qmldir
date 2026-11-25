@@ -1,4 +1,5 @@
 Contact 1.0 Contact.qml
+HistoryLoadingIndicator 1.0 HistoryLoadingIndicator.qml
 PinnedMessagesList 1.0 PinnedMessagesList.qml
 ThreadCard 1.0 ThreadCard.qml
 ThreadHeader 1.0 ThreadHeader.qml

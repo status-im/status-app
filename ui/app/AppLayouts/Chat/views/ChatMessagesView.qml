@@ -996,37 +996,14 @@ Item {
         }
     }
 
-    Item {
-        id: loadingMessagesIndicator
-
-        visible: !!root.rootStore && root.rootStore.loadingHistoryMessagesInProgress
-        anchors.top: parent.top
-        anchors.left: parent.left
-        height: visible ? 20 : 0
-        width: parent.width
-
-        Loader {
-            active: loadingMessagesIndicator.visible
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.verticalCenter: parent.verticalCenter
-            sourceComponent: Component {
-                LoadingAnimation {
-                    width: 18
-                    height: 18
-                }
-            }
-        }
-    }
-
+    // The history loading spinner lives in the chat / thread header
+    // (HistoryLoadingIndicator), so it never resizes the list.
     WindowedView {
         id: chatLogView
 
         objectName: "chatLogView"
 
-        anchors.top: loadingMessagesIndicator.bottom
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
+        anchors.fill: parent
 
         model: messageWindow.model
         keyRole: "messageId"

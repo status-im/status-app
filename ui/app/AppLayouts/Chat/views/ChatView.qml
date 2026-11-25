@@ -408,6 +408,14 @@ Item {
         visible: !root.allChannelsAreHiddenBecauseNotPermitted
         id: headerContentLoader
         sourceComponent: root.contentLocked ? joinCommunityHeaderPanelComponent : chatHeaderContentViewComponent
+
+        // Floats over the header (also hosting a thread opened in the main
+        // pane) instead of taking space, so it doesn't make the chat jump
+        HistoryLoadingIndicator {
+            z: 1
+            anchors.centerIn: parent
+            loading: !root.contentLocked && root.rootStore.loadingHistoryMessagesInProgress
+        }
     }
 
     // Portrait pages share the toolbar row with its back button.
@@ -429,6 +437,12 @@ Item {
                 tooltip.text: qsTr("Search")
                 onClicked: root.openAppSearch(d.openThreadParentChatId, d.openThreadId)
             }
+        }
+
+        HistoryLoadingIndicator {
+            z: 1
+            anchors.centerIn: parent
+            loading: d.threadHeaderInToolbar && root.rootStore.loadingHistoryMessagesInProgress
         }
     }
 
@@ -782,52 +796,65 @@ Item {
             readonly property alias newThreadPanel: newThreadLoader.item
             spacing: 0
 
-            RowLayout {
+            // Wraps the header row so the history loading spinner can float
+            // over its middle without being laid out
+            Item {
                 visible: !d.threadHeaderInToolbar
                 Layout.fillWidth: true
-                Layout.minimumHeight: 64
-                Layout.leftMargin: Theme.padding
-                Layout.rightMargin: Theme.halfPadding
-                spacing: Theme.padding
-
-                StatusIcon {
-                    Layout.preferredWidth: 16
-                    Layout.preferredHeight: 16
-                    icon: "thread"
-                    color: Theme.palette.baseColor1
-                }
-
-                Loader {
-                    Layout.fillWidth: true
-                    active: !d.threadHeaderInToolbar
-                    sourceComponent: threadHeaderComponent
-                }
+                Layout.preferredHeight: Math.max(64, threadHeaderRow.implicitHeight)
 
                 RowLayout {
-                    spacing: 0
+                    id: threadHeaderRow
 
-                    StatusFlatRoundButton {
-                        objectName: "searchThreadButton"
-                        visible: !d.newThreadParentMessageId
-                        icon.name: "search"
-                        tooltip.text: qsTr("Search")
-                        tooltip.orientation: StatusToolTip.Orientation.Bottom
-                        onClicked: root.openAppSearch(d.openThreadParentChatId, d.openThreadId)
+                    anchors.fill: parent
+                    anchors.leftMargin: Theme.padding
+                    anchors.rightMargin: Theme.halfPadding
+                    spacing: Theme.padding
+
+                    StatusIcon {
+                        Layout.preferredWidth: 16
+                        Layout.preferredHeight: 16
+                        icon: "thread"
+                        color: Theme.palette.baseColor1
                     }
 
-                    StatusFlatRoundButton {
-                        objectName: "closeThreadPanelButton"
-                        icon.name: "close"
-                        tooltip.text: qsTr("Close thread")
-                        tooltip.orientation: StatusToolTip.Orientation.Bottom
-                        onClicked: {
-                            const returnToInfo = d.threadOpenedFromInfo
-                            if (!returnToInfo)
-                                root.showUsersListRequested(false)
-                            d.closeThreadPanel()
-                            d.threadOpenedFromInfo = false
+                    Loader {
+                        Layout.fillWidth: true
+                        active: !d.threadHeaderInToolbar
+                        sourceComponent: threadHeaderComponent
+                    }
+
+                    RowLayout {
+                        spacing: 0
+
+                        StatusFlatRoundButton {
+                            objectName: "searchThreadButton"
+                            visible: !d.newThreadParentMessageId
+                            icon.name: "search"
+                            tooltip.text: qsTr("Search")
+                            tooltip.orientation: StatusToolTip.Orientation.Bottom
+                            onClicked: root.openAppSearch(d.openThreadParentChatId, d.openThreadId)
+                        }
+
+                        StatusFlatRoundButton {
+                            objectName: "closeThreadPanelButton"
+                            icon.name: "close"
+                            tooltip.text: qsTr("Close thread")
+                            tooltip.orientation: StatusToolTip.Orientation.Bottom
+                            onClicked: {
+                                const returnToInfo = d.threadOpenedFromInfo
+                                if (!returnToInfo)
+                                    root.showUsersListRequested(false)
+                                d.closeThreadPanel()
+                                d.threadOpenedFromInfo = false
+                            }
                         }
                     }
+                }
+
+                HistoryLoadingIndicator {
+                    anchors.centerIn: parent
+                    loading: !d.threadHeaderInToolbar && root.rootStore.loadingHistoryMessagesInProgress
                 }
             }
 
