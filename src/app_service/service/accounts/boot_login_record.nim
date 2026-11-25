@@ -14,7 +14,8 @@ proc buildBootLoginRecord*(keyUid: string, initRequest: JsonNode, loginRequest: 
     return ""
   let login = loginRequest.copy()
   for key in loginSecretKeys:
-    login.delete(key)
+    if login.hasKey(key):
+      login.delete(key)
   return $(%* {
     "version": BOOT_LOGIN_RECORD_VERSION,
     "keyUid": keyUid,

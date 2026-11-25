@@ -43,5 +43,9 @@ suite "buildBootLoginRecord":
     check loginRequest["dek"].getStr == "a1b2"
     check loginRequest["password"].getStr == "0xhashedpassword"
 
+  test "a request without some secret fields is still accepted":
+    let record = parseJson(buildBootLoginRecord("0xkeyuid", initRequest, %* {"keyUid": "0xkeyuid", "dek": "a1b2"}))
+    check record["loginRequest"] == %* {"keyUid": "0xkeyuid"}
+
   test "no profile, no record":
     check buildBootLoginRecord("", initRequest, loginRequest) == ""
