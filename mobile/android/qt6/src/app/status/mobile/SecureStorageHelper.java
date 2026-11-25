@@ -69,13 +69,9 @@ public final class SecureStorageHelper {
     }
 
     private final Context mContext;
-    private final int mPrefsMode;
 
     private SecureStorageHelper(Context ctx) {
         this.mContext = ctx;
-        this.mPrefsMode = SecureStoreProcess.reloadsBeforeEveryAccess(android.app.Application.getProcessName())
-                ? Context.MODE_MULTI_PROCESS
-                : Context.MODE_PRIVATE;
     }
 
     /** Keystore reachable and usable (never prompts, never throws). */
@@ -318,8 +314,11 @@ public final class SecureStorageHelper {
     // ====== Storage helpers ======
 
     private android.content.SharedPreferences prefs() {
-        // MODE_MULTI_PROCESS in :statusgo: see SecureStoreProcess.reloadsBeforeEveryAccess
-        return mContext.getSharedPreferences(PREFS_NAME, mPrefsMode);
+        // Both the UI and :statusgo processes read and write this file, and a SharedPreferences
+        // commit writes the whole per-process map. MODE_MULTI_PROCESS reloads the file when it
+        // changed on disk, so neither process commits a stale map that brings back an entry the
+        // other one removed (e.g. the boot-login record).
+        return mContext.getSharedPreferences(PREFS_NAME, Context.MODE_MULTI_PROCESS);
     }
 
     /** @throws IllegalArgumentException on malformed Base64 (handled as corruption). */
