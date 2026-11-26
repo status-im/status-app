@@ -13,6 +13,8 @@ QtObject:
       threadLocationsError: bool
       chatSearchModel: chat_search_model.Model
       chatSearchModelVariant: QVariant
+      switcherThreadModel: chat_search_model.Model
+      switcherThreadModelVariant: QVariant
 
   proc delete*(self: View)
   proc newView*(delegate: io_interface.AccessInterface): View =
@@ -24,6 +26,10 @@ QtObject:
     result.threadLocationMenuModel = newSubModel()
     result.chatSearchModel = chat_search_model.newModel(delegate)
     result.chatSearchModelVariant = newQVariant(result.chatSearchModel)
+    result.switcherThreadModel = chat_search_model.newModel(delegate)
+    result.switcherThreadModel.setItems(@[])
+    result.switcherThreadModel.onEverythingLoaded()
+    result.switcherThreadModelVariant = newQVariant(result.switcherThreadModel)
 
   proc load*(self: View) =
     self.delegate.viewDidLoad()
@@ -104,6 +110,18 @@ QtObject:
     return self.chatSearchModelVariant
   QtProperty[QVariant] chatSearchModel:
     read = getChatSearchModel
+
+  proc switcherThreadModel*(self: View): chat_search_model.Model =
+    self.switcherThreadModel
+
+  proc getSwitcherThreadModel(self: View): QVariant {.slot.} =
+    self.switcherThreadModelVariant
+
+  QtProperty[QVariant] switcherThreadModel:
+    read = getSwitcherThreadModel
+
+  proc setSwitcherOpen*(self: View, open: bool) {.slot.} =
+    self.delegate.setSwitcherOpen(open)
 
   proc delete*(self: View) =
     self.QObject.delete

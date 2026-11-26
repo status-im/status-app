@@ -14,8 +14,6 @@ pipeline {
            '--device=/dev/fuse ' +
            '--group-add docker ' +
            '--volume=/var/run/docker.sock:/var/run/docker.sock ' +
-           '--volume=/home/jenkins/.squish-license:/home/jenkins/.squish-license ' +
-           '--volume=/opt/squish-runner-9.2.2-qt-6.11:/opt/squish-runner-9.2.2-qt-6.11 ' +
            '--user jenkins'
     }
   }
@@ -90,9 +88,8 @@ pipeline {
   environment {
     PLATFORM = 'tests/e2e'
 
-    SQUISH_DIR = '/opt/squish-runner-9.2.2-qt-6.11'
-    PYTHONPATH = "${SQUISH_DIR}/lib:${SQUISH_DIR}/lib/python:${PYTHONPATH}"
-    LD_LIBRARY_PATH = "${SQUISH_DIR}/lib:${SQUISH_DIR}/python3/lib:${LD_LIBRARY_PATH}"
+    /* Built by the Plugin stage; the driver loads it into the app */
+    INSPECTOR_PLUGINS = "${WORKSPACE_TMP}/qmlinspector/plugins"
 
     /* To stop e2e tests using port 8545 */
     STATUS_RUNTIME_HTTP_API = 'False'
@@ -165,6 +162,22 @@ pipeline {
           sh 'npm ci --no-audit --no-fund'
         } }
       }
+    }
+
+    stage('Driver unit tests') {
+      steps { timeout(5) { dir('test/e2e') {
+        sh 'python3 -m pytest driver/tests -v'
+      } } }
+    }
+
+    stage('Plugin') {
+      steps { timeout(30) {
+        /* build-plugin.sh mounts its sources into a container started on the host's Docker,
+         * so they must live in a path the host shares with this agent container. */
+        withEnv(["TMPDIR=${WORKSPACE_TMP}", "QT_CACHE=${WORKSPACE_TMP}/qt"]) {
+          sh "test/e2e/scripts/inspector/build-plugin.sh ${WORKSPACE_TMP}/qmlinspector"
+        }
+      } }
     }
 
     stage('Download') {

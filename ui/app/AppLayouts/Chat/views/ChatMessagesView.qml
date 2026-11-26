@@ -2,6 +2,7 @@ import QtQuick
 import QtQml
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Window
 import SortFilterProxyModel
 
 import StatusQ
@@ -51,6 +52,7 @@ Item {
 
     property RootStore rootStore
     property MessageStore messageStore
+    property bool panelInView: true
     property string channelEmoji
     property var formatBalance
 
@@ -59,6 +61,7 @@ Item {
     property DelegatePool rowPool: null
     property ChatTextAppearance textAppearance
     property ChatTextAppearance previewAppearance
+    property MessageHeaderServices messageHeaderServices
 
     // Users related data:
     property var usersModel
@@ -142,6 +145,10 @@ Item {
 
         readonly property var chatDetails: root.chatContentModule && root.chatContentModule.chatDetails || null
         readonly property bool keepUnread: root.messageStore ? root.messageStore.keepUnread : false
+        readonly property bool canAutoRead: root.panelInView && chatLogView.visible
+                                            && Qt.application.state === Qt.ApplicationActive
+                                            && (root.Window.window?.active ?? false)
+                                            && root.Window.window.visibility !== Window.Minimized
 
         // The newest message is on screen: the viewport rests on the bottom
         // and the window reaches the model's start. Only once the view has
@@ -625,7 +632,7 @@ Item {
             "chatLogView", "chatContentModule", "formatBalance", "usersModel",
             "isChatBlocked", "joined", "sendViaPersonalChatEnabled",
             "messageLinkSharingEnabled", "threadsFeatureEnabled", "isThreadView",
-            "disabledTooltipText", "textAppearance", "previewAppearance",
+            "disabledTooltipText", "textAppearance", "previewAppearance", "messageHeaderServices",
             "areTestNetworksEnabled", "extraLeftPadding", "gifUnfurlingEnabled",
             "neverAskAboutUnfurlingAgain", "myPublicKey", "stickersLoaded"
         ]
@@ -697,6 +704,8 @@ Item {
             item.mentionsMap = Qt.binding(() => mentionResolver.resolveFor(
                                               item.unparsedText + " " + item.quotedMessageUnparsedText,
                                               item.mentionedNames))
+            item.threadLastMessageMentionsMap = Qt.binding(() =>
+                mentionResolver.resolveFor(item.threadLastMessageText))
             item.objectName = "chatMessageViewDelegate"
 
             binder.bind(messageWindow.model, row)
@@ -738,6 +747,7 @@ Item {
                 item[name] = item[name]
 
             item.mentionsMap = ({})
+            item.threadLastMessageMentionsMap = ({})
             item.width = item.width
 
             if (d.pooledItems.has(item)) {
@@ -755,8 +765,7 @@ Item {
 
         // ---- Reading ------------------------------------------------------------------
         function markAllMessagesReadIfMostRecentMessageIsInViewport() {
-            if (Qt.application.state != Qt.ApplicationActive || !d.isMostRecentMessageInViewport
-                    || !chatLogView.visible || d.keepUnread)
+            if (!d.canAutoRead || !d.isMostRecentMessageInViewport || d.keepUnread)
                 return
 
             // A visible thread panel is read alongside the selected parent chat.
@@ -773,6 +782,11 @@ Item {
         // reveal settles the view at the newest message.
         onIsMostRecentMessageInViewportChanged:
             Qt.callLater(d.markAllMessagesReadIfMostRecentMessageIsInViewport)
+
+        onCanAutoReadChanged: {
+            if (canAutoRead)
+                Qt.callLater(d.markAllMessagesReadIfMostRecentMessageIsInViewport)
+        }
     }
 
     onRowPoolChanged: d.applyPoolTarget()
@@ -887,15 +901,6 @@ Item {
     }
 
     Connections {
-        target: Qt.application
-
-        function onStateChanged() {
-            if (Qt.application.state === Qt.ApplicationActive)
-                d.markAllMessagesReadIfMostRecentMessageIsInViewport()
-        }
-    }
-
-    Connections {
         target: root.messageStore ? root.messageStore.messageModule : null
 
         function onMessageSuccessfullySent() {
@@ -981,7 +986,7 @@ Item {
 
             // HACK: we call `addNewMessagesMarker` later because messages model
             // may not be yet propagated with unread messages when this signal is emitteds
-            if (chatLogView.visible && (Qt.application.state != Qt.ApplicationActive || !d.isMostRecentMessageInViewport)) {
+            if (chatLogView.visible && (!d.canAutoRead || !d.isMostRecentMessageInViewport)) {
                 Qt.callLater(() => messageStore.addNewMessagesMarker())
             }
         }
@@ -996,37 +1001,12 @@ Item {
         }
     }
 
-    Item {
-        id: loadingMessagesIndicator
-
-        visible: !!root.rootStore && root.rootStore.loadingHistoryMessagesInProgress
-        anchors.top: parent.top
-        anchors.left: parent.left
-        height: visible ? 20 : 0
-        width: parent.width
-
-        Loader {
-            active: loadingMessagesIndicator.visible
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.verticalCenter: parent.verticalCenter
-            sourceComponent: Component {
-                LoadingAnimation {
-                    width: 18
-                    height: 18
-                }
-            }
-        }
-    }
-
     WindowedView {
         id: chatLogView
 
         objectName: "chatLogView"
 
-        anchors.top: loadingMessagesIndicator.bottom
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
+        anchors.fill: parent
 
         model: messageWindow.model
         keyRole: "messageId"
@@ -1075,7 +1055,6 @@ Item {
             if (!wheelScrolling)
                 d.markAllMessagesReadIfMostRecentMessageIsInViewport()
         }
-        onVisibleChanged: d.markAllMessagesReadIfMostRecentMessageIsInViewport()
 
         Binding on flickDeceleration {
             when: localAppSettings.isCustomMouseScrollingEnabled

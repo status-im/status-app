@@ -11739,11 +11739,11 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Create Thread</source>
+        <source>Open thread</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Open thread</source>
+        <source>Reply in thread</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -16784,6 +16784,13 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>StatusChatInputSendButton</name>
+    <message>
+        <source>Send</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>StatusChatInputToolBar</name>
     <message>
         <source>Formatting</source>
@@ -18400,6 +18407,21 @@ This action cannot be undone.</source>
     </message>
 </context>
 <context>
+    <name>ThirdpartyServicesLabel</name>
+    <message>
+        <source>Third-party services %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>enabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>ThirdpartyServicesPopup</name>
     <message>
         <source>Third-party services</source>
@@ -18484,12 +18506,21 @@ This action cannot be undone.</source>
         <source>deleted this thread</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>deleted this thread</source>
+        <comment>Current user</comment>
+        <translation type="unfinished"></translation>
+    </message>
     <message numerus="yes">
         <source>%n message(s)</source>
         <translation type="unfinished">
             <numerusform></numerusform>
             <numerusform></numerusform>
         </translation>
+    </message>
+    <message>
+        <source>You</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -18562,7 +18593,22 @@ This action cannot be undone.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Thread name is required</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source>Max %n character(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
         <source>Thread name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Rename thread</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -20735,18 +20781,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     </message>
     <message>
         <source>Log in</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Third-party services %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>enabled</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>disabled</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

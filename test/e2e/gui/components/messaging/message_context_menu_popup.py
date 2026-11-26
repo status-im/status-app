@@ -19,7 +19,7 @@ class MessageContextMenuPopup(QObject):
         if not self.is_visible:
             return self
         hover_target.hover()
-        driver.waitFor(lambda: not self.is_visible, timeout_msec)
+        driver.wait_until(lambda: not self.is_visible, timeout_msec)
         return self
 
     @allure.step('Wait until appears {0}')
@@ -44,7 +44,7 @@ class MessageContextMenuPopup(QObject):
             temp_real_name.pop('occurrence', None)
 
         # Find the emoji element
-        emoji_obj = driver.waitForObject(temp_real_name, configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
+        emoji_obj = driver.wait(temp_real_name, configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
 
         emoji_id = str(getattr(emoji_obj, 'emojiId', '')).strip()
         if emoji_id:

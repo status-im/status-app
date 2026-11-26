@@ -25,3 +25,32 @@ def is_ios(driver) -> bool:
 def is_android(driver) -> bool:
     """Return ``True`` when the driver session targets an Android device."""
     return get_platform(driver) in ("android", "")
+
+
+def target_platform(environment: str) -> str:
+    """The platform a run will drive, read from its device config before any
+    session exists, selected the way the session will select it
+    (``select_device``). ``"android"`` when it cannot be resolved, matching
+    ``get_platform``."""
+    from config.settings import select_device
+    from core.config_manager import ConfigurationManager
+
+    try:
+        env_cfg = ConfigurationManager().load_environment(environment, validate=False)
+        device = select_device(env_cfg)
+        caps = device.merged_capabilities(env_cfg.device_defaults.get("capabilities", {}))
+        return (caps.get("platformName") or "android").lower()
+    except Exception:
+        return "android"
+
+
+def ios_bundle_id(driver, default: str = "app.status.mobile") -> str:
+    """The app's bundle identifier from whichever capability key the session
+    reports; BrowserStack sessions built from an uploaded app may report none."""
+    caps = getattr(driver, "capabilities", None) or {}
+    return (
+        caps.get("appium:bundleId")
+        or caps.get("bundleId")
+        or caps.get("CFBundleIdentifier")
+        or default
+    )

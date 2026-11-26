@@ -45,7 +45,7 @@ class SendPopup(QObject):
     def get_assets_or_collectibles_list(self, tab: str) -> typing.List[str]:
         assets_or_collectibles_list = []
         if tab == 'Assets':
-            for asset in driver.findAllObjects(self.asset_list_item.real_name):
+            for asset in driver.find_all(self.asset_list_item.real_name):
                 assets_or_collectibles_list.append(asset)
         elif tab == 'Collectibles':
             for asset in walk_children(self.tokens_list.object):
@@ -60,7 +60,7 @@ class SendPopup(QObject):
     @allure.step('Select network in network selector')
     def select_network(self, network_name):
         self.send_modal_network_filter.click()
-        network_options = driver.findAllObjects(self.send_modal_network_item.real_name)
+        network_options = driver.find_all(self.send_modal_network_item.real_name)
         assert network_options, 'Network options are not displayed'
         QObject(find_network_option_item(network_name, network_options)).click()
         time.sleep(0.2)
@@ -82,7 +82,7 @@ class SendPopup(QObject):
         try:
             if not self._send_modal_recipient_panel.is_visible:
                 return False
-            for delegate in driver.findAllObjects(self.send_modal_recipient_delegate.real_name):
+            for delegate in driver.find_all(self.send_modal_recipient_delegate.real_name):
                 title = str(getattr(delegate, 'title', ''))
                 delegate_address = str(getattr(delegate, 'address', ''))
                 if self._same_address(title, address) or self._same_address(delegate_address, address):
@@ -95,7 +95,7 @@ class SendPopup(QObject):
 
     @allure.step('Close send modal without signing')
     def close_without_signing(self):
-        driver.type(self.object, '<Escape>')
+        driver.type_text(self.object, '<Escape>')
         self.wait_until_hidden()
         return self
 
@@ -111,14 +111,14 @@ class SendPopup(QObject):
             )
         self.ens_address_text_input.click()
         self.ens_address_text_input.set_text_property(address)
-        driver.waitFor(
+        driver.wait_until(
             lambda: self._recipient_is_selected(address),
             configs.timeouts.RECIPIENT_VALIDATION_MSEC,
         )
         if not self._recipient_is_selected(address):
             self.select_from_suggestions_if_shown(address)
 
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self._recipient_is_selected(address),
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), f'Recipient {address} was not selected'
@@ -139,7 +139,7 @@ class SendPopup(QObject):
 
     def _max_send_balance(self) -> float:
         try:
-            button = driver.waitForObjectExists(names.sendModalMaxButton, 200)
+            button = driver.wait_exists(names.sendModalMaxButton, 200)
         except (LookupError, RuntimeError):
             return 0.0
 
@@ -154,14 +154,14 @@ class SendPopup(QObject):
             self,
             timeout_msec: int = configs.timeouts.ROUTES_TIMEOUT_MSEC,
     ):
-        assert driver.waitFor(lambda: self._max_send_balance() > 0, timeout_msec), (
+        assert driver.wait_until(lambda: self._max_send_balance() > 0, timeout_msec), (
             f'Send modal still shows zero max balance, got: {self._max_send_balance()!r}'
         )
         return self
 
     def _review_send_enabled(self) -> bool:
         try:
-            button = driver.waitForObjectExists(names.sendModalReviewSendButton, 200)
+            button = driver.wait_exists(names.sendModalReviewSendButton, 200)
         except (LookupError, RuntimeError):
             return False
         return button.enabled
@@ -181,14 +181,14 @@ class SendPopup(QObject):
 
         def review_send_ready():
             try:
-                footer = driver.findObject(send_modal_footer)
+                footer = driver.find(send_modal_footer)
                 if getattr(footer, 'error', False):
                     return False
             except Exception:
                 pass
             return self._review_send_enabled()
 
-        assert driver.waitFor(review_send_ready, timeout_msec), (
+        assert driver.wait_until(review_send_ready, timeout_msec), (
             'Review Send is not enabled (insufficient funds, fees loading, or router error)'
         )
         return self

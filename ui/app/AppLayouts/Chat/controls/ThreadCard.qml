@@ -6,6 +6,7 @@ import QtQuick.Layouts
 
 import QtModelsToolkit
 
+import StatusQ
 import StatusQ.Components
 import StatusQ.Controls
 import StatusQ.Core
@@ -50,9 +51,10 @@ Control {
     property int messagesCount: 0
 
     property bool muted: false
+    property bool hasUnreadMessages: false
 
     /*!
-       Unread/new activity count shown as a badge. Hidden when 0.
+       Unread mention count shown in the badge.
        Only used when threadState is ThreadCard.State.Active.
     */
     property int notificationCount: 0
@@ -72,6 +74,7 @@ Control {
        Only used when threadState is ThreadCard.State.Active.
     */
     property var lastMessage: ({})
+    property var lastMessageMentionsMap: ({})
 
     /*!
        Deleted thread message data. Accepts a JS object or QtObject with:
@@ -79,6 +82,8 @@ Control {
        Only used when threadState is ThreadCard.State.Deleted.
     */
     property var deletedMessage: ({})
+
+    property bool amISender: false
 
     readonly property int maximumWidth: 420
     readonly property real connectorY: contentItem.y + (d.deleted
@@ -117,7 +122,14 @@ Control {
         readonly property int avatarStackWidth: avatarStackCount > 0 ? avatarOuterSize + (avatarStackCount - 1) * avatarStep : 0
         readonly property var bodyMessage: deleted ? (root.deletedMessage || {}) : (root.lastMessage || {})
         readonly property var bodySender: bodyMessage.sender || {}
-        readonly property string bodyMessageText: deleted ? qsTr("deleted this thread") : (bodyMessage.text || "")
+        readonly property string bodyMessageText: {
+            if (deleted)
+                return root.amISender ? qsTr("deleted this thread", "Current user") : qsTr("deleted this thread")
+
+            const text = bodyMessage.text || ""
+            const mentions = root.lastMessageMentionsMap
+            return Object.keys(mentions).length ? MarkdownUtils.plainText(text, mentions) : text
+        }
         readonly property string bodyPreviewText: bodyMessageText.replace(/\s+/g, " ").trim()
         readonly property double bodyTimestamp: bodyMessage.timestamp || 0
         readonly property string formattedBodyTimestamp: bodyTimestamp > 0
@@ -183,11 +195,27 @@ Control {
                 font.weight: root.muted ? Font.Normal : Font.DemiBold
             }
 
+            StatusIcon {
+                objectName: "threadCardMutedIcon"
+                Layout.preferredWidth: d.iconSize
+                Layout.preferredHeight: d.iconSize
+                Layout.leftMargin: Theme.halfPadding
+                visible: root.muted
+                icon: "notification-muted"
+                color: Theme.palette.baseColor1
+            }
+
             StatusBadge {
                 objectName: "threadCardUnreadBadge"
-                visible: root.notificationCount > 0
+                readonly property bool onlyUnread: !root.muted && root.notificationCount === 0 && root.hasUnreadMessages
+
+                Layout.leftMargin: root.muted ? Theme.halfPadding : 0
+                visible: root.notificationCount > 0 || onlyUnread
+                color: onlyUnread ? Theme.palette.baseColor1 :
+                                    root.muted ? Theme.palette.primaryColor2 : Theme.palette.primaryColor1
+                border.width: onlyUnread ? -2 : 4
+                border.color: color
                 value: root.notificationCount
-                border.width: 0
             }
         }
 
@@ -360,7 +388,7 @@ Control {
                     y: d.bodyTopMargin
                     width: Math.min(implicitWidth, parent.width / 2)
                     height: d.bodyLineHeight
-                    text: d.bodySender.name || ""
+                    text: root.amISender ? qsTr("You") : (d.bodySender.name || "")
                     textFormat: Text.PlainText
                     elide: Text.ElideRight
                     color: Theme.palette.directColor1

@@ -132,6 +132,7 @@ class TestOnboardingImportSeed(StepMixin):
     @pytest.mark.onboarding
     @pytest.mark.raw_devices
     @pytest.mark.spec("SC-SEED-01")
+    @pytest.mark.xfail_ios("status-app#22807: recovery phrase word inputs are not in the iOS accessibility tree")
     async def test_import_seed_phrase(self):
         """First-time seed-phrase import: onboard + verify wallet address.
 
@@ -149,6 +150,7 @@ class TestOnboardingImportSeed(StepMixin):
     @pytest.mark.smoke
     @pytest.mark.onboarding
     @pytest.mark.raw_devices
+    @pytest.mark.xfail_ios("status-app#22807: recovery phrase word inputs are not in the iOS accessibility tree")
     async def test_stay_logged_in_skips_password_after_restart(self):
         driver = self.device.driver
         seed_phrase = generate_seed_phrase()
@@ -181,6 +183,7 @@ class TestOnboardingImportSeed(StepMixin):
     @pytest.mark.smoke
     @pytest.mark.onboarding
     @pytest.mark.raw_devices
+    @pytest.mark.xfail_ios("status-app#22807: recovery phrase word inputs are not in the iOS accessibility tree")
     async def test_import_and_reimport_seed(self):
         driver = self.device.driver
         seed_phrase = generate_seed_phrase()

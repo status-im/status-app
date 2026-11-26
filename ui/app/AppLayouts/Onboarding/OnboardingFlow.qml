@@ -285,6 +285,9 @@ OnboardingStackView {
 
         CreateProfilePage {
             isKeycardEnabled: root.isKeycardEnabled
+            privacyModeFeatureEnabled: root.privacyModeFeatureEnabled
+            thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
+            onOpenThirdpartyServicesInfoPopupRequested: d.openThirdpartyServicesPopup()
 
             onCreateProfileWithPasswordRequested: {
                 root.push(createNewProfileFlow)
@@ -307,6 +310,8 @@ OnboardingStackView {
             networkChecksEnabled: root.networkChecksEnabled
             isKeycardEnabled: root.isKeycardEnabled
             thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
+            privacyModeFeatureEnabled: root.privacyModeFeatureEnabled
+            onOpenThirdpartyServicesInfoPopupRequested: d.openThirdpartyServicesPopup()
 
             onLoginWithSyncingRequested: root.push(logInBySyncingFlow)
             onLoginWithKeycardRequested: {

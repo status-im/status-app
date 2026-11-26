@@ -66,9 +66,14 @@ class TestIOSOnboarding(StepMixin):
 
         async with self.step(self.device, "Verify wallet landing screen"):
             from locators.wallet.accounts_locators import WalletAccountsLocators
+            # Portrait phones land on the wallet's centre panel, where the
+            # send/receive footer shows and ADD_ACCOUNT_BUTTON does not render.
             visible = base.is_element_visible(
-                WalletAccountsLocators.ADD_ACCOUNT_BUTTON, timeout=15
+                WalletAccountsLocators.FOOTER_SEND, timeout=15
+            ) or base.is_element_visible(
+                WalletAccountsLocators.ADD_ACCOUNT_BUTTON, timeout=10
             )
             assert visible, (
-                "Wallet ADD_ACCOUNT_BUTTON should be visible after onboarding"
+                "Wallet landing (send footer or add-account button) should be "
+                "visible after onboarding"
             )

@@ -93,6 +93,8 @@ type
     ThreadLastMessageSenderColorId
     ThreadLastMessageText
     ThreadLastMessageTimestamp
+    ThreadLastMessageSenderId
+    ThreadHasUnreadMessages
 
 QtObject:
   type
@@ -215,6 +217,7 @@ QtObject:
       ModelRole.ThreadMessagesCount.int: "threadMessagesCount",
       ModelRole.ThreadMuted.int: "threadMuted",
       ModelRole.ThreadNotificationCount.int: "threadNotificationCount",
+      ModelRole.ThreadHasUnreadMessages.int: "threadHasUnreadMessages",
       ModelRole.ThreadParticipantsModel.int: "threadParticipantsModel",
       ModelRole.ThreadParticipantsCount.int: "threadParticipantsCount",
       ModelRole.ThreadLastMessageSenderName.int: "threadLastMessageSenderName",
@@ -222,6 +225,7 @@ QtObject:
       ModelRole.ThreadLastMessageSenderColorId.int: "threadLastMessageSenderColorId",
       ModelRole.ThreadLastMessageText.int: "threadLastMessageText",
       ModelRole.ThreadLastMessageTimestamp.int: "threadLastMessageTimestamp",
+      ModelRole.ThreadLastMessageSenderId.int: "threadLastMessageSenderId",
     }.toTable
 
   # The message a reply responds to, when this model has it loaded: the
@@ -469,6 +473,8 @@ QtObject:
       result = newQVariant(item.threadSummary.muted)
     of ModelRole.ThreadNotificationCount:
       result = newQVariant(item.threadSummary.notificationCount)
+    of ModelRole.ThreadHasUnreadMessages:
+      result = newQVariant(item.threadSummary.hasUnreadMessages)
     of ModelRole.ThreadParticipantsModel:
       if item.threadParticipantsModel.isNil:
         result = newQVariant()
@@ -486,6 +492,8 @@ QtObject:
       result = newQVariant(item.threadSummary.lastMessageText)
     of ModelRole.ThreadLastMessageTimestamp:
       result = newQVariant(item.threadSummary.lastMessageTimestamp)
+    of ModelRole.ThreadLastMessageSenderId:
+      result = newQVariant(item.threadSummary.lastMessageSenderId)
 
   proc updateAdjacentMessageRolesAtIndex(self: Model, row: int) =
     if row < 0 or row >= self.items.len:
@@ -799,6 +807,8 @@ QtObject:
       addChangedRole(roles, previous.muted, summary.muted, ModelRole.ThreadMuted.int): discard
       addChangedRole(roles, previous.notificationCount, summary.notificationCount,
         ModelRole.ThreadNotificationCount.int): discard
+      addChangedRole(roles, previous.hasUnreadMessages, summary.hasUnreadMessages,
+        ModelRole.ThreadHasUnreadMessages.int): discard
       # Existing participant models notify their own row changes.
       addChangedRole(roles, previousParticipantsModel, self.items[ind].threadParticipantsModel,
         ModelRole.ThreadParticipantsModel.int): discard
@@ -814,6 +824,8 @@ QtObject:
         ModelRole.ThreadLastMessageText.int): discard
       addChangedRole(roles, previous.lastMessageTimestamp, summary.lastMessageTimestamp,
         ModelRole.ThreadLastMessageTimestamp.int): discard
+      addChangedRole(roles, previous.lastMessageSenderId, summary.lastMessageSenderId,
+        ModelRole.ThreadLastMessageSenderId.int): discard
 
   proc setThreadSummary*(self: Model, messageId: string, summary: ThreadSummary) =
     self.setThreadSummary(self.findIndexForMessageId(messageId), summary)

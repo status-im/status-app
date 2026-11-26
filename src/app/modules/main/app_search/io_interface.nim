@@ -89,3 +89,9 @@ method onThreadLocationsLoaded*(self: AccessInterface, threads: seq[ThreadDto], 
 
 method onThreadLocationsFailed*(self: AccessInterface, chatId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
+
+method setSwitcherOpen*(self: AccessInterface, open: bool) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onSwitcherThreadsInvalidated*(self: AccessInterface, chatId: string) {.base.} =
+  raise newException(ValueError, "No implementation available")

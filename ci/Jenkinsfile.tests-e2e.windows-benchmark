@@ -90,8 +90,9 @@ pipeline {
     CHANGE_ID = "${params.CHANGE_ID}"
     RELEASE_VERSION = "${params.RELEASE_VERSION}"
 
-    SQUISH_DIR = 'C:\\squish-runner-9.2.2-qt-6.11'
-    PYTHONPATH = "${SQUISH_DIR}\\lib;${SQUISH_DIR}\\bin;${SQUISH_DIR}\\lib\\python;${PYTHONPATH}"
+    /* Built by the Plugin stage; the driver loads it into the app */
+    INSPECTOR_PLUGINS = "${WORKSPACE_TMP}\\qmlinspector\\plugins"
+    QT_PREFIX = "C:\\Qt\\${QT_VERSION}\\msvc2022_64"
 
     /* To stop e2e tests using port 8545 */
     STATUS_RUNTIME_HTTP_API = 'False'
@@ -176,6 +177,12 @@ pipeline {
             ${VIRTUAL_ENV}\\Scripts\\python.exe -m pip install -r requirements.txt
           """
       } } }
+    }
+
+    stage('Plugin') {
+      steps { timeout(30) {
+        powershell "& test/e2e/scripts/inspector/build-plugin-windows.ps1 '${env.WORKSPACE_TMP}\\qmlinspector'"
+      } }
     }
 
     stage('Download') {

@@ -11755,12 +11755,12 @@ chargement</translation>
         <translation>Répondre</translation>
     </message>
     <message>
-        <source>Create Thread</source>
-        <translation>Créer un fil</translation>
-    </message>
-    <message>
         <source>Open thread</source>
         <translation>Ouvrir le fil</translation>
+    </message>
+    <message>
+        <source>Reply in thread</source>
+        <translation type="unfinished">Répondre dans le fil</translation>
     </message>
     <message>
         <source>Edit</source>
@@ -16800,6 +16800,13 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     </message>
 </context>
 <context>
+    <name>StatusChatInputSendButton</name>
+    <message>
+        <source>Send</source>
+        <translation type="unfinished">Envoyer</translation>
+    </message>
+</context>
+<context>
     <name>StatusChatInputToolBar</name>
     <message>
         <source>Formatting</source>
@@ -18417,6 +18424,21 @@ This action cannot be undone.</source>
     </message>
 </context>
 <context>
+    <name>ThirdpartyServicesLabel</name>
+    <message>
+        <source>Third-party services %1</source>
+        <translation type="unfinished">Services tiers %1</translation>
+    </message>
+    <message>
+        <source>enabled</source>
+        <translation type="unfinished">activé</translation>
+    </message>
+    <message>
+        <source>disabled</source>
+        <translation type="unfinished">désactivé</translation>
+    </message>
+</context>
+<context>
     <name>ThirdpartyServicesPopup</name>
     <message>
         <source>Third-party services</source>
@@ -18501,12 +18523,21 @@ This action cannot be undone.</source>
         <source>deleted this thread</source>
         <translation>a supprimé ce fil</translation>
     </message>
+    <message>
+        <source>deleted this thread</source>
+        <comment>Current user</comment>
+        <translation type="unfinished">a supprimé ce fil</translation>
+    </message>
     <message numerus="yes">
         <source>%n message(s)</source>
         <translation>
             <numerusform>%n message</numerusform>
             <numerusform>%n messages</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>You</source>
+        <translation type="unfinished">Vous</translation>
     </message>
 </context>
 <context>
@@ -18579,8 +18610,23 @@ This action cannot be undone.</source>
         <translation>Impossible de renommer le fil&#xa0;: %1</translation>
     </message>
     <message>
+        <source>Thread name is required</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source>Max %n character(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
         <source>Thread name</source>
         <translation>Nom du fil</translation>
+    </message>
+    <message>
+        <source>Rename thread</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>in %1</source>
@@ -20765,18 +20811,6 @@ Si une transaction avec un nonce inférieur est en attente, les transactions ave
     <message>
         <source>Log in</source>
         <translation>Se connecter</translation>
-    </message>
-    <message>
-        <source>Third-party services %1</source>
-        <translation>Services tiers %1</translation>
-    </message>
-    <message>
-        <source>enabled</source>
-        <translation>activé</translation>
-    </message>
-    <message>
-        <source>disabled</source>
-        <translation>désactivé</translation>
     </message>
     <message>
         <source>By proceeding you accept Status&lt;br&gt;%1 and %2</source>

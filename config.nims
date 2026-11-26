@@ -4,6 +4,8 @@ when withDir(thisDir(), system.fileExists("nimble.paths")):
   include "nimble.paths"
 # end Nimble config
 
+import std/strutils
+
 # Keep a separate nimcache per USE_SIMULATED_KEYCARD mode. That flag toggles -d:useSimulatedKeycard,
 # which adds/removes the KeycardTest* imports from libstatus-keycard-qt; sharing one cache let stale
 # (simulated) codegen leak into a non-simulated build -> dyld "Symbol not found: _KeycardTestCreateCard".
@@ -38,11 +40,13 @@ if hostOS == "macosx":
   let statusqInstallPath = getEnv("STATUSQ_INSTALL_PATH")
   if statusqInstallPath.len > 0:
     switch("passL", "-rpath " & statusqInstallPath & "/StatusQ")
-  # statically link OpenSSL built from mobile/vendors/openssl (see `make openssl`)
-  let opensslRoot = getEnv("OPENSSL_ROOT_DIR",
-    "tmp/openssl/macos-" & (if hostCPU == "arm64": "arm64" else: "x86_64"))
-  switch("passL", opensslRoot & "/lib/libcrypto.a")
-  switch("passL", opensslRoot & "/lib/libssl.a")
+  # statically link OpenSSL built from mobile/vendors/openssl (see `make openssl`),
+  # not into the tools nimble builds for dependencies in nimbledeps/
+  if not projectDir().startsWith(thisDir() & "/nimbledeps/"):
+    let opensslRoot = getEnv("OPENSSL_ROOT_DIR",
+      "tmp/openssl/macos-" & (if hostCPU == "arm64": "arm64" else: "x86_64"))
+    switch("passL", opensslRoot & "/lib/libcrypto.a")
+    switch("passL", opensslRoot & "/lib/libssl.a")
   # No `-Wl,-no_compact_unwind` (once added for VLCKit issue 232's linker
   # warnings): on arm64 most functions only have compact unwind info, so it
   # left C++ code linked into the app unable to throw/catch (ZXing aborted the

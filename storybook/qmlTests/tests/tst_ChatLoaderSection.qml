@@ -26,6 +26,7 @@ Item {
 
     readonly property ChatTextAppearance textAppearance: MessageTextAppearance { theme: root.Theme }
     readonly property ChatTextAppearance previewAppearance: ReplyTextAppearance { theme: root.Theme }
+    readonly property MessageHeaderServices messageHeaderServices: StatusMessageHeaderServices { theme: root.Theme }
 
     width: 1000
     height: 700
@@ -68,6 +69,7 @@ Item {
                     locked: false,
                     isCategory: false,
                     isThread: false,
+                    parentChatId: "",
                     archived: false,
                     followed: false,
                     position: i,
@@ -204,6 +206,8 @@ Item {
 
             property string chatId
             property string chatName
+            property string parentChatId: chatId
+            property bool getChatIdMisreportsParent: false
 
             readonly property var chatDetails: QtObject {
                 readonly property string id: contentModule.chatId
@@ -226,6 +230,11 @@ Item {
             readonly property var messagesModule: QtObject {
                 readonly property var model: messagesModel
                 readonly property bool loading: false
+                readonly property string threadId: contentModule.parentChatId !== contentModule.chatId ? contentModule.chatId : ""
+                readonly property string threadName: contentModule.chatName
+                readonly property string threadParentChatName: "Contact 0"
+                readonly property bool canEditThread: false
+                readonly property bool threadEditPending: false
 
                 signal messageSuccessfullySent()
                 signal sendingMessageFailed(string error)
@@ -233,7 +242,10 @@ Item {
                 signal scrollToMessage(string messageId)
                 signal moreMessagesLoaded()
 
-                function getChatId() { return contentModule.chatId }
+                function getChatId() {
+                    return contentModule.getChatIdMisreportsParent ? contentModule.chatId
+                                                                 : contentModule.parentChatId
+                }
                 function loadMoreMessages() { moreMessagesLoaded() }
                 function updateKeepUnread(flag) {}
             }
@@ -283,6 +295,7 @@ Item {
         sourceComponent: ChatLoader {
             textAppearance: root.textAppearance
             previewAppearance: root.previewAppearance
+            messageHeaderServices: root.messageHeaderServices
             active: true
 
             userUID: "0xdeadbeef"
@@ -348,6 +361,61 @@ Item {
             for (let i = 0; i < views.length; ++i)
                 total += views[i].rowCount
             return total
+        }
+
+        function test_directMessageThreadBackOpensParentChat() {
+            harness.active = true
+            const loader = harness.item
+            tryVerify(() => loader.status === Loader.Ready, 60000)
+            const layout = findChild(loader, "sectionChrome")
+            layout.criteria = [false, true]
+            tryCompare(layout, "isPortrait", false)
+
+            const parentId = "chat-0"
+            const threadId = "chat-2"
+            const thread = d.contentModuleFor(threadId)
+            thread.parentChatId = parentId
+            chatsModel.setProperty(2, "isThread", true)
+            chatsModel.setProperty(2, "parentChatId", parentId)
+            d.setActiveChat("chat-1")
+            d.setActiveChat(parentId)
+            d.setActiveChat(threadId)
+
+            const backButton = findChild(layout, "toolBarBackButton")
+            verify(!!backButton)
+            tryCompare(backButton, "visible", true)
+            compare(backButton.icon.name, "arrow-left")
+            compare(backButton.text, "")
+            verify(waitForPolish(layout))
+            mouseClick(backButton)
+            tryCompare(d, "activeChatId", parentId)
+            tryCompare(backButton, "visible", false)
+            verify(layout.tryGoBack())
+            tryCompare(d, "activeChatId", "chat-1")
+        }
+
+        function test_directMessageThreadBackUsesModelParentWhenStoreChatIdIsThread() {
+            harness.active = true
+            const loader = harness.item
+            tryVerify(() => loader.status === Loader.Ready, 60000)
+            const layout = findChild(loader, "sectionChrome")
+            layout.criteria = [false, true]
+            tryCompare(layout, "isPortrait", false)
+
+            const parentId = "chat-0"
+            const threadId = "chat-2"
+            const thread = d.contentModuleFor(threadId)
+            thread.parentChatId = parentId
+            thread.getChatIdMisreportsParent = true
+            chatsModel.setProperty(2, "isThread", true)
+            chatsModel.setProperty(2, "parentChatId", parentId)
+            d.setActiveChat(threadId)
+
+            const backButton = findChild(layout, "toolBarBackButton")
+            verify(!!backButton)
+            tryCompare(backButton, "visible", true)
+            mouseClick(backButton)
+            tryCompare(d, "activeChatId", parentId)
         }
 
         // waitForRendering waits for the next frame; when the view has
@@ -533,7 +601,7 @@ Item {
             tryVerify(() => loader.status === Loader.Ready, 60000)
             let bubble = null
             tryVerify(() => {
-                bubble = findChild(loader, "StatusMessage_textMessage")
+                bubble = findChild(loader, "StatusTextMessage_chatText")
                 return !!bubble && bubble.width > 0
             }, 10000)
             // walk up to the MessageView delegate (its root is a Loader with

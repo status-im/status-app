@@ -37,6 +37,13 @@ def xpath_string(value: str) -> str:
     return f"concat({', '.join(xpath_parts)})"
 
 
+def object_name_pred(value: str) -> str:
+    """XPath predicate for a QML objectName substring, for use inside larger
+    expressions: ``resource-id`` on Android, ``name`` on iOS."""
+    quoted = xpath_string(value)
+    return f"(contains(@resource-id, {quoted}) or contains(@name, {quoted}))"
+
+
 class BaseLocators:
     BY_ACCESSIBILITY_ID = AppiumBy.ACCESSIBILITY_ID
     BY_ID = AppiumBy.ID
@@ -66,26 +73,37 @@ class BaseLocators:
 
     @staticmethod
     def resource_id_contains(value: str) -> tuple:
-        return (
-            BaseLocators.BY_XPATH,
-            f"//*[contains(@resource-id, '{value}')]",
-        )
+        return BaseLocators.object_name_contains(value)
 
     @staticmethod
     def text_contains(text: str) -> tuple:
-        return (BaseLocators.BY_XPATH, f"//*[contains(@text, '{text}')]")
+        return (
+            BaseLocators.BY_XPATH,
+            "//*[contains(@text, {0}) or contains(@label, {0}) or contains(@value, {0})]".format(
+                xpath_string(text)
+            ),
+        )
 
     @staticmethod
     def text_exact(text: str) -> tuple:
-        return (BaseLocators.BY_XPATH, f"//*[@text='{text}']")
+        return (
+            BaseLocators.BY_XPATH,
+            "//*[@text={0} or @label={0} or @value={0}]".format(xpath_string(text)),
+        )
 
     @staticmethod
     def content_desc_contains(desc: str) -> tuple:
-        return (BaseLocators.BY_XPATH, f"//*[contains(@content-desc, '{desc}')]")
+        return (
+            BaseLocators.BY_XPATH,
+            "//*[contains(@content-desc, {0}) or contains(@label, {0})]".format(xpath_string(desc)),
+        )
 
     @staticmethod
     def content_desc_exact(desc: str) -> tuple:
-        return (BaseLocators.BY_XPATH, f"//*[@content-desc='{desc}']")
+        return (
+            BaseLocators.BY_XPATH,
+            "//*[@content-desc={0} or @label={0}]".format(xpath_string(desc)),
+        )
 
     @staticmethod
     def tid(name: str) -> tuple:
@@ -106,9 +124,11 @@ class BaseLocators:
             BaseLocators.BY_XPATH,
             (
                 f"//*[contains(@content-desc, '[tid:{name}]')"
+                f" or contains(@label, '[tid:{name}]')"
                 f" or substring(@resource-id, string-length(@resource-id) - {len(name)}) = '.{name}'"
                 f" or @resource-id='{name}'"
-                f" or @name='{name}']"
+                f" or @name='{name}'"
+                f" or substring(@name, string-length(@name) - {len(name)}) = '.{name}']"
             ),
         )
 
@@ -150,7 +170,7 @@ class BaseLocators:
         """
         return (
             BaseLocators.BY_XPATH,
-            f"//*[contains(@content-desc, '{value}') or contains(@label, '{value}')]",
+            "//*[contains(@content-desc, {0}) or contains(@label, {0})]".format(xpath_string(value)),
         )
 
     @staticmethod
@@ -161,7 +181,7 @@ class BaseLocators:
         """
         return (
             BaseLocators.BY_XPATH,
-            f"//*[@content-desc='{value}' or @label='{value}']",
+            "//*[@content-desc={0} or @label={0}]".format(xpath_string(value)),
         )
 
     @staticmethod
@@ -170,7 +190,4 @@ class BaseLocators:
 
         Searches ``resource-id`` on Android and ``name`` on iOS.
         """
-        return (
-            BaseLocators.BY_XPATH,
-            f"//*[contains(@resource-id, '{value}') or contains(@name, '{value}')]",
-        )
+        return (BaseLocators.BY_XPATH, f"//*[{object_name_pred(value)}]")

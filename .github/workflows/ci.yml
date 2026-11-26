@@ -92,7 +92,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: [desktop, android]
+        # tests is built on desktop: build-image.sh gets that one first.
+        image: [desktop, android, tests]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -284,6 +285,15 @@ jobs:
     timeout-minutes: 60
     steps:
       - *checkout
+      # Jenkins builds ci/tests.Dockerfile without BASE, so its default must name the current image.
+      - name: Test image base is current
+        run: |
+          base="$(sed -nE 's/^ARG BASE=(.*)$/\1/p' ci/tests.Dockerfile)"
+          image="$(ci/build-image.sh --image desktop)"
+          if [ "$base" != "$image" ]; then
+            echo "::error file=ci/tests.Dockerfile::BASE defaults to $base, but ci/Dockerfile now builds $image"
+            exit 1
+          fi
       - name: Fetch submodules
         run: scripts/ci-fetch-submodules.sh
       # linuxdeployqt and appimagetool are AppImages: without FUSE they unpack and run.
@@ -315,6 +325,39 @@ jobs:
           platform: linux-x86_64
           file: pkg/Status.tar.gz
           suffix: .tar.gz
+
+  # The desktop suite (test/e2e) against the builds of this run: each system
+  # starts when its own build is done, and only if that build succeeded.
+  # They run for pull requests and manual runs, not for a push to master.
+  e2e-linux:
+    needs: linux
+    if: ${{ !cancelled() && github.event_name != 'push' && needs.linux.result == 'success' }}
+    permissions: &e2e-permissions
+      contents: read
+      actions: read
+      packages: read
+    uses: ./.github/workflows/e2e.yml
+    with:
+      os: linux
+      run-id: ${{ github.run_id }}
+
+  e2e-windows:
+    needs: windows
+    if: ${{ !cancelled() && github.event_name != 'push' && needs.windows.result == 'success' }}
+    permissions: *e2e-permissions
+    uses: ./.github/workflows/e2e.yml
+    with:
+      os: windows
+      run-id: ${{ github.run_id }}
+
+  e2e-macos:
+    needs: macos
+    if: ${{ !cancelled() && github.event_name != 'push' && needs.macos.result == 'success' }}
+    permissions: *e2e-permissions
+    uses: ./.github/workflows/e2e.yml
+    with:
+      os: macos
+      run-id: ${{ github.run_id }}
 
   android:
     name: android

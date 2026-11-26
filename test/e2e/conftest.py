@@ -41,11 +41,10 @@ pytest_plugins = [
     'fixtures.browser',
     'fixtures.keycard',
     'fixtures.path',
-    'fixtures.squish',
 ]
 
-# Squish IDE suite for the Object Inspector — not a pytest test.
-collect_ignore_glob = ['suite_status/**']
+# The driver's unit tests run on their own, without the app: pytest driver/tests
+collect_ignore_glob = ['driver/tests/**']
 
 
 def get_git_commit():
@@ -126,7 +125,6 @@ def generate_allure_environment():
 def setup_session_scope(
         generate_allure_environment,
         prepare_test_directory,
-        start_squish_server
 ):
     LOG.info('Session startup...')
     yield

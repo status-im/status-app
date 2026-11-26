@@ -1,5 +1,5 @@
+import re
 from gui.objects_map.names import statusDesktop_mainWindow, statusDesktop_mainWindow_overlay
-from objectmaphelper import *
 
 # Map for communities screens, views locators
 
@@ -40,7 +40,7 @@ channel_identicon_StatusSmartIdenticon = {"container": None, "id": "identicon", 
 channel_name_StatusBaseText = {"container": None, "type": "StatusBaseText", "unnamed": 1, "visible": True}
 mainWindow_createChannelOrCategoryBtn_StatusBaseText = {"container": mainWindow_communityColumnView_CommunityColumnView, "objectName": "createChannelOrCategoryBtn", "type": "StatusBaseText", "visible": True}
 create_channel_StatusMenuItem = {"container": statusDesktop_mainWindow_overlay, "enabled": True, "objectName": "createCommunityChannelBtn", "type": "StatusMenuItem", "visible": True}
-mainWindow_Join_Community_StatusButton = {"container": statusDesktop_mainWindow, "type": "StatusButton", "unnamed": 1, "visible": True}
+mainWindow_Join_Community_StatusButton = {"container": statusDesktop_mainWindow, "objectName": "communityColumnJoinButton", "type": "StatusButton", "visible": True}
 
 # Banned Panel
 mainWindow_CommunityBannedMemberPanel = {"container": statusDesktop_mainWindow, "objectName": "communityBannedMemberPanel", "type": "CommunityBannedMemberCenterPanel", "visible": True}
@@ -161,8 +161,8 @@ arbitrum_NetworkSelectItemDelegate = {"container": statusDesktop_mainWindow_over
 optimism_StatusRadioButton = {"checkable": True, "container": statusDesktop_mainWindow_overlay, "objectName": "networkSelectionRadioButton_Optimism", "type": "StatusRadioButton", "visible": True}
 mainnet_StatusRadioButton = {"checkable": True, "container": statusDesktop_mainWindow_overlay, "objectName": "networkSelectionRadioButton_Mainnet", "type": "StatusRadioButton", "visible": True}
 arbitrum_StatusRadioButton = {"checkable": True, "container": statusDesktop_mainWindow_overlay, "objectName": "networkSelectionRadioButton_Arbitrum", "type": "StatusRadioButton", "visible": True}
-networkItem_StatusRadioButton = {"checkable": True, "container": statusDesktop_mainWindow_overlay, "objectName": RegularExpression("networkSelectionRadioButton*"), "type": "StatusRadioButton", "visible": True}
-networkSelectorDelegate = {"container": statusDesktop_mainWindow_overlay, "objectName": RegularExpression("networkSelectorDelegate_*"), "type": "NetworkSelectItemDelegate", "visible": True}
+networkItem_StatusRadioButton = {"checkable": True, "container": statusDesktop_mainWindow_overlay, "objectName": re.compile("networkSelectionRadioButton*"), "type": "StatusRadioButton", "visible": True}
+networkSelectorDelegate = {"container": statusDesktop_mainWindow_overlay, "objectName": re.compile("networkSelectorDelegate_*"), "type": "NetworkSelectItemDelegate", "visible": True}
 
 editOwnerTokenView_Mint_StatusButton = {"checkable": False, "container": mainWindow_editOwnerTokenView_EditOwnerTokenView, "objectName": "mintButton", "type": "StatusButton", "visible": True}
 editOwnerTokenView_FeeRow = {"container": mainWindow_editOwnerTokenView_EditOwnerTokenView, "type": "FeeRow", "unnamed": 1, "visible": True}
@@ -306,8 +306,8 @@ who_holds_StatusItemSelector = {"container": statusDesktop_mainWindow_overlay, "
 is_allowed_to_StatusFlowSelector = {"container": statusDesktop_mainWindow_overlay, "objectName": "permissionsSelector", "type": "StatusFlowSelector", "visible": True}
 switchItem_StatusSwitch = {"checkable": True, "container": statusDesktop_mainWindow_overlay, "objectName": "switchItem", "occurrence": 2, "type": "StatusSwitch", "visible": True}
 whoHoldsSwitch_StatusSwitch = {"checkable": True, "container": statusDesktop_mainWindow_overlay, "id": "whoHoldsSwitch", "type": "StatusSwitch", "unnamed": 1, "visible": True}
-whoHoldsPlusButton = {"container": statusDesktop_mainWindow, "objectName": RegularExpression("addItemButton_Who*"), "type": "StatusRoundButton", "visible": True}
-isAllowedPlusButton = {"container": statusDesktop_mainWindow, "objectName": RegularExpression("addItemButton_Is*"), "type": "StatusRoundButton", "visible": True}
+whoHoldsPlusButton = {"container": statusDesktop_mainWindow, "objectName": re.compile("addItemButton_Who*"), "type": "StatusRoundButton", "visible": True}
+isAllowedPlusButton = {"container": statusDesktop_mainWindow, "objectName": re.compile("addItemButton_Is*"), "type": "StatusRoundButton", "visible": True}
 inPlusButton = {"container": statusDesktop_mainWindow, "objectName": "addItemButton_In", "type": "StatusRoundButton", "visible": True}
 holdingsPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "HoldingsDropdown", "type": "PopupItem", "visible": True}
 holdingsPopup_SearchBox = {"container": statusDesktop_mainWindow_overlay, "id": "searcher", "type": "SearchBox", "unnamed": 1, "visible": True}

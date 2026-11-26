@@ -11818,12 +11818,12 @@ selhalo</translation>
         <translation>Odpovědět</translation>
     </message>
     <message>
-        <source>Create Thread</source>
-        <translation>Vytvořit vlákno</translation>
-    </message>
-    <message>
         <source>Open thread</source>
         <translation>Otevřít vlákno</translation>
+    </message>
+    <message>
+        <source>Reply in thread</source>
+        <translation type="unfinished">Odpovědět ve vlákně</translation>
     </message>
     <message>
         <source>Edit</source>
@@ -16885,6 +16885,13 @@ selhalo</translation>
     </message>
 </context>
 <context>
+    <name>StatusChatInputSendButton</name>
+    <message>
+        <source>Send</source>
+        <translation type="unfinished">Odeslat</translation>
+    </message>
+</context>
+<context>
     <name>StatusChatInputToolBar</name>
     <message>
         <source>Formatting</source>
@@ -18507,6 +18514,21 @@ Tuto akci nelze vzít zpět.</translation>
     </message>
 </context>
 <context>
+    <name>ThirdpartyServicesLabel</name>
+    <message>
+        <source>Third-party services %1</source>
+        <translation type="unfinished">Služby třetích stran %1</translation>
+    </message>
+    <message>
+        <source>enabled</source>
+        <translation type="unfinished">zapnuto</translation>
+    </message>
+    <message>
+        <source>disabled</source>
+        <translation type="unfinished">vypnuto</translation>
+    </message>
+</context>
+<context>
     <name>ThirdpartyServicesPopup</name>
     <message>
         <source>Third-party services</source>
@@ -18591,6 +18613,11 @@ Tuto akci nelze vzít zpět.</translation>
         <source>deleted this thread</source>
         <translation>smazal(a) toto vlákno</translation>
     </message>
+    <message>
+        <source>deleted this thread</source>
+        <comment>Current user</comment>
+        <translation type="unfinished">smazal(a) toto vlákno</translation>
+    </message>
     <message numerus="yes">
         <source>%n message(s)</source>
         <translation>
@@ -18598,6 +18625,10 @@ Tuto akci nelze vzít zpět.</translation>
             <numerusform>%n zprávy</numerusform>
             <numerusform>%n zpráv</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>You</source>
+        <translation type="unfinished">Vy</translation>
     </message>
 </context>
 <context>
@@ -18670,8 +18701,24 @@ Tuto akci nelze vzít zpět.</translation>
         <translation>Vlákno nelze přejmenovat: %1</translation>
     </message>
     <message>
+        <source>Thread name is required</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source>Max %n character(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
         <source>Thread name</source>
         <translation>Název vlákna</translation>
+    </message>
+    <message>
+        <source>Rename thread</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>in %1</source>
@@ -20860,18 +20907,6 @@ Pokud je ve frontě transakce s nižším nonce, transakce s vyšším nonce zů
     <message>
         <source>Log in</source>
         <translation>Přihlásit se</translation>
-    </message>
-    <message>
-        <source>Third-party services %1</source>
-        <translation>Služby třetích stran %1</translation>
-    </message>
-    <message>
-        <source>enabled</source>
-        <translation>zapnuto</translation>
-    </message>
-    <message>
-        <source>disabled</source>
-        <translation>vypnuto</translation>
     </message>
     <message>
         <source>By proceeding you accept Status&lt;br&gt;%1 and %2</source>

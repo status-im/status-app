@@ -38,7 +38,7 @@ class ManageProfilesDialog(QObject):
         return self
 
     def _row_by_name(self, user_name: str):
-        raw_data = driver.findAllObjects(self.profile_row.real_name)
+        raw_data = driver.find_all(self.profile_row.real_name)
         if not raw_data:
             raise ValueError(f"Can't find {user_name} in manage profiles list as the list is empty")
         for row in raw_data:

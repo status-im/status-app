@@ -46,6 +46,37 @@ devices:
         automationName: "UiAutomator2"
         newCommandTimeout: 300
 
+    - id: "iphone_15_local"
+      display_name: "iPhone 15 (USB, TestFlight build)"
+      tags: ["ios", "phone", "local"]
+      capabilities:
+        platformName: "iOS"
+        platformVersion: "26.1"
+        deviceName: "iPhone"
+        automationName: "XCUITest"
+        appium:udid: "${IOS_UDID:-}"
+        bundleId: "app.status.mobile"
+        noReset: true
+        newCommandTimeout: 300
+        appium:webDriverAgentUrl: "${WDA_URL:-http://localhost:8101}"
+        wdaConnectionTimeout: 120000
+        # iOS permission alerts (local network, notifications) are system
+        # dialogs outside the QML tree; accept them so flows keep moving.
+        autoAcceptAlerts: true
+    - id: "iphone_16_sim"
+      display_name: "iPhone 16 simulator (local build)"
+      tags: ["ios", "phone", "local", "simulator"]
+      capabilities:
+        platformName: "iOS"
+        platformVersion: "18.4"
+        deviceName: "iPhone 16"
+        automationName: "XCUITest"
+        appium:udid: "${IOS_SIM_UDID:-}"
+        bundleId: "app.status.mobile"
+        noReset: true
+        newCommandTimeout: 300
+        wdaLaunchTimeout: 240000
+        autoAcceptAlerts: true
 timeouts:
   default: 60
   element_wait: 30

@@ -10,6 +10,7 @@ import StatusQ.Controls
 import StatusQ.Core.Theme
 
 import AppLayouts.Onboarding.components
+import AppLayouts.Onboarding.controls
 
 import utils
 
@@ -162,31 +163,12 @@ OnboardingPage {
                     onClicked: root.loginRequested()
                 }
 
-                StatusBaseText {
+                ThirdpartyServicesLabel {
                     objectName: "thirdPartyServices"
                     Layout.fillWidth: true
                     Layout.topMargin: Theme.halfPadding
-                    text: qsTr("Third-party services %1").arg(
-                              Utils.getStyledLink(root.thirdpartyServicesEnabled ? qsTr("enabled"): qsTr("disabled"),
-                                                  "#",
-                                                  hoveredLink,
-                                                  Theme.palette.primaryColor1,
-                                                  Theme.palette.primaryColor1,
-                                                  false))
-                    textFormat: Text.RichText
-                    font.pixelSize: Theme.tertiaryTextFontSize
-                    lineHeightMode: Text.FixedHeight
-                    lineHeight: 16
-                    wrapMode: Text.WordWrap
-                    color: Theme.palette.baseColor1
-                    horizontalAlignment: Text.AlignHCenter
-                    onLinkActivated: root.openThirdpartyServicesInfoPopupRequested()
-
-                    HoverHandler {
-                        // Qt CSS doesn't support custom cursor shape
-                        cursorShape: !!parent.hoveredLink ? Qt.PointingHandCursor : undefined
-                    }
-
+                    thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
+                    onOpenThirdpartyServicesInfoPopupRequested: root.openThirdpartyServicesInfoPopupRequested()
                     visible: root.privacyModeFeatureEnabled
                 }
                 StatusBaseText {

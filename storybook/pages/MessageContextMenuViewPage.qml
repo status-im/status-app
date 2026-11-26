@@ -95,6 +95,9 @@ SplitView {
 
             messageLinkSharingEnabled: ctrlMessageLinkSharingEnabled.checked
 
+            threadsFeatureEnabled: true
+            hasThread: ctrlHasThread.checked
+
             onPinMessage: logs.logEvent(`onPinMessage: ${messageContextMenuView.messageId}`)
             onUnpinMessage: logs.logEvent(`onUnpinMessage: ${messageContextMenuView.messageId}`)
             onPinnedMessagesLimitReached: logs.logEvent(`onPinnedMessagesLimitReached: ${messageContextMenuView.messageId}`)
@@ -106,6 +109,7 @@ SplitView {
             onCopyToClipboard: (text) => logs.logEvent("onCopyToClipboard", ["text"], [text])
             onCopyMessageLink: logs.logEvent(`onCopyMessageLink: ${messageContextMenuView.messageId}`)
             onOpenEmojiPopup: logs.logEvent("onOpenEmojiPopup")
+            onOpenThread: logs.logEvent("onOpenThread")
             onClosed: destroy()
         }
     }
@@ -173,6 +177,11 @@ SplitView {
                 CheckBox {
                     id: ctrlMessageLinkSharingEnabled
                     text: "Message link sharing enabled"
+                }
+
+                CheckBox {
+                    id: ctrlHasThread
+                    text: "Has thread"
                 }
             }
         }

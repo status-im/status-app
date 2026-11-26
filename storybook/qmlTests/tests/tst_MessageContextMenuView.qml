@@ -173,7 +173,7 @@ Item {
             const createAction = findAction(createMenuItem, "messageContextMenu_openThread")
             verify(!!createAction)
             verify(createAction.enabled)
-            compare(createAction.text, qsTr("Create Thread"))
+            compare(createAction.text, "Reply in thread")
             createMenuItem.close()
 
             const existingThreadMenu = createMenu({
@@ -186,7 +186,7 @@ Item {
             const openAction = findAction(existingThreadMenu, "messageContextMenu_openThread")
             verify(!!openAction)
             verify(openAction.enabled)
-            compare(openAction.text, qsTr("Open thread"))
+            compare(openAction.text, "Open thread")
             existingThreadMenu.close()
         }
 
@@ -206,7 +206,7 @@ Item {
             menu.open()
             const reply = singleRowAction(menu, "messageContextMenu_replyTo")
             const thread = singleRowAction(menu, "messageContextMenu_openThread")
-            compare(thread.Accessible.name, data.hasThread ? qsTr("Open thread") : qsTr("Create Thread"))
+            compare(thread.Accessible.name, data.hasThread ? "Open thread" : "Reply in thread")
             verify(thread.visible)
             verify(thread.x > reply.x)
             compare(thread.icon.name, "thread")
@@ -228,7 +228,7 @@ Item {
             })
             menu.open()
 
-            verify(enabledActionTexts(menu).indexOf(qsTr("Create Thread")) < 0)
+            verify(enabledActionTexts(menu).indexOf("Reply in thread") < 0)
             menu.close()
         }
 

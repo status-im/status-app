@@ -56,7 +56,7 @@ class EditCategoryPopup(CategoryPopup):
     @allure.step('Click checkbox in edit category popup')
     def click_checkbox_by_index(self, index: int):
         time.sleep(1)
-        checkboxes = driver.findAllObjects(self.channel_item_checkbox.real_name)
+        checkboxes = driver.find_all(self.channel_item_checkbox.real_name)
         if len(checkboxes) > 0:
             for _index, item in enumerate(checkboxes):
                 if index == _index:

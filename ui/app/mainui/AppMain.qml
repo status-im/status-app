@@ -74,6 +74,9 @@ Item {
         theme: appMain.Theme
         selectionPalette: appMain.ApplicationWindow.window?.palette ?? systemPalette
     }
+    readonly property MessageHeaderServices messageHeaderServices: StatusMessageHeaderServices {
+        theme: appMain.Theme
+    }
 
     focus: true
     Component.onCompleted: {
@@ -1738,7 +1741,7 @@ Item {
             id: bannersLayout
 
             enabled: !localAppSettings.testEnvironment
-                     && (d.activeSectionType !== Constants.appSection.homePage && d.activeSectionType !== Constants.appSection.loadingSection)
+                     && d.activeSectionType !== Constants.appSection.loadingSection
             visible: enabled
 
             Layout.fillWidth: true
@@ -2409,6 +2412,7 @@ Item {
                         rowPool: appMain.messageRowPool
                         textAppearance: appMain.textAppearance
                         previewAppearance: appMain.previewAppearance
+                        messageHeaderServices: appMain.messageHeaderServices
 
                         createChatViewOpened: createChatView.opened
                         isPortraitMode: appMain.isPortraitMode
@@ -2616,6 +2620,7 @@ Item {
                             rowPool: appMain.messageRowPool
                             textAppearance: appMain.textAppearance
                             previewAppearance: appMain.previewAppearance
+                            messageHeaderServices: appMain.messageHeaderServices
 
                             createChatViewOpened: createChatView.opened
                             isPortraitMode: appMain.isPortraitMode
@@ -3017,11 +3022,21 @@ Item {
             relativeX: appMain.width/2 - width/2
             relativeY: appMain.height/2 - height/2
             searchBoxPlaceholder: qsTr("Where do you want to go?")
-            model: rootStore.chatSearchModel
+            readonly property var appSearchModule: rootStore.appSearchStore.appSearchModule
 
-            onSelected: function (sectionId, chatId) {
-                rootStore.setActiveSectionChat(sectionId, chatId)
+            model: rootStore.chatSearchModel
+            threadModel: appMain.featureFlagsStore.threadsEnabled
+                         ? appSearchModule.switcherThreadModel : null
+
+            onAboutToShow: appSearchModule.setSwitcherOpen(true)
+            onAboutToHide: appSearchModule.setSwitcherOpen(false)
+
+            onSelected: function (sectionId, chatId, threadId) {
                 close()
+                if (threadId)
+                    rootStore.setActiveSectionThread(sectionId, chatId, threadId)
+                else
+                    rootStore.setActiveSectionChat(sectionId, chatId)
             }
         }
     }

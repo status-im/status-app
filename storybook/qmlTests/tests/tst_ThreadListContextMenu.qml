@@ -90,13 +90,7 @@ Item {
     }
 
     QtObject {
-        id: content
-        readonly property var messagesModule: messages
-    }
-
-    QtObject {
         id: section
-        property string requestedChatId
         property string readChatId
         property string readThreadId
         property bool followed: false
@@ -105,8 +99,6 @@ Item {
                 itemId: id, isThread: true, parentChatId: "parent", name: "Thread", followed: followed
             })
         }
-        function prepareChatContentModuleForChatId(id) { requestedChatId = id }
-        function getChatContentModule() { return content }
         function markAllMessagesRead(chatId, threadId) {
             readChatId = chatId
             readThreadId = threadId
@@ -181,8 +173,18 @@ Item {
         id: threadMenuComponent
         ThreadListContextMenu {
             sectionModule: section
+            canManageThread: (threadId, parentChatId) =>
+                menuStore.chatId === parentChatId && menuStore.canManageThreadById(threadId)
+            threadChangesPending: menuStore.threadDeletePending || menuStore.threadEditPending
+            onFollowRequested: menuStore.setThreadFollowedById(threadId, true)
+            onUnfollowRequested: menuStore.setThreadFollowedById(threadId, false)
+            onDeleteRequested: menuStore.deleteThreadById(threadId)
             onOpened: root.openedMenu = this
         }
+    }
+    RealStores.MessageStore {
+        id: menuStore
+        messageModule: messages
     }
     Component {
         id: chatMenuComponent
@@ -260,7 +262,7 @@ Item {
             mouseClick(row, row.width / 2, row.height / 2, Qt.RightButton)
             tryVerify(() => !!root.openedMenu && root.openedMenu.opened)
             tryCompare(root.openedMenu, "threadId", "thread")
-            tryCompare(section, "requestedChatId", "parent")
+            tryCompare(root.openedMenu, "parentChatId", "parent")
             tryCompare(root, "openedChatId", "")
             return root.openedMenu
         }
@@ -348,6 +350,7 @@ Item {
             menu.close()
             root.activePopup.confirmButtonClicked()
             tryCompare(messages, "deletedId", "thread")
+            messages.threadDeleteFinished("")
         }
 
         function test_deleteErrorIsReportedOnlyByRequestingStore() {

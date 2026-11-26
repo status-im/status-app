@@ -26,6 +26,7 @@ Item {
     readonly property ChatTextAppearance previewAppearance: ReplyTextAppearance {
         theme: root.Theme
     }
+    readonly property MessageHeaderServices messageHeaderServices: StatusMessageHeaderServices { theme: root.Theme }
 
     width: 800
     height: 600
@@ -118,6 +119,7 @@ Item {
         MessageView {
             textAppearance: root.textAppearance
             previewAppearance: root.previewAppearance
+            messageHeaderServices: root.messageHeaderServices
             width: 600
         }
     }
@@ -128,6 +130,7 @@ Item {
         MessageView {
             textAppearance: root.textAppearance
             previewAppearance: root.previewAppearance
+            messageHeaderServices: root.messageHeaderServices
             width: 600
 
             rootStore: rootStoreMock
@@ -143,6 +146,7 @@ Item {
         MessageView {
             textAppearance: root.textAppearance
             previewAppearance: root.previewAppearance
+            messageHeaderServices: root.messageHeaderServices
             rootStore: rootStoreMock
             messageStore: messageStoreMock
             chatContentModule: chatContentModuleMock
@@ -389,8 +393,8 @@ Item {
             verify(!!message)
             compare(message.textAppearance, root.textAppearance)
             compare(message.previewAppearance, root.previewAppearance)
-            tryVerify(() => !!findChild(view, "StatusMessage_textMessage"))
-            const body = findChild(view, "StatusMessage_textMessage").textField
+            tryVerify(() => !!findChild(view, "StatusTextMessage_chatText"))
+            const body = findChild(view, "StatusTextMessage_chatText")
             tryVerify(() => !!findChild(view, "StatusMessage_replyDetails_textMessage"))
             const preview = findChild(view, "StatusMessage_replyDetails_textMessage")
             compare(body.appearance, root.textAppearance)
@@ -436,9 +440,9 @@ Item {
             compare(msg.messageDetails.sender.displayName, "Bob")
             compare(msg.timestamp, messageB.messageTimestamp)
 
-            const textMessage = findChild(view, "StatusMessage_textMessage")
+            const textMessage = findChild(view, "StatusTextMessage_chatText")
             verify(!!textMessage)
-            tryVerify(() => textMessage.textField.text.indexOf("bravo message text") >= 0)
+            tryVerify(() => textMessage.text.indexOf("bravo message text") >= 0)
         }
 
         // The row is as tall as what it shows - on its first load, and when
@@ -553,10 +557,10 @@ Item {
             compare(msg.reactionsModel, reactionsB)
             verify(!msg.isEdited)
 
-            const textMessage = findChild(view, "StatusMessage_textMessage")
+            const textMessage = findChild(view, "StatusTextMessage_chatText")
             verify(!!textMessage)
-            tryVerify(() => textMessage.textField.text.indexOf("bravo message text") >= 0)
-            verify(textMessage.textField.text.indexOf("alpha") < 0)
+            tryVerify(() => textMessage.text.indexOf("bravo message text") >= 0)
+            verify(textMessage.text.indexOf("alpha") < 0)
 
             // Retarget to C, whose original is not loaded: reply album must
             // come from C's quoted payload, nothing from A's original

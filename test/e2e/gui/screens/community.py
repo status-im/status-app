@@ -282,7 +282,7 @@ class CommunityLeftPanel(QObject):
             except Exception:
                 return False
 
-        if not driver.waitFor(_name_matches, timeout_msec):
+        if not driver.wait_until(_name_matches, timeout_msec):
             raise TimeoutError(
                 f'Community name did not become {expected!r} within {timeout_msec} ms; '
                 f'last visible name was {last_name!r}'
@@ -304,8 +304,8 @@ class CommunityLeftPanel(QObject):
     def channels(self) -> typing.List[CommunityChannel]:
         time.sleep(0.5)
         channels_list = []
-        for obj in driver.findAllObjects(self.chatListItemDropAreaItem.real_name):
-            container = driver.objectMap.realName(obj)
+        for obj in driver.find_all(self.chatListItemDropAreaItem.real_name):
+            container = obj
             self._channel_icon_template.real_name['container'] = container
             channels_list.append(CommunityChannel(
                 str(obj.objectName),
@@ -317,7 +317,7 @@ class CommunityLeftPanel(QObject):
     @property
     @allure.step('Get categories')
     def categories_items(self) -> typing.List[CategoryItem]:
-        return [CategoryItem(item) for item in driver.findAllObjects(self.categoryItemDropAreaItem.real_name)]
+        return [CategoryItem(item) for item in driver.find_all(self.categoryItemDropAreaItem.real_name)]
 
     @allure.step('Get channel params')
     def get_channel_parameters(self, name) -> CommunityChannel:
@@ -368,7 +368,7 @@ class CommunityLeftPanel(QObject):
 
         while time.monotonic() < deadline:
             obj = next(
-                (o for o in driver.findAllObjects(self.chatListItemDropAreaItem.real_name)
+                (o for o in driver.find_all(self.chatListItemDropAreaItem.real_name)
                  if _object_name(o) == name),
                 None,
             )
@@ -385,8 +385,8 @@ class CommunityLeftPanel(QObject):
                 return obj
 
             try:
-                srect = driver.object.globalBounds(scroll_obj)
-                crect = driver.object.globalBounds(obj)
+                srect = driver.bounds(scroll_obj)
+                crect = driver.bounds(obj)
             except (RuntimeError, AttributeError):
                 time.sleep(0.1)
                 continue
@@ -396,7 +396,7 @@ class CommunityLeftPanel(QObject):
                 continue
 
             try:
-                driver.mouseClick(obj)
+                driver.click(obj)
                 return obj
             except RuntimeError as e:
                 last_error = e
@@ -525,7 +525,7 @@ class MembersListPanel(QObject):
     @property
     @allure.step('Get all members')
     def members(self) -> typing.List[str]:
-        return [str(member.userName) for member in driver.findAllObjects(self._member_item.real_name)]
+        return [str(member.userName) for member in driver.find_all(self._member_item.real_name)]
 
     @allure.step('Open banned tab')
     def click_banned_button(self):
@@ -537,15 +537,15 @@ class MembersListPanel(QObject):
 
     @allure.step('Click member by name')
     def click_member(self, member_name: str):
-        for member in driver.findAllObjects(self._member_item.real_name):
+        for member in driver.find_all(self._member_item.real_name):
             if getattr(member, 'userName', '') == member_name:
-                driver.mouseClick(member)
+                driver.click(member)
                 break
         return ProfilePopupFromMembers().wait_until_appears()
 
     @allure.step('Verify member is offline by index')
     def member_state(self, member_name: str) -> bool:
-        for member in driver.findAllObjects(self._member_item.real_name):
+        for member in driver.find_all(self._member_item.real_name):
             if getattr(member, 'userName', '') == member_name:
                 for child in walk_children(member):
                     if getattr(child, 'id', '') == 'statusBadge':

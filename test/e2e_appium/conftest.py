@@ -15,6 +15,7 @@ from core import collection_order, peer_containers
 from core.stash_keys import MULTI_DEVICE_MANAGERS_KEY, PEER_REFUSED_KEY
 from core.capacity_reserver import set_shared_pending_counter
 from core.shared_counter import FileBasedCounter, create_shared_counter
+from support.platform import target_platform
 
 
 # Expose fixture modules without star imports
@@ -315,6 +316,14 @@ def pytest_collection_modifyitems(config, items):
     # the longest must be first or a worker starts it once the others are idle.
     # Deselection below only removes items, which keeps this order intact.
     items[:] = collection_order.heaviest_first(items)
+
+    on_ios = target_platform(config.getoption("--env")) == "ios"
+
+    for item in items:
+        xfail_ios = item.get_closest_marker("xfail_ios")
+        if xfail_ios and on_ios:
+            reason = xfail_ios.args[0] if xfail_ios.args else xfail_ios.kwargs.get("reason", "")
+            item.add_marker(pytest.mark.xfail(reason=reason, strict=False))
 
     unrunnable = peer_containers.unrunnable_peer_items(
         items, bool(config.option.collectonly)

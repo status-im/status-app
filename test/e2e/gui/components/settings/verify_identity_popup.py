@@ -24,7 +24,7 @@ class VerifyIdentityPopup(BasePopup):
     @property
     @allure.step('Get send verification button enabled state')
     def is_send_verification_button_enabled(self) -> bool:
-        return driver.waitForObjectExists(self._send_verification_button.real_name,
+        return driver.wait_exists(self._send_verification_button.real_name,
                                           configs.timeouts.UI_LOAD_TIMEOUT_MSEC).enabled
 
     @allure.step('Click send verification button')

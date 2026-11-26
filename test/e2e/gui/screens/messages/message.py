@@ -71,7 +71,7 @@ def _nudge_outgoing_header(message: 'Message') -> None:
     obj = message.object
     try:
         loaded = getattr(obj, 'item', None)
-        driver.mouseMove(loaded if loaded is not None else obj)
+        driver.move(loaded if loaded is not None else obj)
     except (RuntimeError, AttributeError, LookupError, TypeError):
         pass
     message._outgoing = None
@@ -85,7 +85,7 @@ def _find_named_descendant(parent, object_name: str):
     except (LookupError, RuntimeError, AttributeError):
         pass
     try:
-        candidates = driver.findAllObjects({'objectName': object_name})
+        candidates = driver.find_all({'objectName': object_name})
     except (LookupError, RuntimeError, AttributeError):
         return None
     return next(
@@ -197,24 +197,24 @@ class Message:
                     else:
                         match child_id:
                             case 'profileImage':
-                                self.icon = Image(driver.objectMap.realName(child))
+                                self.icon = Image(child)
                             case 'primaryDisplayName':
                                 self.from_user = str(getattr(child, 'text', ''))
                             case 'timestampText':
                                 self.time = str(getattr(child, 'text', ''))
                             case 'replyCorner':
-                                self._reply_corner = QObject(real_name=driver.objectMap.realName(child))
+                                self._reply_corner = QObject(real_name=child)
                             case 'delegate':
-                                self._delegate_button = Button(real_name=driver.objectMap.realName(child))
+                                self._delegate_button = Button(real_name=child)
                             case 'linksMessageView':
-                                self.link_preview = QObject(real_name=driver.objectMap.realName(child))
+                                self.link_preview = QObject(real_name=child)
                             case 'imageMessage':
                                 self._image_message = child
                             case 'bannerImage':
-                                self.banner_image = QObject(real_name=driver.objectMap.realName(child))
+                                self.banner_image = QObject(real_name=child)
                             case 'joinBtn':
                                 self._go_to_community_button = Button(
-                                    real_name=driver.objectMap.realName(child)
+                                    real_name=child
                                 )
                 except (AttributeError, RuntimeError, LookupError):
                     # Skip children that can't be accessed safely
@@ -250,10 +250,10 @@ class Message:
         return match.group(0).rstrip('.,;:!?)]}') if match else None
 
     def activate_link(self, href: str) -> None:
-        text_bubble = _find_named_descendant(self.object, 'StatusMessage_textMessage')
+        text_bubble = _find_named_descendant(self.object, 'StatusTextMessage_chatText')
         if text_bubble is None:
             raise LookupError(f'Message text bubble was not found for link {href!r}')
-        text_bubble.linkActivated(href)
+        text_bubble.messageLinkActivated(href)
 
     def _find_go_to_community_button(self) -> typing.Optional[Button]:
         self._ensure_ui_parsed()
@@ -262,7 +262,7 @@ class Message:
         try:
             for child in walk_children(self.object, self._UI_PARSE_DEPTH):
                 if str(getattr(child, 'text', '')) == 'Go to Community':
-                    return Button(real_name=driver.objectMap.realName(child))
+                    return Button(real_name=child)
         except (RuntimeError, AttributeError, LookupError):
             pass
         return None
@@ -282,7 +282,7 @@ class Message:
         button = self._find_go_to_community_button()
         if button is None:
             return False
-        if not driver.waitFor(
+        if not driver.wait_until(
             lambda: self._go_to_community_button_ready(button),
             configs.timeouts.COMMUNITY_LOAD_TIMEOUT_MSEC,
         ):
@@ -318,7 +318,7 @@ class Message:
         return CommunityScreen().wait_for_content_loaded()
 
     def open_banned_community_invitation(self):
-        driver.waitFor(lambda: self.delegate_button.is_visible, configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
+        driver.wait_until(lambda: self.delegate_button.is_visible, configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
         self.delegate_button.click()
         return BannedCommunityScreen().wait_until_appears()
 
@@ -431,7 +431,7 @@ class Message:
 
     @allure.step('Open context menu for message')
     def open_context_menu_for_message(self):
-        QObject(real_name=driver.objectMap.realName(self.object)).right_click()
+        QObject(real_name=self.object).right_click()
         return MessageContextMenuPopup().wait_until_appears()
 
     @allure.step('Get emoji reaction ids')

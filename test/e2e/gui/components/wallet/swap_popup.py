@@ -63,7 +63,7 @@ class SwapPopup(QObject):
         expected = amount.replace(',', '.')
         self._amount_field.clear()
         self._amount_field.type_text(expected)
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self._amount_field.text.replace(',', '.') == expected,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), (
@@ -111,19 +111,19 @@ class SwapPopup(QObject):
 
         def locate():
             found[:] = [
-                chip for chip in driver.findAllObjects(chip_locator)
+                chip for chip in driver.find_all(chip_locator)
                 if str(getattr(chip, 'objectName', '')) == chip_name
             ]
             return bool(found)
 
-        assert driver.waitFor(locate, configs.timeouts.LOADING_LIST_TIMEOUT_MSEC), (
+        assert driver.wait_until(locate, configs.timeouts.LOADING_LIST_TIMEOUT_MSEC), (
             f'Network chip {chip_name} was not found on swap {side} picker'
         )
         chip = found[0]
 
         if not chip.checked:
             QObject(chip).click()
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: bool(chip.checked),
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), (
@@ -141,12 +141,12 @@ class SwapPopup(QObject):
 
         def selectable_asset_found():
             rows[:] = [
-                item for item in driver.findAllObjects(self._asset_row(side).real_name)
+                item for item in driver.find_all(self._asset_row(side).real_name)
                 if str(getattr(item, 'symbol', '')) == symbol and item.enabled
             ]
             return bool(rows)
 
-        assert driver.waitFor(
+        assert driver.wait_until(
             selectable_asset_found,
             configs.timeouts.LOADING_LIST_TIMEOUT_MSEC,
         ), f'Token {symbol} on chain {chain_id} was not selectable'
@@ -172,7 +172,7 @@ class SwapPopup(QObject):
         panel = self._assets_panel(side)
         label = self._token_label(side)
 
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: label.text == symbol and not panel.is_visible,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), (
@@ -201,7 +201,7 @@ class SwapPopup(QObject):
                 and bool(seen['quote'])
             )
 
-        assert driver.waitFor(ready, timeout_msec), (
+        assert driver.wait_until(ready, timeout_msec), (
             f'Swap modal was not ready to sign {expected_text!r}. Last state: {seen}'
         )
         assert not seen['text'].startswith('Approve'), (
@@ -222,6 +222,6 @@ class SwapPopup(QObject):
         if self._close_button.is_visible:
             self._close_button.click()
         else:
-            driver.type(self.object, '<Escape>')
+            driver.type_text(self.object, '<Escape>')
         self.wait_until_hidden()
         return self

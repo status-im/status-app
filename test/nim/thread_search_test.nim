@@ -7,7 +7,7 @@ import app/modules/main/app_search/io_interface as search_interface
 import app/modules/main/app_search/controller as search_controller
 import app/modules/main/app_search/module as search_module
 import app/modules/main/app_search/view
-import app/modules/main/app_search/models/location_menu_sub_model
+import app/modules/main/app_search/models/[chat_search_model, location_menu_sub_model]
 import app/modules/main/app_search/models/[location_menu_model, location_menu_item, location_menu_sub_item]
 import app_service/service/message/service as message_service
 import app_service/service/message/dto/[message, thread]
@@ -18,6 +18,7 @@ import app/global/feature_flags
 import app/global/global_singleton
 import app/global/qt_settings
 import app/modules/main/io_interface as main_interface
+from app/modules/shared_models/section_item import SectionType
 import app/modules/main/chat_section/module as section_module
 import app/modules/main/chat_section/controller as section_controller
 import app/modules/main/chat_section/view as section_view
@@ -37,6 +38,65 @@ type SearchDelegate = ref object of search_interface.AccessInterface
 
 method onSearchMessagesDone(self: SearchDelegate, messages: seq[MessageDto]) =
   self.completions.add(messages)
+
+type SwitcherDelegate = ref object of main_interface.AccessInterface
+
+method getSectionId(self: SwitcherDelegate, sectionType: SectionType): string =
+  "personal"
+
+method getSectionName(self: SwitcherDelegate, sectionId: string): string =
+  "Chat"
+
+suite "thread switcher":
+  test "loads cached parent threads and follows archive, rename and delete updates":
+    if not THREADS_ENABLED:
+      skip()
+    else:
+      let events = createEventEmitter()
+      let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+      let chats = chat_service.newService(events, nil, nil)
+      chats.chats["group"] = ChatDto(id: "group", name: "Project", active: true, chatType: ChatType.PrivateGroupChat)
+      chats.chats["inactive"] = ChatDto(id: "inactive", chatType: ChatType.PrivateGroupChat)
+      let search = search_module.newModule(SwitcherDelegate(), events, nil, chats, nil, service)
+      defer: search.delete()
+      search.controller.init()
+      let model = search.view.switcherThreadModel()
+
+      service.onAsyncLoadChatThreadsForChats($(%* {
+        "chatIds": ["group", "inactive"],
+        "threads": [
+          {"chatId": "group", "threadId": "thread", "parentMessageId": "root", "name": "Planning"},
+          {"chatId": "inactive", "threadId": "hidden", "parentMessageId": "root", "name": "Hidden"}
+        ]
+      }))
+      check model.rowCount() == 0
+      search.setSwitcherOpen(true)
+      check model.rowCount() == 1
+
+      var roles: Table[string, int]
+      for role, name in model.roleNames():
+        roles[name] = role
+      let index = model.createIndex(0, 0, nil)
+      defer: index.delete()
+      check model.data(index, roles["sectionId"]).stringVal == "personal"
+      check model.data(index, roles["chatId"]).stringVal == "group"
+      check model.data(index, roles["threadId"]).stringVal == "thread"
+      check not model.data(index, roles["archived"]).boolVal
+
+      service.onAsyncLoadChatThreadsForChats($(%* {
+        "chatIds": ["group"],
+        "threads": [{"chatId": "group", "threadId": "thread", "parentMessageId": "root",
+          "name": "Project kickoff", "archived": true}]
+      }))
+      check model.rowCount() == 1
+      let updatedIndex = model.createIndex(0, 0, nil)
+      defer: updatedIndex.delete()
+      check model.data(updatedIndex, roles["name"]).stringVal == "Project kickoff"
+      check model.data(updatedIndex, roles["archived"]).boolVal
+
+      service.onAsyncLoadChatThreadsForChats($(%* {"chatIds": ["group"], "threads": []}))
+      check model.rowCount() == 0
+      search.setSwitcherOpen(false)
 
 suite "thread content search":
   test "global search keeps the active parent and thread without scanning other chats":

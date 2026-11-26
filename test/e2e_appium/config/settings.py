@@ -57,7 +57,9 @@ def _ensure_run_id() -> str:
     return generated
 
 
-def _select_device(env_config: EnvironmentConfig) -> DeviceConfig:
+def select_device(env_config: EnvironmentConfig) -> DeviceConfig:
+    """The device a run drives: ``TEST_DEVICE_ID``, else the first device
+    matching every tag in ``TEST_DEVICE_TAGS``, else the environment's default."""
     device_id = os.getenv("TEST_DEVICE_ID")
     tag_env = os.getenv("TEST_DEVICE_TAGS", "")
     tags = [tag.strip() for tag in tag_env.split(",") if tag.strip()]
@@ -97,7 +99,7 @@ def load_config() -> TestConfig:
         env_name = os.getenv("E2E_PROVIDER", auto)
     env_config = manager.load_environment(env_name)
 
-    device = _select_device(env_config)
+    device = select_device(env_config)
     capabilities = device.merged_capabilities(
         env_config.device_defaults.get("capabilities", {})
     )

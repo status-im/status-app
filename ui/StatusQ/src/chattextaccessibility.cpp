@@ -2,7 +2,7 @@
 
 #include <QAccessible>
 #include <QQuickItem>
-#include <QSet>
+#include <QHash>
 #include <QString>
 #include <QtQuick/private/qquickaccessibleattached_p.h>
 
@@ -19,12 +19,12 @@ public:
     {
         if (!active)
             return;
-        const auto current = items;
+        const auto current = items.keys();
         for (QQuickItem* item : current)
             ChatTextAccessibility::update(item);
     }
 
-    QSet<QQuickItem*> items;
+    QHash<QQuickItem*, const char*> items;
 };
 
 Registry& registry()
@@ -37,12 +37,13 @@ Registry& registry()
 
 namespace ChatTextAccessibility {
 
-void track(QQuickItem* item)
+void track(QQuickItem* item, const char* textProperty)
 {
 #if QT_CONFIG(accessibility)
-    registry().items.insert(item);
+    registry().items.insert(item, textProperty);
 #else
     Q_UNUSED(item)
+    Q_UNUSED(textProperty)
 #endif
 }
 
@@ -72,7 +73,7 @@ void update(QQuickItem* item)
     // An Accessible.name set in QML wins.
     if (attached->wasNameExplicitlySet())
         return;
-    const QString text = item->property("text").toString();
+    const QString text = item->property(registry().items.value(item, "text")).toString();
     if (attached->name() != text)
         attached->setNameImplicitly(text);
 #else

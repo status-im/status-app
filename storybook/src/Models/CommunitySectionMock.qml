@@ -299,11 +299,15 @@ QtObject {
                 // the last message jumped to
                 property string jumpedToMessageId
                 property string threadId: ""
+                property string parentChatId: contentModule.chatId
+                readonly property string threadParentChatName: threadId ? d.chatInfo[parentChatId]?.name ?? "" : ""
+                readonly property int chatType: Constants.chatType.communityChat
                 property bool canEditThread: false
                 property bool threadEditPending: false
                 property bool threadMuted: false
                 property real threadMuteTill: 0
                 property int requestedMuteInterval: -1
+                property string requestedMuteThreadId
                 property int loadThreadsRequests: 0
                 readonly property ListModel threadsModel: ListModel {}
                 readonly property bool threadsLoading: false
@@ -311,6 +315,10 @@ QtObject {
 
                 function loadChatThreads() { loadThreadsRequests++ }
                 function setThreadMuted(interval) { requestedMuteInterval = interval }
+                function setThreadMutedById(id, interval) {
+                    requestedMuteThreadId = id
+                    requestedMuteInterval = interval
+                }
 
                 signal messageSuccessfullySent()
                 signal sendingMessageFailed(string error)
@@ -331,6 +339,7 @@ QtObject {
                     d.chatInfo[parentMessageId] = Object.assign({}, contentModule.info)
                     const threadContent = d.contentModuleFor(parentMessageId)
                     threadContent.messagesModule.threadId = parentMessageId
+                    threadContent.messagesModule.parentChatId = contentModule.chatId
                     threadContent.messagesModule.canEditThread = true
                     return threadContent
                 }
@@ -339,7 +348,7 @@ QtObject {
                     threadOpenRequested(parentMessageId, "New thread")
                 }
 
-                function getChatId() { return contentModule.chatId }
+                function getChatId() { return parentChatId }
                 function jumpToMessage(messageId) {
                     jumpedToMessageId = messageId
                     scrollToMessage(messageId)

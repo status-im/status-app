@@ -540,8 +540,9 @@ proc resolveENS*(self: Controller, ensName: string, uuid: string = "", reason: s
 proc isMnemonicBackedUp*(self: Controller): bool =
   result = self.privacyService.isMnemonicBackedUp()
 
-proc switchTo*(self: Controller, sectionId, chatId, messageId: string) =
-  let data = ActiveSectionChatArgs(sectionId: sectionId, chatId: chatId, messageId: messageId)
+proc switchTo*(self: Controller, sectionId, chatId, messageId: string, threadId = "") =
+  let data = ActiveSectionChatArgs(sectionId: sectionId, chatId: chatId, messageId: messageId,
+    threadId: threadId)
   self.events.emit(SIGNAL_MAKE_SECTION_CHAT_ACTIVE, data)
 
 iterator joinedAndSpectatedCommunities*(self: Controller): lent CommunityDto =

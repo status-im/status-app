@@ -61,8 +61,18 @@ Item {
     readonly property bool canGoBack: root.sectionLayout?.canGoBack ?? false
 
     readonly property QtObject contentHistory: QtObject {
-        readonly property bool canGoBack: !!d.openThreadId && d.threadOpenedFromInfo
+        readonly property bool canGoBackToParentChat: !!infoMessageStore.threadId && !!d.parentChatIdForMainPaneThreadBack()
+                                                       && !root.contentLocked && !root.allChannelsAreHiddenBecauseNotPermitted &&
+                                                       (!root.sectionLayout?.isPortrait ||
+                                                        root.sectionLayout.currentIndex === StatusSectionLayout.CentralPanel)
+        readonly property bool canGoBack: canGoBackToParentChat || (!!d.openThreadId && d.threadOpenedFromInfo)
         function tryGoBack() {
+            if (canGoBackToParentChat) {
+                const parentChatId = d.parentChatIdForMainPaneThreadBack()
+                root.subsectionHistory.dropLeaf()
+                root.rootStore.chatCommunitySectionModule.setActiveItem(parentChatId)
+                return true
+            }
             if (!canGoBack)
                 return false
             d.closeThreadPanel()
@@ -100,6 +110,7 @@ Item {
     property DelegatePool rowPool: null
     property ChatTextAppearance textAppearance
     property ChatTextAppearance previewAppearance
+    property MessageHeaderServices messageHeaderServices
     property bool stickersLoaded: false
 
     readonly property var chatContentModule: rootStore.currentChatContentModule() || null
@@ -148,7 +159,8 @@ Item {
             const m = root.rootStore.chatCommunitySectionModule
             return m && m.activeItem ? m.activeItem.id : ""
         }
-        validateFn: (id) => ModelUtils.indexOf(root.rootStore.chatCommunitySectionModule.model, "itemId", id) >= 0
+        validateFn: (id) => id !== root.activeItemId &&
+                            ModelUtils.indexOf(root.rootStore.chatCommunitySectionModule.model, "itemId", id) >= 0
         onNavigateRequested: (key) => root.rootStore.chatCommunitySectionModule.setActiveItem(key)
     }
 
@@ -240,6 +252,12 @@ Item {
             if (!requestId)
                 threadDraftError = qsTr("Couldn't send thread reply. Try again.")
         }
+        // Portrait keeps adjacent pages alive outside the clipped viewport.
+        function panelInView(index: int): bool {
+            return !root.sectionLayout?.isPortrait
+                    || (!root.sectionLayout.panelSwitchOngoing && root.sectionLayout.currentIndex === index)
+        }
+
         readonly property bool threadPanelOpen: !!openThreadId || !!newThreadParentMessageId
         readonly property string openThreadId: root.rootStore.openThreadId
         readonly property string openThreadName: root.rootStore.openThreadName
@@ -248,6 +266,21 @@ Item {
         property int infoTab: ChatInfoPanel.Default
         property bool threadOpenedFromInfo: false
         property string threadNameEditId
+
+        function parentChatIdForMainPaneThreadBack(): string {
+            if (!infoMessageStore.threadId)
+                return ""
+            const chatId = infoMessageStore.chatId
+            if (chatId && chatId !== root.activeItemId)
+                return chatId
+            const model = root.rootStore.chatCommunitySectionModule?.model
+            if (!model)
+                return ""
+            const idx = ModelUtils.indexOf(model, "itemId", root.activeItemId)
+            if (idx < 0)
+                return ""
+            return ModelUtils.get(model, idx, "parentChatId") || ""
+        }
 
         function getThreadMessageModule(threadId) {
             const section = root.rootStore.chatCommunitySectionModule
@@ -619,11 +652,13 @@ Item {
     }
 
     Loader {
-        id: threadDraftMentions
-        active: !!d.newThreadParentMessageId
+        id: threadMentions
+        active: !!d.newThreadParentMessageId || rightPanelLoader.item?.currentTab === ChatInfoPanel.Threads
         sourceComponent: MentionResolver {
             sourceModel: names.model
             nameRole: "preferredDisplayName"
+            selfPubKey: root.myPublicKey
+            selfName: root.rootStore?.name ?? ""
             aliasProvider: pubKey => root.rootStore.generateAlias(pubKey)
             MentionNamesAdaptor {
                 id: names
@@ -653,13 +688,18 @@ Item {
         ChatInfoPanel {
             id: infoPanel
             sectionModule: root.rootStore.chatCommunitySectionModule
+            canManageThread: (threadId, parentChatId) =>
+                infoMessageStore.chatId === parentChatId && infoMessageStore.canManageThreadById(threadId)
+            threadChangesPending: infoMessageStore.threadDeletePending || infoMessageStore.threadEditPending
             headerInToolbar: !!root.sectionLayout?.isPortrait
             visible: rightPanelLoader.status === Loader.Ready
             chatKey: root.chatContentModule?.getMyChatId() ?? ""
+            myPublicKey: root.myPublicKey
             membersAvailable: root.chatContentModule?.chatDetails.isUsersListAvailable ?? false
             threadsEnabled: root.threadsFeatureEnabled && !(root.chatContentModule?.messagesModule.threadId ?? "")
             threadsModel: currentTab === ChatInfoPanel.Threads && threadsEnabled
                           ? root.chatContentModule?.messagesModule.threadsModel ?? null : null
+            threadMentionResolver: threadMentions.item
             threadsLoading: root.chatContentModule?.messagesModule.threadsLoading ?? false
             threadsError: root.chatContentModule?.messagesModule.threadsError ?? false
             membersContent: membersPanelComponent
@@ -674,6 +714,18 @@ Item {
             }
             onRenameThreadRequested: (threadId, threadName, parentChatId) =>
                 d.renameThreadFromList(threadId, threadName, parentChatId)
+            onThreadMuteRequested: (threadId, parentChatId, interval) => {
+                if (infoMessageStore.chatId === parentChatId)
+                    infoMessageStore.setThreadMutedById(threadId, interval)
+            }
+            onThreadFollowRequested: (threadId, parentChatId, followed) => {
+                if (infoMessageStore.chatId === parentChatId)
+                    infoMessageStore.setThreadFollowedById(threadId, followed)
+            }
+            onThreadDeleteRequested: (threadId, parentChatId) => {
+                if (infoMessageStore.chatId === parentChatId)
+                    infoMessageStore.deleteThreadById(threadId)
+            }
         }
     }
 
@@ -851,7 +903,7 @@ Item {
                     initialText: d.threadDraft?.text ?? ""
                     initialThreadName: d.threadDraft?.name ?? ""
                     initialStartNewThread: d.threadDraft?.asThread ?? true
-                    initialMentionsMap: threadDraftMentions.item?.resolveFor(d.threadDraft?.text ?? "", "") ?? ({})
+                    initialMentionsMap: threadMentions.item?.resolveFor(d.threadDraft?.text ?? "", "") ?? ({})
                     pending: d.threadDraft?.pending ?? false
                     error: d.threadDraftError || d.threadDraft?.error || ""
                     usersModel: root.usersModel
@@ -863,7 +915,7 @@ Item {
                             chatId: d.newThreadParentChatId
                             messageId: d.newThreadParentMessageId
                             unparsedText: threadParent.item?.unparsedText ?? ""
-                            mentionsMap: threadDraftMentions.item?.resolveFor(unparsedText, threadParent.item?.mentionedNames ?? "") ?? ({})
+                            mentionsMap: threadMentions.item?.resolveFor(unparsedText, threadParent.item?.mentionedNames ?? "") ?? ({})
                             senderId: threadParent.item?.senderId ?? ""
                             senderDisplayName: threadParent.item?.senderDisplayName ?? ""
                             senderIcon: threadParent.item?.senderIcon ?? ""
@@ -919,6 +971,7 @@ Item {
                 delegate: ChatColumnView {
                     textAppearance: root.textAppearance
                     previewAppearance: root.previewAppearance
+                    messageHeaderServices: root.messageHeaderServices
                     Layout.fillWidth: true
                     Layout.fillHeight: true
 
@@ -928,6 +981,7 @@ Item {
                     rootStore: root.rootStore
                     createChatPropertiesStore: root.createChatPropertiesStore
                     messagesViewEnabled: rightPanelLoader.status === Loader.Ready
+                    panelInView: d.panelInView(StatusSectionLayout.RightPanel)
                     areTestNetworksEnabled: root.areTestNetworksEnabled
                     stickersLoaded: root.stickersLoaded
                     reactionEmojiModel: root.reactionEmojiModel
@@ -1098,6 +1152,7 @@ Item {
             threadName: root.activeItemName
 
             messagesViewEnabled: centerPanelLoader.status === Loader.Ready
+            panelInView: d.panelInView(StatusSectionLayout.CentralPanel)
 
             areTestNetworksEnabled: root.areTestNetworksEnabled
             createChatPropertiesStore: root.createChatPropertiesStore
@@ -1106,6 +1161,7 @@ Item {
             rowPool: root.rowPool
             textAppearance: root.textAppearance
             previewAppearance: root.previewAppearance
+            messageHeaderServices: root.messageHeaderServices
             viewAndPostHoldingsModel: root.viewAndPostPermissionsModel
             getTokenByKeyOrGroupKeyFromAllTokens: root.getTokenByKeyOrGroupKeyFromAllTokens
             canPost: !root.rootStore.chatCommunitySectionModule.isCommunity() || root.canPost

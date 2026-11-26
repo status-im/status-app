@@ -136,6 +136,15 @@ Item {
             verify(!!portrait.item)
         }
 
+        function test_landscapeBackButtonStillFollowsItsLabelByDefault() {
+            const backButton = findChild(loaderOf("StatusSectionLayoutLandscape").item, "toolBarBackButton")
+            verify(!!backButton)
+            verify(!backButton.visible)
+            layout.backButtonName = "Settings"
+            tryCompare(backButton, "visible", true)
+            compare(backButton.text, "Settings")
+        }
+
         // Hiding the section (as AppMain's StackLayout does) destroys nothing.
         function test_hidingTheSectionKeepsTheView() {
             const landscape = loaderOf("StatusSectionLayoutLandscape")
@@ -284,6 +293,24 @@ Item {
             layout.setCurrentIndex(StatusSectionLayout.CentralPanel)
             compare(pv.currentIndex, StatusSectionLayout.CentralPanel)
             compare(mirror.index, StatusSectionLayout.CentralPanel)
+        }
+
+        function test_openCentralPanelBeforePortraitLoadsAndAfterBack() {
+            const portrait = loaderOf("StatusSectionLayoutPortrait")
+            verify(!!portrait, "Object exists")
+            compare(portrait.item, null)
+
+            layout.setCurrentIndex(StatusSectionLayout.CentralPanel)
+            const view = rotate(true).item
+            verify(!!view, "Object exists")
+            tryCompare(view, "currentIndex", StatusSectionLayout.CentralPanel)
+
+            verify(layout.tryGoBack())
+            tryCompare(view, "currentIndex", StatusSectionLayout.LeftPanel)
+            compare(layout.currentIndex, StatusSectionLayout.LeftPanel)
+
+            layout.setCurrentIndex(StatusSectionLayout.CentralPanel)
+            tryCompare(view, "currentIndex", StatusSectionLayout.CentralPanel)
         }
 
         function test_landscapeSplitStateIsIsolatedPerUserAndSection() {
