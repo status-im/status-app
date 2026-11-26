@@ -50,49 +50,99 @@ can run QML code in the app. Run only on a machine where you trust all users.
 
 ---
 
-## Run on the host
+## Run on your machine
 
-From `test/e2e`, one setup script installs CPython 3.14 (via `uv` if needed), builds the plugin,
-creates `.venv`, installs `requirements.txt`, records `INSPECTOR_PLUGINS`, and ensures `.env` (from
-`.env.example`) with `E2E_LOCAL_WAKU_FLEET` and `WALLET_TEST_USER_SEED`. Activate or the venv's
-`.pth` files load `.env` into the environment for pytest:
+From `test/e2e`.
 
-| Platform | Command |
-|----------|---------|
-| macOS (Apple Silicon) | `./scripts/setup-macos.sh` |
-| Linux | `./scripts/setup-linux.sh` |
-| Windows | `powershell -File scripts/setup-windows.ps1` |
+1. Set up Python, the plugin and `.venv`. This also starts the local Waku fleet (communities and sync
+   need it). `E2E_SKIP_WAKU_FLEET=1` skips the fleet.
 
-Optional argument: plugins directory (`generic/`). Defaults to the plugin just built. `QT_PREFIX` and
-`PLUGIN_SRC` override Qt and plugin sources. Missing tools: macOS — Xcode CLT and CMake; Linux —
-Docker; Windows — VS 2022 (C++), CMake, git.
+   | Platform | Command |
+   |----------|---------|
+   | macOS (Apple Silicon) | `./scripts/setup-macos.sh` |
+   | Linux | `./scripts/setup-linux.sh` |
+   | Windows | `powershell -File scripts/setup-windows.ps1` |
 
-Setup also starts the local Waku fleet. Set `E2E_SKIP_WAKU_FLEET=1` to skip.
+   Needs: macOS — Xcode Command Line Tools and CMake; Linux — git; Windows — Visual Studio 2022 (C++),
+   CMake and git. The fleet nodes need `libpq` (`brew install libpq` or `apt-get install libpq5`).
 
-```bash
-source .venv/bin/activate
-pytest -m critical
-```
+2. Point the tests at the app. Copy `configs/_local.default.py` to `configs/_local.py` and set
+   `AUT_PATH`:
 
-On Windows the activate command is `.\.venv\Scripts\Activate.ps1`.
+   - macOS: the `.app` bundle, for example `bin/StatusDev.app` or a nightly `.app`. The suite starts
+     `Contents/MacOS/nim_status_client`. `AUT_PATH` may also be that binary itself.
+   - Linux: an unpacked AppImage's `AppRun`, or `bin/nim_status_client`.
+   - Windows: `Status\bin\Status.exe`.
 
-Tests with two instances (communities, syncing) need the [local Waku fleet](#local-waku-fleet-optional)
-and `E2E_LOCAL_WAKU_FLEET=1`, as in CI.
+   A local `bin/nim_status_client` on Linux does not carry its libraries. Before pytest (`$ROOT` is the
+   repo root, `$QT_LIBDIR` is the Qt 6.11.0 `lib` directory):
 
-Set `AUT_PATH` in `configs/_local.py` (copy from `configs/_local.default.py`): an unpacked AppImage's
-`AppRun`, or a local `bin/nim_status_client` from `make nim_status_client`.
+   ```bash
+   export LD_LIBRARY_PATH="$QT_LIBDIR:$ROOT/vendor/status-go/build:$ROOT/vendor/status-go/build/bin:$ROOT/vendor/status-keycard-qt/build/linux:$ROOT/bin/StatusQ:$ROOT/ui/StatusQ/build/Qt6.11.0/lib"
+   ```
 
-A local `bin/nim_status_client` does not carry its Qt and Status libraries. Add the directories that
-`make run` uses (`$ROOT` is the repo root, `$QT_LIBDIR` is the Qt 6.11.0 `lib` directory):
+   For a macOS app built with `make run`, set `QT_PREFIX` to the Qt that `qmake` reports and run step 1
+   again, so the plugin is built against that Qt.
 
-```bash
-export LD_LIBRARY_PATH="$QT_LIBDIR:$ROOT/vendor/status-go/build:$ROOT/vendor/status-go/build/bin:$ROOT/vendor/status-keycard-qt/build/linux:$ROOT/bin/StatusQ:$ROOT/ui/StatusQ/build/Qt6.11.0/lib"
-```
+3. Open `.env` and set `WALLET_TEST_USER_SEED` (wallet tests). `E2E_LOCAL_WAKU_FLEET=1` is already there.
+   Activating `.venv` loads `.env`.
 
-For a local macOS app built with `make run`, set `QT_PREFIX` to the Qt that `qmake` reports before
-`./scripts/setup-macos.sh`. Set `AUT_PATH` to the `.app` bundle (`bin/StatusDev.app`); the suite
-launches `Contents/MacOS/nim_status_client`. The bare `bin/nim_status_client` crashes after login on
-macOS: system notifications need a bundle.
+4. Run:
+
+   ```bash
+   source .venv/bin/activate
+   pytest -m critical
+   ```
+
+   Windows: `.\.venv\Scripts\Activate.ps1`, then `pytest -m critical`.
+
+The fleet keeps running after setup. Start it again from the repo root with
+`test/e2e/scripts/start-waku-fleet.sh` (`--stop` stops it). On Windows:
+`powershell -File test\e2e\scripts\start-waku-fleet-windows.ps1`.
+
+---
+
+## Inspect the screen
+
+The inspector is not a separate window. It is loaded into the app and answers on a local port.
+
+1. Take the `plugins` directory from setup (it contains `generic/`). On this Mac, after
+   `./scripts/setup-macos.sh`, that is the path in `.env` as `INSPECTOR_PLUGINS`.
+
+2. Start the app with the plugin. Pick a free port.
+
+   macOS or Linux:
+
+   ```bash
+   export QT_PLUGIN_PATH="/path/to/plugins"
+   export QT_QPA_GENERIC_PLUGINS="qmlinspector:3768"
+   export STATUS_RUNTIME_TEST_MODE=1
+   ```
+
+   Windows (PowerShell):
+
+   ```powershell
+   $env:QT_PLUGIN_PATH = "C:\path\to\plugins"
+   $env:QT_QPA_GENERIC_PLUGINS = "qmlinspector:3768"
+   $env:STATUS_RUNTIME_TEST_MODE = "1"
+   ```
+
+   Then start the app as usual.
+
+3. The app log must contain `Inspector server listening on port 3768`. Without
+   `STATUS_RUNTIME_TEST_MODE=1` the plugin does nothing.
+
+4. Ask for the element tree. One command, one reply:
+
+   ```bash
+   printf '%s\n' '{"id":1,"command":"getTree","params":{}}' | nc 127.0.0.1 3768
+   ```
+
+   The reply is the QML tree: type, id, text, visibility and position.
+
+   For a short list of what is on screen, run the MCP server from
+   [status-qml-inspector](https://github.com/status-im/status-qml-inspector) and call `qml_snapshot`.
+   Set `QML_INSPECTOR_HOST=127.0.0.1` and `QML_INSPECTOR_PORT=3768`.
 
 ---
 
@@ -145,31 +195,12 @@ Requires **Node.js 20.19–20.x or 22+** (`NODE_BIN` if not on `PATH`) and netwo
 
 ---
 
-## Local Waku fleet (optional)
+## Local Waku fleet
 
-Local **logos-delivery** instead of `status.prod`. Setup and `run-in-docker.sh` start a fleet for you.
-The nodes are those of `docker-compose.waku.yml`, run from the node's release binary, so no Docker is
-needed. They need libpq (`apt-get install libpq5`, `brew install libpq`); on Windows they run under WSL1.
-
-From **repo root** (manual):
-
-```bash
-test/e2e/scripts/start-waku-fleet.sh            # Linux, macOS; --stop stops the nodes
-```
-
-```powershell
-powershell -File test\e2e\scripts\start-waku-fleet-windows.ps1
-```
-
-Either way writes `assets/local-waku-fleets-config.json`. Then, from `test/e2e`:
-
-```bash
-export E2E_LOCAL_WAKU_FLEET=1
-# export STATUS_FLEET=status-app.test   # optional; key in the JSON
-pytest -m critical
-```
-
-`E2E_LOCAL_WAKU_FLEET` makes the app use that JSON. Without it, the app uses built-in fleets (e.g. `status.prod`).
+Setup starts it. To start it again, use the commands in [Run on your machine](#run-on-your-machine).
+That writes `assets/local-waku-fleets-config.json`. With `E2E_LOCAL_WAKU_FLEET=1` the app uses that
+file. Without it, the app uses the built-in fleets (for example `status.prod`). `run-in-docker.sh`
+starts its own fleet.
 
 ---
 
