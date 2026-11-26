@@ -37,8 +37,8 @@ QtObject {
 
     // Listed on the login screen, or the silent profile
     function canLogIn(keyUid: string) : bool {
-        return keyUid === root.zeroOnboardedKeyUid
-                || !!StatusQUtils.ModelUtils.getByKey(root.loginAccountsModel, "keyUid", keyUid)
+        return keyUid !== "" && (keyUid === root.zeroOnboardedKeyUid
+                                 || !!StatusQUtils.ModelUtils.getByKey(root.loginAccountsModel, "keyUid", keyUid))
     }
 
     function startZeroOnboarding() : string {

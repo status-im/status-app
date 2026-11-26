@@ -84,6 +84,20 @@ QtObject {
     readonly property SignStores.SigningStore signingStore: SignStores.SigningStore {
     }
 
+    readonly property ZeroOnboardingAuthentication zeroOnboardingAuthentication: ZeroOnboardingAuthentication {
+        authenticationStore: root.authenticationStore
+        signingStore: root.signingStore
+        onPasswordRequired: (onSuccess, onCancel) => root.passwordRequired("", onSuccess, onCancel)
+        onAuthenticated: (reason, password, keyUid) => {
+            if (reason === Constants.keycard.flow.moveProfileKeyPair && !root.removeCredentialForKeycardMove())
+                return
+            Global.authenticationResult(reason, password, "", keyUid, "")
+        }
+        onSigned: (reason, signature, keyUid, path, address) => Global.signingResult(reason, signature, keyUid, path, address)
+        onSigningFailed: Global.displayToastMessage(qsTr("Signing failed"), "", "warning", false,
+                                                    Constants.ephemeralNotificationType.danger, "")
+    }
+
     readonly property KeycardMgmtStores.KeycardManagementStore keycardManagementStore: KeycardMgmtStores.KeycardManagementStore {
         onKeycardMoveProfileKeyPairSuccess: {
             // The profile keypair moved to a keycard — keycard profiles are out of scope
@@ -304,6 +318,11 @@ QtObject {
         if (!finalKeyUid) {
             finalKeyUid = root.authenticationStore.userProfileKeyUid
         }
+        if (root.privacyStore?.zeroOnboarded && root.zeroOnboardingAuthentication.authenticate(reason, finalKeyUid))
+            return
+        // A retry after a failed removal in the zero-onboarded path comes here
+        if (reason === Constants.keycard.flow.moveProfileKeyPair && !root.removeCredentialForKeycardMove())
+            return
         openPopup(authenticationPopupComponent, { reason: reason, keyUid: finalKeyUid, exportChatKey: exportChatKey })
     }
 
@@ -312,7 +331,37 @@ QtObject {
         if (!finalKeyUid) {
             finalKeyUid = root.signingStore.userProfileKeyUid
         }
+        if (root.privacyStore?.zeroOnboarded && root.zeroOnboardingAuthentication.sign(reason, finalKeyUid, txHash, path, address))
+            return
         openPopup(signingPopupComponent, { reason: reason, keyUid: finalKeyUid, txHash: txHash, path: path, address: address })
+    }
+
+    function removeCredentialForKeycardMove() : bool {
+        // Converting the profile to Keycard must not leave a usable silent DEK
+        // behind (the rekey=false conversion rewraps the SAME DEK, so a stored
+        // credential would keep decrypting the databases without the card). Verified
+        // removal — or verified absence — is a prerequisite for the conversion,
+        // and it must be established by deleteCredential, never by a bare
+        // hasCredential probe: on Linux the delete is serialized against the
+        // pending-mutation registry, so a credential write that timed out but may
+        // still commit blocks the conversion, while a read would race past it and
+        // report a stale NotFound. Success and NotFound are verified outcomes; the
+        // stub-only NotSupported proves no build could ever have stored anything.
+        // Any UNVERIFIED outcome (Unavailable — locked keyring, unsigned dev build,
+        // pending mutation — GenericError, Indeterminate) refuses the conversion,
+        // because a surviving credential would remain a usable decryption key once
+        // the store is reachable again. Keycard logins additionally reconcile
+        // leftovers as defense-in-depth, but best-effort cleanup is not a
+        // substitute for the prerequisite.
+        const deleteStatus = root.secureStorage.deleteCredential(root.keycardManagementStore.userProfileKeyUid)
+        const verifiedAbsent = deleteStatus === SecureStorage.StatusSuccess
+                            || deleteStatus === SecureStorage.StatusNotFound
+                            || deleteStatus === SecureStorage.StatusNotSupported
+        if (!verifiedAbsent)
+            Global.displayToastMessage(
+                        qsTr("Cannot move the profile key pair to Keycard: failed to remove the saved password, please try again"),
+                        "", "warning", false, Constants.ephemeralNotificationType.danger, "")
+        return verifiedAbsent
     }
 
     function openKeycardManagementPopup(flow, keyUid, keycardUid, cardMetadataName, cardMetadataWalletAccountsJson, keycardInitialized,
@@ -354,34 +403,11 @@ QtObject {
             console.info("wrong flow for the provided keyUid: ", keyUid, " flow changed from ", flow, " to ", finalFlow)
         }
 
-        if (finalFlow === Constants.keycard.flow.moveProfileKeyPair) {
-            // Converting the profile to Keycard must not leave a usable silent DEK
-            // behind (the rekey=false conversion rewraps the SAME DEK, so a stored
-            // credential would keep decrypting the databases without the card). Verified
-            // removal — or verified absence — is a prerequisite for starting the flow,
-            // and it must be established by deleteCredential, never by a bare
-            // hasCredential probe: on Linux the delete is serialized against the
-            // pending-mutation registry, so a credential write that timed out but may
-            // still commit blocks the conversion, while a read would race past it and
-            // report a stale NotFound. Success and NotFound are verified outcomes; the
-            // stub-only NotSupported proves no build could ever have stored anything.
-            // Any UNVERIFIED outcome (Unavailable — locked keyring, unsigned dev build,
-            // pending mutation — GenericError, Indeterminate) refuses the conversion,
-            // because a surviving credential would remain a usable decryption key once
-            // the store is reachable again. Keycard logins additionally reconcile
-            // leftovers as defense-in-depth, but best-effort cleanup is not a
-            // substitute for the prerequisite.
-            const deleteStatus = root.secureStorage.deleteCredential(root.keycardManagementStore.userProfileKeyUid)
-            const verifiedAbsent = deleteStatus === SecureStorage.StatusSuccess
-                                || deleteStatus === SecureStorage.StatusNotFound
-                                || deleteStatus === SecureStorage.StatusNotSupported
-            if (!verifiedAbsent) {
-                Global.displayToastMessage(
-                            qsTr("Cannot move the profile key pair to Keycard: failed to remove the saved password, please try again"),
-                            "", "warning", false, Constants.ephemeralNotificationType.danger, "")
-                return
-            }
-        }
+        // Without a password the saved credential is the profile's only key: it goes once the
+        // flow's authentication has set one
+        if (finalFlow === Constants.keycard.flow.moveProfileKeyPair && !root.privacyStore?.zeroOnboarded
+                && !root.removeCredentialForKeycardMove())
+            return
 
         console.info("openning keycard popup for flow: ", finalFlow, " keyUid: ", finalKeyUid, " keycardUid: ", keycardUid, " cardMetadataName: ", cardMetadataName, " cardMetadataWalletAccountsJson: ", cardMetadataWalletAccountsJson)
 
