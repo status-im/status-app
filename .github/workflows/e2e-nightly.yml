@@ -4,6 +4,10 @@ on:
   schedule:
     - cron: '0 1 * * *'
   workflow_dispatch:
+  # A schedule runs only what is on master: a change to this workflow is tried in its pull request.
+  pull_request:
+    paths:
+      - .github/workflows/e2e-nightly.yml
 
 permissions:
   contents: read
