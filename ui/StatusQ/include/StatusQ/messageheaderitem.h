@@ -25,9 +25,9 @@
 //                        timestamp: message.timestamp, isContact: sender.isContact })
 //     }
 //
-// services is required: it carries the view's clock, tooltip and resend
-// control. Signals: clicked(sender) for the name, with the header as the
-// anchor, and resendClicked().
+// services is required: it carries the view's appearance, clock, tooltip and
+// resend control. Signals: clicked(sender) for the name, with the header as
+// the anchor, and resendClicked().
 //
 // Content, status, timestamp, colours, fonts, geometry and hover are
 // invalidated separately and coalesced in updatePolish(); each text part keeps
@@ -123,6 +123,7 @@ protected:
     void hoverMoveEvent(QHoverEvent* event) override;
     void hoverLeaveEvent(QHoverEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
     void mouseReleaseEvent(QMouseEvent* event) override;
     void mouseUngrabEvent() override;
 
@@ -201,6 +202,9 @@ private:
     };
 
     void connectAppearance();
+    // Reconnects and redoes everything when the effective appearance (own,
+    // the services', or the defaults) is a different object.
+    void appearanceSourceChanged();
     void invalidate(quint16 flags);
     void process();
     void prepareContent();
@@ -227,8 +231,10 @@ private:
 
     QPointer<MessageHeaderAppearance> m_appearance;
     QPointer<MessageHeaderServices> m_services;
-    QMetaObject::Connection m_servicesDestroyedConnection;
     QList<QMetaObject::Connection> m_appearanceConnections;
+    QPointer<MessageHeaderAppearance> m_connectedAppearance;
+    QMetaObject::Connection m_servicesAppearanceConnection;
+    QMetaObject::Connection m_servicesDestroyedConnection;
     MessageHeaderData m_data;
     bool m_displayNameClickable = true;
     bool m_showFullTimestamp = false;
@@ -258,4 +264,6 @@ private:
     Region m_hoverRegion = Region::None;
     bool m_nameHovered = false;
     bool m_pressedOnName = false;
+    QPointF m_pressPosition;
+    quint64 m_pressTimestamp = 0;
 };

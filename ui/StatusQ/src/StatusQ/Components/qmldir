@@ -49,7 +49,6 @@ StatusMacWindowButtons 0.1 StatusMacWindowButtons.qml
 StatusMemberListItem 0.1 StatusMemberListItem.qml
 StatusMessage 0.1 StatusMessage.qml
 StatusMessageDetails 0.1 StatusMessageDetails.qml
-StatusMessageHeader 0.1 StatusMessageHeader.qml
 StatusMessageHeaderAppearance 0.1 StatusMessageHeaderAppearance.qml
 StatusMessageHeaderServices 0.1 StatusMessageHeaderServices.qml
 StatusMessageSenderDetails 0.1 StatusMessageSenderDetails.qml

@@ -37,6 +37,7 @@ Loader {
     // The message surface owns these instances; pooled rows borrow them.
     property ChatTextAppearance textAppearance
     property ChatTextAppearance previewAppearance
+    property MessageHeaderServices messageHeaderServices
 
     property ChatStores.RootStore rootStore
     property ChatStores.MessageStore messageStore
@@ -1038,6 +1039,7 @@ Loader {
                 id: delegate
                 textAppearance: root.textAppearance
                 previewAppearance: root.previewAppearance
+                headerServices: root.messageHeaderServices
                 Layout.fillWidth: true
                 Layout.topMargin: showHeader && !root.isInPinnedPopup ? 2 : 0
                 Layout.bottomMargin: !root.isInPinnedPopup ? 2 : 0

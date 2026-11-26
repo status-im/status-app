@@ -50,6 +50,14 @@ MessageHeaderServices::~MessageHeaderServices()
     releaseAnchor();
 }
 
+void MessageHeaderServices::setAppearance(MessageHeaderAppearance* appearance)
+{
+    if (m_appearance == appearance)
+        return;
+    m_appearance = appearance;
+    emit appearanceChanged();
+}
+
 void MessageHeaderServices::setResendButton(QQmlComponent* component)
 {
     if (m_resendButton == component)
