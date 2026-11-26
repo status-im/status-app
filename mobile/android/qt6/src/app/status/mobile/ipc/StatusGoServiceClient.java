@@ -4,12 +4,14 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Process;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.os.TransactionTooLargeException;
 import android.system.ErrnoException;
 import android.util.Log;
@@ -28,6 +30,17 @@ public final class StatusGoServiceClient {
     private static final int LARGE_SIGNAL_WARN_BYTES = 256 * 1024;
     private static final long RESTART_KILL_DELAY_MS = 250L;
     private static final long DISCONNECT_SUPPRESSION_WINDOW_MS = 1000L;
+
+    /**
+     * Recovery reason: the service went away during a login (see ServiceDeathRecovery). The
+     * restarted UI skips its silent login once (a login that kills the service must not loop).
+     */
+    public static final String SERVICE_DIED_DURING_LOGIN =
+            ServiceDeathRecovery.SERVICE_DIED_DURING_LOGIN;
+    private static final String LOGIN_INTERRUPTED_PREFS = "status_login_interrupted";
+    private static final String LOGIN_INTERRUPTED_PID = "writer_pid";
+    private static final String LOGIN_INTERRUPTED_AT = "written_at";
+    private static final String LOST_WHILE_HIDDEN_REASON = "statusgo_service_restarted";
 
     private static volatile StatusGoServiceClient sInstance;
     private static final AtomicBoolean restartRequested = new AtomicBoolean(false);
@@ -73,6 +86,9 @@ public final class StatusGoServiceClient {
         @Override
         public void onSignal(byte[] utf8) {
             if (utf8 == null) return;
+            if (deathRecovery.loginInProgress()) {
+                deathRecovery.signalReceived(SignalEnvelope.typeOf(ByteBuffer.wrap(utf8)));
+            }
             // Forward into the native stub callback (SetSignalEventCallback).
             StatusGoStub.nativeDeliverSignal(utf8);
         }
@@ -86,6 +102,9 @@ public final class StatusGoServiceClient {
 
             try (IpcPayload payload = signalPayload) {
                 final ByteBuffer utf8 = payload.buffer();
+                if (deathRecovery.loginInProgress()) {
+                    deathRecovery.signalReceived(SignalEnvelope.typeOf(utf8));
+                }
                 if (utf8.remaining() >= LARGE_SIGNAL_WARN_BYTES) {
                     Log.w(TAG, "received large status-go signal type=" + SignalEnvelope.typeOf(utf8)
                             + " sizeBytes=" + utf8.remaining());
@@ -114,7 +133,7 @@ public final class StatusGoServiceClient {
             }
             if (serviceLostWhileHidden && hasUiVisibilityHint && desiredUiVisible) {
                 serviceLostWhileHidden = false;
-                requestFrontendRestart(StatusGoStub.getContext(), "statusgo_service_restarted");
+                requestFrontendRestart(StatusGoStub.getContext(), LOST_WHILE_HIDDEN_REASON);
                 return;
             }
             // Replay UI visibility on a background thread — the Binder call
@@ -146,13 +165,7 @@ public final class StatusGoServiceClient {
                 bindingInProgress = false;
                 bound = false;
             }
-            if (!suppressed && everConnected) {
-                if (hasUiVisibilityHint && desiredUiVisible) {
-                    requestFrontendRestart(StatusGoStub.getContext(), "statusgo_service_disconnected");
-                } else {
-                    serviceLostWhileHidden = true;
-                }
-            }
+            serviceGone(suppressed, "statusgo_service_disconnected");
         }
 
         @Override
@@ -164,13 +177,7 @@ public final class StatusGoServiceClient {
                 bindingInProgress = false;
                 bound = false;
             }
-            if (!suppressed && everConnected) {
-                if (hasUiVisibilityHint && desiredUiVisible) {
-                    requestFrontendRestart(StatusGoStub.getContext(), "statusgo_binding_died");
-                } else {
-                    serviceLostWhileHidden = true;
-                }
-            }
+            serviceGone(suppressed, "statusgo_binding_died");
         }
 
         @Override
@@ -184,9 +191,52 @@ public final class StatusGoServiceClient {
         }
     };
 
+    private final ServiceDeathRecovery deathRecovery = new ServiceDeathRecovery();
+
     private StatusGoServiceClient() {}
 
-    private void requestFrontendRestart(Context appContext, String reason) {
+    // The service process went away (binder callback): the next call replays
+    // InitializeApplication on the new one, and the frontend restarts as before.
+    private void serviceGone(boolean suppressed, String reason) {
+        deathRecovery.serviceLost();
+        if (suppressed || !everConnected) return;
+        restartFrontend(StatusGoStub.getContext(), reason);
+    }
+
+    // Now, or once the UI is visible again
+    private void restartFrontend(Context app, String reason) {
+        if (hasUiVisibilityHint && desiredUiVisible) {
+            requestFrontendRestart(app, reason);
+        } else {
+            serviceLostWhileHidden = true;
+        }
+    }
+
+    /** True once, in the UI process a frontend restart for a login the service died under started. */
+    public static boolean takeLoginInterrupted(Context context) {
+        return LoginInterruptedMarker.take(loginInterruptedStore(context),
+                Process.myPid(), SystemClock.elapsedRealtime());
+    }
+
+    // Written by the dying UI process, read by the next one: commit() and a multi-process read
+    @SuppressWarnings("deprecation")
+    private static LoginInterruptedMarker.Store loginInterruptedStore(Context context) {
+        final SharedPreferences prefs = context.getApplicationContext()
+                .getSharedPreferences(LOGIN_INTERRUPTED_PREFS, Context.MODE_MULTI_PROCESS);
+        return new LoginInterruptedMarker.Store() {
+            @Override public void write(int writerPid, long writtenAt) {
+                prefs.edit().putInt(LOGIN_INTERRUPTED_PID, writerPid)
+                        .putLong(LOGIN_INTERRUPTED_AT, writtenAt).commit();
+            }
+            @Override public int writerPid() { return prefs.getInt(LOGIN_INTERRUPTED_PID, 0); }
+            @Override public long writtenAt() { return prefs.getLong(LOGIN_INTERRUPTED_AT, 0L); }
+            @Override public void clear() { prefs.edit().clear().commit(); }
+        };
+    }
+
+    // Every restart goes through here: a death during login keeps its reason whatever the cause
+    private void requestFrontendRestart(Context appContext, String cause) {
+        final String reason = deathRecovery.restartReason(cause);
         if (appContext == null) {
             Log.w(TAG, "requestFrontendRestart: context is null, reason=" + reason);
             return;
@@ -198,7 +248,10 @@ public final class StatusGoServiceClient {
                     .getLaunchIntentForPackage(appContext.getPackageName());
             if (launch != null) {
                 launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                launch.putExtra("status.recovery_reason", reason);
+                if (SERVICE_DIED_DURING_LOGIN.equals(reason)) {
+                    LoginInterruptedMarker.mark(loginInterruptedStore(appContext),
+                            Process.myPid(), SystemClock.elapsedRealtime());
+                }
                 appContext.startActivity(launch);
             } else {
                 Log.w(TAG, "requestFrontendRestart: launch intent is null, reason=" + reason);
@@ -316,6 +369,20 @@ public final class StatusGoServiceClient {
      */
     public IpcPayload call(Context context, String method, ByteBuffer argsUtf8) {
         final Context app = context.getApplicationContext();
+        try {
+            return deathRecovery.call(new BinderConnection(app), method, argsUtf8);
+        } catch (TransactionTooLargeException e) {
+            return transactionTooLarge(method, argsUtf8, e);
+        } catch (RemoteException e) {
+            Log.w(TAG, "call failed", e);
+            if (everConnected) {
+                requestFrontendRestart(app, "statusgo_service_call_failed");
+            }
+            return IpcPayload.inline("{\"error\":\"status-go service call failed\"}");
+        }
+    }
+
+    private IStatusGoService awaitService(Context app) {
         ensureStartedAndBound(app);
         IStatusGoService s;
         CountDownLatch latch;
@@ -330,52 +397,74 @@ public final class StatusGoServiceClient {
             }
         }
         synchronized (lock) {
-            s = service;
+            return service;
         }
-        if (s == null) {
-            if (everConnected) {
-                requestFrontendRestart(app, "statusgo_service_not_connected");
-            }
-            return IpcPayload.inline("{\"error\":\"status-go service not connected\"}");
+    }
+
+    private final class BinderConnection
+            implements ServiceDeathRecovery.Connection<IpcPayload, RemoteException> {
+        private final Context app;
+
+        BinderConnection(Context app) {
+            this.app = app;
         }
-        try {
-            return readRpc(s, method, argsUtf8);
-        } catch (TransactionTooLargeException e) {
-            return transactionTooLarge(method, argsUtf8, e);
-        } catch (RemoteException e) {
-            Log.w(TAG, "call failed", e);
-            // After reinstall/update (or service crash), binder can become a dead object.
-            // Reset, rebind, and retry once to avoid cascading JSON parse errors upstream.
-            if (e instanceof android.os.DeadObjectException) {
-                resetConnection(app);
-                ensureStartedAndBound(app);
-                synchronized (lock) {
-                    s = service;
-                    latch = connectedLatch;
+
+        @Override
+        public IpcPayload send(String method, ByteBuffer argsUtf8)
+                throws ServiceDeathRecovery.ServiceDiedException, RemoteException {
+            final IStatusGoService s = awaitService(app);
+            if (s == null) {
+                if (everConnected) {
+                    requestFrontendRestart(app, "statusgo_service_not_connected");
                 }
-                if (s == null && latch != null) {
-                    try {
-                        latch.await(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-                    } catch (InterruptedException ignored) {
-                    }
-                }
-                synchronized (lock) {
-                    s = service;
-                }
-                if (s != null) {
-                    try {
-                        return readRpc(s, method, argsUtf8);
-                    } catch (TransactionTooLargeException e2) {
-                        return transactionTooLarge(method, argsUtf8, e2);
-                    } catch (RemoteException e2) {
-                        Log.w(TAG, "call retry failed", e2);
-                    }
-                }
+                return IpcPayload.inline("{\"error\":\"status-go service not connected\"}");
             }
-            if (everConnected) {
-                requestFrontendRestart(app, "statusgo_service_call_failed");
+            try {
+                return readRpc(s, method, argsUtf8);
+            } catch (android.os.DeadObjectException e) {
+                Log.w(TAG, "service died during " + method, e);
+                throw new ServiceDeathRecovery.ServiceDiedException(e);
             }
-            return IpcPayload.inline("{\"error\":\"status-go service call failed\"}");
+        }
+
+        @Override
+        public void rebind() {
+            // Our own unbind: suppresses the frontend restart the disconnect would request
+            resetConnection(app);
+            ensureStartedAndBound(app);
+        }
+
+        @Override
+        public void loginInterrupted() {
+            restartFrontend(app, SERVICE_DIED_DURING_LOGIN);
+        }
+
+        @Override
+        public IpcPayload serviceDied(String response) {
+            return IpcPayload.inline(response);
+        }
+
+        @Override
+        public boolean succeeded(IpcPayload response) {
+            try {
+                return ServiceDeathRecovery.succeeded(response.buffer());
+            } catch (ErrnoException e) {
+                return false;
+            }
+        }
+
+        @Override
+        public void release(IpcPayload response) {
+            response.close();
+        }
+
+        @Override
+        public String loginState(IpcPayload response) {
+            try {
+                return ServiceDeathRecovery.loginState(response.buffer());
+            } catch (ErrnoException e) {
+                return "";
+            }
         }
     }
 
@@ -414,7 +503,7 @@ public final class StatusGoServiceClient {
         final Context app = context.getApplicationContext();
         if (visible && serviceLostWhileHidden) {
             serviceLostWhileHidden = false;
-            requestFrontendRestart(app, "statusgo_service_restarted");
+            requestFrontendRestart(app, LOST_WHILE_HIDDEN_REASON);
             return;
         }
         runUiVisibilityAsync(() -> setUiVisibleSync(app, visible));
@@ -445,33 +534,11 @@ public final class StatusGoServiceClient {
         } catch (RemoteException e) {
             Log.w(TAG, "setUiVisible failed", e);
             if (e instanceof android.os.DeadObjectException) {
+                // Never re-sent: onServiceConnected replays the visibility to the new service
+                final boolean duringLogin = deathRecovery.serviceLost();
                 resetConnection(app);
                 ensureStartedAndBound(app);
-                synchronized (lock) {
-                    s = service;
-                    latch = connectedLatch;
-                }
-                if (s == null && latch != null) {
-                    try {
-                        latch.await(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-                    } catch (InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                        return;
-                    }
-                }
-                synchronized (lock) {
-                    s = service;
-                }
-                if (s != null) {
-                    try {
-                        s.setUiVisible(visible);
-                    } catch (RemoteException e2) {
-                        Log.w(TAG, "setUiVisible retry failed", e2);
-                        if (everConnected && visible) {
-                            requestFrontendRestart(app, "statusgo_set_ui_visible_failed");
-                        }
-                    }
-                }
+                if (duringLogin) restartFrontend(app, SERVICE_DIED_DURING_LOGIN);
             }
         }
     }

@@ -39,8 +39,15 @@ Item {
     // The KeptCurrent rewrite of an adopted login's record (BootLoginRecordGuard.keepCurrent):
     // (record) => void
     required property var keepBootLoginRecordCurrent
+    // True once after Android restarted the UI because the status-go service died during
+    // the previous UI's login: () => bool
+    required property var consumeLoginInterrupted
 
     readonly property bool userLoggedIn: appMainLoader.item !== null
+    // Taken once when the session is created, also on a resume start that never shows the
+    // login screen, so a later session of this process (the record refresh relogin, a sign-out)
+    // never sees it
+    readonly property bool loginInterrupted: d.loginInterrupted
 
     signal contentLoaded()
     signal storeAppStateRequested()
@@ -83,6 +90,18 @@ Item {
 
         readonly property KeycardStateStore keycardStateStore: KeycardStateStore {}
 
+        property bool loginInterrupted: false
+        property bool loginInterruptedTaken: false
+
+        // Whichever of the session's creation and the login screen's load comes first
+        function takeLoginInterrupted() : bool {
+            if (!d.loginInterruptedTaken) {
+                d.loginInterruptedTaken = true
+                d.loginInterrupted = root.consumeLoginInterrupted()
+            }
+            return d.loginInterrupted
+        }
+
         // Never once the record refresh relogin started: the session is ending
         function moveToAppMain() : void {
             if (bootLoginRecordRefresh.reloginStarted)
@@ -106,6 +125,7 @@ Item {
     }
 
     Component.onCompleted: {
+        d.takeLoginInterrupted()
         if (!root.skipOnboarding)
             return
         // The UI adopted a running session. This runs within AppController.start()
@@ -231,6 +251,7 @@ Item {
             item.secureStorage = root.secureStorage
             item.lastSelectedProfileKeyUid = Qt.binding(() => localAppSettings.selectedProfileKeyUid)
             item.biometricFlowPending = Qt.binding(() => d.biometricFlowPending)
+            item.loginInterrupted = d.takeLoginInterrupted()
             // MUST be assigned LAST: enabling triggers the one-shot auto-login
             // attempt, which needs the key UID (and storage) already in place.
             // Decided (and logged) on the Nim side: e2e runs never auto-login, and
