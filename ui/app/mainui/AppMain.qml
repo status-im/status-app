@@ -2746,6 +2746,7 @@ Item {
 
                         mutualContactsModel: contactsModelAdaptor?.mutualContacts ?? null
                         allContactsModel: appMain.contactsStore.contactsModel
+                        selfContact: appMain.ownContactDetails
 
                         onOpenGifPopupRequest: (params, cbOnGifSelected, cbOnClose) =>
                             popupRequestsHandler.openGifs(params, cbOnGifSelected, cbOnClose)

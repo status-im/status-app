@@ -12,6 +12,8 @@ import StatusQ.Controls
 Item {
     id: root
 
+    property string selfChatId
+
     implicitWidth: 288
 
     // Rows have fixed heights so the (virtualized) list never needs to build
@@ -232,7 +234,7 @@ Item {
                         chatId: model.itemId
                         categoryId: model.categoryId
                         isThread: model.isThread ?? false
-                        name: model.name
+                        name: chatId === root.selfChatId ? qsTr("%1 (You)").arg(model.name) : model.name
                         type: model.type ?? StatusChatListItem.Type.CommunityChat
                         muted: model.muted
                         hasUnreadMessages: model.hasUnreadMessages

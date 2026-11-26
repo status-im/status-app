@@ -3304,6 +3304,10 @@ Do you wish to override the security check and continue?</source>
         <source>More</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>%1 (You)</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message numerus="yes">
         <source>%n member(s)</source>
         <translation type="unfinished">
@@ -5070,6 +5074,10 @@ Log in with your new password.</source>
     <name>CreateChatView</name>
     <message>
         <source>Contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>%1 (You)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -16827,6 +16835,13 @@ to load</source>
     </message>
     <message>
         <source>Reply in thread</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>StatusChatList</name>
+    <message>
+        <source>%1 (You)</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

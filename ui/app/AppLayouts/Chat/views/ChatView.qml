@@ -773,7 +773,7 @@ Item {
                 chatId: root.chatContentModule?.getMyChatId() ?? ""
                 joined: root.joined
                 isPinActionAvailable: infoMessageStore.chatType === Constants.chatType.oneToOne
-                                      ? (root.rootStore.oneToOneChatContact?.isContact ?? false)
+                                      ? root.rootStore.isSelfChat || (root.rootStore.oneToOneChatContact?.isContact ?? false)
                                       : infoMessageStore.amIChatAdmin || infoMessageStore.isPinMessageAllowedForMembers
                 gifUnfurlingEnabled: root.gifUnfurlingEnabled
                 neverAskAboutUnfurlingAgain: root.neverAskAboutUnfurlingAgain

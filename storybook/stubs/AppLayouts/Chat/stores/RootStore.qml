@@ -49,6 +49,7 @@ QtObject {
 
     // The local user's name and every known contact, as the mention names read them
     property string name
+    property string ownPublicKey
     property var contactsModel: null
 
     property UsersStore usersStore: UsersStore {}
@@ -65,6 +66,14 @@ QtObject {
 
     function amIChatAdmin() {
         return currentChatContentModule()?.amIChatAdmin() ?? false
+    }
+
+    function myPublicKey() {
+        return root.ownPublicKey
+    }
+
+    function isCurrentUser(publicKey) {
+        return !!root.ownPublicKey && publicKey === root.ownPublicKey
     }
 
     function generateAlias(publicKey) {

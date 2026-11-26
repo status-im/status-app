@@ -29,6 +29,7 @@ Item {
 
         property bool communityChat: false
         property bool chatAdmin: false
+        readonly property var pinnedMessagesModel: ListModel {}
 
         readonly property var messagesModule: QtObject {
             property string threadId
@@ -47,6 +48,7 @@ Item {
             readonly property int chatType: Constants.chatType.communityChat
             readonly property bool keepUnread: false
             signal threadEditFinished(string error)
+            signal threadDeleteFinished(string error)
             function getChatId() { return "parent-chat" }
             function editThread(name) {
                 requestedName = name
@@ -67,6 +69,7 @@ Item {
             readonly property bool muted: false
             readonly property int position: 0
             readonly property bool hideIfPermissionsNotMet: false
+            readonly property bool requiresPermissions: false
             readonly property bool belongsToCommunity: chatContentModuleMock.communityChat
             readonly property bool isUsersListAvailable: true
             readonly property bool canView: true
@@ -101,6 +104,15 @@ Item {
             id: unmuteSpy
             target: header
             signalName: "unmuteThreadRequested"
+        }
+
+        function test_chatTitleForOwnProfile() {
+            const info = findChild(header, "chatInfoBtnInHeader")
+            verify(!!info)
+            compare(info.title, "Contact 1")
+            rootStoreMock.ownPublicKey = "chat-1"
+            tryCompare(info, "title", "Contact 1 (You)")
+            rootStoreMock.ownPublicKey = ""
         }
 
         // INTENT (perf): the More menu must not be instantiated at load

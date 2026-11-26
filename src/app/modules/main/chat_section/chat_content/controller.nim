@@ -13,6 +13,7 @@ import ../../../../../app_service/service/wallet_account/service as wallet_accou
 import ../../../../core/signals/types
 import ../../../../core/eventemitter
 import ../../../../core/unique_event_emitter
+import ../../../../global/global_singleton
 
 type
   Controller* = ref object of RootObj
@@ -140,6 +141,13 @@ proc init*(self: Controller) =
 
   let chatDto = self.getChatDetails()
   if(chatDto.chatType == ChatType.OneToOne):
+    if self.chatId == singletonInstance.userProfile.getPubKey():
+      self.events.on(SIGNAL_LOGGEDIN_USER_NAME_CHANGED) do(e: Args):
+        self.delegate.onContactDetailsUpdated(self.chatId)
+
+      self.events.on(SIGNAL_LOGGEDIN_USER_IMAGE_CHANGED) do(e: Args):
+        self.delegate.onContactDetailsUpdated(self.chatId)
+
     self.events.on(SIGNAL_CONTACT_ADDED) do(e: Args):
       var args = ContactArgs(e)
       if (args.contactId == self.chatId):

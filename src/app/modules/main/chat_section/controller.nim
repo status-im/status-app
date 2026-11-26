@@ -436,6 +436,12 @@ proc init*(self: Controller) =
           continue
         self.delegate.onCommunityMemberMessagesDeleted(messagesIds)
 
+  self.events.on(SIGNAL_LOGGEDIN_USER_NAME_CHANGED) do(e: Args):
+    self.delegate.onContactDetailsUpdated(singletonInstance.userProfile.getPubKey())
+
+  self.events.on(SIGNAL_LOGGEDIN_USER_IMAGE_CHANGED) do(e: Args):
+    self.delegate.onContactDetailsUpdated(singletonInstance.userProfile.getPubKey())
+
   if self.isCommunitySection:
     self.events.on(SIGNAL_COMMUNITY_ROSTER_LOADED) do(e: Args):
       let args = CommunityRosterLoadedArgs(e)
@@ -454,12 +460,6 @@ proc init*(self: Controller) =
 
     self.events.on(SignalType.MediaServerStarted.event) do(e: Args):
       self.delegate.onRosterMediaServerStarted()
-
-    self.events.on(SIGNAL_LOGGEDIN_USER_NAME_CHANGED) do(e: Args):
-      self.delegate.onContactDetailsUpdated(singletonInstance.userProfile.getPubKey())
-
-    self.events.on(SIGNAL_LOGGEDIN_USER_IMAGE_CHANGED) do(e: Args):
-      self.delegate.onContactDetailsUpdated(singletonInstance.userProfile.getPubKey())
 
     when constants.IS_MOBILE:
       self.events.on(SIGNAL_APP_BACKGROUNDED) do(e: Args):

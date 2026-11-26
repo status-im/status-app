@@ -21,6 +21,7 @@ ColumnLayout {
     property alias suggestionsModel: suggestionsListView.model
     property alias suggestionsDelegate: suggestionsListView.delegate
     property alias suggestionsDialog: suggestionsDialog
+    property bool suppressSuggestions: false
     property size suggestionsDelegateSize: Qt.size(344, 64)
     property alias dirty: confirmButton.enabled
 
@@ -117,7 +118,7 @@ ColumnLayout {
         parent: membersFlick
         x: 0
         y: parent.height + Theme.halfPadding
-        visible: edit.text !== "" && !forceHide
+        visible: edit.text !== "" && !forceHide && !root.suppressSuggestions
         padding: Theme.halfPadding
         background: StatusDialogBackground {
             RectangularShadow {
@@ -307,7 +308,7 @@ ColumnLayout {
                                             } else {
                                                 if (event.key === Qt.Key_Backspace && edit.text === "") {
                                                     root.entryRemoved(membersRepeater.itemAt(membersRepeater.count - 1))
-                                                } else if (event.key === Qt.Key_Return || event.key === Qt.Enter)  {
+                                                } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)  {
                                                     root.enterKeyPressed()
                                                 } else if (event.key === Qt.Key_Escape)  {
                                                     root.rejected()

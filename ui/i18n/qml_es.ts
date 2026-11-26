@@ -3306,6 +3306,10 @@ Do you wish to override the security check and continue?</source>
         <source>More</source>
         <translation>Más</translation>
     </message>
+    <message>
+        <source>%1 (You)</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message numerus="yes">
         <source>%n member(s)</source>
         <translation>
@@ -5077,6 +5081,10 @@ Inicia sesión con tu nueva contraseña.</translation>
     <message>
         <source>Contacts</source>
         <translation>Contactos</translation>
+    </message>
+    <message>
+        <source>%1 (You)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>You can only send direct messages to your Contacts.
@@ -16848,6 +16856,13 @@ al cargar</translation>
     <message>
         <source>Reply in thread</source>
         <translation>Responder en el hilo</translation>
+    </message>
+</context>
+<context>
+    <name>StatusChatList</name>
+    <message>
+        <source>%1 (You)</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

@@ -81,9 +81,10 @@ method load*(self: Module, chatItem: ChatItem) =
   var isContact = false
   var trustStatus = TrustStatus.Unknown
   if chatItem.`type` == ChatType.OneToOne.int and not chatItem.isThread:
-    let contactDto = self.controller.getContactById(self.controller.getMyChatId())
+    let contactDetails = self.controller.getContactDetails(self.controller.getMyChatId())
+    let contactDto = contactDetails.dto
     chatName = contactDto.userDefaultDisplayName()
-    isContact = contactDto.isContact
+    isContact = contactDetails.isCurrentUser or contactDto.isContact
     trustStatus = contactDto.trustStatus
     if(contactDto.image.thumbnail.len > 0):
       chatImage = contactDto.image.thumbnail
@@ -404,9 +405,8 @@ method onGroupChatDetailsUpdated*(self: Module, newName: string, newColor: strin
   self.messagesModule.updateChatIdentifier()
 
 method onMutualContactChanged*(self: Module) =
-  let contactDto = self.controller.getContactById(self.controller.getMyChatId())
-  let isContact = contactDto.isContact
-  self.view.onMutualContactChanged(isContact)
+  let contact = self.controller.getContactDetails(self.controller.getMyChatId())
+  self.view.onMutualContactChanged(contact.isCurrentUser or contact.dto.isContact)
 
 method onMadeActive*(self: Module) =
   # The new messages marker is reset each time the chat is made active,
