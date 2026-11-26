@@ -273,16 +273,30 @@ Item {
             mouseMove(root, 790, 790)
         }
 
-        function test_touchDoesNotCreateDisabledTooltip() {
+        function test_touchDoesNotCreateDisabledTooltip_data() {
+            return [{tag: "desktop", mobile: false}, {tag: "mobile", mobile: true}]
+        }
+
+        function test_touchDoesNotCreateDisabledTooltip(data) {
             mouseMove(root, 790, 790)
-            const part = createPart({isMobile: true, disabledTooltipText: "Not available"})
+            const part = createPart({isMobile: data.mobile, disabledTooltipText: "Not available"})
             part.messageDetails.unparsedText = root.address
             const loader = findChild(part, "StatusTextMessage_disabledLinkTooltipLoader")
             const spy = linkSpy(part)
-            activate(part, linkPoint(part, "//send-via-personal-chat//" + root.address), "touch")
+            const point = linkPoint(part, "//send-via-personal-chat//" + root.address)
+            const touch = touchEvent(part)
+            touch.press(0, part, point.x, point.y).commit()
+            compare(loader.item, null)
+            touch.release(0, part, point.x, point.y).commit()
             compare(spy.count, 0)
             wait(150)
             compare(loader.item, null)
+
+            mouseMove(root, 790, 790)
+            mouseMove(part, point.x, point.y)
+            tryVerify(() => !!loader.item && loader.item.opened)
+            compare(loader.item.text, "Not available")
+            mouseMove(root, 790, 790)
         }
 
         function test_focusPolicyAndMobileToggle() {
