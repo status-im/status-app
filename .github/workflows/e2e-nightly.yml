@@ -121,7 +121,8 @@ jobs:
 
   suite:
     needs: package
-    if: ${{ !cancelled() && needs.package.result == 'success' }}
+    # Whatever the other build did: a suite whose own build is missing fails when it unpacks it.
+    if: ${{ !cancelled() }}
     permissions:
       contents: read
       actions: read
@@ -140,7 +141,8 @@ jobs:
 
   keycard:
     needs: package
-    if: ${{ !cancelled() && needs.package.result == 'success' }}
+    # Whatever the other build did: a suite whose own build is missing fails when it unpacks it.
+    if: ${{ !cancelled() }}
     permissions:
       contents: read
       actions: read
