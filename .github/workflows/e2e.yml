@@ -13,6 +13,27 @@ on:
         description: The run whose builds are tested.
         type: string
         required: true
+      pytest-args:
+        description: The pytest -m expression.
+        type: string
+        default: critical
+      artifact:
+        description: Artifact name pattern. Empty uses the name for os.
+        type: string
+        default: ''
+      results-name:
+        description: Results artifact name. Empty is e2e-<os>-results.
+        type: string
+        default: ''
+      timeout-minutes:
+        type: number
+        default: 90
+      allow-failure:
+        type: boolean
+        default: true
+    secrets:
+      WALLET_TEST_USER_SEED:
+        required: false
 
 permissions:
   contents: read
@@ -27,10 +48,10 @@ jobs:
   e2e:
     name: tests
     runs-on: ${{ fromJSON('{"linux":"ubuntu-24.04","windows":"windows-2022","macos":"macos-26"}')[inputs.os] }}
-    timeout-minutes: 90
-    continue-on-error: true
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+    continue-on-error: ${{ inputs.allow-failure }}
     env:
-      BUILD: ${{ fromJSON('{"linux":"*-linux-x86_64.tar.gz","windows":"*-windows-x86_64.7z","macos":"*-macos-aarch64.dmg"}')[inputs.os] }}
+      BUILD: ${{ inputs.artifact || fromJSON('{"linux":"*-linux-x86_64.tar.gz","windows":"*-windows-x86_64.7z","macos":"*-macos-aarch64.dmg"}')[inputs.os] }}
       # On Windows Bash needs the scripts with LF endings.
       GIT_CONFIG_COUNT: 2
       GIT_CONFIG_KEY_0: core.longpaths
@@ -73,19 +94,20 @@ jobs:
       - name: Critical tests
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          WALLET_TEST_USER_SEED: ${{ secrets.WALLET_TEST_USER_SEED }}
         run: |
           if [ "$RUNNER_OS" = Linux ]; then
             echo "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin || echo "No GHCR login."
           fi
           test/e2e/scripts/ci/run.sh "$RUNNER_TEMP/pkg" "$RUNNER_TEMP/qmlinspector/plugins" \
-            -m critical -v --reruns=1 --timeout=300 -o timeout_func_only=true --disable-warnings \
+            -m "${{ inputs.pytest-args }}" -v --reruns=1 --timeout=300 -o timeout_func_only=true --disable-warnings \
             --junitxml=junit.xml --alluredir=./allure-results
       # Logs, reports and failure screenshots only: the app data of a run is hundreds of megabytes.
       - name: Upload results
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: e2e-${{ inputs.os }}-results
+          name: ${{ inputs.results-name || format('e2e-{0}-results', inputs.os) }}
           path: |
             test/e2e/local_run_results/**/*.log
             test/e2e/local_run_results/**/screenshot_*.png
