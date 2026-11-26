@@ -1611,6 +1611,13 @@ void ChatTextItem::hoverEnterEvent(QHoverEvent* event)
 
 void ChatTextItem::hoverMoveEvent(QHoverEvent* event)
 {
+    // Qt Quick can deliver mouse hover at the touch point during a link press.
+    if (m_touchPressTimer.isValid()) {
+        clearHover();
+        event->ignore();
+        return;
+    }
+
     const QPointF position = event->position();
     hoverAt(position.x(), position.y());
     event->accept();
