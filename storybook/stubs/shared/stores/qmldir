@@ -10,3 +10,4 @@ RootStore 1.0 RootStore.qml
 UtilsStore 1.0 UtilsStore.qml
 SpellCheckStore 1.0 ../../../../ui/imports/shared/stores/SpellCheckStore.qml
 BrowserConnectStore 1.0 BrowserConnectStore.qml
+KeycardStateStore 1.0 ../../../../ui/imports/shared/stores/KeycardStateStore.qml
