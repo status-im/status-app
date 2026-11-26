@@ -21,8 +21,8 @@ Usage: $(basename "$0") <app-bundle> <team-id> <bundle-id> <provisioning-profile
   bundle-id             bundle id to stamp into the app (must match the profile's
                         app id — a wildcard profile accepts any, e.g. im.status.storybook)
   provisioning-profile  path to the Mac Team Provisioning Profile (.provisionprofile)
-  signing-identity      codesign identity (default: the "Apple Development"
-                        certificate in your keychain whose team (OU) matches team-id)
+  signing-identity      codesign identity name or SHA-1 fingerprint (default: a valid
+                        keychain identity included in the team's provisioning profile)
 
 Example:
   scripts/sign-macos-dev.sh storybook/build/Qt6.11.0/bin/Storybook.app \\
@@ -41,24 +41,33 @@ IDENTITY="${5:-}"
 [[ -f "${PROFILE}" ]] || { echo "Provisioning profile not found: ${PROFILE}" >&2; exit 1; }
 
 if [[ -z "${IDENTITY}" ]]; then
-    # Pick the signing identity whose certificate belongs to the given team: the team
-    # id is the OU of the certificate subject (NOT the id in parentheses in the name).
-    while IFS= read -r candidate; do
-        ou=$(security find-certificate -c "${candidate}" -p 2>/dev/null \
-                 | openssl x509 -noout -subject 2>/dev/null \
-                 | grep -oE 'OU *= *[^/,]+' | head -1 | sed -E 's/OU *= *//')
-        if [[ "${ou}" == "${TEAM_ID}" ]]; then
-            IDENTITY="${candidate}"
-            break
-        fi
-    done < <(security find-identity -v -p codesigning | grep -oE '"[^"]+"' | tr -d '"' | sort -u)
+    # Renewed certificates can share a display name. codesign accepts the SHA-1
+    # fingerprint that security find-identity reports for each certificate.
+    IDENTITY=$(python3 - "${PROFILE}" "${TEAM_ID}" <<'PY'
+import hashlib
+import plistlib
+import re
+import subprocess
+import sys
 
-    if [[ -z "${IDENTITY}" ]]; then
-        echo "No codesigning identity for team ${TEAM_ID} found in the keychain." >&2
-        echo "Create one via Xcode -> Settings -> Accounts -> Manage Certificates," >&2
-        echo "or pass the identity name explicitly as the 5th argument." >&2
-        exit 1
-    fi
+profile_path, team_id = sys.argv[1:]
+profile = plistlib.loads(subprocess.check_output(["security", "cms", "-D", "-i", profile_path]))
+if team_id not in profile["TeamIdentifier"]:
+    sys.exit(f"Provisioning profile does not belong to team {team_id}: {profile_path}")
+
+allowed = {hashlib.sha1(cert).hexdigest().upper() for cert in profile["DeveloperCertificates"]}
+identities = subprocess.check_output(["security", "find-identity", "-v", "-p", "codesigning"], text=True)
+for line in identities.splitlines():
+    # A revoked identity may still be listed with an error after the quoted name.
+    match = re.fullmatch(r'\s*\d+\) ([0-9A-Fa-f]{40}) "[^"]+"\s*', line)
+    if match and match[1].upper() in allowed:
+        print(match[1])
+        break
+else:
+    sys.exit(f"No valid signing identity in the keychain matches {profile_path}. "
+             f"Refresh the profile or install a signing identity it includes for team {team_id}.")
+PY
+)
 fi
 
 # codesign refuses symlinked main executables / Info.plists, and the dev bundle
@@ -106,7 +115,13 @@ plutil -replace CFBundleIdentifier -string "${BUNDLE_ID}" "${APP}/Contents/Info.
 echo "### Embedding provisioning profile..."
 cp "${PROFILE}" "${APP}/Contents/embedded.provisionprofile"
 
-echo "### Signing with '${IDENTITY}'..."
+SIGNING_LABEL="${IDENTITY}"
+if [[ "${IDENTITY}" =~ ^[0-9A-Fa-f]{40}$ ]]; then
+    IDENTITY_NAME=$(security find-identity -v -p codesigning \
+        | grep -i -m1 " ${IDENTITY} \"" | sed -E 's/^[^"]*"([^"]+)".*$/\1/' || true)
+    [[ -n "${IDENTITY_NAME}" ]] && SIGNING_LABEL="${IDENTITY_NAME} (${IDENTITY})"
+fi
+echo "### Signing with '${SIGNING_LABEL}'..."
 codesign --force --deep --sign "${IDENTITY}" --entitlements "${ENTITLEMENTS}" "${APP}"
 
 echo "### Verifying..."
