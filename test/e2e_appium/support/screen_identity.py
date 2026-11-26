@@ -37,8 +37,6 @@ SCREEN_ANCHORS = {
 BACKUP_MODAL = BaseLocators.tid("EnableMessageBackupPopup")
 BACKUP_MODAL_SKIP = ChatLocators.BACKUP_SKIP_BUTTON
 
-INTRODUCE_MODAL_SKIP = ChatLocators.INTRODUCE_SKIP_BUTTON
-
 
 def dismiss_backup_modal(page, timeout: int = 2) -> bool:
     """Tap Skip on the on-device-backup popup if it is up. Returns True if a
@@ -56,28 +54,6 @@ def dismiss_backup_modal(page, timeout: int = 2) -> bool:
         if is_session_fatal(exc):
             raise
         page.logger.warning("Backup modal present but dismissal failed: %s", exc)
-        return False
-
-
-def dismiss_introduce_yourself(page, timeout: int = 2) -> bool:
-    """Tap Skip on the introduce-yourself sheet if it is up. Returns True if a
-    sheet was dismissed. It opens on the first entry to a messaging section
-    when the profile has no display name — which e2e profiles never set — and
-    while up it replaces the whole a11y tree, so nav lookups find nothing until
-    it is cleared. The app persists the seen-flag on close, so one dismissal
-    per profile suffices. Never raises: same guard-in-loop contract as
-    ``dismiss_backup_modal``."""
-    if not page.is_element_visible(INTRODUCE_MODAL_SKIP, timeout=timeout):
-        return False
-    try:
-        page.click(INTRODUCE_MODAL_SKIP, timeout=5)
-        return page.wait_for_invisibility(INTRODUCE_MODAL_SKIP, timeout=5)
-    except Exception as exc:
-        if is_session_fatal(exc):
-            raise
-        page.logger.warning(
-            "Introduce-yourself sheet present but dismissal failed: %s", exc
-        )
         return False
 
 
@@ -105,18 +81,34 @@ def topmost_overlay(page, object_names: tuple[str, ...]) -> str | None:
         page.logger.warning("Could not read the page source to find the top overlay: %s", exc)
         return None
 
+    has_focus_attr = False
+    last_listed = None
     for node in root.iter():
+        resource_id = node.get("resource-id") or node.get("name") or ""
+        if node.get("focused") is not None:
+            has_focus_attr = True
+        for name in object_names:
+            # Containers are often not elements on iOS; their children carry
+            # the overlay's name inside their path.
+            if name in resource_id:
+                last_listed = name
         if node.get("focused") != "true":
             continue
-        resource_id = node.get("resource-id") or ""
         for name in object_names:
             if name in resource_id:
                 return name
+    # XCUITest trees carry no focus attribute; there a later sibling is
+    # drawn above an earlier one, so the last listed dialog is on top.
+    if not has_focus_attr:
+        return last_listed
     return None
 
 
 def overlay_locator(object_name: str) -> tuple:
-    return ("xpath", f"//*[contains(@resource-id,'{object_name}')]")
+    return (
+        "xpath",
+        f"//*[contains(@resource-id,'{object_name}') or contains(@name,'{object_name}')]",
+    )
 
 
 def dismiss_stacked_overlays(page, overlays, max_rounds: int = 4):

@@ -9300,29 +9300,6 @@ app&#xa0;: %2</translation>
     </message>
 </context>
 <context>
-    <name>IntroduceYourselfPopup</name>
-    <message>
-        <source>Introduce yourself</source>
-        <translation>Présentez-vous</translation>
-    </message>
-    <message>
-        <source>Your Name</source>
-        <translation>Votre nom</translation>
-    </message>
-    <message>
-        <source>Add an optional display name and profile picture so others can easily recognise you.</source>
-        <translation>Ajoutez un nom public et une photo de profil facultatifs pour que les autres puissent facilement vous reconnaître.</translation>
-    </message>
-    <message>
-        <source>Skip</source>
-        <translation>Ignorer</translation>
-    </message>
-    <message>
-        <source>Edit Profile in Settings</source>
-        <translation>Modifier le profil dans les paramètres</translation>
-    </message>
-</context>
-<context>
     <name>InvitationBubbleView</name>
     <message>
         <source>Verified community invitation</source>
@@ -11755,12 +11732,12 @@ chargement</translation>
         <translation>Répondre</translation>
     </message>
     <message>
-        <source>Create Thread</source>
-        <translation>Créer un fil</translation>
-    </message>
-    <message>
         <source>Open thread</source>
         <translation>Ouvrir le fil</translation>
+    </message>
+    <message>
+        <source>Reply in thread</source>
+        <translation type="unfinished">Répondre dans le fil</translation>
     </message>
     <message>
         <source>Edit</source>
@@ -16800,6 +16777,13 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     </message>
 </context>
 <context>
+    <name>StatusChatInputSendButton</name>
+    <message>
+        <source>Send</source>
+        <translation type="unfinished">Envoyer</translation>
+    </message>
+</context>
+<context>
     <name>StatusChatInputToolBar</name>
     <message>
         <source>Formatting</source>
@@ -18516,12 +18500,21 @@ This action cannot be undone.</source>
         <source>deleted this thread</source>
         <translation>a supprimé ce fil</translation>
     </message>
+    <message>
+        <source>deleted this thread</source>
+        <comment>Current user</comment>
+        <translation type="unfinished">a supprimé ce fil</translation>
+    </message>
     <message numerus="yes">
         <source>%n message(s)</source>
         <translation>
             <numerusform>%n message</numerusform>
             <numerusform>%n messages</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>You</source>
+        <translation type="unfinished">Vous</translation>
     </message>
 </context>
 <context>

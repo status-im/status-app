@@ -498,6 +498,9 @@ method onUnpinMessage*(self: Module, messageId: string) =
 method onMarkMessageAsUnread*(self: Module, messageId: string) =
   self.view.model().markMessageAsUnread(messageId)
 
+method onThreadRootMarkedAsUnread*(self: Module, messageId: string) =
+  self.view.model().markMessageAsUnseen(messageId)
+
 method getSectionId*(self: Module): string =
   return self.controller.getMySectionId()
 
@@ -551,9 +554,13 @@ method updateThreadCanView*(self: Module, canView: bool) =
   self.threadCanView = some(canView)
   self.updateThreadDetails()
 
+method setThreadMutedById*(self: Module, threadId: string, interval: int) =
+  if not THREADS_ENABLED or threadId.len == 0:
+    return
+  self.controller.setThreadMutedById(threadId, interval)
+
 method setThreadMuted*(self: Module, interval: int) =
-  if self.controller.getMyThreadId().len > 0:
-    self.controller.setThreadMuted(interval)
+  self.setThreadMutedById(self.controller.getMyThreadId(), interval)
 
 method canManageThreadById*(self: Module, threadId: string): bool =
   let thread = self.controller.getThreadById(threadId)
@@ -669,11 +676,9 @@ proc threadSummary(self: Module, thread: ThreadDto): ThreadSummary =
     summary.lastMessageTimestamp = thread.deletedAt
     return summary
   summary.messagesCount = thread.messagesCount
-  # Mentions and replies are messages, so adding their counters would count
-  # the same unseen activity more than once.
   summary.muted = thread.muted
-  summary.notificationCount = if thread.muted: thread.unviewedMentionsCount
-                              else: thread.unviewedMessagesCount
+  summary.hasUnreadMessages = thread.unviewedMessagesCount > 0
+  summary.notificationCount = thread.unviewedMentionsCount
   summary.participantsCount = thread.participantsCount
 
   for participantId in thread.participantsPreviewIds:

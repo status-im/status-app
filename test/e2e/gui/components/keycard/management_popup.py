@@ -148,14 +148,14 @@ class KeycardManagementPopup(QObject):
                 self._seed_phrase_scroll.vertical_scroll_down(self.seed_phrase_input)
             except LookupError:
                 pass
-            field = driver.waitForObjectExists(
+            field = driver.wait_exists(
                 self.seed_phrase_input.real_name, configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
             set_text_property_on_object(field, word)
             field.focus = False
 
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: getattr(
-                driver.waitForObjectExists(self.next_button.real_name, 200),
+                driver.wait_exists(self.next_button.real_name, 200),
                 'enabled', False),
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), 'Next did not enable after entering the recovery phrase'
@@ -186,7 +186,7 @@ class KeycardManagementPopup(QObject):
             expected_title: str,
             timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
     ) -> 'KeycardManagementPopup':
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self._progress_title.is_visible and self._progress_title.text == expected_title,
             timeout_msec,
         ), f'Expected Keycard progress title {expected_title!r}'
@@ -218,13 +218,13 @@ class KeycardManagementPopup(QObject):
         return self
 
     def _wait_for_pin_step(self, title: str, timeout_msec: int):
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self._pin_step_title.text == title,
             timeout_msec,
         ), f'Expected PIN step {title!r}, got {self._pin_step_title.text!r}'
 
     def _wait_for_pin_input_reset(self, timeout_msec: int):
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.pin_input.is_visible
                     and len(getattr(self.pin_input.object, 'pinInput', '')) == 0,
             timeout_msec,
@@ -257,7 +257,7 @@ class KeycardManagementPopup(QObject):
         self._wait_for_pin_step('Enter Keycard PIN', timeout_msec)
         self.pin_input.wait_until_appears(timeout_msec)
         self.pin_input.object.setPin(current_pin)
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self._puk_step_title.text == 'Choose a Keycard PUK',
             timeout_msec,
         ), f'Expected PUK setup step, got {self._puk_step_title.text!r}'
@@ -265,7 +265,7 @@ class KeycardManagementPopup(QObject):
         self._puk_input.object.setPin(new_puk)
         self.next_button.wait_until_enabled()
         self.next_button.click()
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self._puk_step_title.text == 'Repeat your Keycard PUK',
             timeout_msec,
         ), f'Expected PUK repeat step, got {self._puk_step_title.text!r}'
@@ -286,7 +286,7 @@ class KeycardManagementPopup(QObject):
         self.pin_input.object.setPin(new_pin)
         self._wait_for_pin_step('Repeat new PIN', timeout_msec)
         self.pin_input.object.setPin(new_pin)
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self._puk_step_title.text == 'Enter PUK',
             timeout_msec,
         ), f'Expected PUK step, got {self._puk_step_title.text!r}'
@@ -316,7 +316,7 @@ class KeycardManagementPopup(QObject):
             expected_title: str,
             timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
     ) -> 'KeycardManagementPopup':
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self._progress_title.text == expected_title,
             timeout_msec,
         ), f'Expected progress title {expected_title!r}, got {self._progress_title.text!r}'
@@ -331,7 +331,7 @@ class KeycardManagementPopup(QObject):
             expected_title: str,
             timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
     ) -> 'KeycardManagementPopup':
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self._progress_title.text == expected_title,
             timeout_msec,
         ), f'Expected progress title {expected_title!r}, got {self._progress_title.text!r}'

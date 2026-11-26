@@ -9346,29 +9346,6 @@ aplikace: %2</translation>
     </message>
 </context>
 <context>
-    <name>IntroduceYourselfPopup</name>
-    <message>
-        <source>Introduce yourself</source>
-        <translation>Představte se</translation>
-    </message>
-    <message>
-        <source>Your Name</source>
-        <translation>Vaše jméno</translation>
-    </message>
-    <message>
-        <source>Add an optional display name and profile picture so others can easily recognise you.</source>
-        <translation>Přidejte volitelné zobrazované jméno a profilový obrázek, aby vás ostatní snadno poznali.</translation>
-    </message>
-    <message>
-        <source>Skip</source>
-        <translation>Přeskočit</translation>
-    </message>
-    <message>
-        <source>Edit Profile in Settings</source>
-        <translation>Upravit profil v Nastavení</translation>
-    </message>
-</context>
-<context>
     <name>InvitationBubbleView</name>
     <message>
         <source>Verified community invitation</source>
@@ -11818,12 +11795,12 @@ selhalo</translation>
         <translation>Odpovědět</translation>
     </message>
     <message>
-        <source>Create Thread</source>
-        <translation>Vytvořit vlákno</translation>
-    </message>
-    <message>
         <source>Open thread</source>
         <translation>Otevřít vlákno</translation>
+    </message>
+    <message>
+        <source>Reply in thread</source>
+        <translation type="unfinished">Odpovědět ve vlákně</translation>
     </message>
     <message>
         <source>Edit</source>
@@ -16885,6 +16862,13 @@ selhalo</translation>
     </message>
 </context>
 <context>
+    <name>StatusChatInputSendButton</name>
+    <message>
+        <source>Send</source>
+        <translation type="unfinished">Odeslat</translation>
+    </message>
+</context>
+<context>
     <name>StatusChatInputToolBar</name>
     <message>
         <source>Formatting</source>
@@ -18606,6 +18590,11 @@ Tuto akci nelze vzít zpět.</translation>
         <source>deleted this thread</source>
         <translation>smazal(a) toto vlákno</translation>
     </message>
+    <message>
+        <source>deleted this thread</source>
+        <comment>Current user</comment>
+        <translation type="unfinished">smazal(a) toto vlákno</translation>
+    </message>
     <message numerus="yes">
         <source>%n message(s)</source>
         <translation>
@@ -18613,6 +18602,10 @@ Tuto akci nelze vzít zpět.</translation>
             <numerusform>%n zprávy</numerusform>
             <numerusform>%n zpráv</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>You</source>
+        <translation type="unfinished">Vy</translation>
     </message>
 </context>
 <context>

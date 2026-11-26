@@ -5,7 +5,6 @@ from pages.app import App
 from pages.messaging.chat_page import ChatPage
 from pages.messaging.group_chat_page import GroupChatPage
 from support.platform import is_android
-from support.screen_identity import dismiss_introduce_yourself
 
 PORTRAIT_LAYOUT = BaseLocators.xpath(
     "//android.widget.TabWidget[contains(@resource-id, '.StatusSectionLayoutPortrait_')]"
@@ -40,7 +39,6 @@ def test_one_to_one_chat_link_opens_conversation(peer_chat):
     )
 
     chat_page.dismiss_backup_prompt(timeout=4)
-    dismiss_introduce_yourself(chat_page, timeout=1)
     assert chat_page.wait_for_message_input(timeout=10), (
         "The chat link did not open a conversation with a message input"
     )

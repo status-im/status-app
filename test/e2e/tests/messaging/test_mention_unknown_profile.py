@@ -8,7 +8,6 @@ from gui.main_window import MainWindow
 from gui.screens.messages import MessagesScreen
 from helpers.chat_helper import (
     latest_message_text,
-    skip_intro_if_visible,
     skip_message_backup_popup_if_visible,
 )
 from helpers.multiple_instances_helper import (
@@ -50,7 +49,7 @@ def test_mention_of_unknown_user_resolves_to_real_name(multiple_instances):
             messages_screen.left_panel.click_chat_by_name(user_b.name)
             messages_screen.group_chat.wait_until_appears()
             messages_screen.group_chat.send_message_mentioning(user_c.name)
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: mention_shows_display_name(messages_screen.chat, user_c.name),
                 configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
             ), (
@@ -64,12 +63,11 @@ def test_mention_of_unknown_user_resolves_to_real_name(multiple_instances):
             f'resolve to the real name (#22947)'
         ):
             switch_to_aut(aut_b, main_window)
-            skip_intro_if_visible()
             skip_message_backup_popup_if_visible()
             messages_screen = main_window.left_panel.open_messages_screen()
             messages_screen.left_panel.click_chat_by_name(user_a.name)
             messages_screen.group_chat.wait_until_appears()
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: mention_shows_display_name(messages_screen.chat, user_c.name),
                 profile_timeout,
             ), (

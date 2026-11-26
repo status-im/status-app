@@ -143,11 +143,11 @@ def test_send_accept_reject_join_requests(multiple_instances):
             CommunitySettingsScreen().left_panel.back_to_community()
             community_screen = main_screen.left_panel.open_community(community.name)
             add_popup = community_screen.left_panel.open_add_members_popup()
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: user_three.name in add_popup.contacts,
                 configs.timeouts.LOADING_LIST_TIMEOUT_MSEC,
             ), f'{user_three.name} should stay in invite list as a contact who is not a member, got {add_popup.contacts}'
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: user_one.name not in add_popup.contacts,
                 configs.timeouts.LOADING_LIST_TIMEOUT_MSEC,
             ), f'{user_one.name} should not be in invite list after joining, got {add_popup.contacts}'
@@ -157,7 +157,7 @@ def test_send_accept_reject_join_requests(multiple_instances):
         with step(f'User {user_one.name}, verify that community appeared and user is a member'):
             switch_to_aut(aut_one, main_screen)
             community_screen = main_screen.left_panel.open_community(community.name)
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: not community_screen.left_panel.is_join_community_visible,
                 configs.timeouts.LOADING_LIST_TIMEOUT_MSEC
             ), f'{user_one.name} should see the community as a member (Join/Request button should be hidden)'

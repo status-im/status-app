@@ -1,4 +1,4 @@
-from ..base_locators import BaseLocators
+from ..base_locators import BaseLocators, object_name_pred
 
 
 class LoginPageLocators(BaseLocators):
@@ -18,9 +18,9 @@ class LoginPageLocators(BaseLocators):
 
     ONBOARDING_FRAME = (
         BaseLocators.BY_XPATH,
-        "//*[contains(@resource-id, 'OnboardingFrame_QMLTYPE')]",
+        f"//*[{object_name_pred('OnboardingFrame_QMLTYPE')}]",
     )
     BUTTON_FRAME = (
         BaseLocators.BY_XPATH,
-        "//*[contains(@resource-id, 'OnboardingButtonFrame_QMLTYPE')]",
+        f"//*[{object_name_pred('OnboardingButtonFrame_QMLTYPE')}]",
     )

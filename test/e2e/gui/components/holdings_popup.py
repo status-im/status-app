@@ -64,7 +64,7 @@ class HoldingsPopup(QObject):
         started_at = time.monotonic()
         asset_items: typing.List = []
         while not asset_items and (time.monotonic() - started_at) < configs.timeouts.UI_LOAD_TIMEOUT_SEC:
-            asset_items = driver.findAllObjects(token_real_name)
+            asset_items = driver.find_all(token_real_name)
             if not asset_items:
                 time.sleep(0.2)
         assert asset_items, 'No TokenItem rows in holdings list'

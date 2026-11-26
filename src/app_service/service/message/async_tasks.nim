@@ -773,6 +773,10 @@ proc asyncMarkMessageAsUnreadTask(argEncoded: string) {.gcsafe, nimcall.} =
     discard response.result.getProp("activityCenterNotifications", activityCenterNotifications)
     responseJson["activityCenterNotifications"] = activityCenterNotifications
 
+    var threads: JsonNode = newJArray()
+    discard response.result.getProp("threads", threads)
+    responseJson["threads"] = threads
+
     var seenAndUnseenMessagesBatch: JsonNode = newJObject()
     discard response.result.getProp("seenAndUnseenMessages", seenAndUnseenMessagesBatch)
     let (count, countWithMentions) = getCountAndCountWithMentionsFromResponse(arg.chatId, seenAndUnseenMessagesBatch)

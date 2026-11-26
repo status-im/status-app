@@ -29,15 +29,15 @@ class CommunitiesSettingsView(QObject):
     def communities(self) -> typing.List[CommunityData]:
         time.sleep(0.5)
         _communities = []
-        for obj in driver.findAllObjects(self._community_item.real_name):
-            container = driver.objectMap.realName(obj)
+        for obj in driver.find_all(self._community_item.real_name):
+            container = obj
             self._community_template_image.real_name['container'] = container
             self._community_template_name_members.real_name['container'] = container
             self._community_template_description.real_name['container'] = container
 
             description = self._community_template_description.text
             name_members_labels = []
-            for item in driver.findAllObjects(self._community_template_name_members.real_name):
+            for item in driver.find_all(self._community_template_name_members.real_name):
                 name_members_labels.append(item)
             sorted(name_members_labels, key=lambda item: item.y)
             name = str(name_members_labels[0].text)
@@ -47,7 +47,7 @@ class CommunitiesSettingsView(QObject):
         return _communities
 
     def _get_community_item(self, name: str):
-        for obj in driver.findAllObjects(self._community_item.real_name):
+        for obj in driver.find_all(self._community_item.real_name):
             for item in objects_access.walk_children(obj):
                 if getattr(item, 'text', '') == name:
                     return obj
@@ -67,5 +67,5 @@ class CommunitiesSettingsView(QObject):
 
     @allure.step('Open community overview settings')
     def open_community_overview_settings(self, name: str):
-        driver.mouseClick(self._get_community_item(name))
+        driver.click(self._get_community_item(name))
         return CommunitySettingsScreen().wait_until_appears()

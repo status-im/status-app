@@ -8,40 +8,10 @@ it. These tests catch it without a device, in under a second.
 import ast
 import os
 from pathlib import Path
-from unittest.mock import MagicMock
 
 import pytest
 
-from locators.app_locators import AppLocators
-from pages.app import App
-
 E2E_ROOT = Path(__file__).resolve().parents[1]
-
-
-@pytest.mark.gate
-@pytest.mark.component
-def test_nav_recovery_probes_a_defined_locator(monkeypatch):
-    """Drive the recovery path that runs after the introduce-yourself sheet.
-
-    An ordinary run skips this branch, because it needs the navigation bar to
-    be missing and the sheet to be up. Assert the locator it probes, not just
-    that it returns True.
-    """
-    app = App(MagicMock())
-    probed = []
-
-    def fake_is_element_visible(locator, timeout=None):
-        probed.append(locator)
-        return len(probed) > 1
-
-    monkeypatch.setattr(app, "is_element_visible", fake_is_element_visible)
-    monkeypatch.setattr(
-        "support.screen_identity.dismiss_introduce_yourself", lambda *a, **k: True
-    )
-
-    assert app._ensure_main_nav_visible() is True
-    assert len(probed) == 2, "the probe after the sheet was dismissed did not run"
-    assert probed[1] == AppLocators.PROFILE_NAV_BUTTON
 
 
 def _parse_tree():

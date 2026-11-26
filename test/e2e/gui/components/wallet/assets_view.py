@@ -29,14 +29,14 @@ class AssetsView(QObject):
         started_at = time.monotonic()
         raw_items: typing.List = []
         while not raw_items and (time.monotonic() - started_at) < configs.timeouts.UI_LOAD_TIMEOUT_MSEC:
-            raw_items = driver.findAllObjects(real_name)
+            raw_items = driver.find_all(real_name)
             if not raw_items:
                 time.sleep(0.2)
 
         assert raw_items, 'No assets found in wallet assets view'
 
         items = [
-            TokenListItem(str(getattr(item, 'title', '')), QObject(real_name=driver.objectMap.realName(item)))
+            TokenListItem(str(getattr(item, 'title', '')), QObject(real_name=item))
             for item in raw_items
         ]
         return sorted(items, key=lambda token: token.object.y)
@@ -46,7 +46,7 @@ class AssetsView(QObject):
         self,
         timeout_msec: int = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
     ) -> 'AssetsView':
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: is_assets_tab_content_loaded(self.asset),
             timeout_msec,
         ), 'Assets list did not finish loading'
@@ -64,7 +64,7 @@ class AssetsView(QObject):
             titles = {asset.title for asset in self.assets}
             return expected_titles.issubset(titles)
 
-        assert driver.waitFor(all_expected_present_and_loaded, timeout_msec), (
+        assert driver.wait_until(all_expected_present_and_loaded, timeout_msec), (
             f'Not all expected assets are visible yet, expected {expected_titles}'
         )
         return self
@@ -85,12 +85,12 @@ class AssetsView(QObject):
 
         def asset_row():
             found[:] = [
-                item for item in driver.findAllObjects(real_name)
+                item for item in driver.find_all(real_name)
                 if str(getattr(item, 'title', '')) == expected_title
             ]
             return bool(found)
 
-        assert driver.waitFor(asset_row, configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC), (
+        assert driver.wait_until(asset_row, configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC), (
             f'Asset "{asset_name}" ({expected_title!r}) did not appear'
         )
         QObject(found[0]).click()

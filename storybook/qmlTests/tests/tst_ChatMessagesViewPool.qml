@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Window
 import QtTest
 import Storybook.Testing
 
@@ -34,6 +35,7 @@ Item {
     readonly property ChatTextAppearance previewAppearance: ReplyTextAppearance {
         theme: root.Theme
     }
+    readonly property MessageHeaderServices messageHeaderServices: StatusMessageHeaderServices { theme: root.Theme }
 
     width: 800
     height: 600
@@ -245,11 +247,21 @@ Item {
     }
 
     Component {
+        id: otherWindowComp
+
+        Window {
+            width: 200
+            height: 160
+        }
+    }
+
+    Component {
         id: viewComp
 
         ChatMessagesView {
             textAppearance: root.textAppearance
             previewAppearance: root.previewAppearance
+            messageHeaderServices: root.messageHeaderServices
             width: root.width
             height: root.height
 
@@ -535,6 +547,34 @@ Item {
             }
         }
 
+        // Each row's header shows that row's message, with the shared services,
+        // including rows reused for another chat.
+        function test_reusedRowsHeadersShowTheirOwnMessage() {
+            prewarmedPool()
+            const view = openView()
+            function verifyHeaders() {
+                let headers = 0
+                for (const row of rowItems(view)) {
+                    const header = findChild(row.content, "StatusMessage_header")
+                    if (!header)
+                        continue
+                    ++headers
+                    header.applyPendingChanges()
+                    compare(header.services, root.messageHeaderServices)
+                    compare(header.displayName, row.content.senderDisplayName)
+                    compare(header.headerData.timestamp, row.content.messageTimestamp)
+                }
+                verify(headers > 0, "some rows show a header")
+            }
+            verifyHeaders()
+            const original = rowItems(view).map(row => row.content)
+            view.messageStore = storeB
+            view.chatContentModule = moduleB
+            settle(view)
+            verify(rowItems(view).some(row => original.indexOf(row.content) >= 0), "a pooled row was reused")
+            verifyHeaders()
+        }
+
         // Fewer items ready than the window wants: the rows wait for the pool
         // to build more, and are all shown once it has.
         function test_aDryPoolDelaysRowsRatherThanLosingThem() {
@@ -808,10 +848,12 @@ Item {
                 { tag: "selected-thread", thread: true, active: true, hidden: false, keepUnread: false, read: true },
                 { tag: "thread-panel", thread: true, active: false, hidden: false, keepUnread: false, read: true },
                 { tag: "inactive-chat", thread: false, active: false, hidden: false, keepUnread: false, read: false },
-                { tag: "hidden-thread", thread: true, active: false, hidden: true, keepUnread: false, read: false },
+                { tag: "hidden-thread", thread: true, active: true, hidden: true, keepUnread: false, read: false },
+                { tag: "thread-outside-panel", thread: true, active: true, outsidePanel: true, read: false },
+                { tag: "chat-outside-panel", thread: false, active: true, outsidePanel: true, read: false },
                 { tag: "keep-thread-unread", thread: true, active: false, hidden: false, keepUnread: true, read: false },
                 { tag: "thread-reading-history", thread: true, active: false, above: true, read: false },
-                { tag: "thread-in-background", thread: true, active: false, background: true, read: false }
+                { tag: "thread-in-background", thread: true, active: true, background: true, read: false }
             ]
         }
 
@@ -833,6 +875,7 @@ Item {
             if (data.background)
                 appState.setActive(false)
             view.visible = !data.hidden
+            view.panelInView = !data.outsidePanel
             const marked = moduleA.markAllMessagesReadCalls
             moduleA.chatDetails.hasUnreadMessages = true
 
@@ -845,7 +888,60 @@ Item {
                 Qt.callLater(() => readCheckProcessed = true)
                 tryVerify(() => readCheckProcessed)
                 compare(moduleA.markAllMessagesReadCalls, marked)
+
+                if (data.outsidePanel) {
+                    verify(view.chatLogView.visible)
+                    view.panelInView = true
+                }
+                if (data.background)
+                    appState.setActive(true)
+                if (data.outsidePanel || data.background)
+                    tryVerify(() => moduleA.markAllMessagesReadCalls > marked, 3000,
+                              "the conversation is read after coming into view")
             }
+        }
+
+        function test_arrivingUnreadMessagesWithUnavailableWindow_data() {
+            return [
+                { tag: "inactive-window", minimized: false },
+                { tag: "minimized-window", minimized: true }
+            ]
+        }
+
+        function test_arrivingUnreadMessagesWithUnavailableWindow(data) {
+            prewarmedPool()
+            moduleA.messagesModule.threadId = "thread-a"
+            const view = openView({ isThreadView: true })
+            const chatWindow = view.Window.window
+            chatWindow.requestActivate()
+            tryCompare(chatWindow, "active", true)
+            const marked = moduleA.markAllMessagesReadCalls
+
+            try {
+                if (data.minimized) {
+                    chatWindow.showMinimized()
+                    tryCompare(chatWindow, "visibility", Window.Minimized)
+                } else {
+                    const otherWindow = createTemporaryObject(otherWindowComp, null, { visible: true })
+                    verify(!!otherWindow)
+                    otherWindow.requestActivate()
+                    tryCompare(otherWindow, "active", true)
+                    tryCompare(chatWindow, "active", false)
+                    compare(Qt.application.state, Qt.ApplicationActive)
+                }
+
+                moduleA.chatDetails.hasUnreadMessages = true
+                wait(root.quietMs)
+                compare(moduleA.markAllMessagesReadCalls, marked)
+            } finally {
+                if (chatWindow.visibility === Window.Minimized)
+                    chatWindow.showNormal()
+                chatWindow.requestActivate()
+            }
+
+            tryCompare(chatWindow, "active", true)
+            tryVerify(() => moduleA.markAllMessagesReadCalls > marked, 3000,
+                      "the thread is read when its window is back in view")
         }
 
         // ---- editing ----------------------------------------------------------------

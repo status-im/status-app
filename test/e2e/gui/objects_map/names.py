@@ -1,5 +1,4 @@
-from objectmaphelper import *
-from objectmaphelper import RegularExpression
+import re
 
 # MAIN NAMES
 
@@ -73,7 +72,7 @@ onlineIdentifierButton = {"checkable": True, "container": primaryNavSidebar, "ob
 mainWindow_statusCommunityMainNavBarListView_ListView = {"container": statusDesktop_mainWindow,
                                                          "objectName": "statusCommunityMainNavBarListView",
                                                          "type": "ListView", "visible": True}
-statusCommunityMainNavBarListView_CommunityNavBarButton = {"container": primaryNavSidebar, "objectName": RegularExpression("CommunityNavBarButton_.*"), "type": "CommunitySectionButton", "visible": True}
+statusCommunityMainNavBarListView_CommunityNavBarButton = {"container": primaryNavSidebar, "objectName": re.compile("CommunityNavBarButton_.*"), "type": "CommunitySectionButton", "visible": True}
 
 scrollView_Add_members_StatusButton = {"container": mainWindow_scrollView_StatusScrollView,
                                        "objectName": "CommunityWelcomeBannerPanel_AddMembersButton",
@@ -115,7 +114,7 @@ not_Now_StatusButton = {"checkable": False, "container": statusDesktop_mainWindo
                         "unnamed": 1, "visible": True}
 confirm_Seed_Phrase_StatusButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay,
                                     "objectName": "BackupSeedModal_nextButton", "type": "StatusButton", "visible": True}
-seedGridItem = {"container": statusDesktop_mainWindow_overlay, "objectName": RegularExpression("seedWordText*"), "type": "StatusBaseText", "visible": True}
+seedGridItem = {"container": statusDesktop_mainWindow_overlay, "objectName": re.compile("seedWordText*"), "type": "StatusBaseText", "visible": True}
 reveal_recovery_phrase_StatusButton = {"container": statusDesktop_mainWindow_overlay, "objectName": "btnReveal", "type": "StatusButton", "visible": True}
 iVeBackedUpPhraseButton = {"container": statusDesktop_mainWindow_overlay, "type": "StatusButton", "unnamed": 1, "visible": True}
 blur_GaussianBlur = {"container": statusDesktop_mainWindow_overlay, "id": "blur", "type": "GaussianBlur", "unnamed": 1,
@@ -144,7 +143,7 @@ completeAndDeleteSeedPhraseButton = {"container": statusDesktop_mainWindow_overl
 
 """Confirm recovery phrase modal"""
 confirmRecoveryPhraseModal = {"container": statusDesktop_mainWindow_overlay, "type": "BackupSeedphraseVerify", "unnamed": 1, "visible": True}
-seedInput = {"container": statusDesktop_mainWindow_overlay, "objectName": RegularExpression("seedInput_*"), "type": "SeedphraseVerifyInput", "visible": True}
+seedInput = {"container": statusDesktop_mainWindow_overlay, "objectName": re.compile("seedInput_*"), "type": "SeedphraseVerifyInput", "visible": True}
 continueButton = {"container": statusDesktop_mainWindow_overlay, "text": "Continue", "type": "StatusButton", "unnamed": 1, "visible": True}
 
 """Keep or delete recovery phrase"""
@@ -351,10 +350,10 @@ communityProfilePopupInviteMessagePanel = {"container": statusDesktop_mainWindow
                                            "objectName": "CommunityProfilePopupInviteMessagePanel_ColumnLayout",
                                            "type": "ProfilePopupInviteMessagePanel", "visible": True}
 o_StatusMemberListItem = {"container": statusDesktop_mainWindow_overlay,
-                          "objectName": RegularExpression("statusMemberListItem*"), "type": "StatusMemberListItem",
+                          "objectName": re.compile("statusMemberListItem*"), "type": "StatusMemberListItem",
                           "visible": True}
 memberListCheckbox = {"checkable": True, "container": statusDesktop_mainWindow_overlay,
-                      "objectName": RegularExpression("contactCheckbox-*"), "type": "StatusCheckBox", "visible": True}
+                      "objectName": re.compile("contactCheckbox-*"), "type": "StatusCheckBox", "visible": True}
 next_StatusButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay,
                      "objectName": "InviteFriendsToCommunityPopup_NextButton", "type": "StatusButton", "visible": True}
 communityProfilePopupInviteMessagePanel_MessageInput_TextEdit = {"container": communityProfilePopupInviteMessagePanel,
@@ -364,7 +363,7 @@ send_1_invite_StatusButton = {"checkable": False, "container": statusDesktop_mai
                               "objectName": "InviteFriendsToCommunityPopup_SendButton", "type": "StatusButton",
                               "visible": True}
 o_StatusMemberListItem_2 = {"container": communityProfilePopupInviteMessagePanel,
-                            "objectName": RegularExpression("statusMemberListItem*"), "type": "StatusMemberListItem",
+                            "objectName": re.compile("statusMemberListItem*"), "type": "StatusMemberListItem",
                             "visible": True}
 copy_icon_StatusIcon = {"container": statusDesktop_mainWindow_overlay, "objectName": "copy-icon", "type": "StatusIcon",
                         "visible": True}
@@ -404,16 +403,6 @@ pinnedMessagesPanel_unpin = {"container": statusDesktop_mainWindow_overlay, "obj
                              "type": "StatusMenuItem", "visible": True}
 chatToolbar_infoButton = {"container": statusDesktop_mainWindow, "objectName": "membersButton",
                           "type": "StatusFlatRoundButton", "visible": True}
-
-# Introduce Yourself popup
-introduceYourselfPopup = {"container": statusDesktop_mainWindow_overlay, "objectName": "IntroduceYourselfPopup",
-                          "type": "PopupItem", "visible": True}
-introduceYourselfSkipButton = {"container": introduceYourselfPopup,
-                               "objectName": "introduceSkipStatusFlatButton", "type": "StatusFlatButton",
-                               "visible": True}
-introduceYourselfEditProfileButton = {"container": introduceYourselfPopup,
-                                      "objectName": "introduceEditStatusFlatButton", "type": "StatusButton",
-                                      "visible": True}
 
 """ Settings """
 
@@ -558,7 +547,7 @@ contextMenu_PopupItem = {"container": statusDesktop_mainWindow_overlay, "objectN
 contextMenuItem = {"container": statusDesktop_mainWindow_overlay, "type": "StatusBaseText", "unnamed": 1,
                    "visible": True}
 contextMenuItem_AddWatchOnly = {"container": statusDesktop_mainWindow_overlay, "enabled": True,
-                                "objectName": RegularExpression("AccountMenu-AddWatchOnlyAccountAction*"),
+                                "objectName": re.compile("AccountMenu-AddWatchOnlyAccountAction*"),
                                 "type": "StatusMenuItem", "visible": True}
 contextSavedAddressEdit = {"container": statusDesktop_mainWindow, "objectName": "editSavedAddress",
                            "type": "StatusMenuItem", "visible": True}
@@ -566,7 +555,7 @@ contextSavedAddressDelete = {"container": statusDesktop_mainWindow, "objectName"
                              "type": "StatusMenuItem", "visible": True}
 
 # Confirmation Popup
-confirmButton = {"container": statusDesktop_mainWindow_overlay, "objectName": RegularExpression("confirm*"),
+confirmButton = {"container": statusDesktop_mainWindow_overlay, "objectName": re.compile("confirm*"),
                  "type": "StatusButton"}
 mainWallet_Saved_Addresses_More_Confirm_Delete = {"container": statusDesktop_mainWindow,
                                                   "objectName": "RemoveSavedAddressPopup-ConfirmButton",
@@ -640,12 +629,12 @@ headerCloseButton_StatusFlatRoundButton = {"container": statusDesktop_mainWindow
                                            "visible": True}
 
 # Wallet Account Popup
-mainWallet_AddEditAccountPopup_derivationPath = {"container": statusDesktop_mainWindow, "objectName": RegularExpression(
+mainWallet_AddEditAccountPopup_derivationPath = {"container": statusDesktop_mainWindow, "objectName": re.compile(
     "AddAccountPopup-PreDefinedDerivationPath*"), "type": "StatusListItem", "visible": True}
 mainWallet_Address_Panel = {"container": statusDesktop_mainWindow, "objectName": "addressPanel",
                             "type": "StatusAddressPanel", "visible": True}
 addAccountPopup_GeneratedAddress = {"container": statusDesktop_mainWindow_overlay,
-                                    "objectName": RegularExpression("AddAccountPopup-GeneratedAddress*"),
+                                    "objectName": re.compile("AddAccountPopup-GeneratedAddress*"),
                                     "type": "Rectangle", "visible": True}
 accountAddressSelectionModal = {"container": statusDesktop_mainWindow_overlay, "objectName": "AccountAddressSelection",
                                 "type": "PopupItem", "visible": True}
@@ -653,7 +642,7 @@ addAccountPopup_GeneratedAddressesListPageIndicatior_StatusPageIndicator = {
     "container": statusDesktop_mainWindow_overlay, "objectName": "AddAccountPopup-GeneratedAddressesListPageIndicatior",
     "type": "StatusPageIndicator", "visible": True}
 page_StatusBaseButton = {"container": addAccountPopup_GeneratedAddressesListPageIndicatior_StatusPageIndicator,
-                         "objectName": RegularExpression("Page-*"), "type": "StatusBaseButton", "visible": True}
+                         "objectName": re.compile("Page-*"), "type": "StatusBaseButton", "visible": True}
 mainWindow_DisabledTooltipButton = {"container": statusDesktop_mainWindow, "type": "DisabledTooltipButton",
                                     "icon": "send", "visible": True}
 
@@ -826,7 +815,7 @@ editWalletSettings_EmojiSelector = {"container": statusDesktop_mainWindow_overla
 editWalletSettings_ColorSelector = {"container": statusDesktop_mainWindow_overlay, "type": "StatusColorRadioButton",
                                     "unnamed": 1, "visible": True}
 editWalletSettings_EmojiItem = {"container": statusDesktop_mainWindow_overlay,
-                                "objectName": RegularExpression("statusEmoji_*"), "type": "StatusEmoji"}
+                                "objectName": re.compile("statusEmoji_*"), "type": "StatusEmoji"}
 
 # Remove Account from settings popup
 removeAccountConfirmationPopup = {"container": statusDesktop_mainWindow_overlay,
@@ -839,7 +828,7 @@ removeConfirmationTextTitle = {"container": statusDesktop_mainWindow_overlay, "o
 removeConfirmationTextBody = {"container": statusDesktop_mainWindow_overlay, "type": "StatusBaseText", "unnamed": 1,
                               "visible": True}
 removeConfirmationRemoveButton = {"container": statusDesktop_mainWindow_overlay,
-                                  "objectName": RegularExpression("confirm*"), "type": "StatusButton"}
+                                  "objectName": re.compile("confirm*"), "type": "StatusButton"}
 removeConfirmationAgreementCheckBox = {"container": statusDesktop_mainWindow_overlay,
                                        "objectName": "RemoveAccountPopup-HavePenPaper", "type": "StatusCheckBox"}
 removeConfirmationConfirmButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay,
@@ -1031,7 +1020,7 @@ sendModalMaxButton = {"container": statusDesktop_mainWindow_overlay, "objectName
 
 # Network selector
 sendModalNetworkSelectorItem = {"container": statusDesktop_mainWindow_overlay,
-                                "objectName": RegularExpression("networkSelectorDelegate_*"),
+                                "objectName": re.compile("networkSelectorDelegate_*"),
                                 "type": "NetworkSelectItemDelegate", "visible": True}
 
 # Sign Send modal
@@ -1095,12 +1084,12 @@ swapModalPayAssetsPanel = {"container": statusDesktop_mainWindow_overlay, "objec
 swapModalReceiveAssetsPanel = {"container": statusDesktop_mainWindow, "objectName": "swapReceiveAssetsPanel", "type": "SearchableAssetsPanel", "visible": True}
 swapModalPaySearchBox = {"container": swapModalPayAssetsPanel, "objectName": "searchBox", "type": "TokenSearchBox", "visible": True}
 swapModalReceiveSearchBox = {"container": swapModalReceiveAssetsPanel, "objectName": "searchBox", "type": "TokenSearchBox", "visible": True}
-swapModalPayChainChip = {"container": swapModalPayAssetsPanel, "objectName": RegularExpression("chainChip_.*"), "type": "Chip", "visible": True}
-swapModalReceiveChainChip = {"container": swapModalReceiveAssetsPanel, "objectName": RegularExpression("chainChip_.*"), "type": "Chip", "visible": True}
+swapModalPayChainChip = {"container": swapModalPayAssetsPanel, "objectName": re.compile("chainChip_.*"), "type": "Chip", "visible": True}
+swapModalReceiveChainChip = {"container": swapModalReceiveAssetsPanel, "objectName": re.compile("chainChip_.*"), "type": "Chip", "visible": True}
 swapModalPayAssetsListView = {"container": swapModalPayAssetsPanel, "objectName": "assetsListView", "type": "StatusListView", "visible": True}
 swapModalReceiveAssetsListView = {"container": swapModalReceiveAssetsPanel, "objectName": "assetsListView", "type": "StatusListView", "visible": True}
-swapModalPayAssetDelegate = {"container": swapModalPayAssetsListView, "objectName": RegularExpression("tokenSelectorAssetDelegate_.*"), "type": "TokenSelectorAssetDelegate", "visible": True}
-swapModalReceiveAssetDelegate = {"container": swapModalReceiveAssetsListView, "objectName": RegularExpression("tokenSelectorAssetDelegate_.*"), "type": "TokenSelectorAssetDelegate", "visible": True}
+swapModalPayAssetDelegate = {"container": swapModalPayAssetsListView, "objectName": re.compile("tokenSelectorAssetDelegate_.*"), "type": "TokenSelectorAssetDelegate", "visible": True}
+swapModalReceiveAssetDelegate = {"container": swapModalReceiveAssetsListView, "objectName": re.compile("tokenSelectorAssetDelegate_.*"), "type": "TokenSelectorAssetDelegate", "visible": True}
 swapSignModal = {"container": statusDesktop_mainWindow_overlay, "objectName": "SwapSignModal", "type": "PopupItem", "visible": True}
 swapSignModalSignButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "objectName": "signButton", "text": "Sign", "type": "StatusButton", "visible": True}
 
@@ -1113,7 +1102,7 @@ tokenSelectorPanel_AssetsTab = {"container": tokensTabBar_StatusTabBar, "objectN
 tokenSelectorPanel_CollectiblesTab = {"container": tokensTabBar_StatusTabBar, "objectName": "collectiblesTab",
                                       "type": "StatusTabButton", "visible": True}
 tokenSelectorAssetDelegate_template = {"container": statusDesktop_mainWindow_overlay,
-                                       "objectName": RegularExpression("tokenSelectorAssetDelegate*"),
+                                       "objectName": re.compile("tokenSelectorAssetDelegate*"),
                                        "type": "TokenSelectorAssetDelegate", "visible": True}
 searchableCollectiblesPanel = {"container": statusDesktop_mainWindow_overlay, "id": "searchableCollectiblesPanel",
                                "type": "SearchableCollectiblesPanel", "unnamed": 1, "visible": True}
@@ -1123,7 +1112,7 @@ collectiblesInnerListView = {"container": statusDesktop_mainWindow_overlay, "typ
                              "visible": True}
 collectiblesListViewInnerItem = {"container": collectiblesListView, "type": "Item", "unnamed": 1, "visible": True}
 tokenSelectorCollectibleDelegate_template = {"container": statusDesktop_mainWindow_overlay,
-                                             "objectName": RegularExpression("tokenSelectorCollectibleDelegate_*"),
+                                             "objectName": re.compile("tokenSelectorCollectibleDelegate_*"),
                                              "type": "TokenSelectorCollectibleDelegate", "visible": True}
 tokenSelectorBackButton = {"container": statusDesktop_mainWindow_overlay, "id": "backButton",
                            "type": "StatusIconTextButton", "unnamed": 1, "visible": True}
@@ -1203,7 +1192,7 @@ qrUploadImageButton = {"container": statusDesktop_mainWindow_overlay, "objectNam
 
 # OS NAMES
 # Open Files Dialog
-chooseAnImageALogo_QQuickWindow = {"title": RegularExpression("Choose.*"), "type": "QQuickWindow", "unnamed": 1,
+chooseAnImageALogo_QQuickWindow = {"title": re.compile("Choose.*"), "type": "QQuickWindow", "unnamed": 1,
                                    "visible": True}
 choose_an_image_as_logo_titleBar_ToolBar = {"container": chooseAnImageALogo_QQuickWindow, "id": "titleBar",
                                             "type": "ToolBar", "unnamed": 1, "visible": True}
@@ -1226,7 +1215,7 @@ mainWallet_All_Accounts_Button = {"container": walletAccounts_StatusListView, "o
 mainWallet_Add_Account_Button = {"container": statusDesktop_mainWindow, "objectName": "addAccountButton",
                                  "type": "StatusRoundButton", "visible": True}
 walletAccount_StatusListItem = {"container": walletAccounts_StatusListView,
-                                "objectName": RegularExpression("walletAccount*"), "type": "StatusListItem",
+                                "objectName": re.compile("walletAccount*"), "type": "StatusListItem",
                                 "visible": True}
 mainWallet_All_Accounts_Balance = {"container": mainWallet_All_Accounts_Button,
                                    "objectName": "walletLeftListAmountValue", "type": "StatusTextWithLoadingState",
@@ -1242,11 +1231,11 @@ mainWallet_Saved_Addresses_Add_Buttton = {"container": mainWindow_SavedAddresses
 mainWallet_Saved_Addresses_List = {"container": mainWindow_SavedAddressesView,
                                    "objectName": "SavedAddressesView_savedAddresses", "type": "StatusListView"}
 savedAddressView_Delegate = {"container": mainWallet_Saved_Addresses_List,
-                             "objectName": RegularExpression("savedAddressView_Delegate*"),
+                             "objectName": re.compile("savedAddressView_Delegate*"),
                              "type": "SavedAddressesDelegate", "visible": True}
 send_StatusRoundButton = {"container": "", "type": "StatusRoundButton", "unnamed": 1, "visible": True}
 savedAddressView_Delegate_menuButton = {"container": mainWindow_SavedAddressesView,
-                                        "objectName": RegularExpression("savedAddressView_Delegate_menuButton*"),
+                                        "objectName": re.compile("savedAddressView_Delegate_menuButton*"),
                                         "type": "StatusRoundButton", "visible": True}
 savedAddressesArea_SavedAddresses = {"container": mainWindow_SavedAddressesView, "objectName": "savedAddressesArea",
                                      "type": "SavedAddresses", "visible": True}

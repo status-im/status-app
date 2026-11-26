@@ -21,7 +21,7 @@ class ProcessSampleStats:
 
 
 def resolve_monitored_pid(pid: int, app_path=None, app_data=None) -> int:
-    """Use the real AUT process when pid points at an idle startaut wrapper."""
+    """Use the real AUT process when pid points at an idle launcher, such as an AppImage's AppRun."""
     if app_path is None:
         return pid
 

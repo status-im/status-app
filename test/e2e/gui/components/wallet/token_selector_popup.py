@@ -44,12 +44,12 @@ class TokenSelectorPopup(QObject):
 
         def asset_found():
             found[:] = [
-                item for item in driver.findAllObjects(self.asset_list_item.real_name)
+                item for item in driver.find_all(self.asset_list_item.real_name)
                 if getattr(item, 'symbol', '') == asset_name
             ]
             return bool(found)
 
-        assert driver.waitFor(asset_found, configs.timeouts.LOADING_LIST_TIMEOUT_MSEC), (
+        assert driver.wait_until(asset_found, configs.timeouts.LOADING_LIST_TIMEOUT_MSEC), (
             f'Asset with symbol "{asset_name}" did not appear'
         )
         QObject(found[0]).click(x=10, y=10)
@@ -74,13 +74,13 @@ class SearchableCollectiblesPanelView(TokenSelectorPopup):
         return self
 
     def _collectibles(self):
-        return driver.findAllObjects(self.collectible_list_item.real_name)
+        return driver.find_all(self.collectible_list_item.real_name)
 
     def _wait_collectibles_loaded(
         self,
         timeout_msec: int = configs.timeouts.COLLECTIBLES_SYNC_TIMEOUT_MSEC,
     ):
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: bool(self._collectibles()),
             timeout_msec,
         ), 'Collectibles list did not load in token selector'
@@ -109,7 +109,7 @@ class SearchableCollectiblesPanelView(TokenSelectorPopup):
             found[:] = collections or matches
             return bool(found)
 
-        assert driver.waitFor(
+        assert driver.wait_until(
             collection_found,
             configs.timeouts.LOADING_LIST_TIMEOUT_MSEC,
         ), f'Collectible collection "{collection_name}" did not appear in search'

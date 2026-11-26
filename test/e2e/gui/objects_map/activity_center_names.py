@@ -1,5 +1,4 @@
 from gui.objects_map.names import statusDesktop_mainWindow
-from objectmaphelper import *
 
 # Map for activity center
 

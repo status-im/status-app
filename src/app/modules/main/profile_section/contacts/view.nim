@@ -57,6 +57,7 @@ QtObject:
     notify = contactsModelChanged
 
   proc contactInfoRequestFinished(self: View, publicKey: string, ok: bool) {.signal.}
+  proc localContactRequestCompleted*(self: View) {.signal.}
 
   proc sendContactRequest*(self: View, publicKey: string, message: string) {.slot.} =
     self.delegate.sendContactRequest(publicKey, message)

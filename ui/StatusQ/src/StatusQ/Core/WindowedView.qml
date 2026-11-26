@@ -99,6 +99,7 @@ Flickable {
     // Extra space at the screen's top and bottom edges of the content.
     property real topPadding: 0
     property real bottomPadding: 0
+    property real rightPadding: 0
 
     // Set by whoever owns the data: is there anything beyond each edge? Top
     // and bottom are the screen's, so an owner whose model runs the other way
@@ -2176,7 +2177,7 @@ Flickable {
     Column {
         id: rowsColumn
 
-        width: root.width
+        width: root.width - root.rightPadding
 
         // Rendering bottom-up, rows too few to fill the viewport rest on its
         // bottom edge rather than hanging from the top - a chat with three

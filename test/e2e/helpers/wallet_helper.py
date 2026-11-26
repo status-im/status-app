@@ -27,25 +27,25 @@ def wait_for_wallet_balances_loaded(
     balance = wallet_left_panel.all_accounts_balance
     balance.wait_until_appears(timeout_msec)
 
-    assert driver.waitFor(
+    assert driver.wait_until(
         lambda: not getattr(balance.object, 'loading', False) and bool(balance.text.strip()),
         timeout_msec,
     ), f'Wallet total balance is still loading, got: {balance.text!r}'
 
 
 def is_assets_tab_content_loaded(asset_item) -> bool:
-    views = driver.findAllObjects(wallet_names.assets_view)
+    views = driver.find_all(wallet_names.assets_view)
     try:
         if not (views and getattr(views[0], 'visible', False)):
             return False
     except (RuntimeError, AttributeError):
         return False
 
-    shells = driver.findAllObjects(wallet_names.assets_viewTokenRowShell)
+    shells = driver.find_all(wallet_names.assets_viewTokenRowShell)
     if shells and not all(getattr(shell, 'contentReady', False) for shell in shells):
         return False
 
-    items = driver.findAllObjects(asset_item.real_name)
+    items = driver.find_all(asset_item.real_name)
     return bool(items) and all(not getattr(item, 'balanceLoading', False) for item in items)
 
 
@@ -66,9 +66,9 @@ def find_network_option_item(network_name: str, network_options: list):
 
 
 def network_selector_options(delegate_real_name, fallback_real_name=None) -> list:
-    options = list(driver.findAllObjects(delegate_real_name))
+    options = list(driver.find_all(delegate_real_name))
     if not options and fallback_real_name is not None:
-        options = list(driver.findAllObjects(fallback_real_name))
+        options = list(driver.find_all(fallback_real_name))
     return options
 
 
@@ -102,10 +102,10 @@ def select_network_in_filter(
     retry_wait_msec = min(timeout_msec, 2000)
     for attempt in range(2):
         if attempt > 0:
-            driver.type(network_filter.object, '<Escape>')
+            driver.type_text(network_filter.object, '<Escape>')
             time.sleep(0.1)
         network_filter.click()
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: network_selector_options(option_delegate_real_name, option_fallback_real_name),
             timeout_msec,
         ), 'Network options are not displayed'
@@ -115,7 +115,7 @@ def select_network_in_filter(
             return
 
         wait_msec = retry_wait_msec if attempt == 0 else timeout_msec
-        if driver.waitFor(lambda: _network_selected(selected_label, network_name), wait_msec):
+        if driver.wait_until(lambda: _network_selected(selected_label, network_name), wait_msec):
             return
 
     assert False, (
@@ -125,7 +125,7 @@ def select_network_in_filter(
 
 
 def is_activity_tab_content_loaded() -> bool:
-    views = driver.findAllObjects(wallet_names.activity_history_view)
+    views = driver.find_all(wallet_names.activity_history_view)
     try:
         return bool(views) and bool(getattr(views[0], 'contentLoaded', False))
     except (RuntimeError, AttributeError):

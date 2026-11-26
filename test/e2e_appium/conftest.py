@@ -297,13 +297,22 @@ def pytest_runtest_setup(item):
 # trylast so -m deselection has already run.
 @pytest.hookimpl(trylast=True)
 def pytest_collection_modifyitems(config, items):
-    """Automatically add single_device marker to tests with device_count(1)."""
+    """Add the single_device marker to tests with device_count(1), and turn
+    ``xfail_ios`` into ``xfail`` when the run targets iOS."""
     # Before anything else: loadscope hands modules out in collection order, so
     # the longest must be first or a worker starts it once the others are idle.
     # Deselection below only removes items, which keeps this order intact.
     items[:] = collection_order.heaviest_first(items)
 
+    from support.platform import target_platform
+    on_ios = target_platform(config.getoption("--env")) == "ios"
+
     for item in items:
+        xfail_ios = item.get_closest_marker("xfail_ios")
+        if xfail_ios and on_ios:
+            reason = xfail_ios.args[0] if xfail_ios.args else xfail_ios.kwargs.get("reason", "")
+            item.add_marker(pytest.mark.xfail(reason=reason, strict=False))
+
         device_count_marker = item.get_closest_marker("device_count")
         if device_count_marker:
             count = None

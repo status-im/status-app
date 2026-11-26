@@ -16,6 +16,7 @@ Loader {
     id: root
 
     required property Item popupParent
+    required property QtObject messageBackupSettings
 
     required property AppStores.RootStore rootStore
     required property AppStores.FeatureFlagsStore featureFlagsStore
@@ -68,6 +69,7 @@ Loader {
         d.sourceSet = true
         setSource(QmlCompiler.handlersManagerUrl, {
             popupParent:            Qt.binding(() => root.popupParent),
+            messageBackupSettings:  Qt.binding(() => root.messageBackupSettings),
             rootStore:              Qt.binding(() => root.rootStore),
             featureFlagsStore:      Qt.binding(() => root.featureFlagsStore),
             contactsStore:          Qt.binding(() => root.contactsStore),

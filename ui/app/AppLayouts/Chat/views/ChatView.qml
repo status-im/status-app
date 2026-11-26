@@ -61,8 +61,18 @@ Item {
     readonly property bool canGoBack: root.sectionLayout?.canGoBack ?? false
 
     readonly property QtObject contentHistory: QtObject {
-        readonly property bool canGoBack: !!d.openThreadId && d.threadOpenedFromInfo
+        readonly property bool canGoBackToParentChat: !!infoMessageStore.threadId && !!d.parentChatIdForMainPaneThreadBack()
+                                                       && !root.contentLocked && !root.allChannelsAreHiddenBecauseNotPermitted &&
+                                                       (!root.sectionLayout?.isPortrait ||
+                                                        root.sectionLayout.currentIndex === StatusSectionLayout.CentralPanel)
+        readonly property bool canGoBack: canGoBackToParentChat || (!!d.openThreadId && d.threadOpenedFromInfo)
         function tryGoBack() {
+            if (canGoBackToParentChat) {
+                const parentChatId = d.parentChatIdForMainPaneThreadBack()
+                root.subsectionHistory.dropLeaf()
+                root.rootStore.chatCommunitySectionModule.setActiveItem(parentChatId)
+                return true
+            }
             if (!canGoBack)
                 return false
             d.closeThreadPanel()
@@ -100,6 +110,7 @@ Item {
     property DelegatePool rowPool: null
     property ChatTextAppearance textAppearance
     property ChatTextAppearance previewAppearance
+    property MessageHeaderServices messageHeaderServices
     property bool stickersLoaded: false
 
     readonly property var chatContentModule: rootStore.currentChatContentModule() || null
@@ -148,7 +159,8 @@ Item {
             const m = root.rootStore.chatCommunitySectionModule
             return m && m.activeItem ? m.activeItem.id : ""
         }
-        validateFn: (id) => ModelUtils.indexOf(root.rootStore.chatCommunitySectionModule.model, "itemId", id) >= 0
+        validateFn: (id) => id !== root.activeItemId &&
+                            ModelUtils.indexOf(root.rootStore.chatCommunitySectionModule.model, "itemId", id) >= 0
         onNavigateRequested: (key) => root.rootStore.chatCommunitySectionModule.setActiveItem(key)
     }
 
@@ -240,6 +252,12 @@ Item {
             if (!requestId)
                 threadDraftError = qsTr("Couldn't send thread reply. Try again.")
         }
+        // Portrait keeps adjacent pages alive outside the clipped viewport.
+        function panelInView(index: int): bool {
+            return !root.sectionLayout?.isPortrait
+                    || (!root.sectionLayout.panelSwitchOngoing && root.sectionLayout.currentIndex === index)
+        }
+
         readonly property bool threadPanelOpen: !!openThreadId || !!newThreadParentMessageId
         readonly property string openThreadId: root.rootStore.openThreadId
         readonly property string openThreadName: root.rootStore.openThreadName
@@ -248,6 +266,21 @@ Item {
         property int infoTab: ChatInfoPanel.Default
         property bool threadOpenedFromInfo: false
         property string threadNameEditId
+
+        function parentChatIdForMainPaneThreadBack(): string {
+            if (!infoMessageStore.threadId)
+                return ""
+            const chatId = infoMessageStore.chatId
+            if (chatId && chatId !== root.activeItemId)
+                return chatId
+            const model = root.rootStore.chatCommunitySectionModule?.model
+            if (!model)
+                return ""
+            const idx = ModelUtils.indexOf(model, "itemId", root.activeItemId)
+            if (idx < 0)
+                return ""
+            return ModelUtils.get(model, idx, "parentChatId") || ""
+        }
 
         function getThreadMessageModule(threadId) {
             const section = root.rootStore.chatCommunitySectionModule
@@ -258,6 +291,16 @@ Item {
         }
 
         function editThreadName(threadId, threadName, parentChatId) {
+            if (threadId === infoMessageStore.threadId) {
+                d.requestCenterPanel()
+                if (root.sectionLayout?.isPortrait)
+                    root.sectionLayout.setCurrentIndex(StatusSectionLayout.CentralPanel)
+                const header = headerContentLoader.item
+                if (header instanceof ChatHeaderContentView)
+                    header.beginThreadNameEdit(threadId)
+                return
+            }
+
             root.rootStore.chatCommunitySectionModule.setActiveItem(parentChatId)
             threadOpenedFromInfo = false
             threadNameEditId = threadId
@@ -526,7 +569,26 @@ Item {
         onLoaded: d.requestCenterPanel()
     }
 
+    readonly property bool mainViewShowsThread: !!infoMessageStore.threadId
+
+    onMainViewShowsThreadChanged: {
+        if (mainViewShowsThread) {
+            // Cancel pending swipe cleanup so it cannot clear the saved Info request.
+            d.threadPanelRevision++
+        } else if (root.showUsersList && root.sectionLayout?.isPortrait) {
+            Qt.callLater(() => {
+                if (!root.mainViewShowsThread && root.showRightPanel && root.showUsersList
+                        && root.sectionLayout?.currentIndex === StatusSectionLayout.CentralPanel)
+                    root.sectionLayout.setCurrentIndex(StatusSectionLayout.RightPanel)
+            })
+        }
+    }
+
     readonly property bool showRightPanel: {
+        // Keep the Info request and tab so the chat can restore them on return.
+        if (root.mainViewShowsThread)
+            return false
+
         if (d.threadPanelOpen)
             return true
 
@@ -542,7 +604,8 @@ Item {
     // only because its answer is not known yet. Let the section chrome keep
     // the user-requested members column in that interval instead of resizing
     // from shown → hidden → shown as this view initializes.
-    readonly property bool rightPanelDecisionReady: d.threadPanelOpen
+    readonly property bool rightPanelDecisionReady: root.mainViewShowsThread
+                                                  || d.threadPanelOpen
                                                   || !root.showUsersList
                                                   || root.contentLocked
                                                   || root.rootStore.openCreateChat
@@ -655,9 +718,13 @@ Item {
         ChatInfoPanel {
             id: infoPanel
             sectionModule: root.rootStore.chatCommunitySectionModule
+            canManageThread: (threadId, parentChatId) =>
+                infoMessageStore.chatId === parentChatId && infoMessageStore.canManageThreadById(threadId)
+            threadChangesPending: infoMessageStore.threadDeletePending || infoMessageStore.threadEditPending
             headerInToolbar: !!root.sectionLayout?.isPortrait
             visible: rightPanelLoader.status === Loader.Ready
             chatKey: root.chatContentModule?.getMyChatId() ?? ""
+            myPublicKey: root.myPublicKey
             membersAvailable: root.chatContentModule?.chatDetails.isUsersListAvailable ?? false
             threadsEnabled: root.threadsFeatureEnabled && !(root.chatContentModule?.messagesModule.threadId ?? "")
             threadsModel: currentTab === ChatInfoPanel.Threads && threadsEnabled
@@ -677,6 +744,18 @@ Item {
             }
             onRenameThreadRequested: (threadId, threadName, parentChatId) =>
                 d.renameThreadFromList(threadId, threadName, parentChatId)
+            onThreadMuteRequested: (threadId, parentChatId, interval) => {
+                if (infoMessageStore.chatId === parentChatId)
+                    infoMessageStore.setThreadMutedById(threadId, interval)
+            }
+            onThreadFollowRequested: (threadId, parentChatId, followed) => {
+                if (infoMessageStore.chatId === parentChatId)
+                    infoMessageStore.setThreadFollowedById(threadId, followed)
+            }
+            onThreadDeleteRequested: (threadId, parentChatId) => {
+                if (infoMessageStore.chatId === parentChatId)
+                    infoMessageStore.deleteThreadById(threadId)
+            }
         }
     }
 
@@ -922,6 +1001,7 @@ Item {
                 delegate: ChatColumnView {
                     textAppearance: root.textAppearance
                     previewAppearance: root.previewAppearance
+                    messageHeaderServices: root.messageHeaderServices
                     Layout.fillWidth: true
                     Layout.fillHeight: true
 
@@ -931,6 +1011,7 @@ Item {
                     rootStore: root.rootStore
                     createChatPropertiesStore: root.createChatPropertiesStore
                     messagesViewEnabled: rightPanelLoader.status === Loader.Ready
+                    panelInView: d.panelInView(StatusSectionLayout.RightPanel)
                     areTestNetworksEnabled: root.areTestNetworksEnabled
                     stickersLoaded: root.stickersLoaded
                     reactionEmojiModel: root.reactionEmojiModel
@@ -994,6 +1075,9 @@ Item {
         }
 
         function onSwiped(previous, current) {
+            if (root.mainViewShowsThread)
+                return
+
             // showUsersList is normally cleared by swiping back, but may
             // remain true e.g. by closing app with user list open or in
             // case of dynamic layout change. In that case the flag should be
@@ -1001,7 +1085,10 @@ Item {
             if (previous === StatusSectionLayout.LeftPanel
                 && current === StatusSectionLayout.CentralPanel
                 && root.showUsersList) {
-                Qt.callLater(() => root.showUsersListRequested(false))
+                Qt.callLater(() => {
+                    if (!root.mainViewShowsThread)
+                        root.showUsersListRequested(false)
+                })
             }
 
             if (previous !== StatusSectionLayout.RightPanel)
@@ -1035,10 +1122,6 @@ Item {
             threadMuted: infoMessageStore.threadMuted
             onMuteThreadRequested: interval => infoMessageStore.setThreadMuted(interval)
             onUnmuteThreadRequested: infoMessageStore.setThreadMuted(Constants.MutingVariations.Unmuted)
-
-            onEditThreadRequested: threadId => {
-                d.editThreadName(threadId, root.activeItemName, root.chatContentModule.messagesModule.getChatId())
-            }
 
             onSearchButtonClicked: root.openAppSearch(root.chatContentModule?.getMyChatId() ?? "",
                                                        root.chatContentModule?.messagesModule.threadId ?? "")
@@ -1101,6 +1184,7 @@ Item {
             threadName: root.activeItemName
 
             messagesViewEnabled: centerPanelLoader.status === Loader.Ready
+            panelInView: d.panelInView(StatusSectionLayout.CentralPanel)
 
             areTestNetworksEnabled: root.areTestNetworksEnabled
             createChatPropertiesStore: root.createChatPropertiesStore
@@ -1109,6 +1193,7 @@ Item {
             rowPool: root.rowPool
             textAppearance: root.textAppearance
             previewAppearance: root.previewAppearance
+            messageHeaderServices: root.messageHeaderServices
             viewAndPostHoldingsModel: root.viewAndPostPermissionsModel
             getTokenByKeyOrGroupKeyFromAllTokens: root.getTokenByKeyOrGroupKeyFromAllTokens
             canPost: !root.rootStore.chatCommunitySectionModule.isCommunity() || root.canPost
@@ -1302,7 +1387,7 @@ Item {
 
     onShowUsersListChanged: {
         Qt.callLater(() => {
-            if (root.showUsersList) {
+            if (root.showUsersList && !root.mainViewShowsThread) {
                 d.requestCenterPanel()
                 root.sectionLayout?.goToNextPanel()
             }

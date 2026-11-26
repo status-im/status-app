@@ -29,7 +29,7 @@ class List(QObject):
 
     @allure.step('Select item {1} in {0}')
     def select(self, value: str, attr_name: str):
-        driver.mouseClick(self.wait_for_item(value, attr_name))
+        driver.click(self.wait_for_item(value, attr_name))
         LOG.info(f'{self}: {value} selected')
 
     @allure.step('Wait for item {1} in {0} with attribute {2}')

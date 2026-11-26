@@ -51,7 +51,7 @@ def test_community_admin_ban_kick_member_and_delete_message(multiple_instances):
         with step(f'User {user_one.name}, accept invitation from {user_two.name}'):
             switch_to_aut(aut_one, main_screen)
             messages_view = main_screen.left_panel.open_messages_screen()
-            assert driver.waitFor(lambda: user_two.name in messages_view.left_panel.get_chats_names,
+            assert driver.wait_until(lambda: user_two.name in messages_view.left_panel.get_chats_names,
                                   10000)
             chat = messages_view.left_panel.click_chat_by_name(user_two.name)
             skip_message_backup_popup_if_visible()
@@ -62,7 +62,7 @@ def test_community_admin_ban_kick_member_and_delete_message(multiple_instances):
             assert community.name in welcome_popup.title
             assert community.introduction == welcome_popup.intro
             welcome_popup.join().authenticate(user_one.password)
-            assert driver.waitFor(lambda: not community_screen.left_panel.is_join_community_visible,
+            assert driver.wait_until(lambda: not community_screen.left_panel.is_join_community_visible,
                                   10000), 'Join community button not hidden'
             main_screen.minimize()
 
@@ -78,11 +78,11 @@ def test_community_admin_ban_kick_member_and_delete_message(multiple_instances):
 
         with step(f'User {user_two.name}, does not see {user_one.name} in members list'):
             members_list = community_screen.right_panel.members
-            assert driver.waitFor(lambda: user_one.name not in members_list, timeout)
+            assert driver.wait_until(lambda: user_one.name not in members_list, timeout)
 
         with step(f'User {user_two.name}, see {user_one.name} in banned members list'):
             community_screen.right_panel.click_banned_button()
-            assert driver.waitFor(lambda: user_one.name not in members_list, timeout)
+            assert driver.wait_until(lambda: user_one.name not in members_list, timeout)
             main_screen.minimize()
 
         with step(f'User {user_one.name} tries to join community when being banned by {user_two.name}'):
@@ -113,7 +113,7 @@ def test_community_admin_ban_kick_member_and_delete_message(multiple_instances):
 
             welcome_popup = community_screen.left_panel.open_welcome_community_popup()
             welcome_popup.join().authenticate(user_one.password)
-            assert driver.waitFor(lambda: not community_screen.left_panel.is_join_community_visible,
+            assert driver.wait_until(lambda: not community_screen.left_panel.is_join_community_visible,
                               10000), 'Join community button not hidden'
             main_screen.minimize()
 
@@ -125,7 +125,7 @@ def test_community_admin_ban_kick_member_and_delete_message(multiple_instances):
 
 
         with step(f'User {user_two.name}, does not see {user_one.name} in members list'):
-            assert driver.waitFor(lambda: user_one.name not in community_screen.right_panel.members, timeout)
+            assert driver.wait_until(lambda: user_one.name not in community_screen.right_panel.members, timeout)
             main_screen.minimize()
 
         with step(f'User {user_one.name} can rejoin community after being kicked'):
@@ -135,5 +135,5 @@ def test_community_admin_ban_kick_member_and_delete_message(multiple_instances):
             community_screen = chat.click_community_invite_message()
             welcome_popup = community_screen.left_panel.open_welcome_community_popup()
             welcome_popup.join().authenticate(user_one.password)
-            assert driver.waitFor(lambda: not community_screen.left_panel.is_join_community_visible,
+            assert driver.wait_until(lambda: not community_screen.left_panel.is_join_community_visible,
                                   10000), 'Join community button not hidden'

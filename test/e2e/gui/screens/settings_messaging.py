@@ -71,15 +71,15 @@ class ContactItem:
         self.contact = str(self.object.userName)
         for child in walk_children(self.object):
             if str(getattr(child, 'id', '')) == 'iconOrImage':
-                self.icon = Image(driver.objectMap.realName(child))
+                self.icon = Image(child)
             elif str(getattr(child, 'objectName', '')) == 'moreBtn':
-                self._open_canvas_button = Button(real_name=driver.objectMap.realName(child))
+                self._open_canvas_button = Button(real_name=child)
             elif str(getattr(child, 'objectName', '')) == 'acceptBtn':
-                self._accept_button = Button(real_name=driver.objectMap.realName(child))
+                self._accept_button = Button(real_name=child)
             elif str(getattr(child, 'objectName', '')) == 'declineBtn':
-                self._reject_button = Button(real_name=driver.objectMap.realName(child))
+                self._reject_button = Button(real_name=child)
             elif str(getattr(child, 'objectName', '')) == 'chat-icon':
-                self._chat_button = Button(real_name=driver.objectMap.realName(child))
+                self._chat_button = Button(real_name=child)
 
     @allure.step('Accept request')
     def accept(self) -> MessagesScreen:
@@ -97,7 +97,7 @@ class ContactItem:
     def open_more_options_popup(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC, attempt: int = 2):
         try:
             self._open_canvas_button.click()
-            driver.waitFor(lambda: ContactsSettingsView()._view_profile_item.is_visible, timeout_msec)
+            driver.wait_until(lambda: ContactsSettingsView()._view_profile_item.is_visible, timeout_msec)
             return self
         except:
             if attempt:
@@ -138,7 +138,7 @@ class ContactsSettingsView(QObject):
     def contact_items(self, attempts: int = 2) -> typing.List[ContactItem]:
         for _ in range(attempts):
             try:
-                contact_items = driver.findAllObjects(self.contact_item.wait_until_appears().real_name)
+                contact_items = driver.find_all(self.contact_item.wait_until_appears().real_name)
                 if contact_items:
                     return [ContactItem(item) for item in contact_items]
             except Exception:

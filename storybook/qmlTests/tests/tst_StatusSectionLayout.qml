@@ -1,3 +1,4 @@
+import QtCore
 import QtQuick
 import QtTest
 
@@ -58,6 +59,11 @@ Item {
         }
     }
 
+    Component {
+        id: settingsProbeComponent
+        Settings {}
+    }
+
     SignalSpy {
         id: startedSpy
         signalName: "panelSwitchStarted"
@@ -89,16 +95,59 @@ Item {
         }
 
         function createLandscapeLayout(userUID, sectionName) {
-            const item = createTemporaryObject(landscapeComponent, root)
+            const leftPanel = createTemporaryObject(panelComponent, root)
+            const centerPanel = createTemporaryObject(panelComponent, root)
+            const rightPanel = createTemporaryObject(panelComponent, root)
+            verify(!!leftPanel && !!centerPanel && !!rightPanel)
+
+            const item = createTemporaryObject(landscapeComponent, root, {
+                userUID: userUID,
+                sectionName: sectionName,
+                leftPanel: leftPanel,
+                centerPanel: centerPanel,
+                rightPanel: rightPanel,
+                showRightPanel: true
+            })
             verify(!!item)
-            item.userUID = userUID
-            item.sectionName = sectionName
-            item.leftPanel = createTemporaryObject(panelComponent, root)
-            item.centerPanel = createTemporaryObject(panelComponent, root)
-            item.rightPanel = createTemporaryObject(panelComponent, root)
-            item.showRightPanel = true
             waitForRendering(item)
             return item
+        }
+
+        function dragSplitterMouse(target, startX, endX) {
+            const y = target.height / 2
+            mousePress(target, startX, y, Qt.LeftButton)
+            mouseMove(target, endX, y, 0, Qt.LeftButton)
+            mouseRelease(target, endX, y, Qt.LeftButton)
+        }
+
+        function dragSplitterTouch(target, startX, endX) {
+            const y = target.height / 2
+            const touch = touchEvent(target)
+            touch.press(0, target, startX, y)
+            touch.commit()
+            touch.move(0, target, endX, y)
+            touch.commit()
+            touch.release(0, target, endX, y)
+            touch.commit()
+        }
+
+        function readSplitStateBytes(probe) {
+            probe.sync()
+            const v = probe.value("splitView")
+            if (v === undefined || v === null)
+                return ""
+            return v instanceof ArrayBuffer ? Array.from(new Uint8Array(v)).join(",") : String(v)
+        }
+
+        // QtCore.Settings batches writes on an internal 500ms timer; poll via a
+        // separate Settings instance so we wait deterministically without
+        // destroying the source layout (proving SplitHandle.onPressedChanged
+        // persisted the state rather than Component.onDestruction).
+        function waitForSplitStatePersisted(probe, previousBytes) {
+            tryVerify(() => {
+                const current = readSplitStateBytes(probe)
+                return current.length > 0 && current !== previousBytes
+            }, 2000)
         }
 
         // The loader holding each orientation's view.
@@ -134,6 +183,15 @@ Item {
             compare(portrait.item, null, "the portrait view is not built before it is chosen")
             rotate(true)
             verify(!!portrait.item)
+        }
+
+        function test_landscapeBackButtonStillFollowsItsLabelByDefault() {
+            const backButton = findChild(loaderOf("StatusSectionLayoutLandscape").item, "toolBarBackButton")
+            verify(!!backButton)
+            verify(!backButton.visible)
+            layout.backButtonName = "Settings"
+            tryCompare(backButton, "visible", true)
+            compare(backButton.text, "Settings")
         }
 
         // Hiding the section (as AppMain's StackLayout does) destroys nothing.
@@ -286,6 +344,24 @@ Item {
             compare(mirror.index, StatusSectionLayout.CentralPanel)
         }
 
+        function test_openCentralPanelBeforePortraitLoadsAndAfterBack() {
+            const portrait = loaderOf("StatusSectionLayoutPortrait")
+            verify(!!portrait, "Object exists")
+            compare(portrait.item, null)
+
+            layout.setCurrentIndex(StatusSectionLayout.CentralPanel)
+            const view = rotate(true).item
+            verify(!!view, "Object exists")
+            tryCompare(view, "currentIndex", StatusSectionLayout.CentralPanel)
+
+            verify(layout.tryGoBack())
+            tryCompare(view, "currentIndex", StatusSectionLayout.LeftPanel)
+            compare(layout.currentIndex, StatusSectionLayout.LeftPanel)
+
+            layout.setCurrentIndex(StatusSectionLayout.CentralPanel)
+            tryCompare(view, "currentIndex", StatusSectionLayout.CentralPanel)
+        }
+
         function test_landscapeSplitStateIsIsolatedPerUserAndSection() {
             const settingsA = Qt.createQmlObject(
                 'import QtCore; Settings { category: "%1_%2".arg("userA").arg("sectionA"); property int splitWidth: 420 }',
@@ -307,6 +383,100 @@ Item {
             compare(settingsA.splitWidth, 420)
             compare(settingsB.splitWidth, 300)
             compare(settingsC.splitWidth, 340)
+        }
+
+        function test_landscapeSplitterMouseDragSavesAndRestoresWidths() {
+            layout.visible = false
+
+            const probe = createTemporaryObject(settingsProbeComponent, root, {
+                category: "userMousePersist_chat"
+            })
+            verify(!!probe)
+
+            const first = createLandscapeLayout("userMousePersist", "chat")
+            const handleHalfWidth = 4
+            tryCompare(first, "leftPanelSlotWidth", 300)
+            tryCompare(first, "rightPanelSlotWidth", 300)
+
+            // Drag left handle +60px (300 -> 360) and right handle +60px (300 -> 240)
+            const leftHandleX = first.leftPanelSlotWidth + handleHalfWidth
+            dragSplitterMouse(first, leftHandleX, leftHandleX + 60)
+            tryCompare(first, "leftPanelSlotWidth", 360)
+
+            const beforeSecondDrag = readSplitStateBytes(probe)
+            const rightHandleX = first.width - first.rightPanelSlotWidth - handleHalfWidth
+            dragSplitterMouse(first, rightHandleX, rightHandleX + 60)
+            tryCompare(first, "rightPanelSlotWidth", 240)
+
+            waitForSplitStatePersisted(probe, beforeSecondDrag)
+            const reloaded = createLandscapeLayout("userMousePersist", "chat")
+            tryCompare(reloaded, "leftPanelSlotWidth", 360)
+            tryCompare(reloaded, "rightPanelSlotWidth", 240)
+
+            // A different user/section must not inherit the saved widths.
+            const other = createLandscapeLayout("userMouseOther", "chat")
+            tryCompare(other, "leftPanelSlotWidth", 300)
+            tryCompare(other, "rightPanelSlotWidth", 300)
+        }
+
+        function test_landscapeSplitterMinimumWidthsSaveAndRestore() {
+            layout.visible = false
+
+            const probe = createTemporaryObject(settingsProbeComponent, root, {
+                category: "userMinWidth_chat"
+            })
+            verify(!!probe)
+
+            const first = createLandscapeLayout("userMinWidth", "chat")
+            const handleHalfWidth = 4
+            tryCompare(first, "leftPanelSlotWidth", 300)
+            tryCompare(first, "rightPanelSlotWidth", 300)
+
+            // Drag both handles well past their minimum widths (200px left, 150px right)
+            const leftHandleX = first.leftPanelSlotWidth + handleHalfWidth
+            dragSplitterMouse(first, leftHandleX, 50)
+            tryCompare(first, "leftPanelSlotWidth", 200)
+
+            const beforeSecondDrag = readSplitStateBytes(probe)
+            const rightHandleX = first.width - first.rightPanelSlotWidth - handleHalfWidth
+            dragSplitterMouse(first, rightHandleX, first.width - 50)
+            tryCompare(first, "rightPanelSlotWidth", 150)
+
+            // Reload with the same userUID/sectionName before destroying `first`
+            waitForSplitStatePersisted(probe, beforeSecondDrag)
+            const reloaded = createLandscapeLayout("userMinWidth", "chat")
+            tryCompare(reloaded, "leftPanelSlotWidth", 200)
+            tryCompare(reloaded, "rightPanelSlotWidth", 150)
+        }
+
+        function test_landscapeSplitterTouchDragSavesAndRestoresWidths() {
+            layout.visible = false
+
+            const probe = createTemporaryObject(settingsProbeComponent, root, {
+                category: "userTouchPersist_chat"
+            })
+            verify(!!probe)
+
+            const first = createLandscapeLayout("userTouchPersist", "chat")
+            const handleHalfWidth = 4
+            tryCompare(first, "leftPanelSlotWidth", 300)
+            tryCompare(first, "rightPanelSlotWidth", 300)
+
+            // Touch-drag left handle -50px (300 -> 250) and right handle -40px (300 -> 340)
+            const leftHandleX = first.leftPanelSlotWidth + handleHalfWidth
+            dragSplitterTouch(first, leftHandleX, leftHandleX - 50)
+            tryCompare(first, "leftPanelSlotWidth", 250)
+
+            const beforeSecondDrag = readSplitStateBytes(probe)
+            const rightHandleX = first.width - first.rightPanelSlotWidth - handleHalfWidth
+            dragSplitterTouch(first, rightHandleX, rightHandleX - 40)
+            tryCompare(first, "rightPanelSlotWidth", 340)
+
+            // Reload while `first` is still alive
+            waitForSplitStatePersisted(probe, beforeSecondDrag)
+            const reloaded = createLandscapeLayout("userTouchPersist", "chat")
+            tryCompare(reloaded, "leftPanelSlotWidth", 250)
+            tryCompare(reloaded, "rightPanelSlotWidth", 340)
         }
     }
 }

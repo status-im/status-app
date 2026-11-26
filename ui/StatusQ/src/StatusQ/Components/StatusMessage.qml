@@ -19,6 +19,11 @@ Control {
 
     property ChatTextAppearance textAppearance
     property ChatTextAppearance previewAppearance
+    // Shared by every message of a view (or of the app, for pooled rows):
+    // the header's appearance, clock, tooltip and resend control. Required, so
+    // a message nobody wired fails at creation instead of silently rendering
+    // English, unthemed headers without tooltip or Resend.
+    required property MessageHeaderServices headerServices
 
     enum ContentType {
         Unknown = 0,
@@ -282,22 +287,6 @@ Control {
                             visible: profileImage.active && profileImage.status !== Loader.Ready
                         }
                     }
-
-                    // Stands in for the avatar on a header-less message that still
-                    // anchors the connector, so the line has something to start from.
-                    // A Loader keeps the icon out of every row that doesn't need it.
-                    Loader {
-                        anchors.top: parent.top
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        active: messageAttachmentLoader.active && !root.showHeader
-                        sourceComponent: StatusIcon {
-                            width: d.threadMarkerSize
-                            height: d.threadMarkerSize
-                            icon: "thread"
-                            color: Theme.palette.baseColor1
-                            opacity: 0.4
-                        }
-                    }
                 }
 
                 ColumnLayout {
@@ -318,14 +307,27 @@ Control {
                         Layout.fillWidth: true
                         active: root.showHeader
                         visible: active
-                        sourceComponent: StatusMessageHeader {
-                            sender: root.messageDetails.sender
-                            amISender: root.messageDetails.amISender
-                            messageOriginInfo: root.messageDetails.messageOriginInfo
-                            resendError: root.messageDetails.amISender ? root.resendError : ""
-                            timestamp: root.timestamp
+                        sourceComponent: MessageHeaderItem {
+                            objectName: "StatusMessage_header"
+                            services: root.headerServices
+                            // One snapshot of every input. A rebind may
+                            // re-evaluate it per changed input, but the header
+                            // ignores equal ones and prepares once per polish.
+                            // tertiaryDetail stays unset and falls back to
+                            // senderId; an empty id (ENS) hides it.
+                            headerData: ({
+                                senderId: root.messageDetails.sender.id,
+                                displayName: root.messageDetails.sender.displayName,
+                                secondaryName: root.messageDetails.sender.secondaryName,
+                                isContact: root.messageDetails.sender.isContact,
+                                trustIndicator: root.messageDetails.sender.trustIndicator,
+                                amISender: root.messageDetails.amISender,
+                                messageOriginInfo: root.messageDetails.messageOriginInfo,
+                                resendError: root.messageDetails.amISender ? root.resendError : "",
+                                timestamp: root.timestamp,
+                                outgoingStatus: root.outgoingStatus
+                            })
                             displayNameClickable: root.profileClickable
-                            outgoingStatus: root.outgoingStatus
                             isMobile: root.isMobile
                             showOutgoingStatusLabel: root.hovered && !root.isInPinnedPopup
                             onClicked: (sender) => root.senderNameClicked(sender)
@@ -372,7 +374,7 @@ Control {
                                     album: root.messageDetails.albumCount > 0 ? root.messageDetails.album : [root.messageDetails.messageContent]
                                     albumCount: effectiveAlbumCount
                                     singleImageFormat: root.messageDetails.messageContentFormat
-                                    imageWidth: Math.max(1, Math.min((messageLayout.width - 9 * (effectiveAlbumCount - 1)) / effectiveAlbumCount, 144))
+                                    imageWidth: Math.max(1, Math.min((messageLayout.width - spacing * (effectiveAlbumCount - 1)) / effectiveAlbumCount, 144))
                                     shapeType: StatusImageMessage.ShapeType.LEFT_ROUNDED
                                     onImageClicked: (image, mouse, imageSource, pos) => root.imageClicked(image, mouse, imageSource, pos)
                                 }
@@ -456,11 +458,10 @@ Control {
                         Loader {
                             objectName: "messageAttachmentConnector"
                             x: -(messageRow.spacing + messageRail.width / 2)
-                            y: (root.showHeader ? profileImage.height : d.threadMarkerSize)
-                               - messageAttachmentHost.y
+                            y: profileImage.height - messageAttachmentHost.y
                             width: messageRow.spacing + messageRail.width / 2
                             height: Math.max(0, messageAttachmentHost.connectorY - y)
-                            active: messageAttachmentLoader.active
+                            active: messageAttachmentLoader.active && root.showHeader
                             visible: active
                             sourceComponent: StatusMessageConnector {
                                 direction: StatusMessageConnector.Direction.Down
@@ -494,8 +495,6 @@ Control {
         property string selectedText
         // Keeps the text clear of the "Unpin" floating button.
         readonly property real textRightMargin: root.isInPinnedPopup ? Theme.xlPadding : 0
-
-        readonly property int threadMarkerSize: 20
 
         // Hover must be reported for real pointing devices only. A touch tap makes Qt synthesize a
         // mouse move (a "core pointer" event, indistinguishable from a real mouse by

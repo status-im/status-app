@@ -73,7 +73,7 @@ def test_delete_generated_account_from_wallet_settings(
 
     with step('Verify the removed account is not displayed in accounts list on main wallet screen'):
         wallet = main_screen.left_panel.open_wallet()
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: account_name not in [account.name for account in wallet.left_panel.accounts], 10000), \
             f'Account with {account_name} is still displayed even it should not be'
 

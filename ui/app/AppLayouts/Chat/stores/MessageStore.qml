@@ -37,6 +37,11 @@ QtObject {
             root.messageModule.setThreadMuted(interval)
     }
 
+    function setThreadMutedById(threadId: string, interval: int) {
+        if (root.messageModule)
+            root.messageModule.setThreadMutedById(threadId, interval)
+    }
+
     readonly property bool threadDeleted: messageModule?.threadDeleted ?? false
     readonly property bool threadFollowed: messageModule?.threadFollowed ?? false
     readonly property bool threadDeletePending: (root.messageModule?.threadDeletePending ?? false) ||

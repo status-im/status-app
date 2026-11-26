@@ -25,7 +25,7 @@ def wait_until_login_screen(timeout_msec: int = APP_LOAD_TIMEOUT_MSEC):
 @allure.step('Wait until automatic login reaches the main window')
 def wait_until_auto_logged_in(main_window, timeout_msec: int = APP_LOAD_TIMEOUT_MSEC):
     login = ReturningLoginView()
-    assert driver.waitFor(
+    assert driver.wait_until(
         lambda: main_window.left_panel.messages_button.is_visible and not login.is_visible,
         timeout_msec,
     ), 'Automatic login did not reach the main window'

@@ -8,7 +8,7 @@ from config.logging_config import get_logger
 from core.device_context import DeviceContext
 from pages.app import App
 from pages.messaging.chat_page import ChatPage
-from support.screen_identity import dismiss_introduce_yourself
+from support.platform import ios_bundle_id, is_ios
 
 logger = get_logger("peer_chat_state")
 
@@ -19,20 +19,21 @@ def open_peer_chat_by_deeplink(device: DeviceContext, peer, attempts: int = DEEP
     """Open the peer's 1:1 through the status-app:// deep link."""
     driver = device.driver
     chat_page = ChatPage(driver)
-    package = driver.capabilities.get("appPackage") or "app.status.mobile"
+    if is_ios(driver):
+        target = {"bundleId": ios_bundle_id(driver)}
+    else:
+        target = {"package": driver.capabilities.get("appPackage") or "app.status.mobile"}
     for attempt in range(1, attempts + 1):
         try:
             driver.execute_script(
                 "mobile: deepLink",
-                {"url": f"status-app://p/{peer.public_key}", "package": package},
+                {"url": f"status-app://p/{peer.public_key}", **target},
             )
         except InvalidSessionIdException:
             raise
         except Exception as exc:
             logger.warning("deepLink attempt %d failed: %s", attempt, exc)
         chat_page.dismiss_backup_prompt(timeout=4)
-        if dismiss_introduce_yourself(chat_page, timeout=1):
-            logger.info("Dismissed introduce-yourself sheet after deep link")
         if chat_page.wait_for_message_input(timeout=10):
             return True
         logger.warning("Peer chat not open after deep link attempt %d", attempt)
@@ -88,7 +89,6 @@ def ensure_peer_chat_visible(device: DeviceContext, peer) -> ChatPage:
     if not app.click_messages_button():
         logger.warning("Messages tab did not report a click")
     chat_page.dismiss_backup_prompt(timeout=2)
-    dismiss_introduce_yourself(chat_page, timeout=1)
     if chat_page.wait_for_message_input(timeout=3):
         return _composer_ready(chat_page)
 
