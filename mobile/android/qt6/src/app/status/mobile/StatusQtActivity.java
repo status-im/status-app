@@ -96,10 +96,12 @@ public class StatusQtActivity extends QtActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        // Before super.onCreate(), which may start the Qt side that takes it. Fresh launches
-        // only: a recreation or a recents launch returns the old restart intent again.
-        if (savedInstanceState == null && !isHistoryLaunch(getIntent())) {
-            readRecoveryReason(getIntent());
+        // Before super.onCreate(), which may start the Qt side that takes it. The dying UI
+        // process also gets here (Android creates the restart activity in it first) and leaves
+        // the mark for the restarted one.
+        if (StatusGoServiceClient.takeLoginInterrupted(this)) {
+            Log.w(TAG, "restarted: the status-go service died during the login");
+            loginInterrupted.set(true);
         }
 
         // Initialize the status-go UI stub bridge early.
@@ -139,16 +141,6 @@ public class StatusQtActivity extends QtActivity {
         if (savedInstanceState == null && !isHistoryLaunch(getIntent())) {
             handleUrlIntake(getIntent());
             handleShareIntake(getIntent());
-        }
-    }
-
-    private static void readRecoveryReason(Intent intent) {
-        if (intent == null) return;
-        final String reason = intent.getStringExtra(StatusGoServiceClient.RECOVERY_REASON_EXTRA);
-        intent.removeExtra(StatusGoServiceClient.RECOVERY_REASON_EXTRA);
-        if (StatusGoServiceClient.SERVICE_DIED_DURING_LOGIN.equals(reason)) {
-            Log.w(TAG, "restarted: the status-go service died during the login");
-            loginInterrupted.set(true);
         }
     }
 

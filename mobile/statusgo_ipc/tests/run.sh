@@ -20,6 +20,7 @@ JAVA_SOURCES=(
   "$JAVA_ROOT/src/app/status/mobile/ipc/BootLogin.java"
   "$JAVA_ROOT/src/app/status/mobile/ipc/BootLoginRecordVersion.java"
   "$JAVA_ROOT/src/app/status/mobile/ipc/BootLoginTrigger.java"
+  "$JAVA_ROOT/src/app/status/mobile/ipc/LoginInterruptedMarker.java"
   "$JAVA_ROOT/src/app/status/mobile/ipc/NotificationReplySignal.java"
   "$JAVA_ROOT/src/app/status/mobile/ipc/ServiceDeathRecovery.java"
   "$JAVA_ROOT/src/app/status/mobile/ipc/SignalEnvelope.java"

@@ -4,12 +4,14 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Process;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.os.TransactionTooLargeException;
 import android.system.ErrnoException;
 import android.util.Log;
@@ -29,14 +31,15 @@ public final class StatusGoServiceClient {
     private static final long RESTART_KILL_DELAY_MS = 250L;
     private static final long DISCONNECT_SUPPRESSION_WINDOW_MS = 1000L;
 
-    /** Launch extra: why the UI process was restarted. */
-    public static final String RECOVERY_REASON_EXTRA = "status.recovery_reason";
     /**
      * Recovery reason: the service went away during a login (see ServiceDeathRecovery). The
      * restarted UI skips its silent login once (a login that kills the service must not loop).
      */
     public static final String SERVICE_DIED_DURING_LOGIN =
             ServiceDeathRecovery.SERVICE_DIED_DURING_LOGIN;
+    private static final String LOGIN_INTERRUPTED_PREFS = "status_login_interrupted";
+    private static final String LOGIN_INTERRUPTED_PID = "writer_pid";
+    private static final String LOGIN_INTERRUPTED_AT = "written_at";
     private static final String LOST_WHILE_HIDDEN_REASON = "statusgo_service_restarted";
 
     private static volatile StatusGoServiceClient sInstance;
@@ -209,6 +212,28 @@ public final class StatusGoServiceClient {
         }
     }
 
+    /** True once, in the UI process a frontend restart for a login the service died under started. */
+    public static boolean takeLoginInterrupted(Context context) {
+        return LoginInterruptedMarker.take(loginInterruptedStore(context),
+                Process.myPid(), SystemClock.elapsedRealtime());
+    }
+
+    // Written by the dying UI process, read by the next one: commit() and a multi-process read
+    @SuppressWarnings("deprecation")
+    private static LoginInterruptedMarker.Store loginInterruptedStore(Context context) {
+        final SharedPreferences prefs = context.getApplicationContext()
+                .getSharedPreferences(LOGIN_INTERRUPTED_PREFS, Context.MODE_MULTI_PROCESS);
+        return new LoginInterruptedMarker.Store() {
+            @Override public void write(int writerPid, long writtenAt) {
+                prefs.edit().putInt(LOGIN_INTERRUPTED_PID, writerPid)
+                        .putLong(LOGIN_INTERRUPTED_AT, writtenAt).commit();
+            }
+            @Override public int writerPid() { return prefs.getInt(LOGIN_INTERRUPTED_PID, 0); }
+            @Override public long writtenAt() { return prefs.getLong(LOGIN_INTERRUPTED_AT, 0L); }
+            @Override public void clear() { prefs.edit().clear().commit(); }
+        };
+    }
+
     // Every restart goes through here: a death during login keeps its reason whatever the cause
     private void requestFrontendRestart(Context appContext, String cause) {
         final String reason = deathRecovery.restartReason(cause);
@@ -223,7 +248,10 @@ public final class StatusGoServiceClient {
                     .getLaunchIntentForPackage(appContext.getPackageName());
             if (launch != null) {
                 launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                launch.putExtra(RECOVERY_REASON_EXTRA, reason);
+                if (SERVICE_DIED_DURING_LOGIN.equals(reason)) {
+                    LoginInterruptedMarker.mark(loginInterruptedStore(appContext),
+                            Process.myPid(), SystemClock.elapsedRealtime());
+                }
                 appContext.startActivity(launch);
             } else {
                 Log.w(TAG, "requestFrontendRestart: launch intent is null, reason=" + reason);
