@@ -412,8 +412,8 @@ public final class StatusGoServiceClient {
         }
 
         @Override
-        public IpcPayload serviceDied() {
-            return IpcPayload.inline(ServiceDeathRecovery.SERVICE_DIED_RESPONSE);
+        public IpcPayload serviceDied(String response) {
+            return IpcPayload.inline(response);
         }
 
         @Override

@@ -27,6 +27,7 @@ public class ServiceDeathRecoveryTest {
         int rebinds;
         int released;
         int loginsInterrupted;
+        String lastDiedResponse;
         boolean alwaysDie;
         RuntimeException throwOnNextCall;
 
@@ -55,7 +56,8 @@ public class ServiceDeathRecoveryTest {
         }
 
         @Override
-        public String serviceDied() {
+        public String serviceDied(String response) {
+            lastDiedResponse = response;
             return DIED;
         }
 
@@ -414,6 +416,51 @@ public class ServiceDeathRecoveryTest {
         assertTrue(ServiceDeathRecovery.succeeded(utf8("{\"accounts\":[]}")));
         assertFalse(ServiceDeathRecovery.succeeded(utf8("{\"error\":\"no\"}")));
         assertFalse(ServiceDeathRecovery.succeeded(utf8("not json")));
+    }
+
+    @Test
+    public void aCallPrivateRpcTheServiceDiedUnderGetsAJsonRpcError() {
+        call(INIT, "a");
+        service.dieOnNextCall();
+
+        call("CallPrivateRPC",
+                "[\"{\\\"jsonrpc\\\":\\\"2.0\\\",\\\"id\\\":7,\\\"method\\\":\\\"x\\\"}\"]");
+
+        assertEquals("{\"jsonrpc\":\"2.0\",\"id\":7,\"error\":{\"code\":-32000,"
+                + "\"message\":\"status-go service died\"}}", service.lastDiedResponse);
+    }
+
+    @Test
+    public void aCallPrivateRpcWithoutAReadableIdGetsANullId() {
+        call(INIT, "a");
+        service.dieOnNextCall();
+
+        call("CallPrivateRPC", "not json");
+
+        assertEquals("{\"jsonrpc\":\"2.0\",\"id\":null,\"error\":{\"code\":-32000,"
+                + "\"message\":\"status-go service died\"}}", service.lastDiedResponse);
+    }
+
+    @Test
+    public void aCallPrivateRpcAfterAFailedReplayGetsAJsonRpcError() {
+        call(INIT, "a");
+        recovery.serviceLost();
+        service.script.add("{\"error\":\"not ready\"}");
+
+        call("CallPrivateRPC", "[\"{\\\"id\\\":\\\"abc\\\"}\"]");
+
+        assertEquals("{\"jsonrpc\":\"2.0\",\"id\":\"abc\",\"error\":{\"code\":-32000,"
+                + "\"message\":\"status-go service died\"}}", service.lastDiedResponse);
+    }
+
+    @Test
+    public void otherCallsTheServiceDiedUnderKeepThePlainError() {
+        call(INIT, "a");
+        service.dieOnNextCall();
+
+        call("GetSettings", "x");
+
+        assertEquals(ServiceDeathRecovery.SERVICE_DIED_RESPONSE, service.lastDiedResponse);
     }
 
     @Test

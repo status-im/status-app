@@ -8,12 +8,13 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
  * What a status-go call does when the service process dies under it. The new process has lost
  * all in-memory state (it never saw InitializeApplication), so the in-flight call is never
- * re-sent: it answers {@link #SERVICE_DIED_RESPONSE}. The next call first replays the last
+ * re-sent: it answers {@link #SERVICE_DIED_RESPONSE} (a JSON-RPC error for CallPrivateRPC). The next call first replays the last
  * successful InitializeApplication once. A call is never retried: a login that kills the
  * service must not loop.
  * It also tells whether the service went away during a login (one this UI sent, or a boot
@@ -27,6 +28,7 @@ final class ServiceDeathRecovery {
     // Matched by StartupOnboardingWrapper.qml (d.serviceDiedError)
     static final String SERVICE_DIED_ERROR = "status-go service died";
     static final String SERVICE_DIED_RESPONSE = "{\"error\":\"" + SERVICE_DIED_ERROR + "\"}";
+    static final String CALL_PRIVATE_RPC = "CallPrivateRPC";
     static final String NODE_LOGIN_SIGNAL = "node.login";
     // Read by StatusQtActivity on the relaunch
     static final String SERVICE_DIED_DURING_LOGIN = "statusgo_service_died_during_login";
@@ -61,7 +63,7 @@ final class ServiceDeathRecovery {
         void loginInterrupted();
 
         /** The answer to a call the service died under. */
-        R serviceDied();
+        R serviceDied(String response);
 
         boolean succeeded(R response);
 
@@ -90,7 +92,7 @@ final class ServiceDeathRecovery {
         // is initialized, so no call reaches it before InitializeApplication
         synchronized (lock) {
             if (!isInit && replayPending()) {
-                final R failed = replay(connection);
+                final R failed = replay(connection, method, argsUtf8);
                 if (failed != null) return failed;
             }
         }
@@ -101,7 +103,7 @@ final class ServiceDeathRecovery {
         try {
             response = connection.send(method, argsUtf8);
         } catch (ServiceDiedException e) {
-            return died(connection, isLogin);
+            return died(connection, isLogin, method, argsUtf8);
         }
         final boolean succeeded = connection.succeeded(response);
         if (isLogin && !succeeded) loginInProgress.set(false);
@@ -173,27 +175,46 @@ final class ServiceDeathRecovery {
 
     // Under lock. Null when the new service is initialized, else the answer for the call,
     // which is not sent. An exception escaping the send leaves the replay pending.
-    private <R, E extends Exception> R replay(Connection<R, E> connection) throws E {
+    private <R, E extends Exception> R replay(Connection<R, E> connection, String method,
+            ByteBuffer argsUtf8) throws E {
         final int seen = losses.get();
         final R response;
         try {
             response = connection.send(INITIALIZE_APPLICATION, ByteBuffer.wrap(lastInitArgs));
         } catch (ServiceDiedException e) {
-            return died(connection, false);
+            return died(connection, false, method, argsUtf8);
         }
         final boolean succeeded = connection.succeeded(response);
         connection.release(response);
-        if (!succeeded) return connection.serviceDied();
+        if (!succeeded) return connection.serviceDied(serviceDiedResponse(method, argsUtf8));
         initializedAt = seen;
         return null;
     }
 
     // A death under the login call itself is answered to its caller
-    private <R> R died(Connection<R, ?> connection, boolean underTheLoginCall) {
+    private <R> R died(Connection<R, ?> connection, boolean underTheLoginCall, String method,
+            ByteBuffer argsUtf8) {
         final boolean interrupted = serviceLost() && !underTheLoginCall;
         connection.rebind();
         if (interrupted) connection.loginInterrupted();
-        return connection.serviceDied();
+        return connection.serviceDied(serviceDiedResponse(method, argsUtf8));
+    }
+
+    // CallPrivateRPC callers parse a JSON-RPC response
+    static String serviceDiedResponse(String method, ByteBuffer argsUtf8) {
+        if (!CALL_PRIVATE_RPC.equals(method)) return SERVICE_DIED_RESPONSE;
+        return "{\"jsonrpc\":\"2.0\",\"id\":" + JSONObject.valueToString(requestId(argsUtf8))
+                + ",\"error\":{\"code\":-32000,\"message\":\"" + SERVICE_DIED_ERROR + "\"}}";
+    }
+
+    // The id of the request in the ["<request>"] argument list, null when unreadable
+    private static Object requestId(ByteBuffer argsUtf8) {
+        try {
+            final String json = StandardCharsets.UTF_8.decode(argsUtf8.duplicate()).toString();
+            return new JSONObject(new JSONArray(json).getString(0)).opt("id");
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private void remember(ByteBuffer argsUtf8, int seen) {
