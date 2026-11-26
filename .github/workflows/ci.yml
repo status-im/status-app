@@ -337,6 +337,8 @@ jobs:
       actions: read
       packages: read
     uses: ./.github/workflows/e2e.yml
+    secrets:
+      WALLET_TEST_USER_SEED: ${{ secrets.WALLET_TEST_USER_SEED }}
     with:
       os: linux
       run-id: ${{ github.run_id }}
@@ -346,6 +348,8 @@ jobs:
     if: ${{ !cancelled() && github.event_name != 'push' && needs.windows.result == 'success' }}
     permissions: *e2e-permissions
     uses: ./.github/workflows/e2e.yml
+    secrets:
+      WALLET_TEST_USER_SEED: ${{ secrets.WALLET_TEST_USER_SEED }}
     with:
       os: windows
       run-id: ${{ github.run_id }}
@@ -355,6 +359,8 @@ jobs:
     if: ${{ !cancelled() && github.event_name != 'push' && needs.macos.result == 'success' }}
     permissions: *e2e-permissions
     uses: ./.github/workflows/e2e.yml
+    secrets:
+      WALLET_TEST_USER_SEED: ${{ secrets.WALLET_TEST_USER_SEED }}
     with:
       os: macos
       run-id: ${{ github.run_id }}
