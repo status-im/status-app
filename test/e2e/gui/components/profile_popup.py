@@ -5,6 +5,7 @@ import configs
 import constants
 import driver
 from gui.components.context_menu import ContextMenu
+from gui.components.nickname_popup import NicknamePopup
 from gui.components.settings.block_user_popup import BlockUserPopup
 from gui.components.settings.review_contact_request_popup import AcceptIgnoreRequestFromProfile
 from gui.components.settings.send_contact_request_popup import SendContactRequestFromProfile
@@ -112,6 +113,18 @@ class ProfilePopupFromMembers(ProfilePopup):
         self._menu_button = Button(names.menuButton_StatusFlatButton)
         self._block_user_menu_item = Button(names.block_user_StatusMenuItem)
         self._add_nickname_menu_item = Button(names.add_nickname_StatusMenuItem)
+        self._remove_nickname_menu_item = Button(names.remove_nickname_StatusMenuItem)
+
+    @allure.step('Set nickname {1} from profile menu')
+    def set_nickname(self, nickname: str):
+        self.click_menu_button()
+        self._add_nickname_menu_item.click()
+        NicknamePopup().set_nickname(nickname)
+
+    @allure.step('Remove nickname from profile menu')
+    def remove_nickname(self):
+        self.click_menu_button()
+        self._remove_nickname_menu_item.click()
 
     @allure.step('Click send request button')
     def send_request(self):

@@ -9,6 +9,8 @@ from allure_commons._allure import step
 import configs
 from constants import RandomCommunity
 from constants.community import Channel
+from gui.components.activity_center import ActivityCenter
+from gui.components.introduce_yourself_popup import IntroduceYourselfPopup
 from gui.screens.messages import MessagesScreen
 from helpers.chat_helper import skip_message_backup_popup_if_visible
 from helpers.multiple_instances_helper import (
@@ -38,6 +40,18 @@ def join_community_from_invite(main_window, inviter_name: str, password: str, co
     chat = messages_view.left_panel.click_chat_by_name(inviter_name)
     community_screen = chat.click_community_invite_message()
     community_screen.left_panel.wait_for_name(community_name, configs.timeouts.APP_LOAD_TIMEOUT_MSEC)
+    # An account without a display name is asked to introduce itself; the popup covers the join button.
+    # It can be opened more than once before the first is dismissed.
+    intro = IntroduceYourselfPopup()
+    for _ in range(3):
+        if not intro.exists:
+            break
+        intro.skip_button.click()
+        driver.wait_until(lambda: not intro.exists, 2000)
+    # A click meant to dismiss the activity center can land on that popup instead; then it covers the join button.
+    activity_center = ActivityCenter()
+    if activity_center.exists:
+        activity_center.close()
     community_screen.left_panel.open_welcome_community_popup().join().authenticate(password)
     assert driver.wait_until(
         lambda: not community_screen.left_panel.is_join_community_visible,

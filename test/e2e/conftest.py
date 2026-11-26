@@ -6,6 +6,13 @@ import pytest
 import shortuuid
 import sys
 import subprocess
+import platform
+
+import pyperclip
+
+# On a WSL kernel (also inside Docker on WSL) pyperclip picks powershell.exe, which a Linux run lacks.
+if 'microsoft' in platform.release().lower():
+    pyperclip.set_clipboard('xclip')
 
 from tests import test_data
 from configs.system import get_platform

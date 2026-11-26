@@ -527,6 +527,19 @@ class MembersListPanel(QObject):
     def members(self) -> typing.List[str]:
         return [str(member.userName) for member in driver.find_all(self._member_item.real_name)]
 
+    @property
+    @allure.step('Get member rows in display order')
+    def member_rows(self) -> typing.List[dict]:
+        items = sorted(driver.find_all(self._member_item.real_name), key=lambda m: driver.bounds(m).y)
+        return [{
+            'name': str(getattr(m, 'userName', '') or ''),
+            'nickname': str(getattr(m, 'nickName', '') or ''),
+            'online': int(getattr(m, 'status', 0)) == 1,
+            'uses_default_name': bool(getattr(m, 'usesDefaultName', False)),
+            'is_contact': bool(getattr(m, 'isContact', False)),
+            'is_blocked': bool(getattr(m, 'isBlocked', False)),
+        } for m in items]
+
     @allure.step('Open banned tab')
     def click_banned_button(self):
         self._banned_tab_button.click()
@@ -537,11 +550,16 @@ class MembersListPanel(QObject):
 
     @allure.step('Click member by name')
     def click_member(self, member_name: str):
-        for member in driver.find_all(self._member_item.real_name):
-            if getattr(member, 'userName', '') == member_name:
-                driver.click(member)
+        popup = ProfilePopupFromMembers()
+        # The first click after the window comes to the front can be lost.
+        for _ in range(2):
+            for member in driver.find_all(self._member_item.real_name):
+                if getattr(member, 'userName', '') == member_name:
+                    driver.click(member)
+                    break
+            if driver.wait_until(lambda: popup.exists, 3000):
                 break
-        return ProfilePopupFromMembers().wait_until_appears()
+        return popup.wait_until_appears()
 
     @allure.step('Verify member is offline by index')
     def member_state(self, member_name: str) -> bool:

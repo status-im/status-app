@@ -224,6 +224,10 @@ block_user_StatusMenuItem = {"checkable": False, "container": statusDesktop_main
                              "objectName": "blockUserStatusAction", "type": "StatusMenuItem", "visible": True}
 add_nickname_StatusMenuItem = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "enabled": True,
                                "objectName": "addEditNickNameStatusAction", "type": "StatusMenuItem", "visible": True}
+remove_nickname_StatusMenuItem = {"checkable": False, "container": statusDesktop_mainWindow_overlay, "enabled": True,
+                                  "objectName": "removeNicknameStatusAction", "type": "StatusMenuItem", "visible": True}
+nicknamePopup_nicknameInput = {"container": statusDesktop_mainWindow_overlay, "id": "nicknameInput",
+                               "type": "StatusInput", "unnamed": 1, "visible": True}
 unblock_user_StatusButton = {"checkable": False, "container": statusDesktop_mainWindow_overlay,
                              "objectName": "unblockUserProfileButton", "type": "StatusButton", "visible": True}
 
