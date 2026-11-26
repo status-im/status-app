@@ -22,6 +22,15 @@ fluxbox > /tmp/fluxbox.log 2>&1 &
 cd /work/test/e2e
 [ -e configs/_local.py ] || cp configs/_local.ci.py configs/_local.py
 
+# The WalletConnect tests start a dApp that needs these packages. A failed install fails those tests only.
+dapp=scripts/wallet_connect_dapp
+if [ ! -f "$dapp/node_modules/@walletconnect/sign-client/package.json" ]; then
+  (cd "$dapp" && npm ci --no-audit --no-fund) > /tmp/npm-ci.log 2>&1 || {
+    echo "in-image: npm ci failed in $dapp" >&2
+    tail -n 20 /tmp/npm-ci.log >&2
+  }
+fi
+
 export STATUS_RUNTIME_HTTP_API=False STATUS_RUNTIME_WS_API=False
 export QML_DISABLE_CACHE=1 QT_QPA_PLATFORM=linuxfb QT_LOGGING_RULES='*.warning=true'
 export STATUS_RUNTIME_TEST_MODE=1 STATUS_NO_DESKTOP_INTEGRATION=1 LIBGL_ALWAYS_SOFTWARE=1
