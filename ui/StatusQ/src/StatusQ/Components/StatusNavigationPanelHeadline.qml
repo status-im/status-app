@@ -7,4 +7,5 @@ StatusBaseText {
     font.pixelSize: Theme.secondaryAdditionalTextSize
     font.weight: Font.Bold
     color: Theme.palette.directColor1
+    elide: Text.ElideRight
 }

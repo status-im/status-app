@@ -56,11 +56,11 @@ Control {
     // Keep same “API surface” used by StatusSectionLayout.qml
     property Component handle: Component {
         Item {
-            implicitWidth: 4 // make the resize target wider than the actual rect below
+            implicitWidth: 8 // make the resize target wider than the actual rect below
             visible: d.showLeftSplitter
             Rectangle {
                 id: outerHandle
-                width: parent.width/2
+                width: parent.width/4
                 height: parent.height
                 anchors.horizontalCenter: parent.horizontalCenter
                 color: parent.SplitHandle.pressed ? Theme.palette.primaryColor1
@@ -68,7 +68,7 @@ Control {
                 Behavior on color { ColorAnimation { duration: ThemeUtils.AnimationDuration.Fast } }
             }
             Rectangle { // inner handle
-                width: parent.width
+                width: parent.width/2
                 height: 186 // by design
                 anchors.centerIn: parent
                 color: outerHandle.color
@@ -237,11 +237,12 @@ Control {
     QtObject {
         id: d
 
-        // Default width of the left panel in its collapsed state.
-        readonly property int defaultLeftPanelWidth: 306
+        // Minimal width of the left/right panel in its collapsed state.
+        readonly property int minimalLeftPanelWidth: 200
+        readonly property int minimalRightPanelWidth: 150
 
-        // Default width of the right panel in its collapsed state.
-        readonly property int defaultRightPanelWidth: 300
+        // Default width of the left panel in its collapsed state.
+        readonly property int defaultLeftPanelWidth: 300
 
         // Effective left panel used for geometry reference:
         // - If real leftPanel if provided
@@ -295,7 +296,7 @@ Control {
         Control {
             visible: d.effectiveLeftPanelWidth > 0 // otherwise the splitter shows up here, even with 0 width
             SplitView.preferredWidth: d.effectiveLeftPanelWidth
-            SplitView.minimumWidth: !!root.leftPanel ? d.defaultLeftPanelWidth : 0
+            SplitView.minimumWidth: !!root.leftPanel ? d.minimalLeftPanelWidth : 0
             SplitView.fillHeight: true
             background: Rectangle {
                 color: root.Theme.palette.baseColor4
@@ -359,7 +360,7 @@ Control {
 
         Control {
             SplitView.preferredWidth: root.showRightPanel ? root.rightPanelWidth : 0
-            SplitView.minimumWidth: root.showRightPanel ? d.defaultRightPanelWidth : 0
+            SplitView.minimumWidth: root.showRightPanel ? d.minimalRightPanelWidth : 0
             opacity: root.showRightPanel ? 1.0 : 0.0
             visible: (opacity > 0.1)
             background: Rectangle {

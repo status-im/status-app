@@ -374,7 +374,7 @@ Control {
                                     album: root.messageDetails.albumCount > 0 ? root.messageDetails.album : [root.messageDetails.messageContent]
                                     albumCount: effectiveAlbumCount
                                     singleImageFormat: root.messageDetails.messageContentFormat
-                                    imageWidth: Math.max(1, Math.min((messageLayout.width - 9 * (effectiveAlbumCount - 1)) / effectiveAlbumCount, 144))
+                                    imageWidth: Math.max(1, Math.min((messageLayout.width - spacing * (effectiveAlbumCount - 1)) / effectiveAlbumCount, 144))
                                     shapeType: StatusImageMessage.ShapeType.LEFT_ROUNDED
                                     onImageClicked: (image, mouse, imageSource, pos) => root.imageClicked(image, mouse, imageSource, pos)
                                 }
