@@ -1029,6 +1029,7 @@ Item {
         prefetchMargin: height / 2
         acquireBudget: 8
         bottomPadding: Theme.halfPadding
+        rightPadding: 2 // scrollbar spacing
 
         // A notch of the mouse wheel scrolls a fixed distance and notches add
         // up, rather than Flickable's ~72 px restarted on every notch.
@@ -1069,6 +1070,7 @@ Item {
         }
 
         ScrollBar.vertical: StatusScrollBar {
+            implicitWidth: Math.max(root.Theme.halfPadding, 8)
             visible: chatLogView.contentHeight > chatLogView.height
         }
 
