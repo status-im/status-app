@@ -184,6 +184,8 @@ public final class StatusGoServiceClient {
         }
     };
 
+    private final ServiceDeathRecovery deathRecovery = new ServiceDeathRecovery();
+
     private StatusGoServiceClient() {}
 
     private void requestFrontendRestart(Context appContext, String reason) {
@@ -316,6 +318,20 @@ public final class StatusGoServiceClient {
      */
     public IpcPayload call(Context context, String method, ByteBuffer argsUtf8) {
         final Context app = context.getApplicationContext();
+        try {
+            return deathRecovery.call(new BinderConnection(app), method, argsUtf8);
+        } catch (TransactionTooLargeException e) {
+            return transactionTooLarge(method, argsUtf8, e);
+        } catch (RemoteException e) {
+            Log.w(TAG, "call failed", e);
+            if (everConnected) {
+                requestFrontendRestart(app, "statusgo_service_call_failed");
+            }
+            return IpcPayload.inline("{\"error\":\"status-go service call failed\"}");
+        }
+    }
+
+    private IStatusGoService awaitService(Context app) {
         ensureStartedAndBound(app);
         IStatusGoService s;
         CountDownLatch latch;
@@ -330,52 +346,60 @@ public final class StatusGoServiceClient {
             }
         }
         synchronized (lock) {
-            s = service;
+            return service;
         }
-        if (s == null) {
-            if (everConnected) {
-                requestFrontendRestart(app, "statusgo_service_not_connected");
-            }
-            return IpcPayload.inline("{\"error\":\"status-go service not connected\"}");
+    }
+
+    private final class BinderConnection
+            implements ServiceDeathRecovery.Connection<IpcPayload, RemoteException> {
+        private final Context app;
+
+        BinderConnection(Context app) {
+            this.app = app;
         }
-        try {
-            return readRpc(s, method, argsUtf8);
-        } catch (TransactionTooLargeException e) {
-            return transactionTooLarge(method, argsUtf8, e);
-        } catch (RemoteException e) {
-            Log.w(TAG, "call failed", e);
-            // After reinstall/update (or service crash), binder can become a dead object.
-            // Reset, rebind, and retry once to avoid cascading JSON parse errors upstream.
-            if (e instanceof android.os.DeadObjectException) {
-                resetConnection(app);
-                ensureStartedAndBound(app);
-                synchronized (lock) {
-                    s = service;
-                    latch = connectedLatch;
+
+        @Override
+        public IpcPayload send(String method, ByteBuffer argsUtf8)
+                throws ServiceDeathRecovery.ServiceDiedException, RemoteException {
+            final IStatusGoService s = awaitService(app);
+            if (s == null) {
+                if (everConnected) {
+                    requestFrontendRestart(app, "statusgo_service_not_connected");
                 }
-                if (s == null && latch != null) {
-                    try {
-                        latch.await(CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-                    } catch (InterruptedException ignored) {
-                    }
-                }
-                synchronized (lock) {
-                    s = service;
-                }
-                if (s != null) {
-                    try {
-                        return readRpc(s, method, argsUtf8);
-                    } catch (TransactionTooLargeException e2) {
-                        return transactionTooLarge(method, argsUtf8, e2);
-                    } catch (RemoteException e2) {
-                        Log.w(TAG, "call retry failed", e2);
-                    }
-                }
+                return IpcPayload.inline("{\"error\":\"status-go service not connected\"}");
             }
-            if (everConnected) {
-                requestFrontendRestart(app, "statusgo_service_call_failed");
+            try {
+                return readRpc(s, method, argsUtf8);
+            } catch (android.os.DeadObjectException e) {
+                Log.w(TAG, "service died during " + method, e);
+                throw new ServiceDeathRecovery.ServiceDiedException(e);
             }
-            return IpcPayload.inline("{\"error\":\"status-go service call failed\"}");
+        }
+
+        @Override
+        public void rebind() {
+            // Our own unbind: suppresses the frontend restart the disconnect would request
+            resetConnection(app);
+            ensureStartedAndBound(app);
+        }
+
+        @Override
+        public IpcPayload serviceDied() {
+            return IpcPayload.inline(ServiceDeathRecovery.SERVICE_DIED_RESPONSE);
+        }
+
+        @Override
+        public boolean succeeded(IpcPayload response) {
+            try {
+                return ServiceDeathRecovery.succeeded(response.buffer());
+            } catch (ErrnoException e) {
+                return false;
+            }
+        }
+
+        @Override
+        public void release(IpcPayload response) {
+            response.close();
         }
     }
 
