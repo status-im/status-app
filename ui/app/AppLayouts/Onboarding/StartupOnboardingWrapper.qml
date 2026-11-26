@@ -50,6 +50,11 @@ Item {
         id: d
 
         property bool loginRequestSent: false
+
+        // A login the UI didn't start is in progress: wait for its node.login. (Logged in
+        // at startup never gets here: the resume path opens the session directly.)
+        readonly property bool adoptingLogin:
+            root.onboardingStore.startupLoginState === Onboarding.LoginState.InProgress
     }
 
     Component {
@@ -104,6 +109,12 @@ Item {
             } else {
                 onboardingLayout.unwindToLoginScreen()
             }
+        }
+
+        function onLoginAdopted() {
+            const item = onboardingLayout.stack.currentItem
+            if (!item || item.objectName !== "splashScreenV2")
+                onboardingLayout.stack.push(splashScreenV2, { runningProgressAnimation: true }, StackView.Immediate)
         }
 
         function onSaveBiometricsRequested(account, credential) {
@@ -193,6 +204,7 @@ Item {
         keychain: root.keychain
         secureStorage: root.secureStorage
         autoLoginEnabled: root.autoLoginEnabled
+        adoptingLogin: d.adoptingLogin
 
         privacyModeFeatureEnabled: root.featureFlagsStore.privacyModeFeatureEnabled
 
@@ -243,6 +255,8 @@ Item {
         }
 
         Component.onCompleted: {
+            if (d.adoptingLogin)
+                onboardingLayout.stack.push(splashScreenV2, { runningProgressAnimation: true }, StackView.Immediate)
             root.contentLoaded()
         }
 

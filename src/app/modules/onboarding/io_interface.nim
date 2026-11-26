@@ -1,4 +1,4 @@
-import results
+import results, options
 
 type
   AccessInterface* {.pure inheritable.} = ref object of RootObj
@@ -24,7 +24,7 @@ method cleanupAfterMainTransition*(self: AccessInterface) {.base.} =
 method onMainFailedToLoad*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method onNodeLogin*(self: AccessInterface, error: string, account: AccountDto, settings: SettingsDto) {.base.} =
+method onNodeLogin*(self: AccessInterface, seq: Option[uint64], error: string, account: AccountDto, settings: SettingsDto) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method load*(self: AccessInterface): Result[void, string] {.base.} =
@@ -79,6 +79,12 @@ method onKeycardExportLoginKeysSuccess*(self: AccessInterface, exportedKeys: Key
 method onAccountLoginError*(self: AccessInterface, error: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method onLoginRequestAccepted*(self: AccessInterface, seq: Option[uint64]) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onLoginRequestFailed*(self: AccessInterface, error: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method onMessengerStarted*(self: AccessInterface, err: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
@@ -116,6 +122,7 @@ method requestDeleteMultiaccount*(self: AccessInterface, keyUid: string): string
 type
   DelegateInterface* = concept c
     c.onboardingDidLoad()
+    c.onboardingDidAdoptSession()
     c.appReady()
     c.userLoggedIn()
     c.finishAppLoading()

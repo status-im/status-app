@@ -2,6 +2,7 @@ import nimqml, json
 import io_interface, states
 from app_service/service/keycardV2/dto import KeycardEventDto, pairingSupported
 from app_service/service/devices/dto/local_pairing_status import LocalPairingState
+from app_service/service/accounts/dto/accounts import LoginState
 
 import models/login_account_model as login_acc_model
 import models/login_account_item as login_acc_item
@@ -17,6 +18,7 @@ QtObject:
       convertKeycardAccountState: ProgressState
       convertKeycardAccountRestartRequired: bool
       keycardModule: QVariant
+      startupLoginState: LoginState
 
   proc delete*(self: View)
   proc newView*(delegate: io_interface.AccessInterface): View =
@@ -33,6 +35,9 @@ QtObject:
   proc appShellReady*(self: View) {.signal.}
   proc appLoaded*(self: View) {.signal.}
   proc accountLoginError*(self: View, error: string, wrongPassword: bool) {.signal.}
+  # The UI's login request was rejected because another login runs: that login was
+  # adopted, its failure is not the UI's login error.
+  proc loginAdopted*(self: View) {.signal.}
   proc saveBiometricsRequested*(self: View, account: string, credential: string) {.signal.}
   proc deleteBiometricsRequested*(self: View, account: string) {.signal.}
   proc stayLoggedInSaveRequested*(self: View, account: string, credential: string, enablePreference: bool) {.signal.}
@@ -51,6 +56,20 @@ QtObject:
       return
     self.syncState = syncState
     self.syncStateChanged()
+
+  # The login state at startup. In progress: a login the UI didn't start is running,
+  # its node.login decides between the session and the login screen.
+  proc startupLoginStateChanged*(self: View) {.signal.}
+  proc getStartupLoginState(self: View): int {.slot.} =
+    return self.startupLoginState.int
+  QtProperty[int] startupLoginState:
+    read = getStartupLoginState
+    notify = startupLoginStateChanged
+  proc setStartupLoginState*(self: View, state: LoginState) =
+    if self.startupLoginState == state:
+      return
+    self.startupLoginState = state
+    self.startupLoginStateChanged()
 
   proc keycardEventChanged*(self: View) {.signal.}
   proc setKeycardEvent*(self: View, keycardEvent: KeycardEventDto) =

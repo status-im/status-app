@@ -159,6 +159,7 @@ Item {
 
                 // password signals
                 signal accountLoginError(string error, bool wrongPassword)
+                signal loginAdopted()
             }
 
             onLoginRequested: (keyUid, method, data) => {

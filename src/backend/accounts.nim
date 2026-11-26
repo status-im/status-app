@@ -488,6 +488,14 @@ proc getActiveAccount*(): RpcResponse[JsonNode] =
     error "getActiveAccount failed", exception=e.msg
     raise newException(RpcException, e.msg)
 
+proc getLoginState*(): RpcResponse[JsonNode] =
+  try:
+    let response = status_go.getLoginState()
+    result.result = Json.decode(response, JsonNode)
+  except RpcException as e:
+    error "getLoginState failed", exception=e.msg
+    raise newException(RpcException, e.msg)
+
 proc keyUID*(): RpcResponse[JsonNode] =
   try:
     let response = status_go.keyUID()

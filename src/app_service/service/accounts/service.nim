@@ -40,12 +40,17 @@ let TEST_PEER_ENR = getEnv("TEST_PEER_ENR").string
 const SIGNAL_CONVERTING_PROFILE_KEYPAIR* = "convertingProfileKeypair"
 const SIGNAL_DERIVED_ADDRESSES_FROM_NOT_IMPORTED_MNEMONIC_FETCHED* = "derivedAddressesFromNotImportedMnemonicFetched"
 const SIGNAL_LOGIN_ERROR* = "errorWhileLogin"
+const SIGNAL_LOGIN_REQUEST_ACCEPTED* = "loginRequestAccepted"
 
 type ResultArgs* = ref object of Args
   success*: bool
 
 type LoginErrorArgs* = ref object of Args
   error*: string
+
+# seq: the login seq its node.login will carry, none from an older status-go
+type LoginRequestAcceptedArgs* = ref object of Args
+  seq*: Option[uint64]
 
 type DerivedAddressesFromNotImportedMnemonicArgs* = ref object of Args
   error*: string
@@ -275,6 +280,7 @@ QtObject:
       let error = response.result["error"].getStr
       if error == "":
         debug "Account saved succesfully"
+        self.events.emit(SIGNAL_LOGIN_REQUEST_ACCEPTED, LoginRequestAcceptedArgs(seq: toLoginSeq(response.result)))
         return ""
 
       error "createAccountAndLogin status-go error: ", error
@@ -353,6 +359,7 @@ QtObject:
       let error = response.result["error"].getStr
       if error == "":
         debug "Account saved succesfully"
+        self.events.emit(SIGNAL_LOGIN_REQUEST_ACCEPTED, LoginRequestAcceptedArgs(seq: toLoginSeq(response.result)))
         return ""
 
       error "restoreAccountAndLogin status-go error: ", error
@@ -508,6 +515,7 @@ QtObject:
       return
 
     debug "login request accepted, waiting for node.login signal"
+    self.events.emit(SIGNAL_LOGIN_REQUEST_ACCEPTED, LoginRequestAcceptedArgs(seq: toLoginSeq(response.result)))
 
   proc login*(self: Service, account: AccountDto, hashedPassword: string, chatPrivateKey: string = "", mnemonic: string = "",
     walletXPub: string = "", dek: string = "") =
@@ -613,10 +621,10 @@ QtObject:
   proc delete*(self: Service) =
     self.QObject.delete
 
-  proc fetchLoggedInAccount*(self: Service): AccountDto =
+  proc fetchLoginState*(self: Service): LoginStateDto =
     try:
-      let response = status_account.getActiveAccount()
-      result = toAccountDto(response.result)
+      let response = status_account.getLoginState()
+      result = toLoginStateDto(response.result)
     except Exception as e:
-      error "fetchLoggedInAccount failed", procName="fetchLoggedInAccount", errName = e.name, errDesription = e.msg
-      result = AccountDto()
+      error "fetchLoginState failed", procName="fetchLoginState", errName = e.name, errDesription = e.msg
+      result = LoginStateDto(state: LoginState.None)

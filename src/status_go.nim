@@ -435,6 +435,11 @@ proc getActiveAccount*(): string =
   defer: go_shim.free(funcOut)
   return $funcOut
 
+proc getLoginState*(): string =
+  var funcOut = go_shim.getLoginState()
+  defer: go_shim.free(funcOut)
+  return $funcOut
+
 proc keyUID*(): string =
   var funcOut = go_shim.keyUID()
   defer: go_shim.free(funcOut)

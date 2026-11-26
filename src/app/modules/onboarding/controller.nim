@@ -59,7 +59,7 @@ proc delete*(self: Controller) =
 proc init*(self: Controller) =
   var handlerId = self.events.onWithUUID(SignalType.NodeLogin.event) do(e:Args):
     let signal = NodeSignal(e)
-    self.delegate.onNodeLogin(signal.error, signal.account, signal.settings)
+    self.delegate.onNodeLogin(signal.seq, signal.error, signal.account, signal.settings)
   self.connectionIds.add(handlerId)
 
   handlerId = self.events.onWithUUID(SIGNAL_LOCAL_PAIRING_STATUS_UPDATE) do(e: Args):
@@ -84,7 +84,12 @@ proc init*(self: Controller) =
 
   handlerId = self.events.onWithUUID(SIGNAL_LOGIN_ERROR) do(e: Args):
     let args = LoginErrorArgs(e)
-    self.delegate.onAccountLoginError(args.error)
+    self.delegate.onLoginRequestFailed(args.error)
+  self.connectionIds.add(handlerId)
+
+  handlerId = self.events.onWithUUID(SIGNAL_LOGIN_REQUEST_ACCEPTED) do(e: Args):
+    let args = LoginRequestAcceptedArgs(e)
+    self.delegate.onLoginRequestAccepted(args.seq)
   self.connectionIds.add(handlerId)
 
   handlerId = self.events.onWithUUID(SignalType.DBReEncryptionStarted.event) do(e: Args):

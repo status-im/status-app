@@ -1,6 +1,6 @@
 import nimqml, chronicles, json, strutils, sequtils, sets, options, results
 
-import io_interface, states
+import io_interface, states, startup_login
 import view, controller
 import app/modules/shared_modules/keycard_management/module as keycard_management_module
 
@@ -28,6 +28,8 @@ logScope:
 const IS_MOBILE = defined(ios) or defined(android)
 
 type
+  IgnoredNodeLogin = tuple[seq: uint64, err: string, account: AccountDto, settings: SettingsDto]
+
   Module*[T: io_interface.DelegateInterface] = ref object of io_interface.AccessInterface
     delegate: T
     view: View
@@ -38,10 +40,12 @@ type
     onboardingFlow: OnboardingFlow
     exportedKeys: KeycardExportedKeysDto
     postOnboardingTasks: seq[PostOnboardingTask]
-    postLoginTasks: seq[PostOnboardingTask]
+    postLoginTasks: PostLoginTasks
     accountsService: accounts_service.Service
     generalService: general_service.Service
-    resumeLogin: bool
+    startupLogin: StartupLogin
+    # The last node.login that wasn't the UI's: a login adopted after it arrived replays it.
+    ignoredNodeLogin: Option[IgnoredNodeLogin]
     # Profiles on the login screen; any other one logging in is new on this device.
     listedKeyUids: Option[HashSet[string]]
     tmpKeyUid: string # TODO: remove this, once we switch fully to new keycard approach
@@ -65,7 +69,7 @@ proc newModule*[T](
   result.onboardingFlow = OnboardingFlow.Unknown
   result.loginFlow = LoginMethod.Unknown
   result.postOnboardingTasks = newSeq[PostOnboardingTask]()
-  result.postLoginTasks = newSeq[PostOnboardingTask]()
+  result.postLoginTasks = newPostLoginTasks()
   result.accountsService = accountsService
   result.generalService = generalService
   result.events = events
@@ -166,12 +170,18 @@ method load*[T](self: Module[T]): Result[void, string] =
   singletonInstance.setSessionContextProperty("onboardingModule", self.viewVariant)
   self.controller.init()
 
-  let loggedInAccount = self.accountsService.fetchLoggedInAccount()
-  self.resumeLogin = loggedInAccount.isValid()
-  if self.resumeLogin:
-    self.controller.setLoggedInAccount(loggedInAccount)
+  # Read after controller.init subscribed to node.login: a login in progress now
+  # can't finish unseen.
+  let loginState = self.accountsService.fetchLoginState()
+  self.startupLogin = initStartupLogin(loginState.state, loginState.seq)
+  if self.startupLogin.action == StartupAction.AdoptSession:
+    # The login in progress when the app controller read the state finished since:
+    # take the resume path, main.qml opens straight on the session.
+    self.controller.setLoggedInAccount(loginState.account)
+    self.delegate.onboardingDidAdoptSession()
     self.finishAppLoading2()
     return ok()
+  self.view.setStartupLoginState(loginState.state)
 
   let accountsLoaded = self.buildLoginAccountsModel()
 
@@ -204,7 +214,7 @@ method inputConnectionStringForBootstrapping*[T](self: Module[T], connectionStri
 
 method finishOnboardingFlow*[T](self: Module[T], flowInt: int, dataJson: string): string =
   self.postOnboardingTasks = newSeq[PostOnboardingTask]()
-  self.postLoginTasks = newSeq[PostOnboardingTask]()
+  self.postLoginTasks.startFlow()
 
   try:
     self.onboardingFlow = OnboardingFlow(flowInt)
@@ -349,10 +359,7 @@ method loginRequested*[T](self: Module[T], keyUid: string, loginFlow: int, dataJ
     self.tmpKeyUid = keyUid
     self.loginFlow = LoginMethod(loginFlow)
 
-    # drop any queued tasks by previous (failed) attempts so a stale credential can never be saved
-    self.postLoginTasks = self.postLoginTasks.filterIt(
-      it.kind != kPostOnboardingTaskSaveBiometrics and
-      it.kind != kPostOnboardingTaskSaveStayLoggedIn)
+    self.postLoginTasks.retryLogin()
 
     let data = parseJson(dataJson)
     let account = self.controller.getAccountByKeyUid(keyUid)
@@ -403,7 +410,39 @@ method onAccountLoginError*[T](self: Module[T], error: string) =
   warn "failed to login", wrongPassword, error
   self.view.accountLoginError(error, wrongPassword)
 
-method onNodeLogin*[T](self: Module[T], err: string, account: AccountDto, settings: SettingsDto) =
+method onLoginRequestAccepted*[T](self: Module[T], seq: Option[uint64]) =
+  if seq.isNone:
+    warn "login request accepted without a login seq, the next node.login is taken as its own"
+  self.startupLogin.requestAccepted(seq)
+
+method onLoginRequestFailed*[T](self: Module[T], error: string) =
+  if not isLoginBusyError(error):
+    self.onAccountLoginError(error)
+    return
+  # Another login (most likely the boot login) runs or just ran: adopt it instead of
+  # reporting a login error, its node.login decides.
+  let loginState = self.accountsService.fetchLoginState()
+  let adoption = self.startupLogin.adoptRunningLogin(loginState.state, loginState.seq)
+  if adoption == LoginAdoption.NotAdopted:
+    self.onAccountLoginError(error)
+    return
+  info "login request rejected, adopting the running login", error, state = $loginState.state, seq = loginState.seq
+  # The rejected request's flow (e.g. a password typed during the boot login) never logs
+  # in: none of its post-login work runs, also what it queues after this rejection.
+  self.postLoginTasks.abandon()
+  self.view.loginAdopted()
+  if adoption == LoginAdoption.AdoptedReplay and self.ignoredNodeLogin.isSome:
+    let ignored = self.ignoredNodeLogin.get
+    self.ignoredNodeLogin = none(IgnoredNodeLogin)
+    self.onNodeLogin(some(ignored.seq), ignored.err, ignored.account, ignored.settings)
+
+method onNodeLogin*[T](self: Module[T], seq: Option[uint64], err: string, account: AccountDto, settings: SettingsDto) =
+  if seq.isNone:
+    warn "node.login without a login seq, taken as the UI's"
+  if not self.startupLogin.admitNodeLogin(seq):
+    info "ignoring the node.login of a login the UI didn't start", seq = seq.get
+    self.ignoredNodeLogin = some((seq: seq.get, err: err, account: account, settings: settings))
+    return
   if err.len != 0:
     self.onAccountLoginError(err)
     return
@@ -429,8 +468,7 @@ method onMessengerStarted*[T](self: Module[T], err: string) =
   # When converting account to regular, we should not finishAppLoading.
   # The task will convert the account, re-encrypt the database with new password and
   # eventually logout. The user will need to login with a new password.
-  for i in 0..<self.postLoginTasks.len:
-    let task = self.postLoginTasks[i]
+  for task in self.postLoginTasks.tasks:
     if task.kind == kConvertKeycardAccountToRegular:
       return
 
@@ -470,7 +508,7 @@ method onKeycardAccountConverted*[T](self: Module[T], success: bool) =
   # Logged out: the login screen binds the selected profile's settings again.
   self.accountsService.clear()
   if success and not restartRequired:
-    self.postLoginTasks = newSeq[PostOnboardingTask]()
+    self.postLoginTasks.startFlow()
     self.accountsService.clearOpenedAccountsCache()
     discard self.buildLoginAccountsModel()
 
@@ -503,7 +541,7 @@ method requestDeleteMultiaccount*[T](self: Module[T], keyUid: string): string =
   return ""
 
 proc runPostLoginTasks*[T](self: Module[T]) =
-  let tasks = self.postLoginTasks
+  let tasks = self.postLoginTasks.tasks
   for task in tasks:
     case task.kind:
     of kConvertKeycardAccountToRegular:

@@ -120,6 +120,7 @@ proc runPostOnboardingTasks(self: AppController)
 
 # Startup Module Delegate Interface
 proc onboardingDidLoad*(self: AppController)
+proc onboardingDidAdoptSession*(self: AppController)
 proc userLoggedIn*(self: AppController): string
 proc appReady*(self: AppController)
 proc finishAppLoading*(self: AppController)
@@ -291,10 +292,12 @@ proc newAppController*(statusFoundation: StatusFoundation): AppController =
   # Do connections
   result.connect()
 
-  let initialAccount = result.accountsService.fetchLoggedInAccount()
-  result.resumeLogin = initialAccount.isValid()
+  # Logged in: adopt the running session. Otherwise the onboarding module reads the
+  # login state again and waits for a login in progress.
+  let loginState = result.accountsService.fetchLoginState()
+  result.resumeLogin = loginState.state == LoginState.LoggedIn
   if result.resumeLogin:
-    result.accountsService.setLoggedInAccount(initialAccount)
+    result.accountsService.setLoggedInAccount(loginState.account)
 
 proc stopActivity*(self: AppController) =
   ## First step of ending the session (logout), once its UI is released: stops what
@@ -384,6 +387,12 @@ proc initializeQmlContext(self: AppController) =
     singletonInstance.engine.load(newQUrl("qrc:///main.qml"))
 
 proc onboardingDidLoad*(self: AppController) =
+  self.initializeQmlContext()
+
+# The onboarding module read logged in at load: a login in progress at
+# newAppController finished since. Startup takes the resume path.
+proc onboardingDidAdoptSession*(self: AppController) =
+  self.resumeLogin = true
   self.initializeQmlContext()
 
 proc mainDidLoad*(self: AppController) =
