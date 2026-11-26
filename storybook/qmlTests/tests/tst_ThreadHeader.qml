@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtTest
 
+import StatusQ.Core.Theme
+
 import AppLayouts.Chat.controls
 import Storybook.Testing
 
@@ -308,14 +310,19 @@ Item {
         }
 
         function test_menuRequestsEditingWithoutStartingInlineEditor() {
-            mouseClick(findChild(header, "threadHeaderMenuButton"))
+            const button = findChild(header, "threadHeaderMenuButton")
+            compare(button.tooltip.y, button.height + Theme.padding)
+            button.forceActiveFocus()
+            keyClick(Qt.Key_Space)
             const menu = findChild(header, "threadHeaderContextMenu")
             verify(!!menu)
             tryCompare(menu, "opened", true)
+            compare(button.highlighted, true)
             menu.actionAt(0).trigger()
             compare(editSpy.count, 1)
             compare(header.editing, false)
             menu.close()
+            tryCompare(button, "highlighted", false)
         }
 
         function test_menuOnlyShowsConnectedActions_data() {

@@ -113,7 +113,7 @@ RowLayout {
             // initializing the tooltip
             tooltip.text: qsTr("Search")
             tooltip.orientation: StatusToolTip.Orientation.Bottom
-            tooltip.y: parent.height + 12
+            tooltip.y: parent.height + Theme.padding
         }
 
         StatusFlatRoundButton {
@@ -129,7 +129,7 @@ RowLayout {
             // initializing the tooltip
             tooltip.text: qsTr("Info")
             tooltip.orientation: StatusToolTip.Orientation.Bottom
-            tooltip.y: parent.height + 12
+            tooltip.y: parent.height + Theme.padding
         }
 
         StatusFlatRoundButton {
@@ -143,7 +143,7 @@ RowLayout {
             tooltip.enabled: !(contextMenuLoader.item?.opened ?? false)
             tooltip.text: qsTr("More")
             tooltip.orientation: StatusToolTip.Orientation.Bottom
-            tooltip.y: parent.height + 12
+            tooltip.y: parent.height + Theme.padding
 
             property bool showMoreMenu: false
             onClicked: {

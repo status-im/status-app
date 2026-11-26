@@ -470,6 +470,8 @@ Item {
                 visible: !d.newThreadParentMessageId
                 icon.name: "search"
                 tooltip.text: qsTr("Search")
+                tooltip.orientation: StatusToolTip.Orientation.Bottom
+                tooltip.y: parent.height + Theme.padding
                 onClicked: root.openAppSearch(d.openThreadParentChatId, d.openThreadId)
             }
         }
@@ -870,11 +872,12 @@ Item {
                 Layout.minimumHeight: 64
                 Layout.leftMargin: Theme.padding
                 Layout.rightMargin: Theme.halfPadding
-                spacing: Theme.padding
+                spacing: 0
 
                 StatusIcon {
                     Layout.preferredWidth: 16
                     Layout.preferredHeight: 16
+                    Layout.rightMargin: Theme.padding
                     icon: "thread"
                     color: Theme.palette.baseColor1
                 }
@@ -894,6 +897,7 @@ Item {
                         icon.name: "search"
                         tooltip.text: qsTr("Search")
                         tooltip.orientation: StatusToolTip.Orientation.Bottom
+                        tooltip.y: parent.height + Theme.padding
                         onClicked: root.openAppSearch(d.openThreadParentChatId, d.openThreadId)
                     }
 
@@ -902,6 +906,7 @@ Item {
                         icon.name: "close"
                         tooltip.text: qsTr("Close thread")
                         tooltip.orientation: StatusToolTip.Orientation.Bottom
+                        tooltip.y: parent.height + Theme.padding
                         onClicked: {
                             const returnToInfo = d.threadOpenedFromInfo
                             if (!returnToInfo)

@@ -206,17 +206,22 @@ RowLayout {
         }
     }
 
-    StatusFlatButton {
+    StatusFlatRoundButton {
         id: menuButton
         objectName: "threadHeaderMenuButton"
         visible: !!root.threadId
         enabled: !root.pending && !root.deletePending
+        focusPolicy: SQUtils.Utils.isMobile ? Qt.NoFocus : Qt.StrongFocus
         icon.name: "more"
-        icon.color: Theme.palette.directColor1
+        highlighted: menu?.opened ?? false
+        tooltip.enabled: !highlighted
         tooltip.text: qsTr("More")
         tooltip.orientation: StatusToolTip.Orientation.Bottom
+        tooltip.y: parent.height + Theme.padding
         readonly property ThreadContextMenu menu: menuLoader.status === Loader.Ready
                                                   ? menuLoader.item as ThreadContextMenu : null
+        Accessible.onPressAction: menuButton.clicked(null)
+        Keys.onSpacePressed: menuButton.clicked(null)
         onClicked: {
             menuLoader.active = true
             if (menuButton.menu)
