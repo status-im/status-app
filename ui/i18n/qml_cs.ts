@@ -9346,29 +9346,6 @@ aplikace: %2</translation>
     </message>
 </context>
 <context>
-    <name>IntroduceYourselfPopup</name>
-    <message>
-        <source>Introduce yourself</source>
-        <translation>Představte se</translation>
-    </message>
-    <message>
-        <source>Your Name</source>
-        <translation>Vaše jméno</translation>
-    </message>
-    <message>
-        <source>Add an optional display name and profile picture so others can easily recognise you.</source>
-        <translation>Přidejte volitelné zobrazované jméno a profilový obrázek, aby vás ostatní snadno poznali.</translation>
-    </message>
-    <message>
-        <source>Skip</source>
-        <translation>Přeskočit</translation>
-    </message>
-    <message>
-        <source>Edit Profile in Settings</source>
-        <translation>Upravit profil v Nastavení</translation>
-    </message>
-</context>
-<context>
     <name>InvitationBubbleView</name>
     <message>
         <source>Verified community invitation</source>

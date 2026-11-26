@@ -9265,29 +9265,6 @@ app: %2</source>
     </message>
 </context>
 <context>
-    <name>IntroduceYourselfPopup</name>
-    <message>
-        <source>Introduce yourself</source>
-        <translation>자기소개하기</translation>
-    </message>
-    <message>
-        <source>Your Name</source>
-        <translation>이름</translation>
-    </message>
-    <message>
-        <source>Add an optional display name and profile picture so others can easily recognise you.</source>
-        <translation>선택으로 표시 이름과 프로필 사진을 추가해, 다른 사람이 당신을 쉽게 알아볼 수 있게 하세요.</translation>
-    </message>
-    <message>
-        <source>Skip</source>
-        <translation>건너 뛰기</translation>
-    </message>
-    <message>
-        <source>Edit Profile in Settings</source>
-        <translation>설정에서 프로필 편집</translation>
-    </message>
-</context>
-<context>
     <name>InvitationBubbleView</name>
     <message>
         <source>Verified community invitation</source>

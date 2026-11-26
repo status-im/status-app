@@ -87,6 +87,7 @@ const SIGNAL_REMOVED_TRUST_STATUS* = "removedTrustStatus"
 const SIGNAL_CONTACT_UNTRUSTWORTHY* = "contactUntrustworthy"
 const SIGNAL_CONTACT_TRUSTED* = "contactTrusted"
 const SIGNAL_CONTACT_INFO_REQUEST_FINISHED* = "contactInfoRequestFinished"
+const SIGNAL_LOCAL_CONTACT_REQUEST_COMPLETED* = "localContactRequestCompleted"
 const SIGNAL_APPEND_CHAT_MESSAGES* = "appendChatMessages"
 
 const SIGNAL_CONTACT_PROFILE_SHOWCASE_UPDATED* = "contactProfileShowcaseUpdated"
@@ -596,6 +597,7 @@ QtObject:
         messages: response.result{"messages"}
       ))
       checkAndEmitACNotificationsFromResponse(self.events, response.result{"activityCenterNotifications"})
+      self.events.emit(SIGNAL_LOCAL_CONTACT_REQUEST_COMPLETED, Args())
 
     except Exception as e:
       error "an error occurred while sending the contact request", msg = e.msg
@@ -619,6 +621,7 @@ QtObject:
         messages: response.result{"messages"}
       ))
       checkAndEmitACNotificationsFromResponse(self.events, response.result{"activityCenterNotifications"})
+      self.events.emit(SIGNAL_LOCAL_CONTACT_REQUEST_COMPLETED, Args())
 
     except Exception as e:
       error "an error occurred while accepting the contact request", msg=e.msg

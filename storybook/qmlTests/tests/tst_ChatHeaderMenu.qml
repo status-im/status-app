@@ -93,12 +93,6 @@ Item {
         when: windowShown
 
         SignalSpy {
-            id: editThreadSpy
-            target: header
-            signalName: "editThreadRequested"
-        }
-
-        SignalSpy {
             id: muteSpy
             target: header
             signalName: "muteThreadRequested"
@@ -170,9 +164,8 @@ Item {
             chatContentModuleMock.chatAdmin = false
         }
 
-        function test_04_selectedThreadHeaderRequestsPanelEditor() {
+        function test_04_selectedThreadHeaderOpensInlineEditor() {
             const messages = chatContentModuleMock.messagesModule
-            editThreadSpy.clear()
             messages.threadId = "thread"
             compare(header.chatContentModule.messagesModule.threadId, "thread")
             compare(findChild(header, "chatHeaderMessageStore").threadId, "thread")
@@ -186,11 +179,22 @@ Item {
             compare(menu.actionAt(0).objectName, "threadContextMenu_editName")
             verify(menu.actionAt(0).enabled)
             menu.actionAt(0).trigger()
-            compare(editThreadSpy.count, 1)
-            compare(editThreadSpy.signalArguments[0][0], "thread")
-            compare(findChild(header, "threadNameInput"), null)
             menu.close()
             tryCompare(menu, "opened", false)
+
+            let editor
+            tryVerify(() => {
+                editor = findChild(header, "threadNameInput")
+                return !!editor
+            })
+            compare(editor.text, "Original thread")
+            editor.text = "Renamed thread"
+            tryCompare(editor, "activeFocus", true)
+            keyClick(Qt.Key_Return)
+            compare(messages.requestedName, "Renamed thread")
+            messages.threadEditPending = false
+            messages.threadEditFinished("")
+            tryVerify(() => !findChild(header, "threadNameInput"))
 
             messages.canEditThread = false
             compare(button.visible, true)
@@ -198,7 +202,6 @@ Item {
             tryCompare(menu, "opened", true)
             compare(menu.actionAt(0).enabled, false)
             verify(findChild(menu, "threadContextMenu_markAsRead").enabled)
-            compare(editThreadSpy.count, 1)
             compare(findChild(menu, "threadContextMenu_delete").enabled, false)
             menu.close()
             tryCompare(menu, "opened", false)

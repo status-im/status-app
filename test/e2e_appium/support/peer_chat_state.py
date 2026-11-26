@@ -9,7 +9,6 @@ from core.device_context import DeviceContext
 from pages.app import App
 from pages.messaging.chat_page import ChatPage
 from support.platform import ios_bundle_id, is_ios
-from support.screen_identity import dismiss_introduce_yourself
 
 logger = get_logger("peer_chat_state")
 
@@ -35,8 +34,6 @@ def open_peer_chat_by_deeplink(device: DeviceContext, peer, attempts: int = DEEP
         except Exception as exc:
             logger.warning("deepLink attempt %d failed: %s", attempt, exc)
         chat_page.dismiss_backup_prompt(timeout=4)
-        if dismiss_introduce_yourself(chat_page, timeout=1):
-            logger.info("Dismissed introduce-yourself sheet after deep link")
         if chat_page.wait_for_message_input(timeout=10):
             return True
         logger.warning("Peer chat not open after deep link attempt %d", attempt)

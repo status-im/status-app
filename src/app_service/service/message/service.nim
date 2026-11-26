@@ -151,6 +151,7 @@ type
 
   MessageMarkMessageAsUnreadArgs* = ref object of Args
     chatId*: string
+    threadId*: string
     messageId*: string
     messagesCount*: int
     messagesWithMentionsCount*: int
@@ -1644,7 +1645,7 @@ QtObject:
 
   proc asyncMarkMessageAsUnread*(self: Service, chatId: string, messageId: string) =
     if (chatId.len == 0):
-      error "empty chat id", procName="markAllMessagesRead"
+      error "empty chat id", procName="asyncMarkMessageAsUnread"
       return
 
     let arg = AsyncMarkMessageAsUnreadTaskArg(
@@ -1840,7 +1841,7 @@ QtObject:
       if errorString != "":
         raise newException(CatchableError, errorString)
 
-      var chatId, messageId: string
+      var chatId, threadId, messageId: string
       var count, countWithMentions: int
 
       discard responseObj.getProp("chatId", chatId)
@@ -1848,14 +1849,22 @@ QtObject:
       discard responseObj.getProp("messagesCount", count)
       discard responseObj.getProp("messagesWithMentionsCount", countWithMentions)
 
+      let threads = responseObj{"threads"}
+      if not threads.isNil and threads.kind == JArray and threads.len > 0:
+        # status-go returns the updated thread only for a thread reply.
+        let thread = threads[0].toThreadDto()
+        threadId = thread.threadId
+        self.handleThreadsUpdate(@[thread])
+      else:
+        self.chatService.updateUnreadMessage(chatId, count, countWithMentions)
+
       let data = MessageMarkMessageAsUnreadArgs(
         chatId: chatId,
+        threadId: threadId,
         messageId: messageId,
         messagesCount: count,
         messagesWithMentionsCount: countWithMentions
       )
-
-      self.chatService.updateUnreadMessage(chatId, count, countWithMentions)
 
       self.events.emit(SIGNAL_MESSAGE_MARKED_AS_UNREAD, data)
       checkAndEmitACNotificationsFromResponse(self.events, responseObj{"activityCenterNotifications"})

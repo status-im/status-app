@@ -28,12 +28,9 @@ RowLayout {
     }
 
     StatusNavigationPanelHeadline {
+        Layout.fillWidth: true
         objectName: "ContactsColumnView_MessagesHeadline"
         text: qsTr("Messages")
-    }
-
-    Item {
-        Layout.fillWidth: true
     }
 
     HeaderButton {

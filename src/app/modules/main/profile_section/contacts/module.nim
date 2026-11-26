@@ -107,6 +107,9 @@ method sendContactRequest*(self: Module, publicKey: string, message: string) =
 method acceptContactRequest*(self: Module, publicKey: string, contactRequestId: string) =
   self.controller.acceptContactRequest(publicKey, contactRequestId)
 
+method onLocalContactRequestCompleted*(self: Module) =
+  self.view.localContactRequestCompleted()
+
 method dismissContactRequest*(self: Module, publicKey: string, contactRequestId: string) =
   self.controller.dismissContactRequest(publicKey, contactRequestId)
 

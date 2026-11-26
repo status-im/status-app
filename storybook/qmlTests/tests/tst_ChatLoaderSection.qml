@@ -386,7 +386,7 @@ Item {
             tryCompare(backButton, "visible", true)
             compare(backButton.icon.name, "arrow-left")
             compare(backButton.text, "")
-            verify(waitForPolish(layout))
+            waitForNextFrame(layout)
             mouseClick(backButton)
             tryCompare(d, "activeChatId", parentId)
             tryCompare(backButton, "visible", false)

@@ -188,17 +188,6 @@ class App(BasePage):
         if self.is_element_visible(self.locators.PROFILE_NAV_BUTTON, timeout=2):
             return True
 
-        from support.screen_identity import dismiss_introduce_yourself
-
-        # Nav not immediately visible: the introduce-yourself sheet is one
-        # cause, and while it is up every a11y lookup below finds nothing.
-        if dismiss_introduce_yourself(self, timeout=1):
-            self.logger.warning(
-                "_ensure_main_nav_visible: dismissed introduce-yourself sheet"
-            )
-            if self.is_element_visible(self.locators.PROFILE_NAV_BUTTON, timeout=2):
-                return True
-
         if self.is_element_visible(self.locators.LEFT_NAV_ANY, timeout=1):
             return self.is_element_visible(self.locators.PROFILE_NAV_BUTTON, timeout=5)
 
@@ -233,8 +222,7 @@ class App(BasePage):
     )
 
     def _ios_clear_sheets(self) -> None:
-        from support.screen_identity import dismiss_backup_modal, dismiss_introduce_yourself
-        dismiss_introduce_yourself(self, timeout=1)
+        from support.screen_identity import dismiss_backup_modal
         dismiss_backup_modal(self, timeout=1)
 
     def _ios_open_drawer(self) -> bool:

@@ -93,7 +93,7 @@ Item {
 
         readonly property int listContentLeftMarginOffset: 1
         readonly property int listContentLeftMargin: SQUtils.Utils.swipeIndicatorWidth + listContentLeftMarginOffset
-        readonly property int scrollBarWidth: Math.max(Theme.halfPadding, 8)
+        readonly property int scrollBarWidth: Math.max(root.Theme.halfPadding, 8)
         // 1px scrollbar inset and 1px gap before it
         readonly property int scrollBarSpacing: 2
 

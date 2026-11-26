@@ -291,6 +291,16 @@ Item {
         }
 
         function editThreadName(threadId, threadName, parentChatId) {
+            if (threadId === infoMessageStore.threadId) {
+                d.requestCenterPanel()
+                if (root.sectionLayout?.isPortrait)
+                    root.sectionLayout.setCurrentIndex(StatusSectionLayout.CentralPanel)
+                const header = headerContentLoader.item
+                if (header instanceof ChatHeaderContentView)
+                    header.beginThreadNameEdit(threadId)
+                return
+            }
+
             root.rootStore.chatCommunitySectionModule.setActiveItem(parentChatId)
             threadOpenedFromInfo = false
             threadNameEditId = threadId
@@ -559,7 +569,26 @@ Item {
         onLoaded: d.requestCenterPanel()
     }
 
+    readonly property bool mainViewShowsThread: !!infoMessageStore.threadId
+
+    onMainViewShowsThreadChanged: {
+        if (mainViewShowsThread) {
+            // Cancel pending swipe cleanup so it cannot clear the saved Info request.
+            d.threadPanelRevision++
+        } else if (root.showUsersList && root.sectionLayout?.isPortrait) {
+            Qt.callLater(() => {
+                if (!root.mainViewShowsThread && root.showRightPanel && root.showUsersList
+                        && root.sectionLayout?.currentIndex === StatusSectionLayout.CentralPanel)
+                    root.sectionLayout.setCurrentIndex(StatusSectionLayout.RightPanel)
+            })
+        }
+    }
+
     readonly property bool showRightPanel: {
+        // Keep the Info request and tab so the chat can restore them on return.
+        if (root.mainViewShowsThread)
+            return false
+
         if (d.threadPanelOpen)
             return true
 
@@ -575,7 +604,8 @@ Item {
     // only because its answer is not known yet. Let the section chrome keep
     // the user-requested members column in that interval instead of resizing
     // from shown → hidden → shown as this view initializes.
-    readonly property bool rightPanelDecisionReady: d.threadPanelOpen
+    readonly property bool rightPanelDecisionReady: root.mainViewShowsThread
+                                                  || d.threadPanelOpen
                                                   || !root.showUsersList
                                                   || root.contentLocked
                                                   || root.rootStore.openCreateChat
@@ -1045,6 +1075,9 @@ Item {
         }
 
         function onSwiped(previous, current) {
+            if (root.mainViewShowsThread)
+                return
+
             // showUsersList is normally cleared by swiping back, but may
             // remain true e.g. by closing app with user list open or in
             // case of dynamic layout change. In that case the flag should be
@@ -1052,7 +1085,10 @@ Item {
             if (previous === StatusSectionLayout.LeftPanel
                 && current === StatusSectionLayout.CentralPanel
                 && root.showUsersList) {
-                Qt.callLater(() => root.showUsersListRequested(false))
+                Qt.callLater(() => {
+                    if (!root.mainViewShowsThread)
+                        root.showUsersListRequested(false)
+                })
             }
 
             if (previous !== StatusSectionLayout.RightPanel)
@@ -1086,10 +1122,6 @@ Item {
             threadMuted: infoMessageStore.threadMuted
             onMuteThreadRequested: interval => infoMessageStore.setThreadMuted(interval)
             onUnmuteThreadRequested: infoMessageStore.setThreadMuted(Constants.MutingVariations.Unmuted)
-
-            onEditThreadRequested: threadId => {
-                d.editThreadName(threadId, root.activeItemName, root.chatContentModule.messagesModule.getChatId())
-            }
 
             onSearchButtonClicked: root.openAppSearch(root.chatContentModule?.getMyChatId() ?? "",
                                                        root.chatContentModule?.messagesModule.threadId ?? "")
@@ -1355,7 +1387,7 @@ Item {
 
     onShowUsersListChanged: {
         Qt.callLater(() => {
-            if (root.showUsersList) {
+            if (root.showUsersList && !root.mainViewShowsThread) {
                 d.requestCenterPanel()
                 root.sectionLayout?.goToNextPanel()
             }

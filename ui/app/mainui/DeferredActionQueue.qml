@@ -4,6 +4,7 @@ import StatusQ.Core.Utils as SQUtils
 
 /**
   * Runs scheduled actions right away, or holds them while `blocked`.
+  * Actions scheduled with `waitForIdle` are also held while `busy`.
   * Once unblocked, held actions run one at a time in scheduling order, each
   * waiting until `busy` is false. Scheduling a key that is already held
   * replaces its action and keeps its place.
@@ -16,12 +17,13 @@ SQUtils.QObject {
 
     readonly property int pendingCount: d.keys.length
 
-    function schedule(key: string, action) {
-        if (!root.blocked) {
+    function schedule(key: string, action, waitForIdle = false) {
+        const alreadyHeld = d.keys.includes(key)
+        if (!root.blocked && (!waitForIdle || (!root.busy && !alreadyHeld))) {
             action()
             return
         }
-        if (!d.keys.includes(key))
+        if (!alreadyHeld)
             d.keys = d.keys.concat([key])
         d.actions[key] = action
     }

@@ -7,7 +7,6 @@ import allure
 import configs
 from driver.objects_access import find_descendant_by_object_name
 from gui.components.community.enable_message_backup_popup import EnableMessageBackupPopup
-from gui.components.introduce_yourself_popup import IntroduceYourselfPopup
 from scripts.utils.parsers import remove_tags
 
 _MESSAGE_TEXT_PARSE_DEPTH = 48
@@ -104,22 +103,3 @@ def close_activity_center_if_visible():
         activity_center.wait_until_hidden(timeout_msec=configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
     except (TimeoutError, Exception):
         pass
-
-
-@allure.step('Skip Introduce Yourself popup')
-def skip_intro_if_visible(attempts=4):
-    popup = IntroduceYourselfPopup()
-    if not popup.is_visible:
-        try:
-            popup.wait_until_appears(timeout_msec=1000)
-        except (TimeoutError, Exception):
-            return
-
-    for attempt in range(1, attempts + 1):
-        try:
-            popup.skip_intro()
-            return
-        except Exception as e:
-            if attempt < attempts:
-                continue
-            raise Exception(f'Failed to close IntroduceYourselfPopup after {attempts} attempts: {e}') from e

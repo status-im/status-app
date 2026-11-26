@@ -1,7 +1,5 @@
 name: e2e
 
-# The desktop suite (test/e2e) against the Linux, Windows or macOS build of a
-# run of the CI workflow. It does not fail the caller yet.
 on:
   workflow_call:
     inputs:
@@ -28,7 +26,7 @@ jobs:
     name: tests
     runs-on: ${{ fromJSON('{"linux":"ubuntu-24.04","windows":"windows-2022","macos":"macos-26"}')[inputs.os] }}
     timeout-minutes: 90
-    continue-on-error: true
+    continue-on-error: ${{ inputs.os != 'linux' }}
     env:
       BUILD: ${{ fromJSON('{"linux":"*-linux-x86_64.tar.gz","windows":"*-windows-x86_64.7z","macos":"*-macos-aarch64.dmg"}')[inputs.os] }}
       # On Windows Bash needs the scripts with LF endings.
