@@ -16634,6 +16634,13 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     </message>
 </context>
 <context>
+    <name>StartupOnboardingWrapper</name>
+    <message>
+        <source>Status was interrupted. Try again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>StatusAddressOrEnsValidator</name>
     <message>
         <source>Please enter a valid address or ENS name.</source>
