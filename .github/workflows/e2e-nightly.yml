@@ -8,6 +8,10 @@ on:
   pull_request:
     paths:
       - .github/workflows/e2e-nightly.yml
+  # Temporary, not for merging: runs the fixes of this branch without a pull request.
+  push:
+    branches:
+      - ab/issue-23167-e2e-nightly-fixes
 
 permissions:
   contents: read
