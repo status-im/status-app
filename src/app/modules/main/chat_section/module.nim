@@ -195,16 +195,16 @@ proc rosterContact(self: Module, pubKey: string): RosterContact =
   let details = self.controller.cachedContact(pubKey)
   if details.isNil:
     return
-  toRosterContact(details.dto, details.icon)
+  toRosterContact(details[])
 
 proc rosterOrderInputs(self: Module): RosterOrderInputs =
-  ## Online members and contact names for the roster load worker's sort.
+  ## Online members and contacts-cache names for the roster load worker's sort.
   self.roster.captureOrderChanges()
   result.online = self.controller.onlinePubKeys()
   let myPubKey = singletonInstance.userProfile.getPubKey()
   if toOnlineStatus(self.controller.getStatusForContactWithId(myPubKey).statusType) == OnlineStatus.Online:
     result.online.add myPubKey
-  for pubKey in self.controller.namedContactKeys():
+  for pubKey in self.controller.statusGoContactKeys():
     result.names[pubKey] = self.rosterContact(pubKey).names
   result.names[myPubKey] = self.rosterContact(myPubKey).names
 

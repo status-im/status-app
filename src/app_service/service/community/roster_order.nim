@@ -8,8 +8,9 @@ import ./dto/roster
 import app/modules/shared_models/contacts_utils
 
 type
-  ## Contacts-cache name fields. Known (self, or a mutual contact the cache holds):
-  ## they replace the roster entry's, empty included; otherwise the entry's apply.
+  ## Contacts-cache name fields. Known (self, or a record status-go sent, kept
+  ## live by contact updates): they replace the roster entry's, empty included;
+  ## otherwise (a placeholder, or not cached) the entry's apply.
   RosterNames* = object
     known*: bool
     localNickname*: string
@@ -18,8 +19,8 @@ type
     ensVerified*: bool
     alias*: string
 
-  ## What the load worker cannot read: online members and the names of
-  ## contacts (nicknames, own profile), keyed by "0x04…" key.
+  ## What the load worker cannot read: online members and the contacts-cache
+  ## names (status-go records, own profile), keyed by "0x04…" key.
   RosterOrderInputs* = object
     online*: seq[string]
     names*: Table[string, RosterNames]

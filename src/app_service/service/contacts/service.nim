@@ -174,7 +174,9 @@ QtObject:
         if changed:
           # Rebuild ContactDetails so derived fields (defaultDisplayName,
           # optionalName, colorId) reflect the fresh data
+          let fromStatusGo = self.contacts[member.id].fromStatusGo
           self.contacts[member.id] = self.constructContactDetails(dto, isCurrentUser)
+          self.contacts[member.id].fromStatusGo = fromStatusGo
       elif member.id != singletonInstance.userProfile.getPubKey():
         let alias =
           if member.alias.len > 0: member.alias
@@ -216,10 +218,12 @@ QtObject:
       let rpcResponseObj = response.parseJson
       for elem in rpcResponseObj["response"]["result"].getElems():
         let contactDto = elem.toContactsDto()
-        self.addContact(self.constructContactDetails(
+        var details = self.constructContactDetails(
           contactDto,
           isCurrentUser = contactDto.id == singletonInstance.userProfile.getPubKey()
-        ))
+        )
+        details.fromStatusGo = true
+        self.addContact(details)
       self.events.emit(SIGNAL_CONTACTS_LOADED, Args())
     except Exception as e:
       error "error fetching contacts", msg = e.msg
@@ -476,11 +480,10 @@ QtObject:
       if toOnlineStatus(status.statusType) == OnlineStatus.Online:
         result.add pubKey
 
-  proc namedContactKeys*(self: Service): seq[string] =
-    ## Cached contacts whose name can differ from their profile: contacts and
-    ## anyone with a local nickname.
+  proc statusGoContactKeys*(self: Service): seq[string] =
+    ## Cached keys status-go sent a record for; placeholders left out.
     for pubKey, details in self.contacts.pairs:
-      if details.dto.isContact or details.dto.localNickname.len > 0:
+      if details.fromStatusGo:
         result.add pubKey
 
   proc getContactColorId*(self: Service, id: string): int =
@@ -543,6 +546,7 @@ QtObject:
       merged,
       isCurrentUser = merged.id == singletonInstance.userProfile.getPubKey()
     )
+    self.contacts[merged.id].fromStatusGo = true
 
   # fromBackup is used to indicate that the contact was loaded from a backup
   proc updateContact(self: Service, contact: ContactsDto, fromBackup: bool = false) =
@@ -559,6 +563,7 @@ QtObject:
       merged,
       isCurrentUser = merged.id == singletonInstance.userProfile.getPubKey()
     )
+    self.contacts[publicKey].fromStatusGo = true
     if signal == SIGNAL_CONTACT_REMOVED:
       self.events.emit(SIGNAL_CONTACT_REMOVED, ContactRemovedArgs(
           contactId: contact.id,
@@ -668,7 +673,13 @@ QtObject:
     if not response.error.isNil:
       error "error setting local name ", msg = response.error.message
       return
-    self.saveContact(contact)
+    let saved = response.result{"contacts"}
+    if not saved.isNil and saved.kind == JArray and saved.len > 0 and saved[0]{"id"}.getStr == contact.id:
+      self.saveContact(saved[0].toContactsDto())
+    else:
+      let fromStatusGo = self.contacts.hasKey(contact.id) and self.contacts[contact.id].fromStatusGo
+      self.saveContact(contact)
+      self.contacts[contact.id].fromStatusGo = fromStatusGo
     let data = ContactArgs(contactId: contact.id)
     self.events.emit(SIGNAL_CONTACT_NICKNAME_CHANGED, data)
 

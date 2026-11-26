@@ -7,7 +7,7 @@ import app/modules/shared/qt_model_spy
 import app_service/common/types
 import app_service/service/community/dto/roster
 import app_service/service/community/roster_order
-import app_service/service/contacts/dto/contacts
+import app_service/service/contacts/dto/contact_details
 
 const
   keyA = "0x0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8"
@@ -83,7 +83,7 @@ proc loadSorted(model: CommunityRosterModel, fake: FakeSources, snap: RosterSnap
     if status == OnlineStatus.Online:
       inputs.online.add pubKey
   for pubKey, contact in fake.contacts.pairs:
-    if contact.known or contact.localNickname.len > 0:
+    if contact.known:
       inputs.names[pubKey] = contact.names
   sortRoster(sorted, inputs)
   model.load(sorted)
@@ -607,7 +607,10 @@ suite "community roster canonical order":
 
   # ContactsService.getContactDetails caches an uncached key as id + generated alias
   proc placeholder(hex, alias: string): RosterContact =
-    toRosterContact(ContactsDto(id: hex, alias: alias), icon = "")
+    toRosterContact(ContactDetails(dto: ContactsDto(id: hex, alias: alias)))
+
+  proc fromStatusGo(dto: ContactsDto, icon = ""): RosterContact =
+    toRosterContact(ContactDetails(dto: dto, icon: icon, fromStatusGo: true))
 
   test "a contacts-cache placeholder does not hide the entry's display name":
     fake.contacts[keyA] = placeholder(keyA, "Zany Mammoth Hare")
@@ -626,18 +629,33 @@ suite "community roster canonical order":
     check model.orderedKeys == @[keyA, keyB]
     check spy.countMoves() == 0
 
-  test "a local nickname on a placeholder wins over the entry's names, not its display name":
-    var dto = ContactsDto(id: keyA, alias: "Zany Mammoth Hare", localNickname: "zed")
-    fake.contacts[keyA] = toRosterContact(dto, icon = "")
+  test "a non-contact's profile change from status-go shows live and moves the row":
+    fake.contacts[keyA] = fromStatusGo(ContactsDto(id: keyA, displayName: "alice", alias: "Zany Mammoth Hare"))
     model.loadSorted(fake, snapshot(10, member(keyA, "alice", alias = "Zany Mammoth Hare"),
       member(keyB, "bob", alias = "Brave Cat")))
+    check model.orderedKeys == @[keyA, keyB]
+    fake.contacts[keyA] = fromStatusGo(ContactsDto(id: keyA, displayName: "zara", alias: "Zany Mammoth Hare"),
+      icon = "img:zara")
+    spy.clear()
+    model.contactChanged(keyA)
     check model.orderedKeys == @[keyB, keyA]
-    check model.str(model.rowOfKey(keyA), "preferredDisplayName") == "zed"
-    check model.str(model.rowOfKey(keyA), "displayName") == "alice"
+    check spy.countMoves() == 1
+    let row = model.rowOfKey(keyA)
+    check model.str(row, "displayName") == "zara"
+    check model.str(row, "preferredDisplayName") == "zara"
+    check model.str(row, "icon") == "img:zara"
 
-  test "a mutual contact's cleared display name wins over the entry's":
-    let dto = ContactsDto(id: keyA, alias: "Zany Mammoth Hare", added: true, hasAddedUs: true)
-    fake.contacts[keyA] = toRosterContact(dto, icon = "")
+  test "a placeholder replaced by a status-go record shows the record's names":
+    fake.contacts[keyA] = placeholder(keyA, "Zany Mammoth Hare")
+    model.loadSorted(fake, snapshot(10, member(keyA, "alice", alias = "Zany Mammoth Hare"),
+      member(keyB, "bob", alias = "Brave Cat")))
+    fake.contacts[keyA] = fromStatusGo(ContactsDto(id: keyA, displayName: "zara", alias: "Zany Mammoth Hare"))
+    model.contactChanged(keyA)
+    check model.orderedKeys == @[keyB, keyA]
+    check model.str(model.rowOfKey(keyA), "preferredDisplayName") == "zara"
+
+  test "a status-go record's cleared display name wins over the entry's":
+    fake.contacts[keyA] = fromStatusGo(ContactsDto(id: keyA, alias: "Zany Mammoth Hare", added: true, hasAddedUs: true))
     model.loadSorted(fake, snapshot(10, member(keyA, "alice", alias = "Zany Mammoth Hare"),
       member(keyB, "bob", alias = "Brave Cat")))
     check model.str(model.rowOfKey(keyA), "preferredDisplayName") == "Zany Mammoth Hare"

@@ -10,7 +10,7 @@ import nimqml, std/[sets, tables, json, strutils]
 import app_service/common/types
 import app_service/service/community/dto/roster
 import app_service/service/community/roster_order
-import app_service/service/contacts/dto/contacts
+import app_service/service/contacts/dto/contact_details
 import user_item
 import contacts_utils
 import model_utils
@@ -78,17 +78,18 @@ const
     ModelRole.IsVerified, ModelRole.IsUntrustworthy, ModelRole.TrustStatus,
     ModelRole.IsBlocked, ModelRole.ContactRequest]
 
-proc toRosterContact*(dto: ContactsDto, icon: string): RosterContact =
-  ## A cached non-contact (e.g. a placeholder for an unseen key) is not known:
-  ## the entry's names apply, under its local nickname.
+proc toRosterContact*(details: ContactDetails): RosterContact =
+  ## Known only for a record status-go sent, contact or not: it is kept live
+  ## by contact updates. A placeholder has no profile, so the entry's names apply.
+  let dto = details.dto
   RosterContact(
-    known: dto.isContact,
+    known: details.fromStatusGo,
     localNickname: dto.localNickname,
     displayName: dto.displayName,
     ensName: dto.name,
     ensVerified: dto.ensVerified,
     alias: dto.alias,
-    icon: icon,
+    icon: details.icon,
     isContact: dto.isContact,
     isBlocked: dto.isBlocked,
     trustStatus: dto.trustStatus,
