@@ -48,6 +48,8 @@ SplitView {
             closePolicy: Popup.NoAutoClose
             directParent: Overlay.overlay
             isMobile: ctrlIsMobile.checked
+            signOutAvailable: !ctrlPasswordSetup.checked
+            passwordSetupAvailable: ctrlPasswordSetup.checked
             compressedPubKey: "zxcvdeadbeef"
             emojiHash: ["👨🏻‍🍼", "🏃🏿‍♂️", "🌇", "🤶🏿", "🏮","🤷🏻‍♂️", "🤦🏻",
                 "📣", "🤎", "👷🏽", "😺", "🥞", "🔃", "🧝🏽‍♂️"]
@@ -66,6 +68,8 @@ SplitView {
                 d.currentUserStatus = status
             }
             onSignOutRequested: logs.logEvent("onSignOutRequested")
+            onSetPasswordRequested: logs.logEvent("onSetPasswordRequested")
+            onCreateOrLoginRequested: logs.logEvent("onCreateOrLoginRequested")
             onQuitRequested: logs.logEvent("onQuitRequested")
         }
     }
@@ -80,6 +84,10 @@ SplitView {
             Switch {
                 id: ctrlIsMobile
                 text: "Is mobile"
+            }
+            Switch {
+                id: ctrlPasswordSetup
+                text: "Password setup instead of Sign out"
             }
             Switch {
                 id: ctrlHasIcon

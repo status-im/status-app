@@ -10,6 +10,23 @@ QtObject {
     readonly property bool mnemonicBackedUp: privacyModule.mnemonicBackedUp
     readonly property string keyUid: userProfile.keyUid
     readonly property bool migratedToColdWallet: userProfile.migratedToColdWallet
+    // Created by the app without a password, until the user sets one
+    readonly property bool zeroOnboarded: userProfile.zeroOnboarded
+    readonly property bool passwordChangeAvailable: !root.migratedToColdWallet && !root.zeroOnboarded
+    readonly property bool signOutAvailable: !root.zeroOnboarded
+
+    signal profilePasswordSet(bool success, string errorMsg)
+
+    readonly property Connections privacyModuleConnections: Connections {
+        target: root.privacyModule
+        function onProfilePasswordSet(success: bool, errorMsg: string) {
+            root.profilePasswordSet(success, errorMsg)
+        }
+    }
+
+    function setProfilePassword(newPassword) {
+        root.privacyModule.setProfilePassword(newPassword)
+    }
 
     readonly property var appSettingsInst: appSettings
 

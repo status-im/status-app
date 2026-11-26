@@ -62,6 +62,16 @@ Item {
         signalName: "quitRequested"
     }
 
+    SignalSpy {
+        id: setPasswordSpy
+        signalName: "setPasswordRequested"
+    }
+
+    SignalSpy {
+        id: createOrLoginSpy
+        signalName: "createOrLoginRequested"
+    }
+
     TestCase {
         name: "UserStatusContextMenu"
         when: windowShown
@@ -88,6 +98,10 @@ Item {
             settingsSpy.clear()
             statusSpy.clear()
             signOutSpy.clear()
+            setPasswordSpy.target = null
+            setPasswordSpy.clear()
+            createOrLoginSpy.target = null
+            createOrLoginSpy.clear()
             quitSpy.clear()
         }
 
@@ -287,6 +301,46 @@ Item {
 
             compare(findAction(menu, "userStatusQuitAction").visible, false)
             compare(findAction(menu, "userStatusSignOutAction").visible, true)
+        }
+
+        function test_passwordSetupReplacesSignOut() {
+            const menu = createMenu({ signOutAvailable: false, passwordSetupAvailable: true })
+
+            compare(findAction(menu, "userStatusSignOutAction").visible, false)
+            const setPassword = findAction(menu, "userStatusSetPasswordAction")
+            const createOrLogin = findAction(menu, "userStatusCreateOrLoginAction")
+            compare(setPassword.visible, true)
+            compare(setPassword.text, qsTr("Set password for this profile"))
+            compare(setPassword.icon.name, "password")
+            compare(createOrLogin.visible, true)
+            compare(createOrLogin.text, qsTr("Create new profile or Log in"))
+            compare(createOrLogin.icon.name, "profile")
+
+            const settingsY = findAction(menu, "userStatusSettingsAction").mapToItem(menu.contentItem, 0, 0).y
+            const alwaysOnlineY = findAction(menu, "userStatusMenuAlwaysOnlineAction").mapToItem(menu.contentItem, 0, 0).y
+            const setPasswordY = setPassword.mapToItem(menu.contentItem, 0, 0).y
+            const createOrLoginY = createOrLogin.mapToItem(menu.contentItem, 0, 0).y
+            verify(settingsY < setPasswordY && setPasswordY < createOrLoginY && createOrLoginY < alwaysOnlineY)
+        }
+
+        function test_regularProfileHasNoPasswordSection() {
+            const menu = createMenu()
+
+            compare(findAction(menu, "userStatusSetPasswordAction").visible, false)
+            compare(findAction(menu, "userStatusCreateOrLoginAction").visible, false)
+        }
+
+        function test_passwordSectionActionsEmitRequested() {
+            let menu = createMenu({ passwordSetupAvailable: true })
+            setPasswordSpy.target = menu
+            triggerAction(menu, "userStatusSetPasswordAction")
+            tryCompare(setPasswordSpy, "count", 1)
+            tryCompare(menu, "opened", false)
+
+            menu = createMenu({ passwordSetupAvailable: true })
+            createOrLoginSpy.target = menu
+            triggerAction(menu, "userStatusCreateOrLoginAction")
+            tryCompare(createOrLoginSpy, "count", 1)
         }
     }
 }

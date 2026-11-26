@@ -60,6 +60,7 @@ Loader {
     signal emojiSkinColorSelected(string skinColor)
     signal buyStickerPackRequested(string packId, string price)
     signal enableThirdpartyServicesRequested()
+    signal passwordRequired(string title, var onSuccess, var onCancel)
 
     asynchronous: true
     active: false
@@ -366,5 +367,6 @@ Loader {
         function onEmojiSkinColorSelected(skinColor) { root.emojiSkinColorSelected(skinColor) }
         function onBuyStickerPackRequested(packId, price) { root.buyStickerPackRequested(packId, price) }
         function onEnableThirdpartyServicesRequested() { root.enableThirdpartyServicesRequested() }
+        function onPasswordRequired(title, onSuccess, onCancel) { root.passwordRequired(title, onSuccess, onCancel) }
     }
 }

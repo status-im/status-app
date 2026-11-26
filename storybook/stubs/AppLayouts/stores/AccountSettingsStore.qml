@@ -6,4 +6,10 @@ QtObject {
     function setShowUsersList(show) {
         showUsersList = show
     }
+
+    property bool termsBannerDismissed: false
+
+    function dismissTermsBanner() {
+        termsBannerDismissed = true
+    }
 }

@@ -19,6 +19,13 @@ QtObject:
   proc changePassword*(self: View, password: string, newPassword: string, rekey: bool) {.slot.} =
     self.delegate.changePassword(password, newPassword, rekey)
 
+  proc setProfilePassword*(self: View, newPassword: string) {.slot.} =
+    self.delegate.setProfilePassword(newPassword)
+
+  proc profilePasswordSet(self: View, success: bool, errorMsg: string) {.signal.}
+  proc emitProfilePasswordSetSignal*(self: View, success: bool, errorMsg: string) =
+    self.profilePasswordSet(success, errorMsg)
+
   proc isProfileMigratedToDEKEncryption*(self: View): bool {.slot.} =
     return self.delegate.isProfileMigratedToDEKEncryption()
 

@@ -43,6 +43,7 @@ Loader {
     required property ProfileStores.PrivacyStore privacyStore
 
     required property Keychain keychain
+    required property SecureStorage secureStorage
 
     asynchronous: true
     active: false // loaded on demand by section loaders, never active by default
@@ -88,6 +89,7 @@ Loader {
             ensUsernamesStore:      Qt.binding(() => root.ensUsernamesStore),
             privacyStore:           Qt.binding(() => root.privacyStore),
             keychain:               Qt.binding(() => root.keychain),
+            secureStorage:          Qt.binding(() => root.secureStorage),
             notificationsStore:     Qt.binding(() => root.notificationsStore),
             devicesStore:           Qt.binding(() => root.devicesStore)
         })
@@ -168,6 +170,12 @@ Loader {
     }
     function openEnableBiometricsPopup() {
         invoke(() => root.item.openEnableBiometricsPopup())
+    }
+    function openSetProfilePasswordPopup() {
+        invoke(() => root.item.openSetProfilePasswordPopup())
+    }
+    function requireProfilePassword(title, onSuccess, onCancel) {
+        invoke(() => root.item.requireProfilePassword(title, onSuccess, onCancel))
     }
 
     onLoaded: d.flushPending()

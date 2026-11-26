@@ -55,6 +55,8 @@ Control {
     property bool statusSupportBotEnabled: false
     property bool swapProvidersEnabled: true
     property bool profileLoading: false
+    property bool signOutAvailable: true
+    property bool passwordSetupAvailable: false
 
     // Set from AppMain: used on mobile so native overlay can dismiss the drawer over Browser WebView.
     property bool browserSectionActive: false
@@ -78,6 +80,8 @@ Control {
     signal settingsRequested
     signal setCurrentUserStatusRequested(int status)
     signal signOutRequested
+    signal setPasswordRequested
+    signal createOrLoginRequested
     signal quitRequested
 
     Component.onCompleted: d.snapToMode()
@@ -308,6 +312,8 @@ Control {
                     currentUserStatus: root.selfContactDetails.onlineStatus
                     usesDefaultName: root.selfContactDetails.usesDefaultName
                     bio: root.selfContactDetails.bio
+                    signOutAvailable: root.signOutAvailable
+                    passwordSetupAvailable: root.passwordSetupAvailable
 
                     getEmojiHashFn: root.getEmojiHashFn
                     getLinkToProfileFn: root.getLinkToProfileFn
@@ -317,6 +323,8 @@ Control {
                     onShareOwnProfileRequested: root.shareOwnProfileRequested()
                     onSettingsRequested: root.settingsRequested()
                     onSignOutRequested: root.signOutRequested()
+                    onSetPasswordRequested: root.setPasswordRequested()
+                    onCreateOrLoginRequested: root.createOrLoginRequested()
                     onQuitRequested: root.quitRequested()
                 }
             }

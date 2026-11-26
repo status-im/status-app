@@ -36,6 +36,10 @@ proc init*(self: Controller) =
     var args = OperationSuccessArgs(e)
     self.delegate.onPasswordChanged(args.success, args.errorMsg)
 
+  self.events.on(SIGNAL_PROFILE_PASSWORD_SET) do(e: Args):
+    let args = OperationSuccessArgs(e)
+    self.delegate.onProfilePasswordSet(args.success, args.errorMsg)
+
   self.events.on(SIGNAL_URL_UNFURLING_MODE_UPDATED) do(e: Args):
     var args = UrlUnfurlingModeArgs(e)
     self.delegate.onUrlUnfurlingModeUpdated(args.value.int)
@@ -48,6 +52,9 @@ proc isMnemonicBackedUp*(self: Controller): bool =
 
 proc changePassword*(self: Controller, password: string, newPassword: string, rekey: bool) =
   self.privacyService.changePassword(password, newPassword, rekey)
+
+proc setProfilePassword*(self: Controller, newPassword: string) =
+  self.privacyService.setProfilePassword(newPassword)
 
 proc isProfileMigratedToDEKEncryption*(self: Controller): bool =
   return self.privacyService.isProfileMigratedToDEKEncryption()

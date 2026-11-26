@@ -1024,6 +1024,7 @@ Item {
         }
 
         readonly property string myPublicKey: userProfile.pubKey // we need it very soon, before all the stores
+        readonly property bool zeroOnboarded: appMain.privacyStore?.zeroOnboarded ?? false
         readonly property string supportBotPublicKey: {
             const chatKey = Constants.statusSupportBotChatKey
             return chatKey && appMain.utilsStore ? appMain.utilsStore.getDecompressedPk(chatKey) : ""
@@ -1173,6 +1174,10 @@ Item {
         function openHomePage() {
             appMain.rootStore.setActiveSectionBySectionType(Constants.appSection.homePage)
             homePageLoader.item.focusSearch()
+        }
+
+        function openCreateOrLoginPopup() {
+            console.warn("Create / Log in is not available yet")
         }
 
         function openSettingsRoot() {
@@ -1382,6 +1387,7 @@ Item {
         onEmojiSkinColorSelected: skinColor => appMainLocalSettings.skinColor = skinColor
         onBuyStickerPackRequested: (packId, price) => popupRequestsHandler.buyStickerPack(packId, price)
         onEnableThirdpartyServicesRequested: popupRequestsHandler.openThirdpartyServicesPopup()
+        onPasswordRequired: (title, onSuccess, onCancel) => popupRequestsHandler.requireProfilePassword(title, onSuccess, onCancel)
     }
 
     BalancesOnScreenTracker {
@@ -1423,6 +1429,7 @@ Item {
         aboutStore: appMain.aboutStore
         privacyStore: appMain.privacyStore
         keychain: appMain.keychain
+        secureStorage: appMain.secureStorage
         notificationsStore: appMain.notificationsStore
         devicesStore: appMain.devicesStore
 
@@ -1750,12 +1757,34 @@ Item {
             Layout.leftMargin: SQUtils.Utils.isMacOS ? appMain.SafeArea.margins.left : 0
             Layout.rightMargin: SQUtils.Utils.isMacOS ? appMain.SafeArea.margins.right : 0
 
+            ZeroOnboardingBanner {
+                objectName: "zeroOnboardingBanner"
+                Layout.fillWidth: true
+
+                active: d.zeroOnboarded
+
+                onSetPasswordRequested: popupRequestsHandler.openSetProfilePasswordPopup()
+                onCreateOrLoginRequested: d.openCreateOrLoginPopup()
+            }
+
+            TermsOfUseBanner {
+                objectName: "termsOfUseBanner"
+                Layout.fillWidth: true
+
+                active: d.zeroOnboarded && !appMain.accountSettingsStore.termsBannerDismissed
+
+                onAcceptRequested: appMain.accountSettingsStore.dismissTermsBanner()
+                onTermsOfUseRequested: Global.termsOfUseRequested()
+                onPrivacyPolicyRequested: Global.privacyPolicyRequested()
+            }
+
             GlobalBanner {
                 Layout.fillWidth: true
 
                 isOnline: d.networkChecker.isOnline
                 testnetEnabled: appMain.networksStore.areTestNetworksEnabled
-                seedphraseBackedUp: appMain.privacyStore?.mnemonicBackedUp === true
+                seedphraseBackedUp: d.zeroOnboarded
+                                   || appMain.privacyStore?.mnemonicBackedUp === true
                                    || appMain.profileStore?.userDeclinedBackupBanner === true
 
                 onOpenTestnetPopupRequested: Global.openTestnetPopup()
@@ -2796,6 +2825,8 @@ Item {
                 thirdpartyServicesEnabled: appMain.rootStore.thirdpartyServicesEnabled
                 statusSupportBotEnabled: appMain.featureFlagsStore.statusSupportBotEnabled
                 profileLoading: !appMain.mainReady
+                signOutAvailable: appMain.privacyStore?.signOutAvailable ?? true
+                passwordSetupAvailable: d.zeroOnboarded
 
                 onActivityCenterRequested: function(shouldShow) {
                     d.closeActivityCenterOnNextBack = false
@@ -2806,6 +2837,8 @@ Item {
                 onShareOwnProfileRequested: Global.shareProfileDialogRequested(appMain.ownContactDetails.publicKey)
                 onSettingsRequested: d.openSettingsRoot()
                 onSignOutRequested: Global.signOutRequested()
+                onSetPasswordRequested: popupRequestsHandler.openSetProfilePasswordPopup()
+                onCreateOrLoginRequested: d.openCreateOrLoginPopup()
                 onQuitRequested: Global.quitAppRequested()
 
                 onSupportBotChatRequested: {

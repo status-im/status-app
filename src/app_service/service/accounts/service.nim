@@ -78,6 +78,9 @@ QtObject:
     self.loggedInAccount.name = displayName
     self.loggedInAccount.images = images
 
+  proc clearLoggedInAccountZeroOnboarded*(self: Service) =
+    self.loggedInAccount.zeroOnboarded = false
+
   proc init*(self: Service) =
     discard
 

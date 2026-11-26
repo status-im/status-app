@@ -54,6 +54,7 @@ QtObject {
     required property ProfileStores.DevicesStore devicesStore
 
     required property Keychain keychain
+    required property SecureStorage secureStorage
 
     readonly property var appMainLocalSettings: Settings {
         id: appMainLocalSettings
@@ -379,10 +380,24 @@ QtObject {
     function openEnableBiometricsPopup() {
         enableBiometricsPopupHandler.openPopup()
     }
+    function openSetProfilePasswordPopup() {
+        createPasswordPopupHandler.requirePassword("", () => Global.displaySuccessToastMessage(qsTr("Password set")), null)
+    }
+    function requireProfilePassword(title, onSuccess, onCancel) {
+        createPasswordPopupHandler.requirePassword(title, onSuccess, onCancel)
+    }
 
     readonly property EnableBiometricsPopupHandler enableBiometricsPopupHandler: EnableBiometricsPopupHandler {
         popupParent: root.popupParent
         privacyStore: root.privacyStore
+        keychain: root.keychain
+    }
+
+    readonly property CreatePasswordPopupHandler createPasswordPopupHandler: CreatePasswordPopupHandler {
+        popupParent: root.popupParent
+        passwordStrengthScoreFunction: root.sharedRootStore.getPasswordStrengthScore
+        privacyStore: root.privacyStore
+        secureStorage: root.secureStorage
         keychain: root.keychain
     }
 }

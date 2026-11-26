@@ -45,6 +45,8 @@ const LSS_KEY_SHOW_DELETE_MESSAGE_WARNING* = "showDeleteMessageWarning"
 const DEFAULT_SHOW_DELETE_MESSAGE_WARNING = true
 const LSS_KEY_SHOW_DELETE_THREAD_WARNING* = "showDeleteThreadWarning"
 const DEFAULT_SHOW_DELETE_THREAD_WARNING = true
+const LSS_KEY_TERMS_BANNER_DISMISSED* = "termsBannerDismissed"
+const DEFAULT_TERMS_BANNER_DISMISSED = false
 const LSS_KEY_ACTIVE_SECTION* = "activeSection"
 const DEFAULT_ACTIVE_SECTION = ""
 const LAST_SECTION_CHAT = "LastSectionChat"
@@ -569,6 +571,18 @@ QtObject:
     write = setShowDeleteMessageWarning
     notify = showDeleteMessageWarningChanged
 
+  proc termsBannerDismissedChanged*(self: LocalAccountSettings) {.signal.}
+  proc getTermsBannerDismissed*(self: LocalAccountSettings): bool {.slot.} =
+    getSettingsProp[bool](self, LSS_KEY_TERMS_BANNER_DISMISSED, newQVariant(DEFAULT_TERMS_BANNER_DISMISSED))
+  proc setTermsBannerDismissed*(self: LocalAccountSettings, value: bool) {.slot.} =
+    setSettingsProp(self, LSS_KEY_TERMS_BANNER_DISMISSED, newQVariant(value)):
+      self.termsBannerDismissedChanged()
+
+  QtProperty[bool] termsBannerDismissed:
+    read = getTermsBannerDismissed
+    write = setTermsBannerDismissed
+    notify = termsBannerDismissedChanged
+
   proc showDeleteThreadWarningChanged*(self: LocalAccountSettings) {.signal.}
   proc getShowDeleteThreadWarning*(self: LocalAccountSettings): bool {.slot.} =
     getSettingsProp[bool](self, LSS_KEY_SHOW_DELETE_THREAD_WARNING, newQVariant(DEFAULT_SHOW_DELETE_THREAD_WARNING))
@@ -887,6 +901,7 @@ QtObject:
       of LSS_KEY_QUITE_ON_CLOSE: self.quitOnCloseChanged()
       of LSS_KEY_SHOW_DELETE_MESSAGE_WARNING: self.showDeleteMessageWarningChanged()
       of LSS_KEY_SHOW_DELETE_THREAD_WARNING: self.showDeleteThreadWarningChanged()
+      of LSS_KEY_TERMS_BANNER_DISMISSED: self.termsBannerDismissedChanged()
       of LSS_KEY_ACTIVE_SECTION: self.activeSectionChanged()
       of LSS_KEY_OPEN_LINKS_IN_STATUS: self.openLinksInStatusChanged()
       of LSS_KEY_SHOULD_SHOW_FAVORITES_BAR: self.shouldShowFavoritesBarChanged()

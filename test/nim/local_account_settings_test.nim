@@ -84,6 +84,20 @@ suite "LocalAccountSettings binding":
     check s.isFreshProfile()
     check not s.getExpandUsersList()
 
+  test "the terms banner stays dismissed for that profile only":
+    let s = newLocalAccountSettings(dir)
+    s.bindAccount(aliceUid)
+    check not s.getTermsBannerDismissed()
+    s.setTermsBannerDismissed(true)
+    s.flush()
+
+    s.bindAccount(bobUid)
+    check not s.getTermsBannerDismissed()
+
+    let reopened = newLocalAccountSettings(dir)
+    reopened.bindAccount(aliceUid)
+    check reopened.getTermsBannerDismissed()
+
   test "binding another profile serves that profile's values":
     let s = newLocalAccountSettings(dir)
     s.bindAccount(aliceUid)

@@ -28,6 +28,9 @@ method isMnemonicBackedUp*(self: AccessInterface): bool {.base.} =
 method changePassword*(self: AccessInterface, password: string, newPassword: string, rekey: bool) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method setProfilePassword*(self: AccessInterface, newPassword: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method getBiometricCredentialForStorage*(self: AccessInterface, keyUid: string, password: string): string {.base.} =
   raise newException(ValueError, "No implementation available")
 
@@ -54,6 +57,9 @@ method mnemonicBackedUp*(self: AccessInterface) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method onPasswordChanged*(self: AccessInterface, success: bool, errorMsg: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method onProfilePasswordSet*(self: AccessInterface, success: bool, errorMsg: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method getMessagesFromContactsOnly*(self: AccessInterface): bool {.base.} =

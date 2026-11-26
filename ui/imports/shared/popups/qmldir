@@ -7,6 +7,7 @@ CommunityMembershipSetupDialog 1.0 CommunityMembershipSetupDialog.qml
 ConfirmExternalLinkPopup 1.0 ConfirmExternalLinkPopup.qml
 ConfirmationDialog 1.0 ConfirmationDialog.qml
 ContactVerificationRequestPopup 1.0 ContactVerificationRequestPopup.qml
+CreatePasswordPopup 1.0 CreatePasswordPopup.qml
 DeleteMessageConfirmationPopup 1.0 DeleteMessageConfirmationPopup.qml
 DownloadModal 1.0 DownloadModal.qml
 DownloadPage 1.0 DownloadPage.qml

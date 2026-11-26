@@ -40,6 +40,7 @@ Item {
         backUpSeedBadgeCount: 1
         keycardEnabled: true
         showPassword: true
+        showSignOut: true
         showAllChats: true
         searchPhrase: ""
         profileId: "tst_HomePageGrid_" + Date.now()

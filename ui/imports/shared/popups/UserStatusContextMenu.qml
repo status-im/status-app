@@ -26,6 +26,8 @@ StatusDropdown {
 
     property int currentUserStatus: Constants.currentUserStatus.unknown
     property bool isMobile: SQUtils.Utils.isMobile
+    property bool signOutAvailable: true
+    property bool passwordSetupAvailable: false
 
     signal viewProfileRequested
     signal copyLinkRequested
@@ -33,6 +35,8 @@ StatusDropdown {
     signal settingsRequested
     signal setCurrentUserStatusRequested(int status)
     signal signOutRequested
+    signal setPasswordRequested
+    signal createOrLoginRequested
     signal quitRequested
 
     implicitWidth: 400
@@ -161,6 +165,7 @@ StatusDropdown {
         }
 
         ActionWrapper {
+            visible: root.signOutAvailable
             action: StatusAction {
                 objectName: "userStatusSignOutAction"
                 text: qsTr("Sign out")
@@ -180,6 +185,37 @@ StatusDropdown {
                 icon.name: "close-circle"
                 onTriggered: {
                     root.quitRequested()
+                    root.close()
+                }
+            }
+        }
+
+        StatusMenuSeparator {
+            Layout.fillWidth: true
+            visible: root.passwordSetupAvailable
+        }
+
+        ActionWrapper {
+            visible: root.passwordSetupAvailable
+            action: StatusAction {
+                objectName: "userStatusSetPasswordAction"
+                text: qsTr("Set password for this profile")
+                icon.name: "password"
+                onTriggered: {
+                    root.setPasswordRequested()
+                    root.close()
+                }
+            }
+        }
+
+        ActionWrapper {
+            visible: root.passwordSetupAvailable
+            action: StatusAction {
+                objectName: "userStatusCreateOrLoginAction"
+                text: qsTr("Create new profile or Log in")
+                icon.name: "profile"
+                onTriggered: {
+                    root.createOrLoginRequested()
                     root.close()
                 }
             }

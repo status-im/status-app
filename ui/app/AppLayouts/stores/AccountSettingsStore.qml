@@ -11,6 +11,12 @@ QObject {
         d.settings.expandUsersList = expanded
     }
 
+    readonly property bool termsBannerDismissed: d.settings.termsBannerDismissed
+
+    function dismissTermsBanner() {
+        d.settings.termsBannerDismissed = true
+    }
+
     QtObject {
         id: d
 

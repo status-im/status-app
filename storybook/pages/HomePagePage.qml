@@ -47,6 +47,7 @@ SplitView {
             browserEnabled: ctrlBrowserEnabled.checked
             keycardEnabled: ctrlKeycardEnabled.checked
             showPassword: ctrlShowPassword.checked
+            showSignOut: true
 
             syncingBadgeCount: 2
             messagingBadgeCount: 4

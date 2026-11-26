@@ -32,6 +32,7 @@ QObject {
     required property int backUpSeedBadgeCount
     required property bool keycardEnabled
     required property bool showPassword
+    required property bool showSignOut
 
     // internal settings
     required property string profileId
@@ -227,6 +228,7 @@ QObject {
                 backUpSeedBadgeCount: root.backUpSeedBadgeCount
                 isKeycardEnabled: root.keycardEnabled
                 showPassword: root.showPassword
+                showSignOut: root.showSignOut
                 showSubSubSections: true
             }
             mapping: [

@@ -50,6 +50,7 @@ Item {
             backUpSeedBadgeCount: 1
             keycardEnabled: true
             showPassword: true
+            showSignOut: true
 
             searchPhrase: ""
             profileId: root.uniqueProfileId()
@@ -104,6 +105,7 @@ Item {
             backUpSeedBadgeCount: 0
             keycardEnabled: false
             showPassword: true
+            showSignOut: true
 
             searchPhrase: ""
             profileId: root.uniqueProfileId()
@@ -265,6 +267,12 @@ Item {
             const passwordKey = "4;" + Constants.settingsSubsection.password
             verify(keys(createAdaptor({ showPassword: true }).homePageEntriesModel).includes(passwordKey))
             verify(!keys(createAdaptor({ showPassword: false }).homePageEntriesModel).includes(passwordKey))
+        }
+
+        function test_showSignOut() {
+            const signOutKey = "4;" + Constants.settingsSubsection.signout
+            verify(keys(createAdaptor({ showSignOut: true }).homePageEntriesModel).includes(signOutKey))
+            verify(!keys(createAdaptor({ showSignOut: false }).homePageEntriesModel).includes(signOutKey))
         }
 
         function test_saveLoadRoundtrip() {

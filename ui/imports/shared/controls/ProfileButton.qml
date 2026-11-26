@@ -22,6 +22,8 @@ StatusIconTabButton {
     property string bio
 
     property bool loading: false
+    property bool signOutAvailable: true
+    property bool passwordSetupAvailable: false
     property var getLinkToProfileFn: function(pubKey) { console.error("IMPLEMENT ME"); return "" }
     property var getEmojiHashFn: function(pubKey) { console.error("IMPLEMENT ME"); return "" }
 
@@ -30,6 +32,8 @@ StatusIconTabButton {
     signal settingsRequested
     signal setCurrentUserStatusRequested(int status)
     signal signOutRequested
+    signal setPasswordRequested
+    signal createOrLoginRequested
     signal quitRequested
 
     name: root.name
@@ -110,6 +114,8 @@ StatusIconTabButton {
             headerIcon: root.iconSource
             usesDefaultName: root.usesDefaultName
             bio: root.bio
+            signOutAvailable: root.signOutAvailable
+            passwordSetupAvailable: root.passwordSetupAvailable
 
             currentUserStatus: root.currentUserStatus
 
@@ -119,6 +125,8 @@ StatusIconTabButton {
             onCopyLinkRequested: ClipboardUtils.setText(root.getLinkToProfileFn(root.pubKey))
             onSetCurrentUserStatusRequested: (status) => root.setCurrentUserStatusRequested(status)
             onSignOutRequested: root.signOutRequested()
+            onSetPasswordRequested: root.setPasswordRequested()
+            onCreateOrLoginRequested: root.createOrLoginRequested()
             onQuitRequested: root.quitRequested()
 
             onClosed: {

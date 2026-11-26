@@ -1,3 +1,4 @@
+CreatePasswordPopupHandler 1.0 CreatePasswordPopupHandler.qml
 HandlersManager 1.0 HandlersManager.qml
 SendModalHandler 1.0 SendModalHandler.qml
 StatusGifPopupHandler 1.0 StatusGifPopupHandler.qml

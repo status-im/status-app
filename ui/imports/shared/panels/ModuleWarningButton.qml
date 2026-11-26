@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 
 import StatusQ.Core
 import StatusQ.Core.Theme
@@ -16,13 +17,35 @@ Button {
 
     focusPolicy: SQUtils.Utils.isMobile ? Qt.NoFocus : Qt.TabFocus
 
-    contentItem: StatusBaseText {
-        text: root.text
-        font.pixelSize: Theme.additionalTextSize
-        font.weight: Font.Medium
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-        color: Theme.palette.indirectColor1
+    icon.width: 16
+    icon.height: 16
+    icon.color: Theme.palette.indirectColor1
+
+    contentItem: Item {
+        implicitWidth: row.implicitWidth
+        implicitHeight: row.implicitHeight
+
+        RowLayout {
+            id: row
+            anchors.centerIn: parent
+            spacing: 4
+
+            StatusIcon {
+                Layout.preferredWidth: root.icon.width
+                Layout.preferredHeight: root.icon.height
+                visible: !!root.icon.name
+                icon: root.icon.name
+                color: root.icon.color
+            }
+            StatusBaseText {
+                text: root.text
+                font.pixelSize: Theme.additionalTextSize
+                font.weight: Font.Medium
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                color: Theme.palette.indirectColor1
+            }
+        }
     }
 
     background: Rectangle {

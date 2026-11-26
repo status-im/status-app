@@ -11,6 +11,8 @@ import ../../../backend/privacy as status_privacy
 
 import ../../common/utils as common_utils
 import ../../common/keychain_credential as keychain_credential
+import ../../../app/global/global_singleton
+import ./operation_result
 
 include ./async_tasks
 
@@ -19,6 +21,7 @@ logScope:
 
 # Signals which may be emitted by this service:
 const SIGNAL_PASSWORD_CHANGED* = "passwordChanged"
+const SIGNAL_PROFILE_PASSWORD_SET* = "profilePasswordSet"
 
 type
   OperationSuccessArgs* = ref object of Args
@@ -47,34 +50,30 @@ QtObject:
     discard
 
   proc onChangeDatabasePasswordResponse(self: Service, responseStr: string) {.slot.} =
-    var data = OperationSuccessArgs(success: false, errorMsg: "")
-    try:
-      let response = responseStr.parseJson
+    let res = operationResult(responseStr)
+    if not res.success:
+      error "error: ", procName="changePassword", errDesription = res.errorMsg
+    self.events.emit(SIGNAL_PASSWORD_CHANGED, OperationSuccessArgs(success: res.success, errorMsg: res.errorMsg))
 
-      # nim runtime error
-      let error = response["error"].getStr
-      if error != "":
-        data.errorMsg = error
-        self.events.emit(SIGNAL_PASSWORD_CHANGED, data)
-        return;
+  proc onSetProfilePasswordResponse(self: Service, responseStr: string) {.slot.} =
+    let res = operationResult(responseStr)
+    if res.success:
+      self.accountsService.clearLoggedInAccountZeroOnboarded()
+      singletonInstance.userProfile.setZeroOnboarded(false)
+    else:
+      error "error: ", procName="setProfilePassword", errDesription = res.errorMsg
+    self.events.emit(SIGNAL_PROFILE_PASSWORD_SET, OperationSuccessArgs(success: res.success, errorMsg: res.errorMsg))
 
-      let result = response["result"]
-
-      if(result.contains("error")):
-        let errMsg = result["error"].getStr
-        if(errMsg.len == 0):
-          data.success = true
-        else:
-          # backend runtime error
-          data.errorMsg = errMsg
-          error "error: ", procName="changePassword", errDesription = errMsg
-
-    except Exception as e:
-      error "error: ", procName="changePassword", errName = e.name, errDesription = e.msg
-      data.errorMsg = e.msg
-
-    self.events.emit(SIGNAL_PASSWORD_CHANGED, data)
-
+  # Sets the first password of a zero-onboarded profile
+  proc setProfilePassword*(self: Service, newPassword: string) =
+    let arg = SetZeroOnboardedProfilePasswordTaskArg(
+      tptr: setZeroOnboardedProfilePasswordTask,
+      vptr: cast[uint](self.vptr),
+      slot: "onSetProfilePasswordResponse",
+      keyUid: self.accountsService.getLoggedInAccount().keyUid,
+      newPassword: common_utils.hashPassword(newPassword)
+    )
+    self.threadpool.start(arg)
 
   proc changePassword*(self: Service, password: string, newPassword: string, rekey: bool = false) =
     try:

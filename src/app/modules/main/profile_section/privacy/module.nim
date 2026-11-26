@@ -52,6 +52,12 @@ method getModuleAsVariant*(self: Module): QVariant =
 method changePassword*(self: Module, password: string, newPassword: string, rekey: bool) =
   self.controller.changePassword(password, newPassword, rekey)
 
+method setProfilePassword*(self: Module, newPassword: string) =
+  self.controller.setProfilePassword(newPassword)
+
+method onProfilePasswordSet*(self: Module, success: bool, errorMsg: string) =
+  self.view.emitProfilePasswordSetSignal(success, errorMsg)
+
 method isProfileMigratedToDEKEncryption*(self: Module): bool =
   return self.controller.isProfileMigratedToDEKEncryption()
 

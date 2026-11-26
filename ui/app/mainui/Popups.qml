@@ -129,6 +129,8 @@ QtObject {
     signal emojiSkinColorSelected(string skinColor)
     signal buyStickerPackRequested(string packId, string price)
     signal enableThirdpartyServicesRequested()
+    // The profile has no password yet: set one first, then onSuccess(password); onCancel otherwise
+    signal passwordRequired(string title, var onSuccess, var onCancel)
 
     readonly property Connections imageSaveConnections: Connections {
         target: SystemUtils
@@ -290,6 +292,10 @@ QtObject {
     }
 
     function openBackUpSeedPopup() {
+        if (root.privacyStore?.zeroOnboarded) {
+            root.passwordRequired("", () => openPopup(backupSeedModalComponent), null)
+            return
+        }
         openPopup(backupSeedModalComponent)
     }
 
@@ -1801,7 +1807,7 @@ QtObject {
                 id: confirmDialog
                 secureStorage: root.secureStorage
                 privacyStore: root.privacyStore
-                keyUid: root.privacyStore.keyUid
+                keyUid: root.privacyStore?.keyUid ?? ""
                 onSignOutRequested: Global.signOutConfirmed()
             }
         },

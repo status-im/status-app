@@ -42,6 +42,9 @@ SortFilterProxyModel {
     // Determines if the change password entry is included
     property bool showPassword: true
 
+    // Determines if the sign out entry is included
+    property bool showSignOut: true
+
     // Determines if local (on-device) backup entries are included
     property bool localBackupEnabled: true
 
@@ -220,6 +223,8 @@ SortFilterProxyModel {
                         return root.showBackUpSeed
                     case Constants.settingsSubsection.password:
                         return root.showPassword
+                    case Constants.settingsSubsection.signout:
+                        return root.showSignOut
                     case Constants.settingsSubsection.keycardNew:
                         return root.isKeycardEnabled
                     case Constants.settingsSubsection.contacts:

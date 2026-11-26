@@ -31,19 +31,16 @@ OnboardingPage {
     QtObject {
         id: d
 
-        property bool stayLoggedIn: true // default ON for new users (per acceptance criteria)
-        property bool enableBiometrics: true // default ON for new users
-
         function submit() : void {
-            if (!passView.ready)
+            if (!form.ready)
                 return
-            root.stayLoggedInRequested(root.stayLoggedInAvailable && d.stayLoggedIn)
-            root.enableBiometricsRequested(root.biometricsAvailable && d.enableBiometrics)
-            root.setPasswordRequested(passView.newPswText)
+            root.stayLoggedInRequested(form.stayLoggedIn)
+            root.enableBiometricsRequested(form.enableBiometrics)
+            root.setPasswordRequested(form.password)
         }
     }
 
-    Component.onCompleted: passView.forceNewPswInputFocus()
+    Component.onCompleted: form.forceInputFocus()
 
     contentItem: Item {
         ColumnLayout {
@@ -51,44 +48,20 @@ OnboardingPage {
             anchors.centerIn: parent
             width: Math.min(400, root.availableWidth)
 
-            PasswordView {
-                id: passView
+            CreatePasswordForm {
+                id: form
                 Layout.fillWidth: true
-                Layout.alignment: Qt.AlignHCenter
-                highSizeIntro: true
                 title: root.title
-                introText: qsTr("This password can’t be recovered")
-                recoverText: ""
                 passwordStrengthScoreFunction: root.passwordStrengthScoreFunction
-                onReturnPressed: d.submit()
-            }
-            StayLoggedInSectionView {
-                objectName: "stayLoggedInSection"
-                Layout.fillWidth: true
-                visible: root.stayLoggedInAvailable
-                storageAvailable: root.stayLoggedInAvailable
-                profileMigrated: true // new profiles use the DEK encryption scheme from birth
-                stayLoggedInEnabled: d.stayLoggedIn
-                onToggleStayLoggedIn: (checked) => d.stayLoggedIn = !checked
-            }
-            StatusModalDivider {
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignHCenter
-                visible: root.stayLoggedInAvailable && root.biometricsAvailable
-            }
-            BiometricsSectionView {
-                objectName: "biometricsSection"
-                Layout.fillWidth: true
-                visible: root.biometricsAvailable
+                stayLoggedInAvailable: root.stayLoggedInAvailable
                 biometricsAvailable: root.biometricsAvailable
-                biometricsEnabled: d.enableBiometrics
-                onToggleBiometrics: (checked) => d.enableBiometrics = !checked
+                onSubmitRequested: d.submit()
             }
             StatusButton {
                 objectName: "btnConfirmPassword"
                 Layout.alignment: Qt.AlignHCenter
                 text: qsTr("Confirm password")
-                enabled: passView.ready
+                enabled: form.ready
                 onClicked: d.submit()
             }
         }
