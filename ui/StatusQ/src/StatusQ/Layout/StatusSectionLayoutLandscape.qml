@@ -74,6 +74,11 @@ Control {
                 color: outerHandle.color
                 Behavior on color { ColorAnimation { duration: ThemeUtils.AnimationDuration.Fast } }
             }
+            SplitHandle.onPressedChanged: {
+                if (!SplitHandle.pressed) {
+                    d.saveState()
+                }
+            }
         }
     }
     /*!
@@ -216,6 +221,11 @@ Control {
         until it clears.
     */
     readonly property bool leftColumnAnimating: leftPanelWidthAnimation.running
+    onLeftColumnAnimatingChanged: {
+        if (!leftColumnAnimating && root.leftPanelWidthOverride === 0) {
+            Qt.callLater(() => d.restoreState())
+        }
+    }
 
     /*!
         \qmlsignal
