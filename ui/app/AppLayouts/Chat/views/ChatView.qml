@@ -61,15 +61,16 @@ Item {
     readonly property bool canGoBack: root.sectionLayout?.canGoBack ?? false
 
     readonly property QtObject contentHistory: QtObject {
-        readonly property bool canGoBackToParentChat: !!infoMessageStore.threadId && !!infoMessageStore.chatId &&
-                                                       !root.contentLocked && !root.allChannelsAreHiddenBecauseNotPermitted &&
+        readonly property bool canGoBackToParentChat: !!infoMessageStore.threadId && !!d.parentChatIdForMainPaneThreadBack()
+                                                       && !root.contentLocked && !root.allChannelsAreHiddenBecauseNotPermitted &&
                                                        (!root.sectionLayout?.isPortrait ||
                                                         root.sectionLayout.currentIndex === StatusSectionLayout.CentralPanel)
         readonly property bool canGoBack: canGoBackToParentChat || (!!d.openThreadId && d.threadOpenedFromInfo)
         function tryGoBack() {
             if (canGoBackToParentChat) {
+                const parentChatId = d.parentChatIdForMainPaneThreadBack()
                 root.subsectionHistory.dropLeaf()
-                root.rootStore.chatCommunitySectionModule.setActiveItem(infoMessageStore.chatId)
+                root.rootStore.chatCommunitySectionModule.setActiveItem(parentChatId)
                 return true
             }
             if (!canGoBack)
@@ -264,6 +265,21 @@ Item {
         property int infoTab: ChatInfoPanel.Default
         property bool threadOpenedFromInfo: false
         property string threadNameEditId
+
+        function parentChatIdForMainPaneThreadBack(): string {
+            if (!infoMessageStore.threadId)
+                return ""
+            const chatId = infoMessageStore.chatId
+            if (chatId && chatId !== root.activeItemId)
+                return chatId
+            const model = root.rootStore.chatCommunitySectionModule?.model
+            if (!model)
+                return ""
+            const idx = ModelUtils.indexOf(model, "itemId", root.activeItemId)
+            if (idx < 0)
+                return ""
+            return ModelUtils.get(model, idx, "parentChatId") || ""
+        }
 
         function getThreadMessageModule(threadId) {
             const section = root.rootStore.chatCommunitySectionModule
