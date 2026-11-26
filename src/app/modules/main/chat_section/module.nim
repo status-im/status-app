@@ -195,19 +195,7 @@ proc rosterContact(self: Module, pubKey: string): RosterContact =
   let details = self.controller.cachedContact(pubKey)
   if details.isNil:
     return
-  RosterContact(
-    known: true,
-    localNickname: details.dto.localNickname,
-    displayName: details.dto.displayName,
-    ensName: details.dto.name,
-    ensVerified: details.dto.ensVerified,
-    alias: details.dto.alias,
-    icon: details.icon,
-    isContact: details.dto.isContact,
-    isBlocked: details.dto.isBlocked,
-    trustStatus: details.dto.trustStatus,
-    contactRequest: toContactStatus(details.dto.contactRequestState),
-  )
+  toRosterContact(details.dto, details.icon)
 
 proc rosterOrderInputs(self: Module): RosterOrderInputs =
   ## Online members and contact names for the roster load worker's sort.

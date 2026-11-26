@@ -10,6 +10,7 @@ import nimqml, std/[sets, tables, json, strutils]
 import app_service/common/types
 import app_service/service/community/dto/roster
 import app_service/service/community/roster_order
+import app_service/service/contacts/dto/contacts
 import user_item
 import contacts_utils
 import model_utils
@@ -76,6 +77,23 @@ const
     ModelRole.LocalNickname, ModelRole.Alias, ModelRole.Icon, ModelRole.IsContact,
     ModelRole.IsVerified, ModelRole.IsUntrustworthy, ModelRole.TrustStatus,
     ModelRole.IsBlocked, ModelRole.ContactRequest]
+
+proc toRosterContact*(dto: ContactsDto, icon: string): RosterContact =
+  ## A cached non-contact (e.g. a placeholder for an unseen key) is not known:
+  ## the entry's names apply, under its local nickname.
+  RosterContact(
+    known: dto.isContact,
+    localNickname: dto.localNickname,
+    displayName: dto.displayName,
+    ensName: dto.name,
+    ensVerified: dto.ensVerified,
+    alias: dto.alias,
+    icon: icon,
+    isContact: dto.isContact,
+    isBlocked: dto.isBlocked,
+    trustStatus: dto.trustStatus,
+    contactRequest: toContactStatus(dto.contactRequestState),
+  )
 
 proc names*(contact: RosterContact): RosterNames =
   RosterNames(known: contact.known, localNickname: contact.localNickname, displayName: contact.displayName,

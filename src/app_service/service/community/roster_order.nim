@@ -8,7 +8,7 @@ import ./dto/roster
 import app/modules/shared_models/contacts_utils
 
 type
-  ## Contacts-cache name fields. Known (self, or a contact the cache holds):
+  ## Contacts-cache name fields. Known (self, or a mutual contact the cache holds):
   ## they replace the roster entry's, empty included; otherwise the entry's apply.
   RosterNames* = object
     known*: bool

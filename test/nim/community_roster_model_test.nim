@@ -7,6 +7,7 @@ import app/modules/shared/qt_model_spy
 import app_service/common/types
 import app_service/service/community/dto/roster
 import app_service/service/community/roster_order
+import app_service/service/contacts/dto/contacts
 
 const
   keyA = "0x0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8"
@@ -82,7 +83,8 @@ proc loadSorted(model: CommunityRosterModel, fake: FakeSources, snap: RosterSnap
     if status == OnlineStatus.Online:
       inputs.online.add pubKey
   for pubKey, contact in fake.contacts.pairs:
-    inputs.names[pubKey] = contact.names
+    if contact.known or contact.localNickname.len > 0:
+      inputs.names[pubKey] = contact.names
   sortRoster(sorted, inputs)
   model.load(sorted)
 
@@ -602,3 +604,41 @@ suite "community roster canonical order":
     check model.str(rowD, "ensName") == "dave.eth"
     check model.str(rowD, "preferredDisplayName") == "dave.eth"
     check model.orderedKeys == @[keyB, keyC, keyD]
+
+  # ContactsService.getContactDetails caches an uncached key as id + generated alias
+  proc placeholder(hex, alias: string): RosterContact =
+    toRosterContact(ContactsDto(id: hex, alias: alias), icon = "")
+
+  test "a contacts-cache placeholder does not hide the entry's display name":
+    fake.contacts[keyA] = placeholder(keyA, "Zany Mammoth Hare")
+    model.loadSorted(fake, snapshot(10, member(keyA, "alice", alias = "Zany Mammoth Hare"),
+      member(keyB, "bob", alias = "Brave Cat")))
+    check model.orderedKeys == @[keyA, keyB]
+    check model.str(0, "preferredDisplayName") == "alice"
+    check model.str(0, "displayName") == "alice"
+
+  test "a presence update does not move a member with a placeholder":
+    fake.contacts[keyA] = placeholder(keyA, "Zany Mammoth Hare")
+    model.loadSorted(fake, snapshot(10, member(keyA, "alice", alias = "Zany Mammoth Hare"),
+      member(keyB, "bob", alias = "Brave Cat")))
+    spy.clear()
+    model.onlineStatusChanged(keyA)
+    check model.orderedKeys == @[keyA, keyB]
+    check spy.countMoves() == 0
+
+  test "a local nickname on a placeholder wins over the entry's names, not its display name":
+    var dto = ContactsDto(id: keyA, alias: "Zany Mammoth Hare", localNickname: "zed")
+    fake.contacts[keyA] = toRosterContact(dto, icon = "")
+    model.loadSorted(fake, snapshot(10, member(keyA, "alice", alias = "Zany Mammoth Hare"),
+      member(keyB, "bob", alias = "Brave Cat")))
+    check model.orderedKeys == @[keyB, keyA]
+    check model.str(model.rowOfKey(keyA), "preferredDisplayName") == "zed"
+    check model.str(model.rowOfKey(keyA), "displayName") == "alice"
+
+  test "a mutual contact's cleared display name wins over the entry's":
+    let dto = ContactsDto(id: keyA, alias: "Zany Mammoth Hare", added: true, hasAddedUs: true)
+    fake.contacts[keyA] = toRosterContact(dto, icon = "")
+    model.loadSorted(fake, snapshot(10, member(keyA, "alice", alias = "Zany Mammoth Hare"),
+      member(keyB, "bob", alias = "Brave Cat")))
+    check model.str(model.rowOfKey(keyA), "preferredDisplayName") == "Zany Mammoth Hare"
+    check model.orderedKeys == @[keyB, keyA]
