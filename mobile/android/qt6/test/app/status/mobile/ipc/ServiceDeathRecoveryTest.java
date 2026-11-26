@@ -70,6 +70,12 @@ public class ServiceDeathRecoveryTest {
             released++;
         }
 
+        @Override
+        public String loginState(String response) {
+            return ServiceDeathRecovery.loginState(
+                    ByteBuffer.wrap(response.getBytes(StandardCharsets.UTF_8)));
+        }
+
         void dieOnNextCall() {
             script.add(null);
         }
@@ -298,6 +304,108 @@ public class ServiceDeathRecoveryTest {
         call("GetSettings", "x");
 
         assertFalse(recovery.serviceLost());
+    }
+
+    @Test
+    public void aLoginStateInProgressAnswerIsALoginInProgress() {
+        // The adopt of a running boot login: this UI sent no login call
+        service.script.add("{\"state\":\"inProgress\",\"seq\":3}");
+        call("GetLoginState", "");
+
+        assertTrue(recovery.serviceLost());
+    }
+
+    @Test
+    public void nodeLoginEndsAnAdoptedLogin() {
+        service.script.add("{\"state\":\"inProgress\",\"seq\":3}");
+        call("GetLoginState", "");
+
+        recovery.signalReceived("node.login");
+
+        assertFalse(recovery.serviceLost());
+    }
+
+    @Test
+    public void aLoginStateLoggedInOrNoneAnswerIsNoLoginInProgress() {
+        service.script.add("{\"state\":\"none\",\"seq\":0}");
+        call("GetLoginState", "");
+        assertFalse(recovery.serviceLost());
+
+        call("LoginAccount", "dek");
+        service.script.add("{\"state\":\"loggedIn\",\"seq\":4,\"account\":{}}");
+        call("GetLoginState", "");
+        assertFalse(recovery.serviceLost());
+    }
+
+    @Test
+    public void loginStateReadsTheStateField() {
+        assertEquals("inProgress", ServiceDeathRecovery.loginState(
+                utf8("{\"state\":\"inProgress\",\"seq\":1}")));
+        assertEquals("", ServiceDeathRecovery.loginState(utf8("{\"error\":\"x\"}")));
+        assertEquals("", ServiceDeathRecovery.loginState(utf8("not json")));
+    }
+
+    @Test
+    public void theRestartReasonIsTheGivenOneWhenNoLoginWasLost() {
+        assertEquals("statusgo_service_not_connected",
+                recovery.restartReason("statusgo_service_not_connected"));
+    }
+
+    @Test
+    public void everyRestartAfterADeathDuringLoginSaysSo() {
+        call("LoginAccount", "dek");
+        recovery.serviceLost();
+
+        assertEquals(ServiceDeathRecovery.SERVICE_DIED_DURING_LOGIN,
+                recovery.restartReason("statusgo_service_not_connected"));
+        assertEquals(ServiceDeathRecovery.SERVICE_DIED_DURING_LOGIN,
+                recovery.restartReason("statusgo_service_call_failed"));
+    }
+
+    @Test
+    public void aLaterLossKeepsTheDeathDuringLogin() {
+        call("LoginAccount", "dek");
+        recovery.serviceLost();
+
+        recovery.serviceLost();
+
+        assertEquals(ServiceDeathRecovery.SERVICE_DIED_DURING_LOGIN,
+                recovery.restartReason("statusgo_service_restarted"));
+    }
+
+    @Test
+    public void aDeathUnderAnotherCallDuringLoginIsADeathDuringLogin() {
+        call(INIT, "a");
+        call("LoginAccount", "dek");
+        service.dieOnNextCall();
+        call("GetSettings", "x");
+
+        assertEquals(ServiceDeathRecovery.SERVICE_DIED_DURING_LOGIN,
+                recovery.restartReason("statusgo_service_disconnected"));
+    }
+
+    @Test
+    public void aLoginThatReachesNodeLoginEndsTheDeathDuringLogin() {
+        call("LoginAccount", "dek");
+        recovery.serviceLost();
+
+        call("LoginAccount", "dek");
+        recovery.signalReceived("node.login");
+
+        assertEquals("statusgo_service_disconnected",
+                recovery.restartReason("statusgo_service_disconnected"));
+    }
+
+    @Test
+    public void aLoginStateLoggedInAnswerEndsTheDeathDuringLogin() {
+        call("LoginAccount", "dek");
+        recovery.serviceLost();
+
+        service.script.add("{\"state\":\"loggedIn\",\"seq\":4,\"account\":{}}");
+        call("GetLoginState", "");
+
+        assertEquals("statusgo_service_disconnected",
+                recovery.restartReason("statusgo_service_disconnected"));
     }
 
     @Test

@@ -16,8 +16,11 @@ import org.json.JSONObject;
  * re-sent: it answers {@link #SERVICE_DIED_RESPONSE}. The next call first replays the last
  * successful InitializeApplication once. A call is never retried: a login that kills the
  * service must not loop.
- * It also tells whether the service went away while a login this UI started was running
- * (sent, no node.login yet), so the restarted UI can skip its silent login once.
+ * It also tells whether the service went away during a login (one this UI sent, or a boot
+ * login GetLoginState reported in progress; no node.login yet), so the restarted UI can skip
+ * its silent login once.
+ * A login that never sends node.login (status-go skips it during local pairing) leaves the
+ * login open: a later death then skips one silent login, the credential is kept.
  */
 final class ServiceDeathRecovery {
     static final String INITIALIZE_APPLICATION = "InitializeApplication";
@@ -25,6 +28,12 @@ final class ServiceDeathRecovery {
     static final String SERVICE_DIED_ERROR = "status-go service died";
     static final String SERVICE_DIED_RESPONSE = "{\"error\":\"" + SERVICE_DIED_ERROR + "\"}";
     static final String NODE_LOGIN_SIGNAL = "node.login";
+    // Read by StatusQtActivity on the relaunch
+    static final String SERVICE_DIED_DURING_LOGIN = "statusgo_service_died_during_login";
+    static final String GET_LOGIN_STATE = "GetLoginState";
+    // Nim LoginState (src/app_service/service/accounts/dto/accounts.nim)
+    private static final String LOGIN_STATE_IN_PROGRESS = "inProgress";
+    private static final String LOGIN_STATE_LOGGED_IN = "loggedIn";
 
     // The status-go calls that start a login; it ends with node.login
     private static final Set<String> LOGIN_METHODS = new HashSet<>(Arrays.asList(
@@ -58,12 +67,17 @@ final class ServiceDeathRecovery {
 
         /** Frees the replayed InitializeApplication's response. */
         void release(R response);
+
+        /** The "state" of a GetLoginState answer, "" when none. */
+        String loginState(R response);
     }
 
     private final Object lock = new Object();
     // Counts the service processes lost; written without the lock (binder callbacks)
     private final AtomicInteger losses = new AtomicInteger();
     private final AtomicBoolean loginInProgress = new AtomicBoolean();
+    // A service was lost during a login, until a later login reaches node.login
+    private final AtomicBoolean lostDuringLogin = new AtomicBoolean();
     // Guarded by lock
     private byte[] lastInitArgs;
     // Guarded by lock: the losses count the service was last initialized at
@@ -92,6 +106,9 @@ final class ServiceDeathRecovery {
         final boolean succeeded = connection.succeeded(response);
         if (isLogin && !succeeded) loginInProgress.set(false);
         if (isInit && succeeded) remember(argsUtf8, seen);
+        if (GET_LOGIN_STATE.equals(method) && succeeded) {
+            loginStateReported(connection.loginState(response));
+        }
         return response;
     }
 
@@ -102,15 +119,31 @@ final class ServiceDeathRecovery {
      */
     boolean serviceLost() {
         losses.incrementAndGet();
-        return loginInProgress.getAndSet(false);
+        final boolean duringLogin = loginInProgress.getAndSet(false);
+        if (duringLogin) lostDuringLogin.set(true);
+        return duringLogin;
     }
 
     void signalReceived(String type) {
-        if (NODE_LOGIN_SIGNAL.equals(type)) loginInProgress.set(false);
+        if (NODE_LOGIN_SIGNAL.equals(type)) loggedIn();
+    }
+
+    /** The reason every frontend restart carries: a death during login wins over the cause. */
+    String restartReason(String reason) {
+        return lostDuringLogin.get() ? SERVICE_DIED_DURING_LOGIN : reason;
     }
 
     boolean loginInProgress() {
         return loginInProgress.get();
+    }
+
+    static String loginState(ByteBuffer responseUtf8) {
+        try {
+            final String json = StandardCharsets.UTF_8.decode(responseUtf8.duplicate()).toString();
+            return new JSONObject(json).optString("state", "");
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     static boolean succeeded(ByteBuffer responseUtf8) {
@@ -120,6 +153,17 @@ final class ServiceDeathRecovery {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    // The adopt of a boot login this UI didn't start is inside the login window too
+    private void loginStateReported(String state) {
+        if (LOGIN_STATE_IN_PROGRESS.equals(state)) loginInProgress.set(true);
+        else if (LOGIN_STATE_LOGGED_IN.equals(state)) loggedIn();
+    }
+
+    private void loggedIn() {
+        loginInProgress.set(false);
+        lostDuringLogin.set(false);
     }
 
     // Guarded by lock

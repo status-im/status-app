@@ -32,10 +32,12 @@ public final class StatusGoServiceClient {
     /** Launch extra: why the UI process was restarted. */
     public static final String RECOVERY_REASON_EXTRA = "status.recovery_reason";
     /**
-     * Recovery reason: the service went away while a login this UI started was running. The
+     * Recovery reason: the service went away during a login (see ServiceDeathRecovery). The
      * restarted UI skips its silent login once (a login that kills the service must not loop).
      */
-    public static final String SERVICE_DIED_DURING_LOGIN = "statusgo_service_died_during_login";
+    public static final String SERVICE_DIED_DURING_LOGIN =
+            ServiceDeathRecovery.SERVICE_DIED_DURING_LOGIN;
+    private static final String LOST_WHILE_HIDDEN_REASON = "statusgo_service_restarted";
 
     private static volatile StatusGoServiceClient sInstance;
     private static final AtomicBoolean restartRequested = new AtomicBoolean(false);
@@ -76,8 +78,6 @@ public final class StatusGoServiceClient {
     // it is visible again (an activity start from the background is blocked on Android 10+,
     // or brings Status to the front on its own where it is allowed).
     private volatile boolean serviceLostWhileHidden = false;
-    // ... and a login this UI started was running when it went away
-    private volatile boolean serviceLostDuringLogin = false;
 
     private final IStatusGoSignalListener signalListener = new IStatusGoSignalListener.Stub() {
         @Override
@@ -130,7 +130,7 @@ public final class StatusGoServiceClient {
             }
             if (serviceLostWhileHidden && hasUiVisibilityHint && desiredUiVisible) {
                 serviceLostWhileHidden = false;
-                requestFrontendRestart(StatusGoStub.getContext(), lostWhileHiddenReason());
+                requestFrontendRestart(StatusGoStub.getContext(), LOST_WHILE_HIDDEN_REASON);
                 return;
             }
             // Replay UI visibility on a background thread — the Binder call
@@ -195,27 +195,23 @@ public final class StatusGoServiceClient {
     // The service process went away (binder callback): the next call replays
     // InitializeApplication on the new one, and the frontend restarts as before.
     private void serviceGone(boolean suppressed, String reason) {
-        final boolean duringLogin = deathRecovery.serviceLost();
+        deathRecovery.serviceLost();
         if (suppressed || !everConnected) return;
-        restartFrontend(StatusGoStub.getContext(),
-                duringLogin ? SERVICE_DIED_DURING_LOGIN : reason, duringLogin);
+        restartFrontend(StatusGoStub.getContext(), reason);
     }
 
     // Now, or once the UI is visible again
-    private void restartFrontend(Context app, String reason, boolean duringLogin) {
+    private void restartFrontend(Context app, String reason) {
         if (hasUiVisibilityHint && desiredUiVisible) {
             requestFrontendRestart(app, reason);
         } else {
-            serviceLostDuringLogin = duringLogin;
             serviceLostWhileHidden = true;
         }
     }
 
-    private String lostWhileHiddenReason() {
-        return serviceLostDuringLogin ? SERVICE_DIED_DURING_LOGIN : "statusgo_service_restarted";
-    }
-
-    private void requestFrontendRestart(Context appContext, String reason) {
+    // Every restart goes through here: a death during login keeps its reason whatever the cause
+    private void requestFrontendRestart(Context appContext, String cause) {
+        final String reason = deathRecovery.restartReason(cause);
         if (appContext == null) {
             Log.w(TAG, "requestFrontendRestart: context is null, reason=" + reason);
             return;
@@ -412,7 +408,7 @@ public final class StatusGoServiceClient {
 
         @Override
         public void loginInterrupted() {
-            restartFrontend(app, SERVICE_DIED_DURING_LOGIN, true);
+            restartFrontend(app, SERVICE_DIED_DURING_LOGIN);
         }
 
         @Override
@@ -432,6 +428,15 @@ public final class StatusGoServiceClient {
         @Override
         public void release(IpcPayload response) {
             response.close();
+        }
+
+        @Override
+        public String loginState(IpcPayload response) {
+            try {
+                return ServiceDeathRecovery.loginState(response.buffer());
+            } catch (ErrnoException e) {
+                return "";
+            }
         }
     }
 
@@ -470,7 +475,7 @@ public final class StatusGoServiceClient {
         final Context app = context.getApplicationContext();
         if (visible && serviceLostWhileHidden) {
             serviceLostWhileHidden = false;
-            requestFrontendRestart(app, lostWhileHiddenReason());
+            requestFrontendRestart(app, LOST_WHILE_HIDDEN_REASON);
             return;
         }
         runUiVisibilityAsync(() -> setUiVisibleSync(app, visible));
@@ -505,7 +510,7 @@ public final class StatusGoServiceClient {
                 final boolean duringLogin = deathRecovery.serviceLost();
                 resetConnection(app);
                 ensureStartedAndBound(app);
-                if (duringLogin) restartFrontend(app, SERVICE_DIED_DURING_LOGIN, true);
+                if (duringLogin) restartFrontend(app, SERVICE_DIED_DURING_LOGIN);
             }
         }
     }
