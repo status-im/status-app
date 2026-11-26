@@ -1,5 +1,6 @@
 import QtQuick
 import QtTest
+import StatusQ.Controls
 import StatusQ.Core.Theme
 
 import AppLayouts.Chat.controls
@@ -34,6 +35,58 @@ Item {
             messagesCount: 12
             participantsCount: 8
             participantsPreviewModel: participantsListModel
+        }
+    }
+
+    Component {
+        id: flickableContainerComponent
+
+        Flickable {
+            width: 420
+            height: 200
+            contentWidth: width
+            contentHeight: 600
+
+            property alias card: card
+
+            ThreadCard {
+                id: card
+                y: 100
+                width: parent.width
+                threadId: "thread-id"
+                originalMessageId: "parent-id"
+                title: "Thread title"
+                messagesCount: 12
+                participantsCount: 8
+                participantsPreviewModel: participantsListModel
+            }
+        }
+    }
+
+    Component {
+        id: parentSecondaryActionComponent
+
+        Item {
+            width: 420
+            height: 200
+
+            property alias card: card
+            property int parentSecondaryCount: 0
+
+            ThreadCard {
+                id: card
+                width: parent.width
+                threadId: "thread-id"
+                originalMessageId: "parent-id"
+                title: "Thread title"
+                messagesCount: 12
+                participantsCount: 8
+                participantsPreviewModel: participantsListModel
+            }
+
+            StatusSecondaryActionHandler {
+                onTriggered: parent.parentSecondaryCount++
+            }
         }
     }
 
@@ -157,6 +210,164 @@ Item {
             wait(1000)
             touch.release(0, controlUnderTest, x, y).commit()
             tryCompare(contextMenuSpy, "count", 1)
+            compare(clickedSpy.count, 0)
+        }
+
+        function test_touchTapEmitsThreadAndParentIds() {
+            const x = controlUnderTest.width / 2
+            const y = controlUnderTest.height / 2
+            const touch = touchEvent(controlUnderTest)
+            touch.press(0, controlUnderTest, x, y).commit()
+            touch.release(0, controlUnderTest, x, y).commit()
+            tryCompare(clickedSpy, "count", 1)
+            compare(clickedSpy.signalArguments[0][0], "thread-id")
+            compare(clickedSpy.signalArguments[0][1], "parent-id")
+            compare(contextMenuSpy.count, 0)
+        }
+
+        function test_touchTapChildAreas_data() {
+            return [
+                { tag: "title", objectName: "threadCardTitle" },
+                { tag: "messages-count", objectName: "threadCardMessagesCount" },
+                { tag: "message-preview", objectName: "threadCardMessagePreview" },
+                { tag: "participant-avatar", objectName: "threadCardParticipantAvatar_0" }
+            ]
+        }
+
+        function test_touchTapChildAreas(data) {
+            controlUnderTest.lastMessage = { sender: { name: "Alice" }, text: "Reply text", timestamp: Date.now() }
+            const child = findChild(controlUnderTest, data.objectName)
+            verify(!!child, "Object exists")
+            tryVerify(() => child.visible && child.width > 0 && child.height > 0)
+
+            const center = child.mapToItem(controlUnderTest, child.width / 2, child.height / 2)
+            const touch = touchEvent(controlUnderTest)
+            touch.press(0, controlUnderTest, center.x, center.y).commit()
+            touch.release(0, controlUnderTest, center.x, center.y).commit()
+            tryCompare(clickedSpy, "count", 1)
+            compare(clickedSpy.signalArguments[0][0], "thread-id")
+            compare(clickedSpy.signalArguments[0][1], "parent-id")
+            compare(contextMenuSpy.count, 0)
+        }
+
+        function test_touchTapWithSmallJitterEmitsClicked() {
+            const x = controlUnderTest.width / 2
+            const y = controlUnderTest.height / 2
+            const touch = touchEvent(controlUnderTest)
+            touch.press(0, controlUnderTest, x, y).commit()
+            touch.move(0, controlUnderTest, x + 2, y + 2).commit()
+            touch.release(0, controlUnderTest, x + 2, y + 2).commit()
+            tryCompare(clickedSpy, "count", 1)
+            compare(clickedSpy.signalArguments[0][0], "thread-id")
+            compare(clickedSpy.signalArguments[0][1], "parent-id")
+            compare(contextMenuSpy.count, 0)
+        }
+
+        function test_touchDragBeyondThresholdCancelsTap() {
+            const x = controlUnderTest.width / 2
+            const y = controlUnderTest.height / 2
+            const touch = touchEvent(controlUnderTest)
+            touch.press(0, controlUnderTest, x, y).commit()
+            touch.move(0, controlUnderTest, x, y + 50).commit()
+            touch.release(0, controlUnderTest, x, y + 50).commit()
+            compare(clickedSpy.count, 0)
+            compare(contextMenuSpy.count, 0)
+        }
+
+        function test_touchDeletedThreadCannotBeOpenedOrContextMenu() {
+            controlUnderTest.threadState = ThreadCard.State.Deleted
+            controlUnderTest.deletedMessage = { sender: { name: "Admin" }, timestamp: Date.now() }
+            const x = controlUnderTest.width / 2
+            const y = controlUnderTest.height / 2
+
+            const tap = touchEvent(controlUnderTest)
+            tap.press(0, controlUnderTest, x, y).commit()
+            tap.release(0, controlUnderTest, x, y).commit()
+            compare(clickedSpy.count, 0)
+            compare(contextMenuSpy.count, 0)
+
+            const longPress = touchEvent(controlUnderTest)
+            longPress.press(0, controlUnderTest, x, y).commit()
+            wait(1000)
+            longPress.release(0, controlUnderTest, x, y).commit()
+            compare(clickedSpy.count, 0)
+            compare(contextMenuSpy.count, 0)
+        }
+
+        function test_touchDisabledThreadCannotBeOpened() {
+            controlUnderTest.enabled = false
+            const x = controlUnderTest.width / 2
+            const y = controlUnderTest.height / 2
+            const touch = touchEvent(controlUnderTest)
+            touch.press(0, controlUnderTest, x, y).commit()
+            touch.release(0, controlUnderTest, x, y).commit()
+            compare(clickedSpy.count, 0)
+            compare(contextMenuSpy.count, 0)
+        }
+
+        function test_touchTapInsideFlickable() {
+            const flickable = createTemporaryObject(flickableContainerComponent, root)
+            verify(!!flickable, "Component exists")
+            const card = flickable.card
+            clickedSpy.target = card
+            clickedSpy.clear()
+            contextMenuSpy.target = card
+            contextMenuSpy.clear()
+
+            const x = card.width / 2
+            const y = card.height / 2
+            const touch = touchEvent(card)
+            touch.press(0, card, x, y).commit()
+            touch.release(0, card, x, y).commit()
+            tryCompare(clickedSpy, "count", 1)
+            compare(clickedSpy.signalArguments[0][0], "thread-id")
+            compare(clickedSpy.signalArguments[0][1], "parent-id")
+            compare(contextMenuSpy.count, 0)
+        }
+
+        function test_touchScrollInsideFlickableCancelsTap() {
+            const flickable = createTemporaryObject(flickableContainerComponent, root)
+            verify(!!flickable, "Component exists")
+            const card = flickable.card
+            clickedSpy.target = card
+            clickedSpy.clear()
+            contextMenuSpy.target = card
+            contextMenuSpy.clear()
+
+            const startX = card.width / 2
+            const startY = card.y + card.height / 2
+            const touch = touchEvent(flickable)
+            touch.press(0, flickable, startX, startY).commit()
+            for (let step = 1; step <= 8; ++step) {
+                touch.move(0, flickable, startX, startY - step * 12).commit()
+                wait(16)
+            }
+            touch.release(0, flickable, startX, startY - 96).commit()
+
+            tryVerify(() => flickable.contentY > 0)
+            compare(clickedSpy.count, 0)
+            compare(contextMenuSpy.count, 0)
+        }
+
+        function test_touchTapUnderParentSecondaryActionHandler() {
+            const container = createTemporaryObject(parentSecondaryActionComponent, root)
+            verify(!!container, "Component exists")
+            const card = container.card
+            clickedSpy.target = card
+            clickedSpy.clear()
+            contextMenuSpy.target = card
+            contextMenuSpy.clear()
+
+            const x = card.width / 2
+            const y = card.height / 2
+            const touch = touchEvent(card)
+            touch.press(0, card, x, y).commit()
+            touch.release(0, card, x, y).commit()
+            tryCompare(clickedSpy, "count", 1)
+            compare(clickedSpy.signalArguments[0][0], "thread-id")
+            compare(clickedSpy.signalArguments[0][1], "parent-id")
+            compare(contextMenuSpy.count, 0)
+            compare(container.parentSecondaryCount, 0)
         }
 
         function test_updatesSummaryAndReadBadge() {
