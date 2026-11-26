@@ -567,6 +567,41 @@ Item {
             compare(wrapper.secureStorage.bootLoginRecord, "")
         }
 
+        function startFailedSilentLogin(error) {
+            wrapper = createTemporaryObject(wrapperComponent, root)
+            verify(!!wrapper)
+            const layout = findChild(wrapper, "startupOnboardingLayout")
+            wrapper.secureStorage.creds["uid_1"] = "dek:" + root.dummyDekHex
+            wrapper.secureStorage.bootLoginRecord = root.dummyRecord
+
+            wrapper.autoLoginEnabled = true
+            tryVerify(() => layout.autoLoginAttempted)
+            wrapper.onboardingStore.accountLoginError(error, false)
+
+            compare(layout.stack.currentItem, layout.stack.loginScreen)
+            const passwordBox = findChild(layout.stack.loginScreen, "passwordBox")
+            verify(!!passwordBox)
+            return passwordBox
+        }
+
+        // The service died under the silent login: nothing was wrong with the credential
+        function test_serviceDiedSilentLoginKeepsTheCredentialAndShowsAHint() {
+            const passwordBox = startFailedSilentLogin("status-go service died")
+
+            compare(wrapper.secureStorage.creds["uid_1"], "dek:" + root.dummyDekHex)
+            compare(wrapper.secureStorage.bootLoginRecord, root.dummyRecord)
+            compare(wrapper.secureStorage.deleteCalls.length, 0)
+            compare(passwordBox.validationError, "Status was interrupted. Try again.")
+        }
+
+        function test_otherSilentLoginErrorRemovesTheCredentialWithoutAHint() {
+            const passwordBox = startFailedSilentLogin("stale dek")
+
+            compare(wrapper.secureStorage.creds["uid_1"], undefined)
+            compare(wrapper.secureStorage.bootLoginRecord, "")
+            compare(passwordBox.validationError, "")
+        }
+
         // After the record refresh relogin (AllowOnce), the silent login's FollowStored save
         // replaces the record from the other version with this version's
         function test_silentLoginAfterTheRefreshReloginWritesANewRecord() {

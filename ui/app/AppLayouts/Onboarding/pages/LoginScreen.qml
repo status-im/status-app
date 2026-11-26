@@ -197,6 +197,11 @@ OnboardingPage {
         }
     }
 
+    function setLoginHint(hint: string) : void {
+        passwordBox.validationError = hint
+        passwordBox.detailedError = ""
+    }
+
     // login errors reporting
     function setAccountLoginError(error: string, wrongPassword: bool) : void {
         if (!error && !wrongPassword) {

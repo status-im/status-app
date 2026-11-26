@@ -54,6 +54,9 @@ Item {
 
         property bool loginRequestSent: false
 
+        // StatusGoServiceClient's answer to a call the service process died under
+        readonly property string serviceDiedError: "status-go service died"
+
         // A login the UI didn't start is in progress: wait for its node.login. (Logged in
         // at startup never gets here: the resume path opens the session directly.)
         readonly property bool adoptingLogin:
@@ -108,8 +111,12 @@ Item {
             // fresh credential. Consume-once with the RECORDED key UID: a later
             // manual-login error (possibly on another profile) finds nothing to
             // delete.
+            // The Android status-go service died under the silent login: the credential
+            // is fine, keep it and the record. No automatic retry (a login that kills the
+            // service would loop): the user's next login or app start tries again.
             const staleAutoLoginKeyUid = onboardingLayout.consumeAutoLoginFailure()
-            if (staleAutoLoginKeyUid !== "" && root.secureStorage) {
+            const interrupted = staleAutoLoginKeyUid !== "" && error === d.serviceDiedError
+            if (staleAutoLoginKeyUid !== "" && !interrupted && root.secureStorage) {
                 root.secureStorage.deleteCredential(staleAutoLoginKeyUid)
                 root.secureStorage.deleteBootLoginRecord()
             }
@@ -123,6 +130,9 @@ Item {
             } else {
                 onboardingLayout.unwindToLoginScreen()
             }
+
+            if (interrupted && onboardingLayout.stack.loginScreen)
+                onboardingLayout.stack.loginScreen.setLoginHint(qsTr("Status was interrupted. Try again."))
         }
 
         function onLoginAdopted() {
