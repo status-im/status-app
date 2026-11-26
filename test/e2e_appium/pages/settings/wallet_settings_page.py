@@ -258,6 +258,12 @@ class WalletSettingsPage(BasePage):
             self.locators.TESTNET_MODE_SWITCH, timeout=timeout
         )
 
+    def select_mainnet_tab(self, timeout: int = 10) -> bool:
+        tab = self.locators.MAINNET_TAB
+        return self.try_click(tab, timeout=timeout) and self.wait_for_element_checked(
+            tab, timeout=timeout
+        )
+
     def _visible_network_states(self) -> dict[str, bool]:
         states = {}
         prefix = self.locators.NETWORK_SWITCH_PREFIX

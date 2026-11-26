@@ -7,6 +7,28 @@ from pages.settings.wallet_settings_page import WalletSettingsPage
 pytestmark = pytest.mark.component
 
 
+@pytest.mark.parametrize(
+    ("clicked", "checked", "active"),
+    [(True, "true", True), (True, "false", False), (False, None, False)],
+)
+def test_select_mainnet_tab_requires_checked_state(monkeypatch, clicked, checked, active):
+    tab = Mock()
+    tab.get_attribute.side_effect = {"checked": checked, "selected": "false"}.get
+    driver = Mock()
+    driver.find_element.return_value = tab
+    page = WalletSettingsPage(driver)
+    tap = Mock(return_value=clicked)
+    monkeypatch.setattr(page, "try_click", tap)
+
+    assert page.select_mainnet_tab(timeout=1) is active
+    tap.assert_called_once_with(page.locators.MAINNET_TAB, timeout=1)
+    if clicked:
+        driver.find_element.assert_called_with(*page.locators.MAINNET_TAB)
+        tab.get_attribute.assert_called_with("checked")
+    else:
+        driver.find_element.assert_not_called()
+
+
 def _viewport(*switches: tuple[str, str]) -> str:
     nodes = "".join(
         f'<node resource-id="wallet.isActiveSwitch_{name}" checkable="true" '

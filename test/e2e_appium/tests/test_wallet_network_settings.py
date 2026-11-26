@@ -20,6 +20,7 @@ class TestWalletNetworkSettings(StepMixin):
         wallet = settings.open_wallet_settings()
         assert wallet is not None, "Wallet settings did not load"
         assert wallet.open_networks(), "Networks view did not load"
+        assert wallet.select_mainnet_tab(), "Mainnet tab was not selected"
         return wallet
 
     async def test_network_switches_persist_after_restart(self):
