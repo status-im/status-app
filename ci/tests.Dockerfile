@@ -24,6 +24,7 @@ RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor --ba
     librocksdb-dev libfuse2 \
     libpython3-dev \
     pcscd \
+    openjdk-17-jre-headless \
 && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN groupadd -g 999 docker && usermod -aG docker jenkins
