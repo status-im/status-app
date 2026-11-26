@@ -71,7 +71,17 @@ if (-not (Test-Path $dotenv)) {
 }
 foreach ($key in @('E2E_LOCAL_WAKU_FLEET', 'WALLET_TEST_USER_SEED')) {
     if (-not (Select-String -Path $dotenv -Pattern "^${key}=" -Quiet)) {
-        [Console]::Error.WriteLine("setup: add ${key}= to .env")
+        $line = (Select-String -Path $example -Pattern "^${key}=" | Select-Object -First 1).Line
+        if ($line) {
+            $raw = Get-Content -Raw $dotenv
+            if ($raw.Length -gt 0 -and -not $raw.EndsWith("`n") -and -not $raw.EndsWith("`r`n")) {
+                [System.IO.File]::AppendAllText($dotenv, [Environment]::NewLine)
+            }
+            Add-Content -Path $dotenv -Value $line
+            [Console]::Error.WriteLine("setup: added $key to .env")
+        } else {
+            [Console]::Error.WriteLine("setup: add ${key}= to .env")
+        }
     }
 }
 if (-not (Select-String -Path $dotenv -Pattern '^WALLET_TEST_USER_SEED=.+$' -Quiet)) {

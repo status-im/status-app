@@ -63,8 +63,9 @@ From `test/e2e`.
    | Linux | `./scripts/setup-linux.sh` |
    | Windows | `powershell -File scripts/setup-windows.ps1` |
 
-   Needs: macOS — Xcode Command Line Tools and CMake; Linux — git; Windows — Visual Studio 2022 (C++),
-   CMake and git. The fleet nodes need `libpq` (`brew install libpq` or `apt-get install libpq5`).
+   Needs: macOS — Xcode Command Line Tools, CMake and Homebrew `libpq`; Linux — Docker (running), git and
+   `libpq5`; Windows — Visual Studio 2022 (C++), CMake, git and WSL 1 for the fleet (the script installs
+   `libpq` inside WSL).
 
 2. Point the tests at the app. Copy `configs/_local.default.py` to `configs/_local.py` and set
    `AUT_PATH`:
@@ -84,8 +85,9 @@ From `test/e2e`.
    For a macOS app built with `make run`, set `QT_PREFIX` to the Qt that `qmake` reports and run step 1
    again, so the plugin is built against that Qt.
 
-3. Open `.env` and set `WALLET_TEST_USER_SEED` (wallet tests). `E2E_LOCAL_WAKU_FLEET=1` is already there.
-   Activating `.venv` loads `.env`.
+3. Open `.env` and set `WALLET_TEST_USER_SEED` (wallet tests). Setup creates `.env` from
+   `.env.example` on first run and appends missing keys (`E2E_LOCAL_WAKU_FLEET=1`, and so on) to an
+   existing file. Activating `.venv` loads `.env`.
 
 4. Run:
 
@@ -106,8 +108,9 @@ The fleet keeps running after setup. Start it again from the repo root with
 
 The inspector is not a separate window. It is loaded into the app and answers on a local port.
 
-1. Take the `plugins` directory from setup (it contains `generic/`). On this Mac, after
-   `./scripts/setup-macos.sh`, that is the path in `.env` as `INSPECTOR_PLUGINS`.
+1. Take the `plugins` directory from setup (it contains `generic/`). The setup script prints
+   its path as `INSPECTOR_PLUGINS`; it is injected into `.venv` activation rather than written
+   to `.env`.
 
 2. Start the app with the plugin. Pick a free port.
 
