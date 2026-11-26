@@ -42,7 +42,7 @@ CalloutCard {
         isOnline: root.isOnline
         asynchronous: true
         isAnimated: true
-        onClicked: {
+        onClicked: (image, mouse) => {
             if (isAnimated && !playing)
                 localAnimationEnabled = true
             else
