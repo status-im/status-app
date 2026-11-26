@@ -1,0 +1,554 @@
+name: E2E Android
+# Runs the Android e2e lane on BrowserStack with a headless status-backend peer.
+# Dispatch it by hand with an uploaded app, or call it from a workflow that
+# built an APK and pass the artifact name. Advisory and QA-owned: do not make
+# its check required, because a run without credentials ends as skipped.
+on:
+  workflow_dispatch:
+    inputs:
+      app-id:
+        description: 'BrowserStack app id (bs://...) uploaded by a user in the account''s group. Dispatch from a ref whose tests match the APK.'
+        type: string
+        required: true
+      account:
+        description: 'BrowserStack account that holds the app id. Runs on the same account wait in a queue, one at a time.'
+        type: choice
+        options: ['1', '2']
+        default: '1'
+      selection:
+        description: 'Tests to run'
+        type: choice
+        options: [gate, smoke]
+        default: gate
+      tests:
+        description: 'Optional space-separated test node IDs under tests/. Quote an entire ID if it contains spaces. Replaces the selection.'
+        type: string
+        default: ''
+      markers:
+        description: 'Optional marker expression, e.g. two_phone and messaging. Only marker names from pytest.ini with and, or, not and parentheses. Replaces the selection.'
+        type: string
+        default: ''
+      device:
+        description: 'Android device id from config/environments/browserstack.yaml'
+        type: choice
+        options: [default, galaxy_tab_s10p_android_15, pixel_8_android_14, pixel_7_android_13, samsung_s23_android_13]
+        default: default
+      workers:
+        description: 'Parallel workers. auto: 4 for the gate, 2 when multi-phone tests can be selected.'
+        type: choice
+        options: [auto, '1', '2', '3', '4', '5']
+        default: auto
+  workflow_call:
+    inputs:
+      app-id:
+        type: string
+        default: ''
+      apk-artifact:
+        description: 'Name of an artifact in the calling run that holds one APK built with STATUSQ_TESTMODE=true'
+        type: string
+        default: ''
+      apk-producer-sha:
+        description: 'Full git rev-parse HEAD from the APK build checkout; required with apk-artifact'
+        type: string
+        default: ''
+      account:
+        description: '1, 2 or auto. auto spreads pull requests that pass apk-artifact over both accounts by PR number; with app-id it is account 1.'
+        type: string
+        default: auto
+      selection:
+        type: string
+        default: gate
+      tests:
+        type: string
+        default: ''
+      markers:
+        type: string
+        default: ''
+      device:
+        type: string
+        default: default
+      workers:
+        type: string
+        default: auto
+    secrets:
+      BROWSERSTACK_USERNAME:
+        required: false
+      BROWSERSTACK_ACCESS_KEY:
+        required: false
+      BROWSERSTACK_USERNAME_2:
+        required: false
+      BROWSERSTACK_ACCESS_KEY_2:
+        required: false
+permissions: {}
+jobs:
+  credentials:
+    name: credentials
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      ready: ${{ steps.check.outputs.ready }}
+      account: ${{ steps.check.outputs.account }}
+    steps:
+      - name: Pick the account and check it has credentials
+        id: check
+        shell: bash
+        env:
+          ACCOUNT_INPUT: ${{ inputs.account }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          APK_ARTIFACT: ${{ inputs.apk-artifact }}
+          # Only whether each account has credentials; the keys stay out of this job.
+          READY_1: ${{ secrets.BROWSERSTACK_USERNAME != '' && secrets.BROWSERSTACK_ACCESS_KEY != '' }}
+          READY_2: ${{ secrets.BROWSERSTACK_USERNAME_2 != '' && secrets.BROWSERSTACK_ACCESS_KEY_2 != '' }}
+        run: |
+          case "$ACCOUNT_INPUT" in
+            1|2)
+              account="$ACCOUNT_INPUT"
+              ;;
+            auto)
+              # An app id works only on the account that uploaded it, so only
+              # runs that upload their own APK are spread: odd pull requests
+              # on account 1, even ones on account 2.
+              account=1
+              if [[ -n "$APK_ARTIFACT" && "$PR_NUMBER" =~ ^[0-9]+$ ]] && (( 10#$PR_NUMBER % 2 == 0 )); then
+                account=2
+              fi
+              # A repository with one account's secrets still runs.
+              chosen="READY_${account}"
+              other="READY_$(( 3 - account ))"
+              if [[ "${!chosen}" != "true" && "${!other}" == "true" ]]; then
+                account=$(( 3 - account ))
+              fi
+              ;;
+            *)
+              echo "::error::account must be 1, 2 or auto, got '${ACCOUNT_INPUT}'."
+              exit 1
+              ;;
+          esac
+          echo "account=${account}" >> "$GITHUB_OUTPUT"
+          chosen="READY_${account}"
+          if [[ "${!chosen}" == "true" ]]; then
+            echo "BrowserStack account ${account}"
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::NOT RUN: no BrowserStack credentials for account ${account} in this repository."
+            echo "## E2E Android NOT RUN: no BrowserStack credentials for account ${account}" >> "$GITHUB_STEP_SUMMARY"
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  peer-image:
+    name: peer image
+    needs: credentials
+    if: needs.credentials.outputs.ready == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: read
+    outputs:
+      pytest-args: ${{ steps.args.outputs.pytest-args }}
+      tested-ref: ${{ steps.checkout.outputs.sha }}
+      image: ${{ steps.peer.outputs.image }}
+      artifact: ${{ steps.peer.outputs.artifact }}
+      published: ${{ steps.peer.outputs.published }}
+      call-id: ${{ steps.peer.outputs.call-id }}
+    env:
+      SELECTION: ${{ inputs.selection }}
+      TESTS: ${{ inputs.tests }}
+      MARKERS: ${{ inputs.markers }}
+      DEVICE: ${{ inputs.device != 'default' && inputs.device || '' }}
+      WORKERS: ${{ inputs.workers }}
+      APP_ID_INPUT: ${{ inputs.app-id }}
+      APK_ARTIFACT: ${{ inputs.apk-artifact }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check the app inputs
+        id: app-inputs
+        env:
+          APK_PRODUCER_SHA: ${{ inputs.apk-producer-sha }}
+          EVENT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          if [[ -n "$APP_ID_INPUT" && -n "$APK_ARTIFACT" ]] || [[ -z "$APP_ID_INPUT" && -z "$APK_ARTIFACT" ]]; then
+            echo "::error::Give exactly one of app-id and apk-artifact."
+            exit 1
+          fi
+          if [[ -n "$APP_ID_INPUT" && ! "$APP_ID_INPUT" =~ ^bs://[0-9a-f]{40}$ ]]; then
+            echo "::error::app-id must look like bs:// followed by 40 hex characters."
+            exit 1
+          fi
+          ref="$EVENT_SHA"
+          if [[ -n "$APK_ARTIFACT" ]]; then
+            if [[ ! "$APK_PRODUCER_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "::error::apk-artifact requires apk-producer-sha from git rev-parse HEAD."
+              exit 1
+            fi
+            ref="$APK_PRODUCER_SHA"
+          elif [[ -n "$APK_PRODUCER_SHA" ]]; then
+            echo "::error::apk-producer-sha is only accepted with apk-artifact."
+            exit 1
+          fi
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ steps.app-inputs.outputs.ref }}
+
+      - name: Verify the peer checkout
+        id: checkout
+        env:
+          EXPECTED_REF: ${{ steps.app-inputs.outputs.ref }}
+        run: &verify-checkout |
+          actual=$(git rev-parse HEAD)
+          if [[ "$actual" != "$EXPECTED_REF" ]]; then
+            echo "::error::Checked out $actual, expected $EXPECTED_REF."
+            exit 1
+          fi
+          echo "sha=$actual" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.11'
+
+      - name: Build the pytest arguments
+        id: args
+        working-directory: test/e2e_appium
+        run: |
+          pip install --quiet "$(grep -i '^pyyaml==' requirements.txt)"
+          python scripts/ci_pytest_args.py \
+            --selection "$SELECTION" --workers "$WORKERS" --device "$DEVICE" --tests "$TESTS" --markers "$MARKERS" \
+            > "$RUNNER_TEMP/pytest.args"
+          tr '\0' ' ' < "$RUNNER_TEMP/pytest.args"; echo
+          echo "pytest-args=$(base64 -w0 < "$RUNNER_TEMP/pytest.args")" >> "$GITHUB_OUTPUT"
+
+      - name: Check out the vendored status-go
+        run: |
+          # Pinned so a branch that edits .gitmodules cannot point the peer
+          # build at another repository.
+          git submodule init vendor/status-go
+          git config submodule.vendor/status-go.url https://github.com/status-im/status-go.git
+          git submodule update --depth 1 vendor/status-go
+
+      - name: Pull or build the status-backend peer image
+        id: peer
+        timeout-minutes: 35
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          sha=$(git ls-tree HEAD vendor/status-go | awk '{print $3}')
+          local_name="statusgo-peer-${sha:0:12}"
+          # Published only by e2e-peer-image.yml from the default branch, so a
+          # branch run can read it but never write it.
+          published="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/status-app-e2e-peer:${sha}"
+          pulled=""
+          if echo "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin > /dev/null \
+            && docker pull --quiet "$published"; then
+            docker tag "$published" "$local_name"
+            pulled=true
+            echo "Pulled ${published}"
+            echo "published=${published}" >> "$GITHUB_OUTPUT"
+          else
+            echo "No published peer image for status-go ${sha}, or GHCR is unreachable; building it"
+          fi
+          image=$(test/e2e_appium/scripts/peer_image.sh "peer-image-${GITHUB_RUN_ID}")
+          echo "image=${image}" >> "$GITHUB_OUTPUT"
+          # A pulled image is pulled again by the e2e job; only a built one is handed over.
+          if [[ -z "$pulled" ]]; then
+            docker save "$image" | gzip -1 > "$RUNNER_TEMP/peer-image.tar.gz"
+            ls -lh "$RUNNER_TEMP/peer-image.tar.gz"
+          fi
+          # A rerun of failed jobs reuses this job and its outputs, and a caller
+          # may call this workflow twice in one run, so names carry this job's
+          # attempt and a per-call id rather than the e2e job's attempt.
+          call_id=$(od -An -N4 -tx1 /dev/urandom | tr -d ' \n')
+          echo "call-id=${call_id}" >> "$GITHUB_OUTPUT"
+          echo "artifact=e2e-android-peer-image-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${call_id}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: steps.peer.outputs.published == ''
+        with:
+          name: ${{ steps.peer.outputs.artifact }}
+          path: ${{ runner.temp }}/peer-image.tar.gz
+          # Long enough for "Re-run failed jobs" after a weekend.
+          retention-days: 4
+          compression-level: 0
+          if-no-files-found: error
+
+  e2e:
+    name: e2e
+    needs: [credentials, peer-image]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 110
+    permissions:
+      contents: read
+      packages: read
+    # Only this job holds the account: the peer image is ready before it
+    # queues. Without queue: max GitHub keeps one waiting run per group and
+    # cancels the one that waited before it.
+    concurrency:
+      group: e2e-android-bs-account-${{ needs.credentials.outputs.account }}
+      cancel-in-progress: false
+      queue: max
+    env:
+      ACCOUNT: ${{ needs.credentials.outputs.account }}
+      DEVICE: ${{ inputs.device != 'default' && inputs.device || '' }}
+      APK_ARTIFACT: ${{ inputs.apk-artifact }}
+      E2E_RUN_ID: gha-${{ github.run_id }}-${{ github.run_attempt }}
+      BROWSERSTACK_BUILD_IDENTIFIER: ${{ github.run_id }}-${{ github.run_attempt }}-${{ needs.peer-image.outputs.call-id }}
+      STATUS_BACKEND_DOCKER_PROJECT: e2e-${{ github.run_id }}-${{ github.run_attempt }}
+      STATUS_BACKEND_IMAGE: ${{ needs.peer-image.outputs.image }}
+      PYTHONUNBUFFERED: '1'
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ needs.peer-image.outputs.tested-ref }}
+
+      - name: Verify the test checkout
+        id: checkout
+        env:
+          EXPECTED_REF: ${{ needs.peer-image.outputs.tested-ref }}
+        run: *verify-checkout
+
+      - name: Check out the vendored status-go
+        run: |
+          # The harness drives the peer through status-go's own test client, and
+          # the image is rebuilt from it if GHCR fails.
+          git submodule init vendor/status-go
+          git config submodule.vendor/status-go.url https://github.com/status-im/status-go.git
+          git submodule update --depth 1 vendor/status-go
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.11'
+
+      - name: Install the test dependencies
+        working-directory: test/e2e_appium
+        run: pip install -r requirements.txt -r requirements-backend-peer.txt
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        if: needs.peer-image.outputs.published == ''
+        with:
+          name: ${{ needs.peer-image.outputs.artifact }}
+          path: ${{ runner.temp }}/peer
+
+      - name: Load the peer image
+        env:
+          PYTEST_ARGS_B64: ${{ needs.peer-image.outputs.pytest-args }}
+          PUBLISHED: ${{ needs.peer-image.outputs.published }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          if [[ -z "$PUBLISHED" ]]; then
+            gunzip -c "$RUNNER_TEMP/peer/peer-image.tar.gz" | docker load
+          elif echo "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin > /dev/null; then
+            # Retry before falling back: a rebuild here holds the account queue.
+            for attempt in 1 2 3; do
+              if docker pull --quiet "$PUBLISHED"; then
+                docker tag "$PUBLISHED" "$STATUS_BACKEND_IMAGE"
+                break
+              fi
+              if [[ "$attempt" -lt 3 ]]; then sleep $((attempt * 20)); fi
+            done
+          fi
+          # Builds the image if GHCR failed since the peer image job.
+          test/e2e_appium/scripts/peer_image.sh "$STATUS_BACKEND_DOCKER_PROJECT" > /dev/null
+          base64 -d <<< "$PYTEST_ARGS_B64" > "$RUNNER_TEMP/pytest.args"
+
+      - name: Select the account's credentials
+        env:
+          # The one place in this job that maps the account to its secrets.
+          BS_USER: ${{ needs.credentials.outputs.account == '1' && secrets.BROWSERSTACK_USERNAME || needs.credentials.outputs.account == '2' && secrets.BROWSERSTACK_USERNAME_2 || '' }}
+          BS_KEY: ${{ needs.credentials.outputs.account == '1' && secrets.BROWSERSTACK_ACCESS_KEY || needs.credentials.outputs.account == '2' && secrets.BROWSERSTACK_ACCESS_KEY_2 || '' }}
+        run: |
+          { echo "BS_USER=${BS_USER}"; echo "BS_KEY=${BS_KEY}"; } >> "$GITHUB_ENV"
+
+      - name: Download the APK
+        if: inputs.apk-artifact != ''
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: ${{ inputs.apk-artifact }}
+          path: ${{ runner.temp }}/apk
+
+      - name: Upload the APK to BrowserStack
+        id: upload
+        if: inputs.apk-artifact != ''
+        run: |
+          mapfile -t apks < <(find "$RUNNER_TEMP/apk" -type f -name '*.apk')
+          if [[ ${#apks[@]} -ne 1 ]]; then
+            echo "::error::Expected one APK in artifact ${APK_ARTIFACT}, found ${#apks[@]}."
+            exit 1
+          fi
+          # Credentials go to curl on stdin so they never appear in the process list.
+          if ! response=$(printf 'user = "%s:%s"\n' "$BS_USER" "$BS_KEY" | curl --config - \
+            --silent --show-error --fail-with-body \
+            --form "file=@${apks[0]}" \
+            --form "custom_id=${E2E_RUN_ID}" \
+            https://api-cloud.browserstack.com/app-automate/upload); then
+            echo "::error::BrowserStack upload failed: ${response}"
+            exit 1
+          fi
+          app_id=$(jq -r '.app_url // empty' <<< "$response")
+          if [[ -z "$app_id" ]]; then
+            echo "::error::BrowserStack upload answered without an app_url: ${response}"
+            exit 1
+          fi
+          echo "app-id=${app_id}" >> "$GITHUB_OUTPUT"
+
+      - name: Check the app is on the account
+        id: app
+        env:
+          APP_ID: ${{ steps.upload.outputs.app-id || inputs.app-id }}
+        run: |
+          # Apps are usable by every user in the BrowserStack group, so ask for
+          # the group's uploads (kept 30 days); a lookup by id cannot prove absence.
+          limit=100
+          app=''
+          for ((offset=0; ; offset+=limit)); do
+            if ! apps=$(printf 'user = "%s:%s"\n' "$BS_USER" "$BS_KEY" | curl --config - \
+              --silent --show-error --fail-with-body \
+              "https://api-cloud.browserstack.com/app-automate/recent_group_apps?limit=${limit}&offset=${offset}"); then
+              echo "::error::BrowserStack could not list apps at offset ${offset}: ${apps}"
+              exit 1
+            fi
+            if jq -e 'type == "object" and .message == "No results found"' <<< "$apps" > /dev/null; then
+              break
+            fi
+            if ! count=$(jq -er 'if type == "array" and all(.[]; type == "object") then length else error("expected an array of apps") end' <<< "$apps"); then
+              echo "::error::Unexpected answer from BrowserStack when listing apps at offset ${offset}."
+              exit 1
+            fi
+            app=$(jq -c --arg id "$APP_ID" 'first(.[] | select(.app_url == $id)) | {app_id: .app_url, app_name, uploaded_at}' <<< "$apps")
+            if [[ -n "$app" ]] || ((count < limit)); then
+              break
+            fi
+          done
+          if [[ -z "$app" ]]; then
+            echo "::error::${APP_ID} is not among recent uploads of BrowserStack account ${ACCOUNT}'s group: deleted after 30 days or uploaded to another group."
+            exit 1
+          fi
+          echo "$app"
+          echo "app-id=${APP_ID}" >> "$GITHUB_OUTPUT"
+          echo "app-json=${app}" >> "$GITHUB_OUTPUT"
+
+      - name: Run the tests
+        id: tests
+        timeout-minutes: 90
+        working-directory: test/e2e_appium
+        env:
+          BROWSERSTACK_APP_ID: ${{ steps.app.outputs.app-id }}
+          BROWSERSTACK_PROJECT_NAME: Mobile E2E GHA
+          BROWSERSTACK_BUILD_NAME: e2e-android-${{ github.run_number }}
+          GIT_COMMIT: ${{ steps.checkout.outputs.sha }}
+          BUILD_ID: ${{ github.run_id }}
+        run: |
+          export BROWSERSTACK_USERNAME="$BS_USER" BROWSERSTACK_ACCESS_KEY="$BS_KEY"
+          if [[ -n "$DEVICE" ]]; then export TEST_DEVICE_ID="$DEVICE"; fi
+          mapfile -d '' -t args < "$RUNNER_TEMP/pytest.args"
+          # The log is kept for the summary: only pytest's output names the reruns.
+          python -m pytest "${args[@]}" 2>&1 | tee "$RUNNER_TEMP/pytest.log"
+
+      - name: Find the BrowserStack build and stop its leftover sessions
+        id: build
+        if: always() && steps.app.outcome == 'success'
+        run: |
+          # A cancelled or timed-out run leaves sessions open until BrowserStack's
+          # idle timeout; ending them frees the account for the next run.
+          bs() { printf 'user = "%s:%s"\n' "$BS_USER" "$BS_KEY" | curl --config - --silent --show-error --fail-with-body "$@"; }
+          build=$(bs "https://api-cloud.browserstack.com/app-automate/builds.json?limit=50" \
+            | jq -r --arg id "$BROWSERSTACK_BUILD_IDENTIFIER" \
+              'first(.[].automation_build | select(.name | endswith($id))) | .hashed_id // empty') || true
+          if [[ -z "$build" ]]; then
+            echo "No BrowserStack build for ${BROWSERSTACK_BUILD_IDENTIFIER}"
+            exit 0
+          fi
+          echo "url=https://app-automate.browserstack.com/dashboard/v2/builds/${build}" >> "$GITHUB_OUTPUT"
+          running_sessions() {
+            local attempt sessions
+            for attempt in 1 2 3; do
+              if sessions=$(bs "https://api-cloud.browserstack.com/app-automate/builds/${build}/sessions.json?limit=100" \
+                | jq -er 'if type == "array" then
+                            [.[] | .automation_session | select(.status == "running") | .hashed_id] | join("\n")
+                          else error("expected a session list") end'); then
+                if [[ -n "$sessions" ]]; then printf '%s\n' "$sessions"; fi
+                return 0
+              fi
+              if [[ "$attempt" -lt 3 ]]; then sleep 5; fi
+            done
+            return 1
+          }
+          if ! running=$(running_sessions); then
+            echo "::warning::Could not list this run's BrowserStack sessions after three attempts; remaining sessions are unknown."
+            exit 0
+          fi
+          if [[ -z "$running" ]]; then
+            exit 0
+          fi
+          for session in $running; do
+            echo "Stopping session ${session}"
+            bs --request DELETE "https://hub-cloud.browserstack.com/wd/hub/session/${session}" > /dev/null || true
+          done
+          # BrowserStack needs a moment to close a session it was told to stop.
+          sleep 15
+          if ! left=$(running_sessions | wc -l); then
+            echo "::warning::Could not verify BrowserStack session cleanup after three attempts; remaining sessions are unknown."
+            exit 0
+          fi
+          echo "Sessions still running after the stop: ${left// /}"
+          if [[ "${left// /}" != "0" ]]; then
+            echo "::warning::${left// /} BrowserStack session(s) of this run are still running; they end at BrowserStack's idle timeout."
+          fi
+
+      - name: Summarise the results
+        if: always()
+        working-directory: test/e2e_appium
+        env:
+          APP_JSON: ${{ steps.app.outputs.app-json }}
+          BUILD_URL: ${{ steps.build.outputs.url }}
+          COMMIT: ${{ steps.checkout.outputs.sha }}
+          APK_PRODUCER_SHA: ${{ inputs.apk-producer-sha }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          GH_TOKEN: ${{ github.token }}
+          TESTS_OUTCOME: ${{ steps.tests.outcome }}
+        run: |
+          from_commit=false
+          if [[ -n "$APK_ARTIFACT" && -n "$APK_PRODUCER_SHA" && "$APK_PRODUCER_SHA" == "$COMMIT" ]]; then
+            from_commit=true
+          fi
+          printf "APK producer SHA: \`%s\`\n\nTest checkout SHA: \`%s\`\n\n" \
+            "${APK_PRODUCER_SHA:-unverified}" "${COMMIT:-unverified}" >> "$GITHUB_STEP_SUMMARY"
+          # Normally under reports/<run id>/; the harness writes to reports/
+          # itself when it cannot load its configuration.
+          junit=""
+          if [[ -d reports ]]; then
+            junit=$(find reports -name 'pytest_results_*.xml' -printf '%T@ %p\n' | sort -nr | sed -n '1s/^[^ ]* //p')
+          fi
+          if [[ -z "$junit" ]]; then
+            echo "## E2E Android: no test results, the run stopped before pytest reported" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          app="${APP_JSON}"
+          if [[ -z "$app" ]]; then app='{}'; fi
+          behind=""
+          if [[ -n "$BASE_REF" ]]; then
+            count=$(gh api "repos/${GITHUB_REPOSITORY}/compare/$(jq -rn --arg ref "$BASE_REF" '$ref | @uri')...${COMMIT}" --jq .behind_by 2> /dev/null) || count=""
+            if [[ "$count" =~ ^[0-9]+$ ]]; then behind="${count} ${BASE_REF}"; fi
+          fi
+          python scripts/ci_junit_report.py --junit "$junit" --summary "$GITHUB_STEP_SUMMARY" \
+            --app-json "$app" --commit "${COMMIT:0:11}" --app-from-this-commit "$from_commit" \
+            --account "$ACCOUNT" --build-url "$BUILD_URL" --tests-outcome "$TESTS_OUTCOME" \
+            --pytest-log "$RUNNER_TEMP/pytest.log" --behind-base "$behind"
+
+      - name: Upload the reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: e2e-android-reports-${{ github.run_id }}-${{ github.run_attempt }}-${{ needs.peer-image.outputs.call-id }}
+          path: |
+            test/e2e_appium/reports/
+            test/e2e_appium/screenshots/
+          retention-days: 14
+          if-no-files-found: warn

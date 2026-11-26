@@ -135,3 +135,20 @@ jobs:
       - run: pip install pytest==8.4.1
       - name: Run the binding contract
         run: python -m pytest test/contract/test_wakuext_binding.py -v
+  e2e-appium-component-tests:
+    name: e2e_appium component tests
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.11'
+      - name: Run the device-free tests of the e2e harness
+        working-directory: test/e2e_appium
+        run: |
+          pip install --quiet -r requirements.txt
+          python -m pytest -m component tests/test_ci_pytest_args.py tests/test_ci_account_choice.py tests/test_ci_junit_report.py tests/test_session_manager_device.py tests/test_ci_android_workflow.py
