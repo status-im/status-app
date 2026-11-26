@@ -602,6 +602,28 @@ Item {
             compare(passwordBox.validationError, "")
         }
 
+        // The previous UI was restarted because the service died during its login: no
+        // silent login on this start, the credential and the record stay, the hint says why
+        function test_loginInterruptedSkipsTheSilentLoginOnceAndShowsTheHint() {
+            wrapper = createTemporaryObject(wrapperComponent, root)
+            verify(!!wrapper)
+            const layout = findChild(wrapper, "startupOnboardingLayout")
+            wrapper.secureStorage.creds["uid_1"] = "dek:" + root.dummyDekHex
+            wrapper.secureStorage.bootLoginRecord = root.dummyRecord
+
+            wrapper.loginInterrupted = true
+            wrapper.autoLoginEnabled = true
+
+            compare(wrapper.onboardingStore.loginRequestedCalls.length, 0)
+            verify(!layout.autoLoginAttempted)
+            compare(wrapper.secureStorage.creds["uid_1"], "dek:" + root.dummyDekHex)
+            compare(wrapper.secureStorage.bootLoginRecord, root.dummyRecord)
+            compare(layout.stack.currentItem, layout.stack.loginScreen)
+            const passwordBox = findChild(layout.stack.loginScreen, "passwordBox")
+            verify(!!passwordBox)
+            compare(passwordBox.validationError, "Status was interrupted. Try again.")
+        }
+
         // After the record refresh relogin (AllowOnce), the silent login's FollowStored save
         // replaces the record from the other version with this version's
         function test_silentLoginAfterTheRefreshReloginWritesANewRecord() {

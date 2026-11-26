@@ -25,6 +25,10 @@ Item {
     property bool autoLoginEnabled
     property string lastSelectedProfileKeyUid
     property bool biometricFlowPending
+    // The previous UI was restarted because the Android status-go service died during its
+    // login: no silent login on this start (a login that kills the service must not loop).
+    // The credential and the record stay, and the login screen says why.
+    property bool loginInterrupted
 
     // Injectable for tests; the default instance is backed by the onboarding module
     // context property, exactly as before.
@@ -57,6 +61,11 @@ Item {
         // StatusGoServiceClient's answer to a call the service process died under
         readonly property string serviceDiedError: "status-go service died"
 
+        function showInterruptedHint() {
+            if (onboardingLayout.stack.loginScreen)
+                onboardingLayout.stack.loginScreen.setLoginHint(qsTr("Status was interrupted. Try again."))
+        }
+
         // A login the UI didn't start is in progress: wait for its node.login. (Logged in
         // at startup never gets here: the resume path opens the session directly.)
         readonly property bool adoptingLogin:
@@ -81,6 +90,11 @@ Item {
             messagesEnabled: true
             infiniteLoading: runningProgressAnimation
         }
+    }
+
+    onLoginInterruptedChanged: {
+        if (loginInterrupted)
+            d.showInterruptedHint()
     }
 
     Connections {
@@ -131,8 +145,8 @@ Item {
                 onboardingLayout.unwindToLoginScreen()
             }
 
-            if (interrupted && onboardingLayout.stack.loginScreen)
-                onboardingLayout.stack.loginScreen.setLoginHint(qsTr("Status was interrupted. Try again."))
+            if (interrupted)
+                d.showInterruptedHint()
         }
 
         function onLoginAdopted() {
@@ -240,7 +254,7 @@ Item {
 
         keychain: root.keychain
         secureStorage: root.secureStorage
-        autoLoginEnabled: root.autoLoginEnabled
+        autoLoginEnabled: root.autoLoginEnabled && !root.loginInterrupted
         adoptingLogin: d.adoptingLogin
 
         privacyModeFeatureEnabled: root.featureFlagsStore.privacyModeFeatureEnabled

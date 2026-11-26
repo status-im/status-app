@@ -16,6 +16,7 @@ import android.net.Uri;
 import android.provider.Settings;
 import android.util.Log;
 import im.status.mobileui.PushNotificationHelper;
+import app.status.mobile.ipc.StatusGoServiceClient;
 import android.content.ActivityNotFoundException;
 import android.widget.Toast;
 import java.io.File;
@@ -35,6 +36,10 @@ public class StatusQtActivity extends QtActivity {
     private static final long TEARDOWN_WATCHDOG_MS = 3000L;
 
     private static final AtomicBoolean splashShouldHide = new AtomicBoolean(false);
+    // This UI process was started because the status-go service died during the previous
+    // UI's login (StatusGoServiceClient.SERVICE_DIED_DURING_LOGIN). Taken once by the
+    // login screen, which then skips its silent login.
+    private static final AtomicBoolean loginInterrupted = new AtomicBoolean(false);
     private static StatusQtActivity sInstance = null;
 
     // App-private cache subdirectory holding copies of shared image streams.
@@ -91,6 +96,12 @@ public class StatusQtActivity extends QtActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        // Before super.onCreate(), which may start the Qt side that takes it. Fresh launches
+        // only: a recreation or a recents launch returns the old restart intent again.
+        if (savedInstanceState == null && !isHistoryLaunch(getIntent())) {
+            readRecoveryReason(getIntent());
+        }
+
         // Initialize the status-go UI stub bridge early.
         // (In the service-based architecture this forwards to the separate status-go process.)
         StatusGoStub.setContext(this);
@@ -129,6 +140,21 @@ public class StatusQtActivity extends QtActivity {
             handleUrlIntake(getIntent());
             handleShareIntake(getIntent());
         }
+    }
+
+    private static void readRecoveryReason(Intent intent) {
+        if (intent == null) return;
+        final String reason = intent.getStringExtra(StatusGoServiceClient.RECOVERY_REASON_EXTRA);
+        intent.removeExtra(StatusGoServiceClient.RECOVERY_REASON_EXTRA);
+        if (StatusGoServiceClient.SERVICE_DIED_DURING_LOGIN.equals(reason)) {
+            Log.w(TAG, "restarted: the status-go service died during the login");
+            loginInterrupted.set(true);
+        }
+    }
+
+    /** Called from Qt via JNI: true once after a restart for a login the service died under. */
+    public static boolean consumeLoginInterrupted() {
+        return loginInterrupted.getAndSet(false);
     }
 
     private static boolean isHistoryLaunch(Intent intent) {

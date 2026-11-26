@@ -650,6 +650,19 @@ void SystemUtilsInternal::setMainWindowReady()
 #endif
 }
 
+bool SystemUtilsInternal::consumeLoginInterrupted()
+{
+#ifdef Q_OS_ANDROID
+    return QJniObject::callStaticMethod<jboolean>(
+        "app/status/mobile/StatusQtActivity",
+        "consumeLoginInterrupted",
+        "()Z"
+    );
+#else
+    return false;
+#endif
+}
+
 void SystemUtilsInternal::moveAppTaskToBack()
 {
 #ifdef Q_OS_ANDROID

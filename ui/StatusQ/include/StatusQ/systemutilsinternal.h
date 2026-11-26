@@ -57,6 +57,9 @@ public:
     // Background the whole Android task, revealing the app the user came from
     // (share flow cancel: "return to the source app"); no-op elsewhere
     Q_INVOKABLE void moveAppTaskToBack();
+    // True once after Android restarted the UI because the status-go service died during
+    // the previous UI's login; false elsewhere
+    Q_INVOKABLE bool consumeLoginInterrupted();
     
     // Get Android keyboard state (uses WindowInsets API, works Android 11-16+)
     Q_INVOKABLE int androidKeyboardHeight() const;

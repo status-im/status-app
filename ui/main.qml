@@ -577,6 +577,7 @@ Window {
                 holdIntake: () => sessionView.holdIntakeForNextSession()
                 releaseIntake: () => sessionView.releaseIntakeHold()
                 keepBootLoginRecordCurrent: (record) => bootLoginRecordGuard.keepCurrent(record)
+                consumeLoginInterrupted: () => SystemUtils.consumeLoginInterrupted()
 
                 onContentLoaded: {
                     sessionLoadingScreen.sessionContentLoaded()

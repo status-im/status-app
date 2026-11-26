@@ -39,6 +39,9 @@ Item {
     // The KeptCurrent rewrite of an adopted login's record (BootLoginRecordGuard.keepCurrent):
     // (record) => void
     required property var keepBootLoginRecordCurrent
+    // True once after Android restarted the UI because the status-go service died during
+    // the previous UI's login: () => bool
+    required property var consumeLoginInterrupted
 
     readonly property bool userLoggedIn: appMainLoader.item !== null
 
@@ -231,6 +234,7 @@ Item {
             item.secureStorage = root.secureStorage
             item.lastSelectedProfileKeyUid = Qt.binding(() => localAppSettings.selectedProfileKeyUid)
             item.biometricFlowPending = Qt.binding(() => d.biometricFlowPending)
+            item.loginInterrupted = root.consumeLoginInterrupted()
             // MUST be assigned LAST: enabling triggers the one-shot auto-login
             // attempt, which needs the key UID (and storage) already in place.
             // Decided (and logged) on the Nim side: e2e runs never auto-login, and
