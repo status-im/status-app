@@ -203,18 +203,21 @@ final class ServiceDeathRecovery {
     // CallPrivateRPC callers parse a JSON-RPC response
     static String serviceDiedResponse(String method, ByteBuffer argsUtf8) {
         if (!CALL_PRIVATE_RPC.equals(method)) return SERVICE_DIED_RESPONSE;
-        return "{\"jsonrpc\":\"2.0\",\"id\":" + JSONObject.valueToString(requestId(argsUtf8))
+        return "{\"jsonrpc\":\"2.0\",\"id\":" + requestIdJson(argsUtf8)
                 + ",\"error\":{\"code\":-32000,\"message\":\"" + SERVICE_DIED_ERROR + "\"}}";
     }
 
     // The id of the request in the ["<request>"] argument list, null when unreadable
-    private static Object requestId(ByteBuffer argsUtf8) {
+    private static String requestIdJson(ByteBuffer argsUtf8) {
         try {
             final String json = StandardCharsets.UTF_8.decode(argsUtf8.duplicate()).toString();
-            return new JSONObject(new JSONArray(json).getString(0)).opt("id");
+            final Object id = new JSONObject(new JSONArray(json).getString(0)).opt("id");
+            if (id instanceof String) return JSONObject.quote((String) id);
+            if (id instanceof Number) return JSONObject.numberToString((Number) id);
         } catch (Exception e) {
-            return null;
+            // unreadable request
         }
+        return "null";
     }
 
     private void remember(ByteBuffer argsUtf8, int seen) {
