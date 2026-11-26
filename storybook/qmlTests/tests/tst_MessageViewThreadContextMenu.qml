@@ -1,5 +1,7 @@
 import QtQuick
 import QtTest
+import StatusQ
+import StatusQ.Components
 import StatusQ.Core.Theme
 import utils
 import shared.views.chat
@@ -9,6 +11,8 @@ Item {
     id: root
     width: 800
     height: 600
+
+    readonly property MessageHeaderServices messageHeaderServices: StatusMessageHeaderServices { theme: root.Theme }
 
     QtObject {
         id: localAccountSettings
@@ -65,6 +69,7 @@ Item {
         id: viewComponent
         MessageView {
             width: 600
+            messageHeaderServices: root.messageHeaderServices
             joined: true
             rootStore: rootStoreMock
             messageStore: messageStoreMock

@@ -27,6 +27,7 @@ Item {
         id: messageComponent
         StatusMessage {
             id: message
+            headerServices: null // showHeader: false, no header is created
             textAppearance: MessageTextAppearance {
                 theme: message.Theme
                 selectionPalette: message.palette

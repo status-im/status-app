@@ -25,6 +25,7 @@ Item {
     readonly property ChatTextAppearance previewAppearance: ReplyTextAppearance {
         theme: root.Theme
     }
+    readonly property MessageHeaderServices messageHeaderServices: StatusMessageHeaderServices { theme: root.Theme }
 
     width: 800
     height: 600
@@ -48,6 +49,7 @@ Item {
         MessageView {
             textAppearance: root.textAppearance
             previewAppearance: root.previewAppearance
+            messageHeaderServices: root.messageHeaderServices
             width: 600
 
             rootStore: rootStoreMock
@@ -159,14 +161,14 @@ Item {
             verify(!!view)
             const avatar = avatarLoader(view)
             verify(!avatar.active)
-            compare(findChild(view, "StatusMessageHeader_DisplayName"), null)
+            compare(findChild(view, "StatusMessage_header"), null)
 
             view.hasThread = true
 
             tryVerify(() => avatar.status === Loader.Ready && avatar.visible)
-            const author = findChild(view, "StatusMessageHeader_DisplayName")
-            verify(!!author && author.visible)
-            compare(author.text, "Sender")
+            const header = findChild(view, "StatusMessage_header")
+            verify(!!header && header.visible)
+            compare(header.displayName, "Sender")
 
             const connector = findChild(view, "messageAttachmentConnector")
             verify(!!connector)
