@@ -295,6 +295,24 @@ Item {
             compare(mirror.index, StatusSectionLayout.CentralPanel)
         }
 
+        function test_openCentralPanelBeforePortraitLoadsAndAfterBack() {
+            const portrait = loaderOf("StatusSectionLayoutPortrait")
+            verify(!!portrait, "Object exists")
+            compare(portrait.item, null)
+
+            layout.setCurrentIndex(StatusSectionLayout.CentralPanel)
+            const view = rotate(true).item
+            verify(!!view, "Object exists")
+            tryCompare(view, "currentIndex", StatusSectionLayout.CentralPanel)
+
+            verify(layout.tryGoBack())
+            tryCompare(view, "currentIndex", StatusSectionLayout.LeftPanel)
+            compare(layout.currentIndex, StatusSectionLayout.LeftPanel)
+
+            layout.setCurrentIndex(StatusSectionLayout.CentralPanel)
+            tryCompare(view, "currentIndex", StatusSectionLayout.CentralPanel)
+        }
+
         function test_landscapeSplitStateIsIsolatedPerUserAndSection() {
             const settingsA = Qt.createQmlObject(
                 'import QtCore; Settings { category: "%1_%2".arg("userA").arg("sectionA"); property int splitWidth: 420 }',
