@@ -14,6 +14,7 @@ using namespace Status;
 #include <QGuiApplication>
 #include <QJsonArray>
 #include <QJsonDocument>
+#include <QPointer>
 
 #if defined(Q_OS_IOS)
     #include <CoreFoundation/CFBundle.h>
@@ -43,9 +44,12 @@ void UrlSchemeEvent::registerUrlHandler()
             QDesktopServices::setUrlHandler(bundleId.toLower(), this, "handleUrl");
     }
     // Qt also posts a QFileOpenEvent for these, without the security scope.
-    Status::OpenedFileIntake::setReceiver([this](const QString& fileUrl, bool copied) {
-        emitFileToQt(fileUrl, copied);
-    });
+    // The receiver outlives this object; a file arriving after it is gone is dropped.
+    Status::OpenedFileIntake::setReceiver(
+        [self = QPointer<UrlSchemeEvent>(this)](const QString& fileUrl, bool copied) {
+            if (self)
+                self->emitFileToQt(fileUrl, copied);
+        });
 #endif
 }
 

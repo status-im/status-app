@@ -23,6 +23,7 @@ Item {
             property string title: ""
             property url icon: ""
             property var url: ""
+            property bool offTheRecord: false
         }
     }
 
@@ -34,6 +35,7 @@ Item {
             property var views: []
             property int count: 0
             property int activated: -1
+            property int currentIndex: 0
 
             function createEmptyTab(params, startPage, focus, url, title, icon, uid) {
                 const view = viewComponent.createObject(null, {
@@ -112,6 +114,33 @@ Item {
 
             compare(t.host.views.map(v => v.uid), ["t2", "t1"])
             compare(t.host.views[1].profileParams, t.defaultParams)
+        }
+
+        // An unsaved Tab before the current one must not shift the saved index.
+        function test_theCurrentTabIsSavedByItsPlaceAmongSavedTabs() {
+            const host = createTemporaryObject(tabHostComponent, root)
+            const params = createTemporaryObject(paramsComponent, root)
+            let savedIndex = -1
+            const session = createTemporaryObject(sessionComponent, root, {
+                webViewContext: host,
+                tabs: host,
+                defaultProfileParams: params,
+                preferencesStore: {
+                    getRestoreOpenTabs: () => true,
+                    setOpenTabs: tabs => {},
+                    setCurrentTabIndex: index => savedIndex = index
+                }
+            })
+            host.createEmptyTab(params, false, false, "https://private.example", "P", "", "p")
+                .offTheRecord = true
+            host.createEmptyTab(params, false, false, "https://a.example", "A", "", "a")
+            host.createEmptyTab(params, false, false, "https://b.example", "B", "", "b")
+            host.currentIndex = 1
+
+            session.saveSession()
+
+            compare(session.persistedTabs.map(t => t.uuid), ["a", "b"])
+            compare(savedIndex, 0)
         }
 
         function test_aGoneFileIsLeftOut() {

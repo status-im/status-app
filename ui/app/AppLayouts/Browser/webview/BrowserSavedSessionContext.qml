@@ -98,15 +98,20 @@ QtObject {
         if (!preferencesStore.getRestoreOpenTabs())
             return
 
+        // The current index counts saved Tabs only, the list restore walks.
         const tabsModel = []
+        let currentIndex = 0
         for (let i = 0; i < tabs.count; i++) {
             const dto = buildTabDto(webViewContext.getWebView(i))
-            if (dto)
-                tabsModel.push(dto)
+            if (!dto)
+                continue
+            if (i <= tabs.currentIndex)
+                currentIndex = tabsModel.length
+            tabsModel.push(dto)
         }
 
         preferencesStore.setOpenTabs(tabsModel)
-        preferencesStore.setCurrentTabIndex(tabs.currentIndex)
+        preferencesStore.setCurrentTabIndex(currentIndex)
         setPersisted(tabsModel)
     }
 

@@ -48,8 +48,9 @@ QtObject {
     }
 
     function accept() {
-        askedType = fileType
-        offerFn(fileType)
+        // Only a shown system choice hides the offer; otherwise the user can choose again.
+        if (offerFn(fileType))
+            askedType = fileType
     }
 
     function acknowledge() {

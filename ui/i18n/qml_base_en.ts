@@ -13120,6 +13120,10 @@ to load</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Enable third-party services to open files in Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Couldn&apos;t open the file</source>
         <translation type="unfinished"></translation>
     </message>

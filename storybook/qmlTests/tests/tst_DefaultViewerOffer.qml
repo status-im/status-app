@@ -54,6 +54,14 @@ Item {
             compare(offer.typeName, "PDFs")
         }
 
+        // When the system shows nothing, the user can choose again.
+        function test_anOfferTheSystemDidNotShowKeepsTheBanner() {
+            const offer = makeOffer({ openedFile: "content://media/doc/report.pdf" })
+            offer.offerFn = type => false
+            offer.accept()
+            verify(offer.shown)
+        }
+
         function test_offeredForEveryTypeStatusClaims() {
             const offer = makeOffer({ openedFile: "content://media/doc/photo.png" })
             verify(offer.shown)

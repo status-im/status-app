@@ -4,6 +4,8 @@ import QtQuick
 /// the file is released and the user told; it is never handed back to the OS.
 QtObject {
     property bool browserEnabled: true
+    /// Off in privacy mode, where the browser section shows the privacy wall.
+    property bool thirdpartyServicesEnabled: true
 
     /// The loaded browser section, or what stands in its place.
     property var browserFn: () => null
@@ -14,6 +16,10 @@ QtObject {
     function deliver(fileUrl, refused) {
         if (!browserEnabled) {
             refuse(fileUrl, qsTr("Turn on the browser in Settings to open files in Status"))
+            return
+        }
+        if (!thirdpartyServicesEnabled) {
+            refuse(fileUrl, qsTr("Enable third-party services to open files in Status"))
             return
         }
         showBrowserFn()

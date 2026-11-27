@@ -223,6 +223,11 @@ Item {
             compare(DownloadFormatUtils.elideFileName("noext", 4).length <= 4, true)
         }
 
+        function test_aFileNameIsTakenAfterEitherSeparator() {
+            compare(DownloadFormatUtils.fileNameOf("/Users/me/a.pdf"), "a.pdf")
+            compare(DownloadFormatUtils.fileNameOf("C:\\Users\\me\\a.pdf"), "a.pdf")
+        }
+
         function test_strip_singlePill_keepsFixedWidth_leftAligned() {
             const record = createTemporaryObject(recordComponent, root)
             const strip = createTemporaryObject(stripComponent, root)

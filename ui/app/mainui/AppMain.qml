@@ -1438,6 +1438,7 @@ Item {
         id: openedFileDelivery
 
         browserEnabled: d.isBrowserEnabled
+        thirdpartyServicesEnabled: appMain.rootStore.thirdpartyServicesEnabled
         browserFn: () => browserLayoutContainer.item
         showBrowserFn: () => globalConns.onAppSectionBySectionTypeChanged(Constants.appSection.browser)
         releaseFn: fileUrl => SystemUtils.releaseOpenedFileUrl(fileUrl)

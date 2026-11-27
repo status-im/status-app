@@ -75,6 +75,19 @@ Item {
             compare(browserShown, 0)
         }
 
+        function test_privacyModeSaysWhyAFileIsNotOpened() {
+            const browser = createTemporaryObject(browserComponent, root)
+            const delivery = createDelivery(true, browser)
+            delivery.thirdpartyServicesEnabled = false
+
+            delivery.deliver("file:///tmp/a.png", false)
+
+            compare(released, ["file:///tmp/a.png"])
+            compare(messages, ["Enable third-party services to open files in Status"])
+            compare(browserShown, 0)
+            compare(browser.opened, [])
+        }
+
         function test_aFileIsReleasedBehindThePrivacyWall() {
             const wall = createTemporaryObject(privacyWallComponent, root)
             const delivery = createDelivery(true, wall)
