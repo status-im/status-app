@@ -8,6 +8,7 @@ from allure_commons._allure import step
 import configs
 import driver
 from constants import CommunityChannel
+from driver.obj import colour_hex
 from driver.objects_access import emoji_text, walk_children
 from gui.components.community.community_category_popup import NewCategoryPopup
 from gui.components.community.community_channel_popups import EditChannelPopup, NewChannelPopup
@@ -169,7 +170,7 @@ class CommunityToolBar(QObject):
     @property
     @allure.step('Get channel color')
     def channel_color(self) -> str:
-        return str(self._channel_header.object.asset.color.name).lower()
+        return colour_hex(self._channel_header.object.asset.color)
 
     @property
     @allure.step('Get channel name')
@@ -555,4 +556,4 @@ class MembersListPanel(QObject):
             if getattr(member, 'userName', '') == member_name:
                 for child in walk_children(member):
                     if getattr(child, 'id', '') == 'statusBadge':
-                        return child.color.name
+                        return colour_hex(child.color)

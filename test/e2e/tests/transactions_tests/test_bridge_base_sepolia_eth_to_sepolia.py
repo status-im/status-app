@@ -27,7 +27,8 @@ from helpers.wallet_helper import (
     indirect=['user_data', 'user_account'],
 )
 @pytest.mark.timeout(600)
-def test_bridge_sepolia_eth_to_base(main_screen, user_account):
+def test_bridge_base_sepolia_eth_to_sepolia(main_screen, user_account):
+    # Sepolia -> Base Sepolia quotes INSUFFICIENT_LIQUIDITY (max $0) as of 2026-11-27.
     skip_post_login_popups_if_visible()
     wallet_account = open_wallet_account(main_screen)
     wait_for_account_assets_loaded(wallet_account)
@@ -35,9 +36,9 @@ def test_bridge_sepolia_eth_to_base(main_screen, user_account):
     sepolia = WalletNetworkNaming.LAYER1_ETHEREUM_TESTNET
     base_sepolia = WalletNetworkNaming.LAYER2_BASE_SEPOLIA
 
-    with step('Quote Sepolia ETH to Base Sepolia ETH'):
-        swap_popup.select_token('receive', 'ETH', base_sepolia.chain_id)
-        swap_popup.select_token('pay', 'ETH', sepolia.chain_id)
+    with step('Quote Base Sepolia ETH to Sepolia ETH'):
+        swap_popup.select_token('receive', 'ETH', sepolia.chain_id)
+        swap_popup.select_token('pay', 'ETH', base_sepolia.chain_id)
         swap_popup.set_pay_amount('0.0001')
         swap_popup.wait_until_confirm_ready('Confirm Bridge')
 
@@ -47,9 +48,9 @@ def test_bridge_sepolia_eth_to_base(main_screen, user_account):
         authenticate_with_password(user_account)
         SwapPopup().wait_until_hidden()
 
-    with step('Bridge appears in History on Sepolia'):
+    with step('Bridge appears in History on Base Sepolia'):
         wallet_account.wait_for_new_history_transaction(
             titles=WalletHistoryTitles.BRIDGE,
-            network_name=sepolia.value,
+            network_name=base_sepolia.value,
             sent_at=sent_at,
         )

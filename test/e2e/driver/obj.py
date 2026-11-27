@@ -34,6 +34,12 @@ class Colour(str):
         return "#" + self[3:].lower()
 
 
+def colour_hex(value) -> str:
+    if isinstance(value, Colour):
+        return value.name
+    return str(value).lower()
+
+
 class Record(dict):
     """A value with fields, such as a point or a rectangle. Fields read as attributes."""
 

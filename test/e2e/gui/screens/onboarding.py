@@ -11,6 +11,7 @@ from constants.onboarding import OnboardingScreensHeaders
 import driver
 from constants import ColorCodes
 from constants.keycard import KEYCARD_NOT_VERIFIED_SNIPPET
+from driver.obj import colour_hex
 from driver.objects_access import walk_children
 from gui.components.onboarding.language_selector import LanguageSelector
 from gui.components.onboarding.login_by_syncing_checklist import LogInBySyncingDialog
@@ -517,7 +518,7 @@ class CreatePasswordView(OnboardingView):
     @property
     @allure.step('Get strength indicator color')
     def strength_indicator_color(self) -> str:
-        return self._strength_indicator.object.fillColor['name']
+        return colour_hex(self._strength_indicator.object.fillColor)
 
     @property
     @allure.step('Get strength indicator text')
@@ -531,7 +532,7 @@ class CreatePasswordView(OnboardingView):
         color = ColorCodes.GREEN.value
 
         for item in driver.find_all(self.password_component_indicator.real_name):
-            if str(item.color.name) == color:
+            if colour_hex(item.color) == color:
                 messages.append(str(item.text))
         return messages
 
@@ -603,7 +604,7 @@ class OnboardingCreatePasswordView(OnboardingView):
     @property
     @allure.step('Get strength indicator color')
     def strength_indicator_color(self) -> str:
-        return self.password_strength_indicator.object.fillColor['name']
+        return colour_hex(self.password_strength_indicator.object.fillColor)
 
     @property
     @allure.step('Get strength indicator text')
@@ -617,7 +618,7 @@ class OnboardingCreatePasswordView(OnboardingView):
         color = ColorCodes.GREEN.value
 
         for item in driver.find_all(self.password_component_indicator.real_name):
-            if str(item.color.name) == color:
+            if colour_hex(item.color) == color:
                 messages.append(str(item.text))
         return messages
 

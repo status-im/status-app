@@ -7,6 +7,7 @@ import allure
 import configs
 import constants.colors
 import driver
+from driver.obj import colour_hex
 from configs.timeouts import APP_LOAD_TIMEOUT_MSEC
 from constants import UserAccount, CommunityData
 from gui.components.activity_center import ActivityCenter
@@ -150,12 +151,12 @@ class MainLeftPanel(QObject):
     @property
     @allure.step('Get user badge color')
     def user_badge_color(self) -> str:
-        return str(self.profile_button.object.badge.color.name)
+        return colour_hex(self.profile_button.object.badge.color)
 
     @property
     @allure.step('Get avatar background color')
     def avatar_background_color(self) -> str:
-        return str(self.profile_button.object.identicon.asset.bgColor.name).upper()
+        return colour_hex(self.profile_button.object.identicon.asset.bgColor).upper()
 
     @allure.step('Verify: User is online')
     def user_is_online(self) -> bool:

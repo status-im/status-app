@@ -5,6 +5,7 @@ import allure
 
 import configs
 import driver
+from driver.obj import colour_hex
 from driver.objects_access import (
     find_descendant_by_object_name,
     is_descendant_of,
@@ -378,7 +379,7 @@ class Message:
         return (
             str(delegate.pinnedMsgInfoText),
             str(delegate.pinnedBy),
-            str(delegate.background.color.name),
+            colour_hex(delegate.background.color),
         )
 
     @property
