@@ -72,8 +72,10 @@ AbstractWebView {
         if (!item)
             return
 
+        // An Opened File's Tab is named by its file while it shows the file.
         const nextTitle = item.title || ""
-        if (nextTitle && root.title !== nextTitle)
+        const showsOpenedFile = !!root.openedFilePath && !item.canGoBack
+        if (nextTitle && !showsOpenedFile && root.title !== nextTitle)
             root.title = nextTitle
 
         const nextIcon = item.icon || ""

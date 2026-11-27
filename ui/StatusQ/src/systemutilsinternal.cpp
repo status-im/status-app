@@ -182,6 +182,74 @@ QVariantMap SystemUtilsInternal::openedFileInfo(const QString &fileUrl) const
     return Status::OpenedFileIntake::description(fileUrl);
 }
 
+QString SystemUtilsInternal::defaultViewer(const QString &mimeType) const
+{
+#ifdef Q_OS_ANDROID
+    QJniObject context = QNativeInterface::QAndroidApplication::context();
+    if (!context.isValid())
+        return {};
+    return QJniObject::callStaticObjectMethod("app/status/mobile/DefaultViewer", "state",
+                                              "(Landroid/content/Context;Ljava/lang/String;)Ljava/lang/String;",
+                                              context.object<jobject>(),
+                                              QJniObject::fromString(mimeType).object<jstring>())
+        .toString();
+#else
+    Q_UNUSED(mimeType)
+    return {};
+#endif
+}
+
+bool SystemUtilsInternal::offerDefaultViewer(const QString &mimeType) const
+{
+#ifdef Q_OS_ANDROID
+    QJniObject activity = QNativeInterface::QAndroidApplication::context();
+    if (!activity.isValid())
+        return false;
+    return QJniObject::callStaticMethod<jboolean>("app/status/mobile/DefaultViewer", "offer",
+                                                  "(Landroid/app/Activity;Ljava/lang/String;)Z",
+                                                  activity.object<jobject>(),
+                                                  QJniObject::fromString(mimeType).object<jstring>());
+#else
+    Q_UNUSED(mimeType)
+    return false;
+#endif
+}
+
+QStringList SystemUtilsInternal::defaultViewerTypes() const
+{
+    QStringList types;
+#ifdef Q_OS_ANDROID
+    QJniObject context = QNativeInterface::QAndroidApplication::context();
+    if (!context.isValid())
+        return types;
+    QJniObject array = QJniObject::callStaticObjectMethod("app/status/mobile/DefaultViewer", "types",
+                                                          "(Landroid/content/Context;)[Ljava/lang/String;",
+                                                          context.object<jobject>());
+    if (!array.isValid())
+        return types;
+    QJniEnvironment env;
+    const auto items = array.object<jobjectArray>();
+    const jsize count = env->GetArrayLength(items);
+    for (jsize i = 0; i < count; ++i)
+        types << QJniObject::fromLocalRef(env->GetObjectArrayElement(items, i)).toString();
+#endif
+    return types;
+}
+
+bool SystemUtilsInternal::resetDefaultViewer() const
+{
+#ifdef Q_OS_ANDROID
+    QJniObject activity = QNativeInterface::QAndroidApplication::context();
+    if (!activity.isValid())
+        return false;
+    return QJniObject::callStaticMethod<jboolean>("app/status/mobile/DefaultViewer", "reset",
+                                                  "(Landroid/app/Activity;)Z",
+                                                  activity.object<jobject>());
+#else
+    return true;
+#endif
+}
+
 bool SystemUtilsInternal::ensureDirectory(const QString &path) const
 {
     if (path.isEmpty())

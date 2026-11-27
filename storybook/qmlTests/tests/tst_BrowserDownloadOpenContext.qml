@@ -39,15 +39,13 @@ Item {
             ctx.mediaPlayerDirectory = "/tmp/status-player"
             ctx.ensureDirectoryFn = function(path) { return true }
             ctx.writeTextFileFn = function(path, data) { return true }
-            ctx.openUrlFn = (url, openedFilePath, title) => {
-                openedUrls.push(String(url))
-                openedPaths.push(openedFilePath || "")
-                openedTitles.push(title || "")
-            }
-            ctx.openFileUrlFn = (fileUrl, readAccessUrl, openedFilePath, title) => {
-                openedFileUrls.push({ url: String(fileUrl), readAccess: String(readAccessUrl || "") })
-                openedPaths.push(openedFilePath || "")
-                openedTitles.push(title || "")
+            ctx.openPreviewFn = plan => {
+                if (plan.readAccessUrl)
+                    openedFileUrls.push({ url: String(plan.url), readAccess: String(plan.readAccessUrl) })
+                else
+                    openedUrls.push(String(plan.url))
+                openedPaths.push(plan.openedFilePath || "")
+                openedTitles.push(plan.title || "")
             }
             // The player page is what the desktop Backend needs; tests that
             // exercise the direct route flip this Capability themselves.
@@ -80,13 +78,16 @@ Item {
             pngRec.missingFile = true
             verify(!ctx.canOpenInBrowser(pngRec, false))
 
-            // The rest of the enumerated raster set, plus plain text.
+            // The rest of the enumerated raster set, plus plain text and JSON.
             verify(ctx.canOpenInBrowser(completed("image/jpeg", "a.jpg"), false))
             verify(ctx.canOpenInBrowser(completed("image/gif", "a.gif"), false))
             verify(ctx.canOpenInBrowser(completed("image/webp", "a.webp"), false))
             verify(ctx.canOpenInBrowser(completed("image/bmp", "a.bmp"), false))
+            verify(ctx.canOpenInBrowser(completed("image/x-ms-bmp", "picture"), false))
             verify(ctx.canOpenInBrowser(completed("", "a.jpeg"), false))
             verify(ctx.canOpenInBrowser(completed("text/plain", "notes.txt"), false))
+            verify(ctx.canOpenInBrowser(completed("application/json", "data.json"), false))
+            verify(ctx.canOpenInBrowser(completed("application/json", "data"), false))
         }
 
         /// A Download opens in the isolated local-preview profile — no scripts
@@ -483,6 +484,47 @@ Item {
             ctx.proprietaryCodecsSupported = true
 
             verify(ctx.openOpenedFile(m4v, true))
+        }
+
+        // The plan a restored Session reopens an Opened File with.
+        function test_openedFilePlan_isTheTabAFileWouldOpenIn() {
+            const ctx = openedFileContext(["/Users/me/a b.pdf", "/Users/me/song.mp3"])
+
+            const pdf = ctx.openedFilePlan("file:///Users/me/a b.pdf", true)
+            compare(pdf.url, "file:///Users/me/a b.pdf")
+            compare(pdf.readAccessUrl, "file:///Users/me/a b.pdf")
+            compare(pdf.openedFilePath, "/Users/me/a b.pdf")
+            compare(pdf.title, "a b.pdf")
+
+            const song = ctx.openedFilePlan("file:///Users/me/song.mp3", true)
+            verify(String(song.url).indexOf("/tmp/status-player/") >= 0, song.url)
+            compare(song.readAccessUrl, "")
+
+            compare(ctx.openedFilePlan("file:///Users/me/gone.pdf", true), null)
+            compare(openedFileUrls.length + openedUrls.length, 0)
+        }
+
+        function test_openOpenedFile_opensDescribedImagesByTheirType() {
+            const urls = {
+                "content://com.example.files/doc/30": { name: "a.png", mimeType: "image/png", readable: true },
+                "content://com.example.files/doc/31": { name: "b.jpg", mimeType: "image/jpeg", readable: true },
+                "content://com.example.files/doc/32": { name: "c.webp", mimeType: "image/webp", readable: true },
+                "content://com.example.files/doc/33": { name: "d.bmp", mimeType: "image/bmp", readable: true }
+            }
+            const ctx = describedFileContext(urls)
+
+            for (const url in urls)
+                verify(ctx.openOpenedFile(url, true), url)
+        }
+
+        // MediaStore types a .bmp image/x-ms-bmp; mobilewebview shows it in an image page.
+        function test_openOpenedFile_opensABitmapTypedXMsBmp() {
+            const url = "content://com.example.files/doc/34"
+            const ctx = describedFileContext({
+                [url]: { name: "bars.bmp", mimeType: "image/x-ms-bmp", readable: true }
+            })
+
+            verify(ctx.openOpenedFile(url, true))
         }
 
         // On Android the local path of a content:// URL is a copy of the file.

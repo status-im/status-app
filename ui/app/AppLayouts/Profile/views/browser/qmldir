@@ -1,4 +1,5 @@
 DefaultDAppExplorerView 1.0 DefaultDAppExplorerView.qml
+DefaultViewerSettings 1.0 DefaultViewerSettings.qml
 HomePageView 1.0 HomePageView.qml
 OpenLinksInView 1.0 OpenLinksInView.qml
 

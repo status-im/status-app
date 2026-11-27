@@ -18,12 +18,14 @@
 # StatusQtActivity (mainWindowReady, openDownloadsUi,
 # openAccessibilitySettings, restartApplication), KeyboardUtil
 # (requestKeyboardShow, start), StatusBarUtil (setStatusBarIconColor),
-# ShareUtils (sharePaths), MediaStoreHelper (insertImageFromPath);
+# ShareUtils (sharePaths), MediaStoreHelper (insertImageFromPath),
+# DefaultViewer (state, offer, types, reset);
 # RegisterNatives on DensityListener, ShakeDetector and KeyboardUtil
 # (nativeOnKeyboardHeightChanged).
 # ui/StatusQ/src/openedfileintake_android.cpp: OpenedFileIntake (release).
 -keep class app.status.mobile.StatusQtActivity { *; }
 -keep class app.status.mobile.OpenedFileIntake { *; }
+-keep class app.status.mobile.DefaultViewer { *; }
 -keep class app.status.mobile.KeyboardUtil { *; }
 -keep class app.status.mobile.StatusBarUtil { *; }
 -keep class app.status.mobile.ShareUtils { *; }

@@ -75,6 +75,7 @@ Item {
             property url icon: ""
             property bool crashed: false
             property bool openFailed: false
+            property string openedFilePath: ""
             property bool offTheRecord: profileParams ? profileParams.offTheRecord
                                                       : false
         }
@@ -303,6 +304,37 @@ Item {
             previewParams.offTheRecord = false
             compare(preview.offTheRecord, false)
             compare(BrowserSessionUtils.buildTabDto(preview, [], determineRealURL), null)
+        }
+
+        // An Opened File's Tab comes back while its file is still there (D8).
+        function test_anOpenedFilesTab_isSavedByItsFile() {
+            const opened = createTemporaryObject(fakeWebViewComponent, root, {
+                profileParams: createTemporaryObject(previewParamsComponent, root),
+                url: "file:///Users/me/My Docs/a b.pdf",
+                uid: "tab-3",
+                title: "a b.pdf",
+                openedFilePath: "/Users/me/My Docs/a b.pdf"
+            })
+            const dto = BrowserSessionUtils.buildTabDto(opened, [], url => url, true)
+            compare(dto.openedFile, "/Users/me/My Docs/a b.pdf")
+            compare(dto.uuid, "tab-3")
+            compare(dto.title, "a b.pdf")
+            verify(dto.url.length > 0)
+
+            compare(BrowserSessionUtils.buildTabDto(opened, [], url => url, false), null)
+            opened.openFailed = true
+            compare(BrowserSessionUtils.buildTabDto(opened, [], url => url, true), null)
+        }
+
+        // A content:// grant does not outlive the run.
+        function test_aDescribedFilesTab_isNeverSaved() {
+            const described = createTemporaryObject(fakeWebViewComponent, root, {
+                profileParams: createTemporaryObject(previewParamsComponent, root),
+                url: "content://com.example.files/doc/1",
+                uid: "tab-4",
+                openedFilePath: "content://com.example.files/doc/1"
+            })
+            compare(BrowserSessionUtils.buildTabDto(described, [], url => url, true), null)
         }
     }
 }

@@ -95,6 +95,7 @@ Item {
 
             verify(!formatNamed(ctx, "HTML and SVG").supported)
             verify(formatNamed(ctx, "Plain text").supported)
+            verify(formatNamed(ctx, "JSON").supported)
             verify(formatNamed(ctx, "Images").supported)
             verify(formatNamed(ctx, "Images").detail.indexOf("svg") < 0)
             compare(formatNamed(ctx, "Text and HTML"), null)

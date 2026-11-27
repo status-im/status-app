@@ -22,24 +22,20 @@ import "DownloadFormatUtils.js" as DownloadFormatUtils
  * a plain per-call input.
  *
  * openInBrowser() makes the open-route choice: a generated player page for
- * media where the Backend needs one, otherwise the file itself via
- * openFileUrlFn, read-granted to itself alone. A false return means "not
+ * media where the Backend needs one, otherwise the file itself, read-granted
+ * to itself alone, both through openPreviewFn. A false return means "not
  * renderable here" — the caller hands the file to the OS.
  */
 QtObject {
     id: root
 
-    /// Opens a URL in the browser; injected by the owner. openedFilePath names
-    /// the Opened File the Tab shows, "" for a Download; title is the Tab's
-    /// title until the page gives one.
-    property var openUrlFn: function(url, openedFilePath, title) {
-        console.warn("BrowserDownloadOpenContext: openUrlFn not set")
-    }
-
-    /// Opens a local file with a read grant for it or a directory (AbstractWebView
-    /// loadFileUrl); empty readAccessUrl means the file's own directory.
-    property var openFileUrlFn: function(fileUrl, readAccessUrl, openedFilePath, title) {
-        console.warn("BrowserDownloadOpenContext: openFileUrlFn not set")
+    /// Opens a Preview Tab for a plan {url, readAccessUrl, openedFilePath, title};
+    /// injected by the owner. The file loads through a Read Grant for
+    /// readAccessUrl, or, when that is "", as a page (the player page).
+    /// openedFilePath names the Opened File the Tab shows, "" for a Download;
+    /// title holds until the page gives one.
+    property var openPreviewFn: function(plan) {
+        console.warn("BrowserDownloadOpenContext: openPreviewFn not set")
     }
 
     // Text file writer; production uses StringUtils, tests inject a fake.
@@ -105,19 +101,24 @@ QtObject {
     readonly property QtObject d: QtObject {
 
         /// The player page where the Backend needs one, otherwise the file
-        /// itself, read-granted to itself alone.
-        function open(record, fileUrl, openedFilePath) {
+        /// itself, read-granted to itself alone; null when no page can be made.
+        function plan(record, fileUrl, openedFilePath) {
             const title = openedFilePath ? record.fileName : ""
             if (root.mediaPlayerPageRequired
                     && DownloadFormatUtils.isPlayableMedia(record.mimeType, record.fileName,
                                                            root.proprietaryCodecsSupported)) {
                 const page = root.mediaPlayerPageUrl(record)
                 if (!page)
-                    return false
-                root.openUrlFn(page, openedFilePath, title)
-                return true
+                    return null
+                return { url: page, readAccessUrl: "", openedFilePath: openedFilePath, title: title }
             }
-            root.openFileUrlFn(fileUrl, fileUrl, openedFilePath, title)
+            return { url: fileUrl, readAccessUrl: fileUrl, openedFilePath: openedFilePath, title: title }
+        }
+
+        function open(plan) {
+            if (!plan)
+                return false
+            root.openPreviewFn(plan)
             return true
         }
 
@@ -208,21 +209,26 @@ QtObject {
         const path = record.targetPath
         if (!path)
             return false
-        return d.open(record, UrlUtils.urlFromUserInput(path), "")
+        return d.open(d.plan(record, UrlUtils.urlFromUserInput(path), ""))
     }
 
     /// An Opened File through the same allowlist and player page as a Record,
     /// read-granted to the file alone. False when it cannot be shown here.
-    /// A described file is taken at the platform's word and tagged by its URL.
     function openOpenedFile(fileUrl, supportsPdf) {
+        return d.open(openedFilePlan(fileUrl, supportsPdf))
+    }
+
+    /// How an Opened File opens, or null when it cannot be shown here.
+    /// A described file is taken at the platform's word and tagged by its URL.
+    function openedFilePlan(fileUrl, supportsPdf) {
         const described = root.openedFileInfoFn(fileUrl) || {}
         const isDescribed = described.name !== undefined
         const path = isDescribed ? "" : root.localPathFn(fileUrl)
         if (isDescribed) {
             if (!described.readable)
-                return false
+                return null
         } else if (!path || !root.fileExistsFn(path)) {
-            return false
+            return null
         }
         const record = {
             targetPath: path,
@@ -232,13 +238,13 @@ QtObject {
             state: AbstractWebView.DownloadState.DownloadCompleted
         }
         if (!canOpenInBrowser(record, supportsPdf))
-            return false
+            return null
         // A content:// URL renders by its provider's type, so the type must pass on its own.
         if (isDescribed && !DownloadFormatUtils.canOpenInBrowser(
                     record.mimeType, "", supportsPdf, root.inBrowserMediaPlaybackSupported,
                     root.proprietaryCodecsSupported))
-            return false
-        return d.open(record, fileUrl, path || fileUrl)
+            return null
+        return d.plan(record, fileUrl, path || fileUrl)
     }
 
     /// The tag of an Opened File's Tab: its local path, or its URL when the

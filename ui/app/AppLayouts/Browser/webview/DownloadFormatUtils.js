@@ -11,15 +11,18 @@
 // The enumerated safe sets, one pair per branch of canOpenInBrowser. The
 // extensions are the operative half; the MIME types only answer for a name
 // that carries no extension at all.
-const _IMAGE_MIME_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp", "image/bmp"]
+// image/x-ms-bmp: Android's name for a .bmp.
+const _IMAGE_MIME_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp", "image/bmp",
+                           "image/x-ms-bmp"]
 const _IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "gif", "webp", "bmp"]
-const _TEXT_MIME_TYPES = ["text/plain"]
-const _TEXT_EXTENSIONS = ["txt"]
+// JSON shows as text: no engine runs a script in it.
+const _TEXT_MIME_TYPES = ["text/plain", "application/json"]
+const _TEXT_EXTENSIONS = ["txt", "json"]
 const _PDF_MIME_TYPES = ["application/pdf"]
 const _PDF_EXTENSIONS = ["pdf"]
 
 /// Open-in-Browser allowlist: types our Backends render (ADR 0006 §8).
-/// Raster images and plain text; PDF when the Backend supports it; media per
+/// Raster images, plain text and JSON; PDF when the Backend supports it; media per
 /// isPlayableMedia, gated by mediaPlaybackSupported. Everything else is handed
 /// to the OS.
 ///
