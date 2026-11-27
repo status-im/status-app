@@ -4,6 +4,10 @@ on:
   schedule:
     - cron: '0 1 * * *'
   workflow_dispatch:
+  # A schedule runs only what is on master: a change to this workflow is tried in its pull request.
+  pull_request:
+    paths:
+      - .github/workflows/e2e-nightly.yml
 
 permissions:
   contents: read
@@ -60,6 +64,7 @@ jobs:
           env: |
             APPIMAGE_EXTRACT_AND_RUN=1
             USE_SIMULATED_KEYCARD=${{ matrix.simulated }}
+      # The caches the linux job of ci.yml saves on master. None is saved here.
       - name: Cache keys
         id: keys
         run: |
@@ -71,14 +76,14 @@ jobs:
         id: go
         with:
           path: .ci-cache/go-build
-          key: go-linux-${{ matrix.id }}-${{ steps.keys.outputs.status-go }}
-          restore-keys: go-linux-${{ matrix.id }}-
+          key: go-linux-${{ steps.keys.outputs.status-go }}
+          restore-keys: go-linux-
       - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         id: ccache
         with:
           path: .ci-cache/ccache
-          key: ccache-linux-${{ matrix.id }}-${{ steps.keys.outputs.day }}
-          restore-keys: ccache-linux-${{ matrix.id }}-
+          key: ccache-linux-${{ steps.keys.outputs.day }}
+          restore-keys: ccache-linux-
       - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         id: nimble
         with:
@@ -103,16 +108,6 @@ jobs:
           STATUS_BUILD_KLIPY_API_KEY: ${{ secrets.STATUS_BUILD_KLIPY_API_KEY }}
           USE_SIMULATED_KEYCARD: ${{ matrix.simulated }}
         run: $IN_IMAGE make tgz-linux
-      - uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
-        if: ${{ !cancelled() && steps.go.outputs.cache-hit != 'true' }}
-        with:
-          path: .ci-cache/go-build
-          key: go-linux-${{ matrix.id }}-${{ steps.keys.outputs.status-go }}
-      - uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
-        if: ${{ !cancelled() && steps.ccache.outputs.cache-hit != 'true' }}
-        with:
-          path: .ci-cache/ccache
-          key: ccache-linux-${{ matrix.id }}-${{ steps.keys.outputs.day }}
       - uses: ./.github/actions/build-artifact
         with:
           platform: linux-x86_64-${{ matrix.id }}
@@ -121,7 +116,8 @@ jobs:
 
   suite:
     needs: package
-    if: ${{ !cancelled() && needs.package.result == 'success' }}
+    # Whatever the other build did: a suite whose own build is missing fails when it unpacks it.
+    if: ${{ !cancelled() }}
     permissions:
       contents: read
       actions: read
@@ -140,7 +136,8 @@ jobs:
 
   keycard:
     needs: package
-    if: ${{ !cancelled() && needs.package.result == 'success' }}
+    # Whatever the other build did: a suite whose own build is missing fails when it unpacks it.
+    if: ${{ !cancelled() }}
     permissions:
       contents: read
       actions: read

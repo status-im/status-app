@@ -93,12 +93,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           WALLET_TEST_USER_SEED: ${{ secrets.WALLET_TEST_USER_SEED }}
+          # Through the environment: pasted into the script, it would run as shell.
+          MARKERS: ${{ inputs.pytest-args }}
         run: |
           if [ "$RUNNER_OS" = Linux ]; then
             echo "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin || echo "No GHCR login."
           fi
           test/e2e/scripts/ci/run.sh "$RUNNER_TEMP/pkg" "$RUNNER_TEMP/qmlinspector/plugins" \
-            -m "${{ inputs.pytest-args }}" -v --reruns=1 --timeout=300 -o timeout_func_only=true --disable-warnings \
+            -m "$MARKERS" -v --reruns=1 --timeout=300 -o timeout_func_only=true --disable-warnings \
             --junitxml=junit.xml --alluredir=./allure-results
       # Logs, reports and failure screenshots only: the app data of a run is hundreds of megabytes.
       - name: Upload results
