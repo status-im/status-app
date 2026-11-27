@@ -11,6 +11,10 @@ on:
         description: The run whose builds are tested.
         type: string
         required: true
+      backend:
+        description: The messaging backend of the app, go-waku or logos-delivery.
+        type: string
+        default: go-waku
 
 permissions:
   contents: read
@@ -29,6 +33,7 @@ jobs:
     continue-on-error: ${{ inputs.os != 'linux' }}
     env:
       BUILD: ${{ fromJSON('{"linux":"*-linux-x86_64.tar.gz","windows":"*-windows-x86_64.7z","macos":"*-macos-aarch64.dmg"}')[inputs.os] }}
+      STATUS_RUNTIME_MESSAGING_BACKEND: ${{ inputs.backend }}
       # On Windows Bash needs the scripts with LF endings.
       GIT_CONFIG_COUNT: 2
       GIT_CONFIG_KEY_0: core.longpaths
@@ -83,7 +88,7 @@ jobs:
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: e2e-${{ inputs.os }}-results
+          name: e2e-${{ inputs.os }}-${{ inputs.backend }}-results
           path: |
             test/e2e/local_run_results/**/*.log
             test/e2e/local_run_results/**/screenshot_*.png
