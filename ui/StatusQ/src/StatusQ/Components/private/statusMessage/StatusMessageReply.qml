@@ -107,7 +107,7 @@ Item {
                                 appearance: root.appearance
                                 clip: true
                                 edited: root.replyDetails.isEdited
-                                segments: MarkdownUtils.toChatTextSegments(root.replyDetails.unparsedText, root.replyDetails.mentionsMap)
+                                segments: root.replyDetails.textSegments
                             }
                         }
 

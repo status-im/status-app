@@ -138,6 +138,9 @@ QList<ChatTextSegment> MarkdownUtils::toChatTextSegments(const QString& text, co
         if (node.kind == NodeKind::Link || node.kind == NodeKind::WalletLink) {
             format.href = node.kind == NodeKind::WalletLink
                           ? Markdown::kSendViaChatPrefix + node.destination : node.destination;
+            // The parser retains the opening '[' as a delimiter only for authored links.
+            if (!node.children.isEmpty() && node.children.first().kind == NodeKind::Delimiter)
+                format.setExplicitLink(true);
             format.setUnderline(true);
         }
         if (node.kind == NodeKind::Text || node.kind == NodeKind::Mention

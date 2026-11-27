@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Window
 import QtQuick.Layouts
+import QtQml.Models
 import QtModelsToolkit
 import SortFilterProxyModel
 
@@ -1037,6 +1038,14 @@ Loader {
 
             StatusMessage {
                 id: delegate
+
+                ProfileLinkResolver {
+                    id: profileLinks
+                    messageDetails: details
+                    contactsModel: root.rootStore?.contactsModel ?? null
+                    profileUrlResolver: root.messageStore?.profileUrlResolver ?? null
+                }
+
                 textAppearance: root.textAppearance
                 previewAppearance: root.previewAppearance
                 headerServices: root.messageHeaderServices
@@ -1128,7 +1137,13 @@ Loader {
                         return
                     }
 
-                    const linkPreviewType = root.linkPreviewModel.getLinkPreviewType(link)
+                    if (profileLinks.links[link]) {
+                        Global.activateDeepLink(link)
+                        return
+                    }
+
+                    const linkPreviewType = root.linkPreviewModel?.getLinkPreviewType(link)
+                        ?? Constants.LinkPreviewType.NoPreview
 
                     if (linkPreviewType === Constants.LinkPreviewType.Standard || !Utils.isStatusDeepLink(link)) {
                         Global.requestOpenLink(link)
@@ -1215,6 +1230,7 @@ Loader {
                 }
 
                 messageDetails: StatusMessageDetails {
+                    id: details
                     contentType: delegate.contentType
                     messageOriginInfo: {
                         if (root.isDiscordMessage)  {
@@ -1226,6 +1242,7 @@ Loader {
                     }
                     unparsedText: d.gifOnlyMessage ? "" : root.unparsedText
                     mentionsMap: root.mentionsMap
+                    inlineLinks: profileLinks.links
                     messageContent: {
                         switch (delegate.contentType)
                         {
@@ -1262,6 +1279,7 @@ Loader {
                 }
 
                 replyDetails: StatusMessageDetails {
+                    textSegmentsEnabled: delegate.showReply && contentType !== StatusMessage.ContentType.Sticker
                     isEdited: root.quotedMessageEdited
                     messageContent: root.quotedMessageContent
 
@@ -1299,6 +1317,8 @@ Loader {
                 linksComponent: Component {
                     LinksMessageView {
                         id: linksMessageView
+
+                        inlineLinks: profileLinks.links
 
                         linkPreviewModel: root.linkPreviewModel
                         gifLinks: root.gifLinks

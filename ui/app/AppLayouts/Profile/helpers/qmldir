@@ -1,5 +1,6 @@
 ContactDetails 1.0 ContactDetails.qml
 ContactModelEntry 1.0 ContactModelEntry.qml
+ProfileLinkResolver 1.0 ProfileLinkResolver.qml
 ProfileShowcaseDirtyState 1.0 ProfileShowcaseDirtyState.qml
 ProfileShowcaseModelAdapter 1.0 ProfileShowcaseModelAdapter.qml
 ProfileShowcaseModels 1.0 ProfileShowcaseModels.qml
