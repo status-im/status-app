@@ -1455,6 +1455,12 @@ Flickable {
                 return
             }
 
+            if (d.requestedAtEdge && d.requestedAtTop && root.stickToBottom
+                    && d.atBottomOfContent()) {
+                d.releaseAnchor()
+                return
+            }
+
             if (d.armAnchor(d.requestedAtEdge ? d.requestedAtTop : true))
                 return
 
@@ -1497,7 +1503,9 @@ Flickable {
             // Requesting at the top grows above and trims below, so a row at
             // the viewport top survives; at the bottom it is the other way round.
             d.releaseAnchor()
-            d.armAnchor(atTop)
+            // A reader at the newest row keeps following it while older rows load.
+            if (!(atTop && root.stickToBottom && d.atBottomOfContent()))
+                d.armAnchor(atTop)
 
             d.requestedAtTop = atTop
             d.requestedAtEdge = true

@@ -844,6 +844,7 @@ Item {
         // reader is there, a message arriving is shown, and the oldest one the
         // window held falls off the top.
         followsStart: chatLogView.atBottom
+        keepStartWhileGrowing: true
     }
 
     // the attached chat's store swapped its model
@@ -1021,6 +1022,10 @@ Item {
         // stuck to the newest message - never to the bottom of a window slid
         // into history, which has newer messages beyond it
         stickToBottom: !messageWindow.moreAvailableStart
+
+        // Paging into loaded history here would trim back to the same window
+        // while the reader stays at the newest message.
+        autoRequest: !stickToBottom || !atBottom || !messageWindow.moreAvailableEnd
 
         placeholder: MessageRowsSkeleton {
             stackFromTop: chatLogView.placeholderBelowRows

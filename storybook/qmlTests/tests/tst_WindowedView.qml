@@ -5752,6 +5752,7 @@ Item {
             view.moreAvailableTop = true
             view.moreAvailableBottom = true
             owner.answerOwed = false
+            root.height = 400
         }
 
         function fill(count) {
@@ -5830,6 +5831,48 @@ Item {
             compare(renderedValues()[30], owner.liveValue,
                     "and it is drawn last, at the bottom")
             verify(view.atBottom, "the viewport followed it")
+        }
+
+        function test_aNewMessageFollowsTheBottomWhileOlderHistoryLoads_data() {
+            return [
+                { tag: "already-at-bottom", scrollToBottom: false },
+                { tag: "scroll-to-bottom-during-request", scrollToBottom: true }
+            ]
+        }
+
+        function test_aNewMessageFollowsTheBottomWhileOlderHistoryLoads(data) {
+            view.stickToBottom = true
+            view.moreAvailableBottom = false
+            root.height = 300
+            fill(30)
+            view.contentY = view.contentHeight - view.height
+            tryCompare(view, "atBottom", true)
+
+            if (data.scrollToBottom) {
+                view.contentY -= 100
+                tryCompare(view, "atBottom", false)
+            }
+
+            owner.holdAdmit = true
+            owner.removeOnReveal = false
+            verify(view.requestMore(WindowedView.Edge.Top), "accepted the older history request")
+            verify(owner.answerOwed)
+
+            if (data.scrollToBottom) {
+                view.contentY = view.contentHeight - view.height
+                tryCompare(view, "atBottom", true)
+            }
+
+            // The chat grows when the keyboard closes.
+            root.height = 400
+            tryCompare(view, "height", root.height)
+            const newMessage = owner.liveValue + 4
+            rows.insert(0, rows.make(newMessage, 1))
+            owner.answer()
+
+            tryVerify(() => settled(41), 8000, "the incoming message and history were revealed")
+            compare(view.itemAtRow(0).content.value, newMessage)
+            tryCompare(view, "atBottom", true, 5000, "the new message is above the composer")
         }
 
         // The mirror: a request at the top has to be answered from the

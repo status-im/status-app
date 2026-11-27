@@ -26,9 +26,10 @@ ColumnLayout {
     property bool canPost: true
     property bool pending: false
     property string error
+    property bool focusOnOpen: true
     readonly property alias chatInput: input
     readonly property bool readyForFocus: visible && !!Window.window
-    onReadyForFocusChanged: if (readyForFocus) Qt.callLater(input.forceInputActiveFocus)
+    onReadyForFocusChanged: if (focusOnOpen && readyForFocus) Qt.callLater(input.forceInputActiveFocus)
 
     signal sendRequested(string text, string threadName, bool startNewThread)
 
@@ -81,7 +82,7 @@ ColumnLayout {
         sendEnabled: root.canPost && !root.pending
         textInput.readOnly: root.pending
 
-        Component.onCompleted: Qt.callLater(forceInputActiveFocus)
+        Component.onCompleted: if (root.focusOnOpen && root.readyForFocus) Qt.callLater(forceInputActiveFocus)
 
         onSendMessageRequested: (startNewThread, newThreadName, alsoReplyToParentChat) => {
             const text = input.getTextWithPublicKeys()
