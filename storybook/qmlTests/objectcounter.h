@@ -3,7 +3,9 @@
 #include <QMutex>
 #include <QMutexLocker>
 #include <QObject>
+#include <QHash>
 #include <QSet>
+#include <QVariantMap>
 
 #include <private/qhooks_p.h>
 
@@ -57,6 +59,25 @@ public:
             if (obj->inherits(name.constData()))
                 ++result;
 
+        return result;
+    }
+
+    // Live objects created since start(), counted per most-derived class
+    // name (QML types carry their _QMLTYPE_ suffix stripped).
+    Q_INVOKABLE QVariantMap histogram() const
+    {
+        QMutexLocker lock(&mutex());
+        QHash<QString, int> counts;
+        for (QObject* obj : std::as_const(tracked())) {
+            QString name = QString::fromLatin1(obj->metaObject()->className());
+            const qsizetype suffix = name.indexOf(QLatin1String("_QML"));
+            if (suffix > 0)
+                name.truncate(suffix);
+            ++counts[name];
+        }
+        QVariantMap result;
+        for (auto it = counts.cbegin(); it != counts.cend(); ++it)
+            result.insert(it.key(), it.value());
         return result;
     }
 
