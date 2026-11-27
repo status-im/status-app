@@ -2549,6 +2549,12 @@ Item {
                         leftPanelWidthOverride: mainLayoutItem.leftPanelWidthOverride
                     }
 
+                    MemoryReleaseScheduler {
+                        id: memoryRelease
+
+                        releaseContext: appMain
+                    }
+
                     Repeater {
                         id: communityRepeater
 

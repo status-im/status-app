@@ -1,8 +1,10 @@
 Tracer 1.0 Tracer.qml
 singleton Constants 1.0 Constants.qml
 singleton Global 1.0 Global.qml
+MemoryReleaseScheduler 1.0 MemoryReleaseScheduler.qml
 singleton ProfileUtils 1.0 ProfileUtils.qml
 singleton SearchEnginesConfig 1.0 SearchEnginesConfig.qml
+SectionDropPolicy 1.0 SectionDropPolicy.qml
 singleton BrowserPreferenceKeys 1.0 BrowserPreferenceKeys.qml
 BrowserPreferencesStoreBase 1.0 BrowserPreferencesStoreBase.qml
 singleton Utils 1.0 Utils.qml
