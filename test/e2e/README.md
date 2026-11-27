@@ -82,6 +82,10 @@ From `test/e2e`.
    export LD_LIBRARY_PATH="$QT_LIBDIR:$ROOT/vendor/status-go/build:$ROOT/vendor/status-go/build/bin:$ROOT/vendor/status-keycard-qt/build/linux:$ROOT/bin/StatusQ:$ROOT/ui/StatusQ/build/Qt6.11.0/lib"
    ```
 
+   For a local Linux binary built with `USE_SIMULATED_KEYCARD=true`, use
+   `…/vendor/status-keycard-qt/build/linux-simulated-keycard` instead of `…/build/linux` in
+   `LD_LIBRARY_PATH` (see [Keycard e2e](#keycard-e2e-pytestmarkkeycard)).
+
    For a macOS app built with `make run`, set `QT_PREFIX` to the Qt that `qmake` reports and run step 1
    again, so the plugin is built against that Qt.
 
@@ -164,17 +168,59 @@ left after each rule of the locator.
 
 ## Keycard e2e (`@pytest.mark.keycard`)
 
-Needs a build with `USE_SIMULATED_KEYCARD=true` and a **JRE ≥ 11** on `PATH`.
+Keycard tests drive the in-app **Keycard Simulator Controller**, which talks to the
+[jcardsim-backed simulator](../../vendor/status-keycard-qt/test/keycard-simulator/README.md)
+bundled with simulated-keycard builds.
 
-- Dev build, from the repo root: `USE_SIMULATED_KEYCARD=true make -j12`, then `AUT_PATH` → `…/status-app/bin/StatusDev`.
-- Packaged build: CI **Build with Parameters** → enable `USE_SIMULATED_KEYCARD`.
+### Build with simulated keycard
+
+From the **repository root**, pass `USE_SIMULATED_KEYCARD=true` to `make` (same targets as a normal
+dev build). Example:
 
 ```bash
-pytest -m keycard -v
+USE_SIMULATED_KEYCARD=true make -j12          # Linux
+USE_SIMULATED_KEYCARD=true make run         # macOS → bin/StatusDev.app
+USE_SIMULATED_KEYCARD=true make nim_status_client   # or full package target on Windows
 ```
 
-A client built with `USE_SIMULATED_KEYCARD=true` loads keycard from
-`vendor/status-keycard-qt/build/linux-simulated-keycard` instead of `.../linux`.
+That flag:
+
+- builds `status-keycard-qt` into `vendor/status-keycard-qt/build/<platform>-simulated-keycard`
+  (on Linux, `…/linux-simulated-keycard` instead of `…/linux`);
+- precompiles `vendor/status-keycard-qt/test/keycard-simulator` (build host needs **JDK with `javac` ≥ 11**);
+- links the client with `-d:useSimulatedKeycard` (separate Nim cache — toggling the flag forces a client
+  rebuild; do not mix a normal client with a simulated `status-keycard-qt` library).
+
+Packaged builds: Jenkins **Build with Parameters** → `USE_SIMULATED_KEYCARD=true` (Linux / Windows /
+macOS). The simulator tree is copied next to the app (`share/keycard-simulator` on Linux, and so on).
+GitHub **e2e nightly** builds separate Linux packages with the same flag for the `keycard` pytest mark.
+
+### Run keycard tests
+
+Set `AUT_PATH` in `configs/_local.py` ([Run on your machine](#run-on-your-machine)):
+
+| Platform | Typical `AUT_PATH` after a simulated dev build |
+|----------|------------------------------------------------|
+| Linux | `…/status-app/bin/nim_status_client` |
+| macOS | `…/status-app/bin/StatusDev.app` |
+| Windows | `…/status-app/bin/Status.exe` |
+
+Or point at a CI package built with `USE_SIMULATED_KEYCARD=true`.
+
+**JRE ≥ 11** on `PATH` when running tests (the app starts the simulator with the host JVM; packaged
+builds ship the simulator files but not a JVM).
+
+For a local binary under `bin/`, the test runner sets `STATUS_KEYCARD_SIM_DIR` to
+`vendor/status-keycard-qt/test/keycard-simulator` when that directory exists. Override with
+`STATUS_KEYCARD_SIM_DIR` if needed.
+
+On Linux, if you export `LD_LIBRARY_PATH` for `bin/nim_status_client`, include
+`vendor/status-keycard-qt/build/linux-simulated-keycard` (not `…/build/linux`).
+
+```bash
+cd test/e2e && source .venv/bin/activate
+pytest -m keycard -v
+```
 
 ---
 
