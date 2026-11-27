@@ -315,7 +315,13 @@ RowLayout {
             readonly property string assetName: chatContentModule && chatContentModule.chatDetails.icon
 
             objectName: "chatInfoBtnInHeader"
-            title: chatContentModule? chatContentModule.chatDetails.name : ""
+            title: {
+                const details = chatContentModule?.chatDetails
+                if (!details)
+                    return ""
+                return details.type === Constants.chatType.oneToOne && root.rootStore.isCurrentUser(details.id)
+                        ? qsTr("%1 (You)").arg(details.name) : details.name
+            }
             requiresPermissions: chatContentModule ? chatContentModule.chatDetails.requiresPermissions : false
             locked: requiresPermissions && (chatContentModule ? !chatContentModule.chatDetails.canPost : false)
             subTitle: {

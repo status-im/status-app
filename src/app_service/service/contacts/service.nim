@@ -403,9 +403,6 @@ QtObject:
     if len(pubkey) == 0:
       return
 
-    if self.contacts.hasKey(pubkey):
-      return self.contacts[pubkey]
-
     if pubkey == singletonInstance.userProfile.getPubKey():
       # If we try to get the contact details of ourselves, just return our own info.
       let myPubKey = singletonInstance.userProfile.getPubKey()
@@ -429,6 +426,9 @@ QtObject:
         ),
         isCurrentUser = true,
       )
+
+    if self.contacts.hasKey(pubkey):
+      return self.contacts[pubkey]
 
     if not pubkey.startsWith("0x"):
       debug "id is not in a hex format"

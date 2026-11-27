@@ -22,6 +22,15 @@ MembersSelectorBase {
 
     property UtilsStore utilsStore
     property var allContactsModel
+    property string selfChatPublicKey
+    property string selfChatCompressedPublicKey
+    readonly property bool matchesSelfChatKey: {
+        if (!selfChatPublicKey)
+            return false
+        const key = Utils.dropUserLinkPrefix(edit.text.trim())
+        return key.toLowerCase() === selfChatPublicKey.toLowerCase()
+                || (!!selfChatCompressedPublicKey && key === selfChatCompressedPublicKey)
+    }
 
     // Selected members carrying the full contact role set (unlike the plain `model`)
     readonly property alias selectedContactsModel: selectedContacts
@@ -138,6 +147,9 @@ MembersSelectorBase {
         }
 
         function lookupContact(value) {
+            if (root.matchesSelfChatKey)
+                return
+
             const urlContactData = Utils.parseContactUrl(value)
             if (urlContactData) {
                 // Ignore all the data from the link, because it might be malformed.
@@ -171,6 +183,9 @@ MembersSelectorBase {
             if (root.utilsStore.isCompressedPubKey(fullPubkey)) {
                 fullPubkey = root.utilsStore.getDecompressedPk(publicKey)
             }
+            if (root.selfChatPublicKey && fullPubkey.toLowerCase() === root.selfChatPublicKey.toLowerCase())
+                return
+
             const contactEntry = d.getContactModelEntry(fullPubkey)
 
             if (!contactEntry.available) {

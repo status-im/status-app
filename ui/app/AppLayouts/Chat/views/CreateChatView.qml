@@ -15,6 +15,7 @@ import shared.stores as SharedStores
 import utils
 
 import AppLayouts.Chat.stores as ChatStores
+import AppLayouts.Profile.helpers
 
 import QtModelsToolkit
 
@@ -27,6 +28,7 @@ Page {
 
     property var mutualContactsModel
     property var allContactsModel
+    property ContactDetails selfContact
 
     signal openGifPopupRequest(var params, var cbOnGifSelected, var cbOnClose)
 
@@ -63,6 +65,7 @@ Page {
             anchors.fill: parent
             MembersSelectorView {
                 id: membersSelector
+                objectName: "createChatMembersSelector"
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.leftMargin: Theme.halfPadding
@@ -71,6 +74,9 @@ Page {
                 utilsStore: root.utilsStore
                 contactsModel: root.mutualContactsModel
                 allContactsModel: root.allContactsModel
+                selfChatPublicKey: model.ModelCount.empty ? (root.selfContact?.publicKey ?? "") : ""
+                selfChatCompressedPublicKey: root.selfContact?.compressedPubKey ?? ""
+                suppressSuggestions: selfContactItem.visible && (matchesSelfChatKey || suggestionsModel.count === 0)
 
                 function createChat() {
                     if (model.count === 0) {
@@ -105,7 +111,13 @@ Page {
                         edit.forceActiveFocus()
                 }
 
-                onEnterKeyPressed: entryAccepted(contactsList.itemAtIndex(contactsList.currentIndex))
+                onEnterKeyPressed: {
+                    if (selfContactItem.visible && (suppressSuggestions || (edit.text === "" && !contactsList.visible))) {
+                        selfContactItem.openChat()
+                    } else {
+                        entryAccepted(contactsList.itemAtIndex(contactsList.currentIndex))
+                    }
+                }
 
                 onUpKeyPressed: contactsList.decrementCurrentIndex()
 
@@ -139,9 +151,39 @@ Page {
             StatusBaseText {
                 Layout.alignment: Qt.AlignTop
                 Layout.leftMargin: Theme.halfPadding
-                visible: contactsList.visible
+                visible: contactsList.visible || selfContactItem.visible
                 text: qsTr("Contacts")
                 color: Theme.palette.baseColor1
+            }
+
+            StatusMemberListItem {
+                id: selfContactItem
+                objectName: "createChatSelfContact"
+
+                Layout.fillWidth: true
+                visible: {
+                    if (!root.selfContact?.publicKey || !membersSelector.model.ModelCount.empty)
+                        return false
+                    const text = membersSelector.edit.text.trim()
+                    const query = text.toLowerCase()
+                    return membersSelector.matchesSelfChatKey || userName.toLowerCase().includes(query)
+                            || root.selfContact.publicKey.toLowerCase().includes(query)
+                            || pubKey.includes(text)
+                }
+                userName: root.selfContact ? qsTr("%1 (You)").arg(root.selfContact.preferredDisplayName) : ""
+                pubKey: root.selfContact?.compressedPubKey ?? ""
+                usesDefaultName: root.selfContact?.usesDefaultName ?? false
+                isContact: true
+                icon.name: root.selfContact?.icon ?? ""
+                icon.color: Utils.colorForColorId(Theme.palette, root.selfContact?.colorId ?? 0)
+                onClicked: openChat()
+
+                function openChat() {
+                    root.rootStore.contactsStore.joinPrivateChat(root.selfContact.publicKey)
+                    membersSelector.cleanup()
+                    chatInput.textInput.clear()
+                    Global.closeCreateChatView()
+                }
             }
 
             StatusListView {
@@ -190,7 +232,7 @@ Page {
         StatusBaseText {
             anchors.centerIn: parent
             width: Math.min(553, parent.width - 2 * Theme.padding)
-            visible: root.mutualContactsModel.ModelCount.empty
+            visible: !root.selfContact?.publicKey && root.mutualContactsModel.ModelCount.empty
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             wrapMode: Text.WordWrap

@@ -3305,6 +3305,10 @@ Do you wish to override the security check and continue?</source>
         <source>More</source>
         <translation>Plus</translation>
     </message>
+    <message>
+        <source>%1 (You)</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message numerus="yes">
         <source>%n member(s)</source>
         <translation>
@@ -5075,6 +5079,10 @@ Connectez-vous avec votre nouveau mot de passe.</translation>
     <message>
         <source>Contacts</source>
         <translation>Contacts</translation>
+    </message>
+    <message>
+        <source>%1 (You)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>You can only send direct messages to your Contacts.
@@ -16844,6 +16852,13 @@ Seul le détenteur du jeton Owner peut distribuer des jetons TokenMaster. Ces je
     <message>
         <source>Reply in thread</source>
         <translation>Répondre dans le fil</translation>
+    </message>
+</context>
+<context>
+    <name>StatusChatList</name>
+    <message>
+        <source>%1 (You)</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

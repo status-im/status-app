@@ -3319,6 +3319,10 @@ Do you wish to override the security check and continue?</source>
         <source>More</source>
         <translation>Більше</translation>
     </message>
+    <message>
+        <source>%1 (You)</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message numerus="yes">
         <source>%n member(s)</source>
         <translation>
@@ -5099,6 +5103,10 @@ Log in with your new password.</source>
     <message>
         <source>Contacts</source>
         <translation>Контакти</translation>
+    </message>
+    <message>
+        <source>%1 (You)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>You can only send direct messages to your Contacts.
@@ -16930,6 +16938,13 @@ to load</source>
     <message>
         <source>Reply in thread</source>
         <translation>Відповісти в гілці</translation>
+    </message>
+</context>
+<context>
+    <name>StatusChatList</name>
+    <message>
+        <source>%1 (You)</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

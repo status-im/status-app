@@ -102,6 +102,7 @@ Item {
         // chat list
         StatusChatList {
             id: channelList
+            selfChatId: root.store.myPublicKey()
             objectName: "ContactsColumnView_chatList"
             Layout.fillWidth: true
             Layout.fillHeight: true

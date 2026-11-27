@@ -55,7 +55,7 @@ QtObject:
       var receivedData = MessageSignal(e)
 
       # Handling account image changes
-      if receivedData.identityImages.thumbnail != "":
+      if receivedData.identityImages.thumbnail != "" or receivedData.identityImages.large != "":
         updateProfileIdentityImages(receivedData.identityImages)
 
     self.events.on(SIGNAL_DISPLAY_NAME_UPDATED) do(e:Args):

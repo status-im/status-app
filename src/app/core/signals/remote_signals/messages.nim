@@ -183,7 +183,13 @@ proc fromEvent*(T: type MessageSignal, event: JsonNode): MessageSignal =
 
   var imagesObj: JsonNode
   if e.getProp("identityImages", imagesObj):
-    signal.identityImages = contacts.toImages(imagesObj)
+    case imagesObj.kind
+    of JArray:
+      signal.identityImages = contacts.toImagesFromArray(imagesObj)
+    of JObject:
+      signal.identityImages = contacts.toImages(imagesObj)
+    else:
+      discard
 
   if e.contains("savedAddresses"):
     for jsonSavedAddress in e["savedAddresses"]:

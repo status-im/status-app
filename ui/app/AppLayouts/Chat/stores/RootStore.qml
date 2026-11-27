@@ -198,6 +198,8 @@ QtObject {
 
     readonly property string overviewChartData: chatCommunitySectionModule.overviewChartData
 
+    readonly property bool isSelfChat: d.activeChatType === Constants.chatType.oneToOne
+                                       && !!d.activeContactId && isCurrentUser(d.activeContactId)
     readonly property bool isUserAllowedToSendMessage: d.isUserAllowedToSendMessage
     readonly property string chatInputPlaceHolderText: d.chatInputPlaceHolderText
     readonly property var oneToOneChatContact: d.oneToOneChatContact
@@ -719,7 +721,7 @@ QtObject {
         }
 
         property var oneToOneContactModelEntryLoader: Loader {
-            active: d.activeContactId && d.activeChatType === Constants.chatType.oneToOne
+            active: d.activeContactId && d.activeChatType === Constants.chatType.oneToOne && !root.isSelfChat
 
             sourceComponent: ContactModelEntry {
                 publicKey: d.activeContactId

@@ -3292,6 +3292,10 @@ Do you wish to override the security check and continue?</source>
         <source>More</source>
         <translation>더 보기</translation>
     </message>
+    <message>
+        <source>%1 (You)</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message numerus="yes">
         <source>%n member(s)</source>
         <translation>
@@ -5054,6 +5058,10 @@ Log in with your new password.</source>
     <message>
         <source>Contacts</source>
         <translation>연락처</translation>
+    </message>
+    <message>
+        <source>%1 (You)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>You can only send direct messages to your Contacts.
@@ -16767,6 +16775,13 @@ to load</source>
     <message>
         <source>Reply in thread</source>
         <translation>스레드에서 답장</translation>
+    </message>
+</context>
+<context>
+    <name>StatusChatList</name>
+    <message>
+        <source>%1 (You)</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
