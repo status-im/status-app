@@ -1,14 +1,17 @@
+import re
 from typing import Optional
+from xml.etree import ElementTree
 
-from ..base_page import BasePage
 from locators.settings.settings_locators import SettingsLocators
 from locators.settings.wallet_settings_locators import WalletSettingsLocators
-from .backup_seed_modal import BackupSeedModal
-from .password_change_page import PasswordChangePage
 from locators.wallet.saved_addresses_locators import SavedAddressesLocators
 from pages.wallet.saved_addresses_page import SavedAddressesPage
-from .messaging_page import MessagingSettingsPage
+
+from ..base_page import BasePage
+from .backup_seed_modal import BackupSeedModal
 from .contacts_page import ContactsSettingsPage
+from .messaging_page import MessagingSettingsPage
+from .password_change_page import PasswordChangePage
 from .profile_page import ProfileSettingsPage
 from .share_profile_dialog import ShareProfileDialog
 from .wallet_settings_page import WalletSettingsPage
@@ -21,6 +24,34 @@ class SettingsPage(BasePage):
 
     def is_loaded(self, timeout: Optional[int] = 6) -> bool:
         return self.is_element_visible(self.locators.PROFILE_MENU_ITEM, timeout=timeout)
+
+    def visible_menu_item_ids(self) -> set[str]:
+        """Read the Settings rows with on-screen bounds in the Android tree."""
+        items = set()
+        for node in ElementTree.fromstring(self.driver.page_source).iter():
+            menu_item = self.locators.MENU_ITEM_RESOURCE_ID.search(
+                node.get("resource-id", "")
+            )
+            if menu_item is None:
+                menu_item = self.locators.MENU_ITEM_TEST_ID.search(
+                    node.get("content-desc", "")
+                )
+            if menu_item is None or node.get("displayed") == "false":
+                continue
+
+            bounds = re.findall(r"-?\d+", node.get("bounds", ""))
+            if len(bounds) == 4:
+                left, top, right, bottom = map(int, bounds)
+                if left < right and top < bottom:
+                    items.add(menu_item[1])
+        return items
+
+    def swipe_toward_end_of_menu(self) -> None:
+        size = self.driver.get_window_size()
+        x = int(size["width"] * 0.2)
+        height = size["height"]
+        # Leave overlap between viewports so each row is sampled.
+        self.driver.swipe(x, int(height * 0.8), x, int(height * 0.3), duration=1000)
 
     def open_sign_out(self) -> bool:
         return self.try_click(
