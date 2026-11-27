@@ -7,6 +7,7 @@
 #include <QAbstractTextDocumentLayout>
 #include <QClipboard>
 #include <QGuiApplication>
+#include <QFontMetricsF>
 #include <QGlyphRun>
 #include <QStyleHints>
 #include <QHoverEvent>
@@ -595,6 +596,18 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
         } else if (segment.inlineIconOffsets.isEmpty()) {
             cursor.insertText(segment.text, format);
         } else {
+            // An icon reserves a no-break space widened to an em. Qt lays a
+            // no-break space out like a letter, so unlike an em space it is
+            // neither squeezed at a line end nor a break opportunity, and
+            // unlike an inline object (which always ends a line when the
+            // next word does not fit) it keeps the icon on its label's line.
+            // The spacing is relative, so it follows font size changes.
+            QTextCharFormat iconFormat = format;
+            const QFontMetricsF metrics(format.font().resolve(m_document->defaultFont()));
+            if (const qreal space = metrics.horizontalAdvance(QChar::Nbsp); space > 0) {
+                iconFormat.setFontLetterSpacingType(QFont::PercentageSpacing);
+                iconFormat.setFontLetterSpacing(100 * metrics.horizontalAdvance(QChar(0x2003)) / space);
+            }
             int previous = 0;
             for (qsizetype i = 0; i < segment.inlineIconOffsets.size(); ++i) {
                 const int offset = segment.inlineIconOffsets.at(i);
@@ -602,10 +615,12 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
                     continue;
                 cursor.insertText(segment.text.mid(previous, offset - previous), format);
                 icons.append({cursor.position(), int(i)});
-                // Reserve font-sized space for the inline icon.
-                // Keep the icon with the following text when wrapping.
-                cursor.insertText(i == 0 ? QStringLiteral("\u202f\u2003\u202f\u2060")
-                                         : QStringLiteral("\u2003\u202f\u2060"), format);
+                // Reserve font-sized space for the inline icon, glued to the
+                // following text by the no-break spaces and the word joiner.
+                if (i == 0)
+                    cursor.insertText(QStringLiteral("\u202f"), format);
+                cursor.insertText(QString(QChar::Nbsp), iconFormat);
+                cursor.insertText(QStringLiteral("\u202f\u2060"), format);
                 previous = offset;
             }
             cursor.insertText(segment.text.mid(previous), format);

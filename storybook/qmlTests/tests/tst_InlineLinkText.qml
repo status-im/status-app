@@ -119,6 +119,26 @@ Item {
             compare(item.text, "Before " + root.url + " after")
         }
 
+        // At any width an icon keeps its size, and the avatar stays on the
+        // line its label starts on.
+        function test_iconsKeepSizeAndLabelWhenWrapping() {
+            const item = createText({title: "Status App", path: [{text: "# feedback-desktop"}], trailingIcons: ["chat"]})
+            const sizes = item.inlineIconRects.map(icon => icon.rect.width)
+            compare(sizes.length, 2)
+            for (const size of sizes)
+                fuzzyCompare(size, item.appearance.font.pixelSize, 1) // an em
+            for (let width = 100; width <= 400; width += 3) {
+                item.width = width
+                const icons = item.inlineIconRects
+                compare(icons.length, 2)
+                for (const icon of icons)
+                    fuzzyCompare(icon.rect.width, sizes[icon.iconIndex], 0.5)
+                const avatar = icons[0].rect
+                compare(item.linkAt(avatar.x + avatar.width + 3, avatar.y + avatar.height / 2), root.url,
+                        "label follows the avatar at width " + width)
+            }
+        }
+
         function test_storybookGallery() {
             const page = createTemporaryObject(pageComponent, root, {width: 1000, height: 1000})
             verify(page)
