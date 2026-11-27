@@ -1,5 +1,6 @@
 import std/[importutils, json, sets, tables, unittest]
 import app/core/eventemitter
+import app_service/common/types
 import app_service/service/contacts/service as contacts_service
 import ./support/qt_app
 
@@ -67,8 +68,24 @@ suite "contact info request coalescing":
     check not pendingAtNotification
     check "profile" notin service.contactInfoRequests
     check service.contacts["profile"].dto.displayName == "Fetched profile"
+    check service.contacts["profile"].fromStatusGo
+    check service.statusGoContactKeys() == @["profile"]
     check completions.len == 1
     check completions[0].ok
+
+  test "a placeholder is not a status-go record until status-go sends one":
+    const key = "0x0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8"
+    service.seedFromChatMembers(@[MemberSeed(id: key, alias: "Zany Mammoth Hare",
+      compressedPubKey: "zQ3sh", emojiHash: "[\"x\"]", colorId: 4)])
+    check service.contacts.hasKey(key)
+    check not service.contacts[key].fromStatusGo
+    check service.statusGoContactKeys().len == 0
+    service.contactInfoRequests.incl(key)
+    service.asyncContactInfoLoaded($ %* {
+      "publicKey": key, "error": "", "response": {"result": {"id": key, "displayName": "alice"}}
+    })
+    check service.contacts[key].fromStatusGo
+    check service.contacts[key].dto.alias == "Zany Mammoth Hare"
 
   test "empty keys fail explicitly without dispatch":
     service.requestContactInfo("")

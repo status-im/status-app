@@ -477,8 +477,8 @@ proc loadCommunityRoster*(self: Controller, orderInputs: proc(): RosterOrderInpu
 proc onlinePubKeys*(self: Controller): seq[string] =
   self.contactService.onlinePubKeys()
 
-proc namedContactKeys*(self: Controller): seq[string] =
-  self.contactService.namedContactKeys()
+proc statusGoContactKeys*(self: Controller): seq[string] =
+  self.contactService.statusGoContactKeys()
 
 proc releaseCommunityRoster*(self: Controller) =
   self.communityService.releaseCommunityRoster(self.sectionId)

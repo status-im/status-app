@@ -10,6 +10,7 @@ import nimqml, std/[sets, tables, json, strutils]
 import app_service/common/types
 import app_service/service/community/dto/roster
 import app_service/service/community/roster_order
+import app_service/service/contacts/dto/contact_details
 import user_item
 import contacts_utils
 import model_utils
@@ -76,6 +77,24 @@ const
     ModelRole.LocalNickname, ModelRole.Alias, ModelRole.Icon, ModelRole.IsContact,
     ModelRole.IsVerified, ModelRole.IsUntrustworthy, ModelRole.TrustStatus,
     ModelRole.IsBlocked, ModelRole.ContactRequest]
+
+proc toRosterContact*(details: ContactDetails): RosterContact =
+  ## Known only for a record status-go sent, contact or not: it is kept live
+  ## by contact updates. A placeholder has no profile, so the entry's names apply.
+  let dto = details.dto
+  RosterContact(
+    known: details.fromStatusGo,
+    localNickname: dto.localNickname,
+    displayName: dto.displayName,
+    ensName: dto.name,
+    ensVerified: dto.ensVerified,
+    alias: dto.alias,
+    icon: details.icon,
+    isContact: dto.isContact,
+    isBlocked: dto.isBlocked,
+    trustStatus: dto.trustStatus,
+    contactRequest: toContactStatus(dto.contactRequestState),
+  )
 
 proc names*(contact: RosterContact): RosterNames =
   RosterNames(known: contact.known, localNickname: contact.localNickname, displayName: contact.displayName,
