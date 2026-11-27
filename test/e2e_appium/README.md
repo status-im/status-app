@@ -165,6 +165,10 @@ jobs:
 - Adding the label reruns the PR workflow, so the tests run against an APK
   built from that PR. Every later push runs them again until the label is
   removed.
+- To get the same run without the label, start CI by hand on a branch:
+  `gh workflow run ci.yml --ref <branch> -f e2e-android=true`. A manual run
+  has no pull request number, so it uses account 1, or account 2 when only
+  account 2 has secrets.
 - PRs from forks get no secrets, so their run ends as NOT RUN.
 - In a stack of PRs, put the label on the top PR only. It contains the
   changes of the PRs below it, and every labelled PR in the stack queues its

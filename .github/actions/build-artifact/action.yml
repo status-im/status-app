@@ -10,6 +10,10 @@ inputs:
   suffix:
     description: Filename suffix, including the extension.
     required: true
+outputs:
+  name:
+    description: Name of the uploaded artifact.
+    value: ${{ steps.package.outputs.name }}
 runs:
   using: composite
   steps:

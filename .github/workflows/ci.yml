@@ -2,18 +2,28 @@ name: CI
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
   # Runs on master publish the build images and save the caches that pull requests restore.
   push:
     branches:
       - master
   workflow_dispatch:
+    inputs:
+      e2e-android:
+        description: 'Also run the Android e2e tests on BrowserStack, as the e2e-android label does'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
   packages: read
 
+# Adding a label other than e2e-android skips every job, so its run gets a
+# group of its own and cancels nothing.
 concurrency:
-  group: ci-${{ github.event.pull_request.number || github.sha }}
+  group: >-
+    ${{ github.event.action == 'labeled' && github.event.label.name != 'e2e-android' && github.run_id ||
+    format('ci-{0}', github.event.pull_request.number || github.sha) }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 defaults:
@@ -48,6 +58,7 @@ jobs:
   # Tells the jobs whether a pull request touches anything but documentation.
   changes:
     name: changes
+    if: ${{ github.event.action != 'labeled' || github.event.label.name == 'e2e-android' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
@@ -82,6 +93,7 @@ jobs:
     name: image (${{ matrix.image }})
     if: >-
       github.repository == 'status-im/status-app' &&
+      (github.event.action != 'labeled' || github.event.label.name == 'e2e-android') &&
       (github.event_name != 'pull_request' ||
        github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-24.04
@@ -122,7 +134,7 @@ jobs:
     needs: [changes, image]
     # Skipped for a pull request that changes only documentation; a failed filter does not skip it.
     # Nor does a failed or skipped image job: the container action then builds the image itself.
-    if: &if-code ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    if: &if-code ${{ !cancelled() && needs.changes.result != 'skipped' && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     steps:
@@ -365,14 +377,15 @@ jobs:
       os: macos
       run-id: ${{ github.run_id }}
 
-  # The check a branch rule can require. It reports on every run; a skipped
-  # e2e-linux reports nothing under the name of its tests, and a rule that
-  # requires that name then waits forever. Windows and macOS are not counted:
-  # they do not fail the workflow yet.
+  # The check a branch rule can require. A skipped e2e-linux reports nothing
+  # under the name of its tests, so a rule requiring that name waits forever.
+  # Windows and macOS are not counted: they do not fail the workflow yet.
   e2e:
     name: e2e
     needs: [linux, e2e-linux]
-    if: ${{ !cancelled() }}
+    if: >-
+      !cancelled() &&
+      (github.event.action != 'labeled' || github.event.label.name == 'e2e-android')
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -395,11 +408,20 @@ jobs:
   android:
     name: android
     needs: [changes, image]
-    if: *if-code
+    # The e2e-android label needs an APK even on a docs-only pull request.
+    if: >-
+      ${{ !cancelled() && needs.changes.result != 'skipped' &&
+      (needs.changes.outputs.code != 'false' || contains(github.event.pull_request.labels.*.name, 'e2e-android')) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 75
+    outputs:
+      apk-artifact: ${{ steps.apk.outputs.name }}
+      producer-sha: ${{ steps.producer.outputs.sha }}
     steps:
       - *checkout
+      - name: Producer commit
+        id: producer
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       - name: Fetch submodules
         run: scripts/ci-fetch-submodules.sh --mobile
       - uses: ./.github/actions/container
@@ -452,6 +474,7 @@ jobs:
       - *save-go
       - *save-ccache
       - uses: ./.github/actions/build-artifact
+        id: apk
         with:
           platform: android-arm64
           file: mobile/bin/android/qt6/StatusPR.apk
@@ -461,6 +484,27 @@ jobs:
           platform: android-arm64
           file: mobile/bin/android/qt6/StatusPR-mapping.txt
           suffix: -mapping.txt
+
+  # Opt-in: the e2e-android label on a pull request, or a manual run with
+  # e2e-android set. Without BrowserStack secrets (forks) it ends as NOT RUN.
+  e2e-android:
+    needs: android
+    if: >-
+      !cancelled() && needs.android.result == 'success' &&
+      (contains(github.event.pull_request.labels.*.name, 'e2e-android') || inputs.e2e-android)
+    permissions:
+      contents: read
+      packages: read
+    uses: ./.github/workflows/e2e-android.yml
+    with:
+      apk-artifact: ${{ needs.android.outputs.apk-artifact }}
+      apk-producer-sha: ${{ needs.android.outputs.producer-sha }}
+      account: auto
+    secrets:
+      BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
+      BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+      BROWSERSTACK_USERNAME_2: ${{ secrets.BROWSERSTACK_USERNAME_2 }}
+      BROWSERSTACK_ACCESS_KEY_2: ${{ secrets.BROWSERSTACK_ACCESS_KEY_2 }}
 
   macos:
     name: macos
@@ -733,9 +777,10 @@ jobs:
           suffix: .7z
 
   artifact-links:
-    needs: [linux, android, macos, ios, windows]
+    needs: [changes, linux, android, macos, ios, windows]
     if: >-
       !cancelled() && github.event_name == 'pull_request' &&
+      needs.changes.result != 'skipped' &&
       github.event.pull_request.head.repo.full_name == github.repository
     permissions:
       actions: read
