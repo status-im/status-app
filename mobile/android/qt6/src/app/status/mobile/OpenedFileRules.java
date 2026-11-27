@@ -30,6 +30,17 @@ final class OpenedFileRules {
         return name;
     }
 
+    /**
+     * The type whose extension a nameless file gets: the provider's, else the
+     * sender's claim, which only names a copy and never describes a file.
+     */
+    static String nameType(String providerType, String intentType) {
+        if (providerType != null && !providerType.isEmpty()) {
+            return providerType;
+        }
+        return intentType == null ? "" : intentType;
+    }
+
     /** Whether canonical {@code path} lies inside canonical {@code dir}, not being it. */
     static boolean isInside(String path, String dir) {
         if (path == null || dir == null || dir.isEmpty()) {

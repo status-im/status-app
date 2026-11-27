@@ -28,22 +28,26 @@ Item {
         property var openedUrls: []
         property var openedFileUrls: []
         property var openedPaths: []
+        property var openedTitles: []
 
         function createContext() {
             openedUrls = []
             openedFileUrls = []
             openedPaths = []
+            openedTitles = []
             const ctx = createTemporaryObject(openContextComponent, root)
             ctx.mediaPlayerDirectory = "/tmp/status-player"
             ctx.ensureDirectoryFn = function(path) { return true }
             ctx.writeTextFileFn = function(path, data) { return true }
-            ctx.openUrlFn = (url, openedFilePath) => {
+            ctx.openUrlFn = (url, openedFilePath, title) => {
                 openedUrls.push(String(url))
                 openedPaths.push(openedFilePath || "")
+                openedTitles.push(title || "")
             }
-            ctx.openFileUrlFn = (fileUrl, readAccessUrl, openedFilePath) => {
+            ctx.openFileUrlFn = (fileUrl, readAccessUrl, openedFilePath, title) => {
                 openedFileUrls.push({ url: String(fileUrl), readAccess: String(readAccessUrl || "") })
                 openedPaths.push(openedFilePath || "")
+                openedTitles.push(title || "")
             }
             // The player page is what the desktop Backend needs; tests that
             // exercise the direct route flip this Capability themselves.
@@ -350,6 +354,35 @@ Item {
             compare(openedUrls.length, 0)
         }
 
+        // WKWebView gives a local file no title of its own.
+        function test_openOpenedFile_titlesItsTabWithTheFileName() {
+            const ctx = openedFileContext(["/Users/me/My Docs/a b.txt", "/Users/me/song.mp3"])
+
+            verify(ctx.openOpenedFile("file:///Users/me/My Docs/a b.txt", false))
+            verify(ctx.openOpenedFile("file:///Users/me/song.mp3", false))
+
+            compare(openedTitles, ["a b.txt", "song.mp3"])
+        }
+
+        function test_openOpenedFile_titlesADescribedFileWithItsName() {
+            const url = "content://com.example.files/doc/9"
+            const ctx = describedFileContext({
+                [url]: { name: "report.pdf", mimeType: "application/pdf", readable: true }
+            })
+
+            verify(ctx.openOpenedFile(url, true))
+
+            compare(openedTitles, ["report.pdf"])
+        }
+
+        function test_openInBrowser_leavesADownloadsTitleToThePage() {
+            const ctx = createContext()
+
+            verify(ctx.openInBrowser(completed("text/plain", "notes.txt"), false))
+
+            compare(openedTitles, [""])
+        }
+
         function test_openOpenedFile_refusesWhatATabCannotShow() {
             const ctx = openedFileContext(["/Users/me/setup.exe", "/Users/me/a.pdf"])
 
@@ -426,6 +459,30 @@ Item {
             verify(ctx.openOpenedFile(bare, true))
             compare(openedFileUrls.length, 1)
             compare(openedFileUrls[0].url, bare)
+        }
+
+        // A content:// URL renders by the type its provider reports, not by its name.
+        function test_openOpenedFile_refusesADescribedFileWhoseTypeIsNotAllowed() {
+            const html = "content://com.example.files/doc/20"
+            const untyped = "content://com.example.files/doc/21"
+            const ctx = describedFileContext({
+                [html]: { name: "invoice.pdf", mimeType: "text/html", readable: true },
+                [untyped]: { name: "report.pdf", mimeType: "", readable: true }
+            })
+
+            verify(!ctx.openOpenedFile(html, true))
+            verify(!ctx.openOpenedFile(untyped, true))
+            compare(openedFileUrls.length, 0)
+        }
+
+        function test_openOpenedFile_opensDescribedMediaByItsType() {
+            const m4v = "content://com.example.files/doc/22"
+            const ctx = describedFileContext({
+                [m4v]: { name: "clip.m4v", mimeType: "video/x-m4v", readable: true }
+            })
+            ctx.proprietaryCodecsSupported = true
+
+            verify(ctx.openOpenedFile(m4v, true))
         }
 
         // On Android the local path of a content:// URL is a copy of the file.

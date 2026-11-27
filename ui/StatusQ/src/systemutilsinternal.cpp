@@ -172,6 +172,11 @@ void SystemUtilsInternal::releaseOpenedFile(const QString &path) const
     Status::OpenedFileIntake::release(path);
 }
 
+void SystemUtilsInternal::releaseOpenedFileUrl(const QString &fileUrl) const
+{
+    Status::OpenedFileIntake::release(Status::OpenedFileIntake::releaseKey(fileUrl));
+}
+
 QVariantMap SystemUtilsInternal::openedFileInfo(const QString &fileUrl) const
 {
     return Status::OpenedFileIntake::description(fileUrl);

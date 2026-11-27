@@ -59,6 +59,35 @@ private slots:
 
         QVERIFY(OpenedFileIntake::description(url).isEmpty());
     }
+
+    // Two Tabs of one file: closing the first keeps the second's description.
+    void aFileDescribedTwiceOutlivesOneForget()
+    {
+        const QString url = "content://com.example.files/doc/5";
+        OpenedFileIntake::describe(url, "report.pdf", "application/pdf", true);
+        OpenedFileIntake::describe(url, "report.pdf", "application/pdf", true);
+
+        OpenedFileIntake::forget(url);
+        QCOMPARE(OpenedFileIntake::description(url).value("name").toString(), QString("report.pdf"));
+
+        OpenedFileIntake::forget(url);
+        QVERIFY(OpenedFileIntake::description(url).isEmpty());
+    }
+
+    void aDescribedFileIsReleasedByItsUrl()
+    {
+        const QString url = "content://com.example.files/doc/6";
+        OpenedFileIntake::describe(url, "report.pdf", "application/pdf", true);
+
+        QCOMPARE(OpenedFileIntake::releaseKey(url), url);
+        OpenedFileIntake::forget(url);
+    }
+
+    void anyOtherFileIsReleasedByItsPath()
+    {
+        QCOMPARE(OpenedFileIntake::releaseKey("file:///tmp/My%20Docs/a%20b.txt"),
+                 QString("/tmp/My Docs/a b.txt"));
+    }
 };
 
 QTEST_GUILESS_MAIN(TestOpenedFileIntake)

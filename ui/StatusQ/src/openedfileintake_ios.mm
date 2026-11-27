@@ -27,10 +27,11 @@ NSMutableArray<NSDictionary *> *pending()
     return files;
 }
 
-// In-place originals whose security scope is held, by path.
-NSMutableDictionary<NSString *, NSURL *> *scopedFiles()
+// In-place originals whose security scope is held, by path: one URL per Tab.
+NSMutableDictionary<NSString *, NSMutableArray<NSURL *> *> *scopedFiles()
 {
-    static NSMutableDictionary<NSString *, NSURL *> *files = [[NSMutableDictionary alloc] init];
+    static NSMutableDictionary<NSString *, NSMutableArray<NSURL *> *> *files =
+        [[NSMutableDictionary alloc] init];
     return files;
 }
 
@@ -115,7 +116,10 @@ void receive(UIOpenURLContext *context)
         return;
     }
     if ([url startAccessingSecurityScopedResource]) {
-        scopedFiles()[comparablePath(url.path)] = url;
+        NSString *path = comparablePath(url.path);
+        if (!scopedFiles()[path])
+            scopedFiles()[path] = [NSMutableArray array];
+        [scopedFiles()[path] addObject:url];
         deliver(url, false);
         return;
     }
@@ -214,9 +218,11 @@ void Status::OpenedFileIntake::setReceiver(std::function<void(const QString &, b
 void Status::OpenedFileIntake::release(const QString &localPath)
 {
     NSString *path = comparablePath(localPath.toNSString());
-    if (NSURL *scoped = scopedFiles()[path]) {
-        [scoped stopAccessingSecurityScopedResource];
-        [scopedFiles() removeObjectForKey:path];
+    if (NSMutableArray<NSURL *> *scoped = scopedFiles()[path]) {
+        [scoped.lastObject stopAccessingSecurityScopedResource];
+        [scoped removeLastObject];
+        if (scoped.count == 0)
+            [scopedFiles() removeObjectForKey:path];
         return;
     }
     if (isCopyPath(path))

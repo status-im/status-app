@@ -45,6 +45,7 @@ import StatusQ.Popups.Dialog
 
 import AppLayouts.Chat.stores as ChatStores
 import AppLayouts.Communities.stores
+import AppLayouts.Browser
 import AppLayouts.Browser.stores as BrowserStores
 import AppLayouts.Profile.stores as ProfileStores
 import AppLayouts.Profile.helpers
@@ -97,7 +98,7 @@ Item {
                                    appMain.privacyStore?.thirdpartyServicesEnabled ?? true : true
         onOpenUrl: (link) => Global.requestOpenLink(link)
         onOpenUrlInNewBrowserTab: (link) => d.openUrlInNewBrowserTab(link)
-        onOpenFileInBrowserTab: (fileUrl, refused) => d.openFileInBrowserTab(fileUrl, refused)
+        onOpenFileInBrowserTab: (fileUrl, refused) => openedFileDelivery.deliver(fileUrl, refused)
         onLaunchShareFlow: (text, imagePaths) => shareFlowLoader.launch(text, imagePaths)
         onOpenActivityCenter: () => {
             d.closeActivityCenterOnNextBack = false
@@ -1244,21 +1245,6 @@ Item {
             })
         }
 
-        // An Opened File: the OS offered Status for it, so it is never handed
-        // back to the OS.
-        function openFileInBrowserTab(fileUrl: string, refused: bool) {
-            if (!d.isBrowserEnabled) {
-                console.warn("An opened file arrived while the browser is disabled")
-                return
-            }
-            globalConns.onAppSectionBySectionTypeChanged(Constants.appSection.browser)
-            Qt.callLater(() => {
-                const browser = browserLayoutContainer.item
-                if (browser && browser.openOpenedFile)
-                    browser.openOpenedFile(fileUrl, refused)
-            })
-        }
-
         function tryOpenNavigationEducationPopup() {
             loginPopupsQueue.schedule("navigationEducation", () => {
                 if (!appMainGlobalSettings.newMenuEducationPopupSeen && !sidebar.alwaysVisible)
@@ -1446,6 +1432,17 @@ Item {
             if (appMain.mainReady)
                 Qt.callLater(d.maybeDisplayEnablePushNotificationsPopup)
         }
+    }
+
+    OpenedFileDelivery {
+        id: openedFileDelivery
+
+        browserEnabled: d.isBrowserEnabled
+        browserFn: () => browserLayoutContainer.item
+        showBrowserFn: () => globalConns.onAppSectionBySectionTypeChanged(Constants.appSection.browser)
+        releaseFn: fileUrl => SystemUtils.releaseOpenedFileUrl(fileUrl)
+        notifyFn: message => Global.displayToastMessage(message, "", "info", false,
+                                                        Constants.ephemeralNotificationType.normal, "")
     }
 
     Connections {

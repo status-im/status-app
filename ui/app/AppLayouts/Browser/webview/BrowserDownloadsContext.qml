@@ -41,13 +41,13 @@ QtObject {
     /// its footer/strip to this — nothing writes visibility imperatively.
     readonly property bool stripVisible: stripPresenter.stripVisible
 
-    property var openUrlFn: function(url, openedFilePath) {
+    property var openUrlFn: function(url, openedFilePath, title) {
         console.warn("BrowserDownloadsContext: openUrlFn not set")
     }
 
     /// Opens a local file through the Web View's loadFileUrl (read grant for a
     /// directory); empty readAccessUrl means the file's own directory.
-    property var openFileUrlFn: function(fileUrl, readAccessUrl, openedFilePath) {
+    property var openFileUrlFn: function(fileUrl, readAccessUrl, openedFilePath, title) {
         console.warn("BrowserDownloadsContext: openFileUrlFn not set")
     }
 
@@ -84,9 +84,9 @@ QtObject {
         readonly property BrowserDownloadOpenContext openContext: BrowserDownloadOpenContext {
             id: downloadOpenContext
 
-            openUrlFn: (url, openedFilePath) => root.openUrlFn(url, openedFilePath)
-            openFileUrlFn: (fileUrl, readAccessUrl, openedFilePath) =>
-                root.openFileUrlFn(fileUrl, readAccessUrl, openedFilePath)
+            openUrlFn: (url, openedFilePath, title) => root.openUrlFn(url, openedFilePath, title)
+            openFileUrlFn: (fileUrl, readAccessUrl, openedFilePath, title) =>
+                root.openFileUrlFn(fileUrl, readAccessUrl, openedFilePath, title)
         }
 
         // Missing File markers go stale while the app is backgrounded (files can
