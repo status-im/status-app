@@ -20,6 +20,8 @@ class WalletSettingsLocators(BaseLocators):
 
     # Wallet settings menu items
     NETWORKS_ITEM = BaseLocators.resource_id_contains("networksItem")
+    MAINNET_TAB = BaseLocators.tid("testModeViewMainButton")
+    NETWORK_SWITCH_PREFIX = "isActiveSwitch_"
 
     # Networks view — testnet mode toggle + its confirmation popup. The
     # popup title repeats the accept-button text, so prefer the Button class
@@ -41,6 +43,17 @@ class WalletSettingsLocators(BaseLocators):
     ACCOUNT_ORDER_ITEM = BaseLocators.resource_id_contains("accountOrderItem")
     MANAGE_TOKENS_ITEM = BaseLocators.resource_id_contains("manageTokensItem")
     SAVED_ADDRESSES_ITEM = BaseLocators.resource_id_contains("savedAddressesItem")
+
+    @classmethod
+    def network_switch(cls, name: str, checked: bool | None = None) -> tuple:
+        strategy, locator = cls.tid(f"{cls.NETWORK_SWITCH_PREFIX}{name}")
+        state = "" if checked is None else f" and @checked='{str(checked).lower()}'"
+        return strategy, f"{locator}[@checkable='true'{state}]"
+
+    @staticmethod
+    def deactivate_network_confirmation(name: str) -> tuple:
+        title = xpath_string(f"Disable {name} network")
+        return BaseLocators.xpath(f"//*[@text={title} or contains(@content-desc, {title})]")
 
     @staticmethod
     def account_row_by_name(name: str) -> tuple:

@@ -1,12 +1,14 @@
 import time
-from typing import Optional, List
+from typing import List, Optional
+from xml.etree import ElementTree
 
 from selenium.webdriver.remote.webelement import WebElement
 
-from ..base_page import BasePage
 from locators.settings.wallet_settings_locators import WalletSettingsLocators
 from pages.wallet.add_edit_account_modal import AddEditAccountModal
 from pages.wallet.keycard_auth_modal import KeycardAuthenticationModal
+
+from ..base_page import BasePage
 
 
 class WalletSettingsPage(BasePage):
@@ -254,6 +256,80 @@ class WalletSettingsPage(BasePage):
             return False
         return self.is_element_visible(
             self.locators.TESTNET_MODE_SWITCH, timeout=timeout
+        )
+
+    def select_mainnet_tab(self, timeout: int = 10) -> bool:
+        tab = self.locators.MAINNET_TAB
+        return self.try_click(tab, timeout=timeout) and self.wait_for_element_checked(
+            tab, timeout=timeout
+        )
+
+    def _visible_network_states(self) -> dict[str, bool]:
+        states = {}
+        prefix = self.locators.NETWORK_SWITCH_PREFIX
+        for node in ElementTree.fromstring(self.driver.page_source).iter():
+            if node.get("checkable") != "true" or node.get("displayed") == "false":
+                continue
+            _, marker, name = node.get("resource-id", "").rpartition(prefix)
+            if not marker:
+                name = node.get("content-desc", "").partition(f"[tid:{prefix}")[2]
+                name = name.partition("]")[0]
+            if name:
+                checked = node.get("checked")
+                if checked not in ("true", "false"):
+                    raise ValueError(f"Network switch {name!r} has no checked state")
+                states[name] = checked == "true"
+        return states
+
+    def _swipe_networks(self, *, down: bool = False) -> None:
+        size = self.driver.get_window_size()
+        x = size["width"] // 2
+        upper, lower = int(size["height"] * 0.35), int(size["height"] * 0.75)
+        start_y, end_y = (upper, lower) if down else (lower, upper)
+        self.driver.swipe(x, start_y, x, end_y, duration=700)
+
+    def _scroll_to_network_tabs(self) -> None:
+        for _ in range(12):
+            if self.is_element_visible(self.locators.MAINNET_TAB, timeout=1):
+                return
+            self._swipe_networks(down=True)
+        raise ValueError("Could not reach the top of the network list")
+
+    def get_network_states(self) -> dict[str, bool]:
+        """Read all switches on the current tab, then return to the top."""
+        self._scroll_to_network_tabs()
+        states = self._visible_network_states()
+        if not states:
+            raise ValueError("No network switches visible")
+        for _ in range(12):
+            self._swipe_networks()
+            visible = self._visible_network_states()
+            if not visible:
+                raise ValueError("No network switches visible after scrolling")
+            if visible.keys() <= states.keys():
+                self._scroll_to_network_tabs()
+                return states
+            states.update(visible)
+        raise ValueError("Could not reach the bottom of the network list")
+
+    def set_network_enabled(self, name: str, enabled: bool) -> bool:
+        locator = self.locators.network_switch(name)
+        for _ in range(12):
+            if self.is_element_visible(locator, timeout=1):
+                break
+            self._swipe_networks()
+        else:
+            return False
+        target = self.locators.network_switch(name, enabled)
+        if self.is_element_visible(target, timeout=1):
+            return True
+        return self.try_click(locator, max_attempts=1) and self.is_element_visible(
+            target, timeout=10
+        )
+
+    def is_deactivate_network_confirmation_visible(self, name: str) -> bool:
+        return self.is_element_visible(
+            self.locators.deactivate_network_confirmation(name), timeout=1
         )
 
     def enable_testnet_mode(self, timeout: int = 10) -> bool:
