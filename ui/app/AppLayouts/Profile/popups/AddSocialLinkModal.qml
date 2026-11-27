@@ -53,7 +53,7 @@ StatusStackModal {
         readonly property var staticLinkTypesModel: ListModel {
             readonly property var data: [
                 { type: Constants.socialLinkType.twitter, icon: "xtwitter", text: "__twitter" },
-                { type: Constants.socialLinkType.personalSite, icon: "language", text: "__personal_site" },
+                { type: Constants.socialLinkType.personalSite, icon: "globe", text: "__personal_site" },
                 { type: Constants.socialLinkType.github, icon: "github", text: "__github" },
                 { type: Constants.socialLinkType.youtube, icon: "youtube", text: "__youtube" },
                 { type: Constants.socialLinkType.discord, icon: "discord", text: "__discord" },
@@ -114,7 +114,7 @@ StatusStackModal {
                 placeholderText: ""
                 label: qsTr("Title")
                 linkType: Constants.socialLinkType.custom
-                icon: "language"
+                icon: "globe"
                 charLimit: Constants.maxSocialLinkTextLength
                 input.tabNavItem: linkTarget.input.edit
                 validators: [

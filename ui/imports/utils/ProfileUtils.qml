@@ -80,7 +80,7 @@ QtObject {
 
     function linkTypeToIcon(linkType: int) : string {
         if (linkType === Constants.socialLinkType.twitter) return "xtwitter"
-        if (linkType === Constants.socialLinkType.personalSite) return "language"
+        if (linkType === Constants.socialLinkType.personalSite) return "globe"
         if (linkType === Constants.socialLinkType.github) return "github"
         if (linkType === Constants.socialLinkType.youtube) return "youtube"
         if (linkType === Constants.socialLinkType.discord) return "discord"
@@ -96,7 +96,7 @@ QtObject {
         case Constants.ShowcaseVisibility.Contacts:
             return "profile"
         case Constants.ShowcaseVisibility.Everyone:
-            return "language"
+            return "globe"
         case Constants.ShowcaseVisibility.NoOne:
         default:
             return "hide"
