@@ -359,6 +359,37 @@ jobs:
       os: macos
       run-id: ${{ github.run_id }}
 
+  # The same suites with the app on the logos-delivery messaging backend.
+  e2e-linux-logos-delivery:
+    needs: linux
+    if: ${{ !cancelled() && github.event_name != 'push' && needs.linux.result == 'success' }}
+    permissions: *e2e-permissions
+    uses: ./.github/workflows/e2e.yml
+    with:
+      os: linux
+      run-id: ${{ github.run_id }}
+      backend: logos-delivery
+
+  e2e-windows-logos-delivery:
+    needs: windows
+    if: ${{ !cancelled() && github.event_name != 'push' && needs.windows.result == 'success' }}
+    permissions: *e2e-permissions
+    uses: ./.github/workflows/e2e.yml
+    with:
+      os: windows
+      run-id: ${{ github.run_id }}
+      backend: logos-delivery
+
+  e2e-macos-logos-delivery:
+    needs: macos
+    if: ${{ !cancelled() && github.event_name != 'push' && needs.macos.result == 'success' }}
+    permissions: *e2e-permissions
+    uses: ./.github/workflows/e2e.yml
+    with:
+      os: macos
+      run-id: ${{ github.run_id }}
+      backend: logos-delivery
+
   android:
     name: android
     needs: [changes, image]

@@ -70,6 +70,15 @@ method getWakuV2LightClientEnabled*(self: Module): bool =
 method setWakuV2LightClientEnabled*(self: Module, enabled: bool): bool =
   return self.controller.setWakuV2LightClientEnabled(enabled)
 
+method getMessagingBackend*(self: Module): string =
+  return self.controller.getMessagingBackend()
+
+method setMessagingBackend*(self: Module, backend: string): bool =
+  return self.controller.setMessagingBackend(backend)
+
+method isMessagingBackendOverridden*(self: Module): bool =
+  return self.controller.isMessagingBackendOverridden()
+
 method isDebugEnabled*(self: Module): bool =
   self.controller.isDebugEnabled()
 

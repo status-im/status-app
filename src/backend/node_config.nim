@@ -51,3 +51,12 @@ proc setLightClient*(enabled: bool): RpcResponse[JsonNode] =
     "enabled": enabled
   }]
   return core.callPrivateRPC("setLightClient".prefix, payload)
+
+proc setMessagingBackend*(backend: string): RpcResponse[JsonNode] =
+  let payload = %*[{
+    "backend": backend
+  }]
+  return core.callPrivateRPC("setMessagingBackend".prefix, payload)
+
+proc messagingBackend*(): RpcResponse[JsonNode] =
+  return core.callPrivateRPC("messagingBackend".prefix, %* [])

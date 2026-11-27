@@ -17,6 +17,8 @@ QtObject {
     // Advanced Module Properties
     property string fleet: advancedModule? advancedModule.fleet : ""
     property bool wakuV2LightClientEnabled: advancedModule? advancedModule.wakuV2LightClientEnabled : false
+    property string messagingBackend: advancedModule ? advancedModule.messagingBackend : ""
+    property bool isMessagingBackendOverridden: advancedModule ? advancedModule.isMessagingBackendOverridden : false
     property bool isNimbusProxyEnabled: advancedModule? advancedModule.isNimbusProxyEnabled : false
     property bool isDebugEnabled: advancedModule? advancedModule.isDebugEnabled : false
     property int logMaxBackups: advancedModule ? advancedModule.logMaxBackups : 1
@@ -129,6 +131,14 @@ QtObject {
             return false
 
         return root.advancedModule.setFleet(fleetName)
+    }
+
+    // True when saved: the backend applies from the next login on
+    function setMessagingBackend(backend) {
+        if(!root.advancedModule)
+            return false
+
+        return root.advancedModule.setMessagingBackend(backend)
     }
 
     function setWakuV2LightClientEnabled(mode) {

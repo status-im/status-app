@@ -38,6 +38,24 @@ QtObject:
     read = getWakuV2LightClientEnabled
     notify = wakuV2LightClientEnabledChanged
 
+  proc messagingBackendChanged*(self: View) {.signal.}
+  proc getMessagingBackend*(self: View): string {.slot.} =
+    return self.delegate.getMessagingBackend()
+  QtProperty[string] messagingBackend:
+    read = getMessagingBackend
+    notify = messagingBackendChanged
+
+  proc setMessagingBackend*(self: View, backend: string): bool {.slot.} =
+    ## The backend applies from the next login on.
+    result = self.delegate.setMessagingBackend(backend)
+    if result:
+      self.messagingBackendChanged()
+
+  proc getIsMessagingBackendOverridden*(self: View): bool {.slot.} =
+    return self.delegate.isMessagingBackendOverridden()
+  QtProperty[bool] isMessagingBackendOverridden:
+    read = getIsMessagingBackendOverridden
+
   proc setWakuV2LightClientEnabled*(self: View, enabled: bool): bool {.slot.} =
     return self.delegate.setWakuV2LightClientEnabled(enabled)
 

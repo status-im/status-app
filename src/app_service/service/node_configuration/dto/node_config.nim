@@ -106,6 +106,7 @@ type
     StoreSeconds*: int
     EnableFilterFullNode*: bool
     UseShardAsDefaultTopic*: bool
+    Backend*: string
 
   NimbusProxyConfig* = object
     Enabled*: bool
@@ -348,6 +349,7 @@ proc toWaku2Config*(jsonObj: JsonNode): Waku2Config =
   discard jsonObj.getProp("StoreSeconds", result.StoreSeconds)
   discard jsonObj.getProp("EnableFilterFullNode", result.EnableFilterFullNode)
   discard jsonObj.getProp("UseShardAsDefaultTopic", result.UseShardAsDefaultTopic)
+  discard jsonObj.getProp("Backend", result.Backend)
 
 proc toWakuConfig*(jsonObj: JsonNode): WakuConfig =
   discard jsonObj.getProp("Enabled", result.Enabled)

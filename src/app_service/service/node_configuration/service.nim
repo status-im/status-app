@@ -164,6 +164,37 @@ proc setLightClient*(self: Service, enabled: bool): bool =
     error "failed to set light client", errDescription = e.msg
     return false
 
+proc setMessagingBackend*(self: Service, backend: string): bool =
+  try:
+    let response = status_node_config.setMessagingBackend(backend)
+
+    if response.error != nil:
+      let error = Json.decode($response.error, RpcError)
+      raise newException(RpcException, error.message)
+
+    self.configuration.WakuV2Config.Backend = backend
+    return true
+  except Exception as e:
+    error "failed to set messaging backend", errDescription = e.msg
+    return false
+
+## The backend the next login uses: the saved one, else the current one.
+proc getMessagingBackend*(self: Service): string =
+  if self.configuration.WakuV2Config.Backend != "":
+    return self.configuration.WakuV2Config.Backend
+  try:
+    let response = status_node_config.messagingBackend()
+    if response.error != nil:
+      let error = Json.decode($response.error, RpcError)
+      raise newException(RpcException, error.message)
+    return response.result.getStr()
+  except Exception as e:
+    error "failed to get messaging backend", errDescription = e.msg
+    return ""
+
+proc isMessagingBackendOverridden*(self: Service): bool =
+  return main_constants.MESSAGING_BACKEND != ""
+
 proc getLogLevel(self: Service): string =
   return self.configuration.LogLevel
 
