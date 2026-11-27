@@ -603,6 +603,7 @@ Item {
                         chatId: model.itemId
                         chatType: model.type
                         rootStore: root.rootStore
+                        messagesView: sharedMessagesView
                         isBlocked: model.blocked
 
                         Component.onCompleted: {
@@ -630,8 +631,10 @@ Item {
                 id: sharedMessagesView
 
                 panelInView: root.panelInView
-                parent: d.activeContentItem ? d.activeContentItem.messagesSlot
-                                            : messagesViewHolder
+                // Keep the old chat's content out of the incoming slot while
+                // the view switches stores or waits for the panel to finish.
+                parent: d.activeContentItem && messageStore === d.activeContentItem.messageStore
+                        ? d.activeContentItem.messagesSlot : messagesViewHolder
                 anchors.fill: parent
 
                 chatContentModule: d.activeContentItem ? d.activeContentItem.chatContentModule : null

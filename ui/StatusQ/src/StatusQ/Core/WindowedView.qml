@@ -234,6 +234,11 @@ Flickable {
     // one to hang a skeleton on.
     readonly property bool initialLoading: d.initialLoading
 
+    // True once the viewport-filling placeholder is visible. Edge placeholders
+    // do not cover the viewport.
+    readonly property bool fillPlaceholderVisible: d.placeholderItem?.parent === fillBand
+                                                   && d.placeholderItem.visible
+
     // "I would like more rows at this edge." Nothing is promised. The argument
     // is an Edge; it is typed int because a QML-declared enum cannot be a
     // signal parameter type.

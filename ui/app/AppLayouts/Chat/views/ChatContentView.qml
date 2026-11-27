@@ -35,6 +35,7 @@ ColumnLayout {
 
     // Where the shared messages view goes while this chat is active.
     readonly property alias messagesSlot: messagesSlot
+    property ChatMessagesView messagesView
 
     readonly property ChatStores.MessageStore messageStore: ChatStores.MessageStore {
         messageModule: root.chatContentModule ? root.chatContentModule.messagesModule : null
@@ -62,20 +63,10 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
 
-        // Whether the shared messages view is parented here. The skeleton is
-        // a child too, and does not count.
-        property bool occupied: false
-
-        onChildrenChanged: {
-            for (let i = 0; i < children.length; ++i) {
-                if (children[i] !== chatMessagesSkeleton) {
-                    occupied = true
-                    return
-                }
-            }
-
-            occupied = false
-        }
+        readonly property bool hasMessagesView: root.messagesView?.parent === messagesSlot
+        readonly property bool viewShowsFill: hasMessagesView
+            && root.messagesView.messageStore === root.messageStore
+            && root.messagesView.fillPlaceholderVisible
 
         Loader {
             id: chatMessagesSkeleton
@@ -83,10 +74,9 @@ ColumnLayout {
             anchors.fill: parent
             z: 1
 
-            // Covers the backend fetch, and the slot until the messages view
-            // has arrived. The view's own fill then covers the rows until
-            // they reveal, all at once.
-            active: root.messageStore.loading || !messagesSlot.occupied
+            // Cover loading until this chat's messages view shows its own fill.
+            active: (root.messageStore.loading || !messagesSlot.hasMessagesView)
+                    && !messagesSlot.viewShowsFill
             visible: active
             sourceComponent: MessageRowsSkeleton {
                 objectName: "chatMessagesSkeleton"
