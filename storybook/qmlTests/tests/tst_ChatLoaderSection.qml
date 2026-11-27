@@ -414,6 +414,7 @@ Item {
             const backButton = findChild(layout, "toolBarBackButton")
             verify(!!backButton)
             tryCompare(backButton, "visible", true)
+            waitForNextFrame(layout)
             mouseClick(backButton)
             tryCompare(d, "activeChatId", parentId)
         }
