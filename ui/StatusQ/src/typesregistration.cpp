@@ -69,6 +69,7 @@ extern void registerNativeIndicatorItemType();
 #endif
 #if defined(Q_OS_IOS)
 extern void registerNativePasteButtonItemType();
+extern "C" void statusq_linkSceneKeyWindowFix();
 #endif
 #if defined(Q_OS_IOS) || defined(Q_OS_MACOS)
 extern "C" void statusq_linkAccessibilityCrashFilter();
@@ -256,6 +257,10 @@ void registerStatusQTypes() {
     registerNativePasteButtonItemType();
 #else
     qmlRegisterType<NativePasteButtonItem>("StatusQ.Controls", 0, 1, "NativePasteButtonItem");
+#endif
+
+#if defined(Q_OS_IOS)
+    statusq_linkSceneKeyWindowFix();
 #endif
 
 #if defined(Q_OS_IOS) || defined(Q_OS_MACOS)

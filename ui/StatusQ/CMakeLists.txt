@@ -356,6 +356,7 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
         src/StatusQ/Controls/NativeIndicatorItem_ios.mm
         src/StatusQ/Controls/NativePasteButtonItem_ios.mm
         src/localnetworkpermission_ios.mm
+        src/scene_key_window_ios.mm
     )
     # Keep AudioUtils cross-platform while allowing native AVAudioSession setup on iOS.
     set_source_files_properties(src/audioutils.cpp PROPERTIES COMPILE_OPTIONS "-x;objective-c++")
