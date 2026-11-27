@@ -64,7 +64,8 @@ QObject {
         property var nativeSelectedFiles: []
         property bool nativeDialogOpen: false
 
-        readonly property url resolvedFile: Utils.isIOS ? resolveFile(nativeSelectedFiles[0]) : resolveFile(d.dialog?.selectedFile ?? "")
+        // Taken from resolvedFiles: resolving copies the file on Android
+        readonly property url resolvedFile: resolvedFiles.length > 0 ? resolvedFiles[0] : ""
         readonly property var resolvedFiles: Utils.isIOS ? resolveSelectedFiles(nativeSelectedFiles) : resolveSelectedFiles(d.dialog?.selectedFiles ?? [])
 
         function resolveFile(file) {

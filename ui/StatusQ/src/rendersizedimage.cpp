@@ -395,7 +395,8 @@ void RenderSizedImage::finishRequest()
 void RenderSizedImage::pixmapChange()
 {
     Q_D(RenderSizedImage);
-    if (d->renderSized && !d->currentPix->isNull()) {
+    // A failed load has no native size to learn, and reloading it would only fail again
+    if (d->renderSized && !d->currentPix->isNull() && !d->currentPix->isError()) {
         const QSize native = d->currentPix->implicitSize();
         const bool overLimit = d->currentPix->width() > qMin(native.width(), maxDecodeSide)
                 || d->currentPix->height() > qMin(native.height(), maxDecodeSide);

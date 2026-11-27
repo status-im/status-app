@@ -2643,6 +2643,10 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
         <source>This file cannot be played here. Open it with another app.</source>
         <translation>Tento soubor zde nelze přehrát. Otevřete jej v jiné aplikaci.</translation>
     </message>
+    <message>
+        <source>Couldn&apos;t open the file</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>BrowserFormatSupportContext</name>
@@ -2861,6 +2865,10 @@ Přejete si obejít bezpečnostní kontrolu a pokračovat?</translation>
     <message>
         <source>Find in page</source>
         <translation>Najít na stránce</translation>
+    </message>
+    <message>
+        <source>Copy file path</source>
+        <translation type="unfinished">Kopírovat cestu k souboru</translation>
     </message>
     <message>
         <source>Developer Tools</source>
@@ -5728,6 +5736,111 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
     <message>
         <source>Choose a blockchain explorer to open Ethereum addresses or transaction hashes entered in the address bar</source>
         <translation>Vyberte průzkumníka blockchainu pro otevření Ethereum adres nebo hashů transakcí zadaných v adresním řádku</translation>
+    </message>
+</context>
+<context>
+    <name>DefaultViewerBanner</name>
+    <message>
+        <source>Status opens your %1 now.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Open %1 in Status? Choose Status, then Always.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Not now</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Choose</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Got it</source>
+        <translation type="unfinished">Rozumím</translation>
+    </message>
+</context>
+<context>
+    <name>DefaultViewerSettings</name>
+    <message>
+        <source>Suggest opening files in Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Opened in Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stop</source>
+        <translation type="unfinished">Zastavit</translation>
+    </message>
+</context>
+<context>
+    <name>DefaultViewerTypes</name>
+    <message>
+        <source>PDFs</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PNG images</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>JPEG images</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>GIF images</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>WebP images</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>BMP images</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>text files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>JSON files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>MP3 audio</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>WAV audio</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>WebM audio</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>WebM videos</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>MP4 videos</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>M4V videos</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>M4A audio</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>AAC audio</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -12244,6 +12357,14 @@ selhalo</translation>
         <translation>Najít na stránce</translation>
     </message>
     <message>
+        <source>Share file</source>
+        <translation type="unfinished">Sdílet soubor</translation>
+    </message>
+    <message>
+        <source>Save to Downloads</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Zoom</source>
         <translation>Lupa</translation>
     </message>
@@ -13042,6 +13163,17 @@ selhalo</translation>
     </message>
 </context>
 <context>
+    <name>OpenFailedPage</name>
+    <message>
+        <source>Couldn&apos;t open the file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>View supported formats</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>OpenLinksInView</name>
     <message>
         <source>Open links in</source>
@@ -13058,6 +13190,21 @@ selhalo</translation>
     <message>
         <source>User device default browser</source>
         <translation>Výchozí prohlížeč zařízení</translation>
+    </message>
+</context>
+<context>
+    <name>OpenedFileDelivery</name>
+    <message>
+        <source>Turn on the browser in Settings to open files in Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable third-party services to open files in Status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Couldn&apos;t open the file</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

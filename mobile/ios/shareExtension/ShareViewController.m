@@ -148,7 +148,12 @@ static const NSUInteger kMaxSharedImages = 31;
         // still waiting in the slot — and the wake would bounce the user into
         // Status for nothing.
         if (!hasText && imagePaths.count == 0) {
-            NSLog(@"StatusShareExtension: nothing extractable was shared; no hand-off");
+            NSMutableOrderedSet<NSString *> *types = [NSMutableOrderedSet orderedSet];
+            for (NSExtensionItem *item in self.extensionContext.inputItems)
+                for (NSItemProvider *provider in item.attachments)
+                    [types addObjectsFromArray:provider.registeredTypeIdentifiers];
+            NSLog(@"StatusShareExtension: nothing extractable was shared (types: %@); no hand-off",
+                  [types.array componentsJoinedByString:@", "]);
             [self.extensionContext completeRequestReturningItems:@[] completionHandler:nil];
             return;
         }

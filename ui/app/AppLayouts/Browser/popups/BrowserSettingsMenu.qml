@@ -28,9 +28,11 @@ StatusMenu {
     signal forceReload()
     signal clearSiteData()
     signal clearBrowsingData()
+    signal copyFilePath()
 
     property bool clearingBrowsingData: false
     property bool clearSiteDataSupported: true
+    property bool canCopyFilePath: false
 
     background: StatusBackgroundPanel {
         color: root.incognitoMode ?
@@ -122,6 +124,14 @@ StatusMenu {
         icon.name: "search-custom"
         shortcut: StandardKey.Find
         onTriggered: launchFindBar()
+    }
+
+    StatusMenuItem {
+        text: qsTr("Copy file path")
+        icon.name: "copy"
+        enabled: root.canCopyFilePath
+        visible: root.canCopyFilePath
+        onTriggered: copyFilePath()
     }
 
     StatusAction {

@@ -16,6 +16,7 @@ namespace Status
             void emitAppBackgroundedToQt();
             void watchApplicationState();
             void emitShareToQt(const QString& text, const QStringList& imagePaths);
+            void emitFileToQt(const QString& fileUrl, bool copied);
             static void setInstance(UrlSchemeEvent* instance);
 
             void registerUrlHandler();
@@ -38,6 +39,9 @@ namespace Status
             // copies of shared images, as a JSON array of absolute paths (a
             // JSON string keeps the Nim slot signature to plain QStrings).
             void shareActivated(const QString& text, const QString& imagePathsJson);
+            // An Opened File handed over by the OS ("Open with"); `copied`
+            // when it is a copy the app deletes once unused.
+            void fileActivated(const QString& fileUrl, bool copied);
     };
 }
 

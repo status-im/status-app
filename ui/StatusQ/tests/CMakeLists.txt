@@ -155,6 +155,10 @@ add_executable(TestBackgroundGraphicsRelease src/tst_backgroundgraphicsrelease.c
 target_link_libraries(TestBackgroundGraphicsRelease PRIVATE Qt::Test Qt::Gui Qt::Quick StatusQ)
 add_test(NAME TestBackgroundGraphicsRelease COMMAND TestBackgroundGraphicsRelease)
 
+qt_add_executable(TestOpenedFileIntake src/tst_openedfileintake.cpp)
+target_link_libraries(TestOpenedFileIntake PRIVATE Qt::Test StatusQ)
+add_test(NAME TestOpenedFileIntake COMMAND TestOpenedFileIntake)
+
 add_executable(TestIncubationController src/tst_incubationcontroller.cpp)
 target_link_libraries(TestIncubationController PRIVATE Qt::Test Qt::Gui Qt::Qml Qt::Quick StatusQ)
 add_test(NAME TestIncubationController COMMAND TestIncubationController)
@@ -175,4 +179,8 @@ if(NOT ANDROID AND NOT IOS)
     qt_add_executable(TestRestartApplication src/tst_restartapplication.cpp)
     target_link_libraries(TestRestartApplication PRIVATE Qt::Test Qt::Network Qt::Quick StatusQ)
     add_test(NAME TestRestartApplication COMMAND TestRestartApplication)
+
+    qt_add_executable(TestBrowserLocalFileGrants src/tst_browserlocalfilegrants.cpp)
+    target_link_libraries(TestBrowserLocalFileGrants PRIVATE Qt::Test StatusQ)
+    add_test(NAME TestBrowserLocalFileGrants COMMAND TestBrowserLocalFileGrants)
 endif()

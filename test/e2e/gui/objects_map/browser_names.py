@@ -22,3 +22,13 @@ browserNewTabButton = {
     "type": "BrowserHeaderButton",
     "visible": True,
 }
+browserOpenFailedText = {
+    "container": browserLayout,
+    "objectName": "openFailedText",
+    "visible": True,
+}
+browserOpenFailedFileName = {
+    "container": browserLayout,
+    "objectName": "openFailedFileName",
+    "visible": True,
+}

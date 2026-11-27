@@ -49,13 +49,7 @@ bool BrowserBackendCapabilities::isMediaPlayerPageRequired()
 bool BrowserBackendCapabilities::isPdfViewerSupported()
 {
 #if defined(STATUSQ_MOBILE_BACKEND)
-#ifdef Q_OS_IOS
-    // WKWebView renders PDF natively in the page.
-    return true;
-#else
-    // The system Android WebView has no PDF renderer.
-    return false;
-#endif
+    return MobileWebViewCapabilities::isPdfViewerSupported();
 #else
     // Qt WebEngine ships Chromium's built-in PDF viewer.
     return true;

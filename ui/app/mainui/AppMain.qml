@@ -45,6 +45,7 @@ import StatusQ.Popups.Dialog
 
 import AppLayouts.Chat.stores as ChatStores
 import AppLayouts.Communities.stores
+import AppLayouts.Browser
 import AppLayouts.Browser.stores as BrowserStores
 import AppLayouts.Profile.stores as ProfileStores
 import AppLayouts.Profile.helpers
@@ -97,6 +98,7 @@ Item {
                                    appMain.privacyStore?.thirdpartyServicesEnabled ?? true : true
         onOpenUrl: (link) => Global.requestOpenLink(link)
         onOpenUrlInNewBrowserTab: (link) => d.openUrlInNewBrowserTab(link)
+        onOpenFileInBrowserTab: (fileUrl, refused) => openedFileDelivery.deliver(fileUrl, refused)
         onLaunchShareFlow: (text, imagePaths) => shareFlowLoader.launch(text, imagePaths)
         onOpenActivityCenter: () => {
             d.closeActivityCenterOnNextBack = false
@@ -1430,6 +1432,18 @@ Item {
             if (appMain.mainReady)
                 Qt.callLater(d.maybeDisplayEnablePushNotificationsPopup)
         }
+    }
+
+    OpenedFileDelivery {
+        id: openedFileDelivery
+
+        browserEnabled: d.isBrowserEnabled
+        thirdpartyServicesEnabled: appMain.rootStore.thirdpartyServicesEnabled
+        browserFn: () => browserLayoutContainer.item
+        showBrowserFn: () => globalConns.onAppSectionBySectionTypeChanged(Constants.appSection.browser)
+        releaseFn: fileUrl => SystemUtils.releaseOpenedFileUrl(fileUrl)
+        notifyFn: message => Global.displayToastMessage(message, "", "info", false,
+                                                        Constants.ephemeralNotificationType.normal, "")
     }
 
     Connections {

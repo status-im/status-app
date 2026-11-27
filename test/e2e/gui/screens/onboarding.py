@@ -568,6 +568,7 @@ class OnboardingCreatePasswordView(OnboardingView):
         self.password_strength_indicator = QObject(onboarding_names.passwordStrengthIndicator)
         self.password_component_indicator = QObject(onboarding_names.passwordComponentIndicator)
         self.stay_logged_in_switch = QObject(onboarding_names.stayLoggedInSwitch)
+        self.biometrics_switch = QObject(onboarding_names.biometricsSwitch)
 
     @allure.step('Set stay logged in switch')
     def set_stay_logged_in(self, enabled: bool):
@@ -580,10 +581,17 @@ class OnboardingCreatePasswordView(OnboardingView):
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), f'Save password switch did not become {enabled}'
 
+    @allure.step('Turn biometrics off where the machine offers them')
+    def turn_off_biometrics(self):
+        # On by default with Touch ID: signing would wait for a finger instead of the password.
+        if self.biometrics_switch.exists and self.biometrics_switch.is_checked:
+            self.biometrics_switch.click()
+
     @allure.step('Set password and open Confirmation password view')
     def create_password(self, value: str):
         self.set_password_in_first_field(value)
         self.set_password_in_repeat_field(value)
+        self.turn_off_biometrics()
         self.confirm_password_button.click()
 
     @allure.step('Fill in choose password field')
