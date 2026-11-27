@@ -471,7 +471,8 @@ method onCommunityTokensDetailsLoaded*(self: AccessInterface, communityId: strin
 method addressWasShown*(self: AccessInterface, address: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
-method openSectionChatAndMessage*(self: AccessInterface, sectionId: string, chatId: string, messageId: string, threadId: string = ""): bool {.base.} =
+method openSectionChatAndMessage*(self: AccessInterface, sectionId: string, chatId: string, messageId: string,
+    threadId: string = "", preferOpenThreadPanel: bool = false): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method updateRequestToJoinState*(self: AccessInterface, sectionId: string, requestToJoinState: RequestToJoinState) {.base.} =

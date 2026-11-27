@@ -310,13 +310,14 @@ proc init*(self: Controller) =
     self.delegate.resolvedENS(args.pubkey, args.address, args.uuid, args.reason)
 
   self.events.on(SIGNAL_MAKE_SECTION_CHAT_ACTIVE) do(e: Args):
-    var args = ActiveSectionChatArgs(e)
+    let args = ActiveSectionChatArgs(e)
+    let preferOpenThreadPanel = args.preferOpenThreadPanel and self.activeSectionId == args.sectionId
     self.activeSectionId = args.sectionId
     self.delegate.activeSectionSet(self.activeSectionId)
 
     if args.chatId != "":
       discard self.delegate.openSectionChatAndMessage(args.sectionId, args.chatId,
-        args.messageId, args.threadId)
+        args.messageId, args.threadId, preferOpenThreadPanel)
 
   self.events.on(SIGNAL_STATUS_URL_ACTIVATED) do(e: Args):
     var args = StatusUrlArgs(e)

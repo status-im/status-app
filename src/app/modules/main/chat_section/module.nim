@@ -2279,6 +2279,25 @@ method onCommunityMemberMessagesDeleted*(self: Module, deletedMessages: seq[stri
 method communityContainsChat*(self: Module, chatId: string): bool =
   return self.view.chatsModel().isItemWithIdAdded(chatId)
 
+method scrollToMessageInOpenThreadPanel*(self: Module, chatId, threadId, messageId: string): bool =
+  if not THREADS_ENABLED or threadId.len == 0 or messageId.len == 0 or
+      self.view.getOpenThreadId() != threadId or self.view.getOpenThreadParentChatId() != chatId or
+      self.controller.getActiveChatId() != chatId:
+    return false
+
+  let parentItem = self.view.chatsModel().getItemById(chatId)
+  let content = self.chatContentModules.getOrDefault(threadId)
+  if parentItem.isNil or not parentItem.canView or content.isNil:
+    return false
+
+  self.pendingNavigation.clear()
+  if self.pendingThreadNavigation:
+    self.clearPendingThreadRestore(clearSettings = false)
+  if not content.isLoaded():
+    content.load(self.view.chatsModel().getItemById(threadId))
+  content.scrollToMessage(messageId)
+  return true
+
 method openCommunityChatAndScrollToMessage*(self: Module, chatId: string, messageId: string,
     threadId: string = ""): bool =
   if chatId.len == 0 or (threadId.len > 0 and not THREADS_ENABLED):

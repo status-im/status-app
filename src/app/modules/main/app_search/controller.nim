@@ -277,7 +277,8 @@ proc resultItemClicked*(self: Controller, itemId: string) =
   let data = ActiveSectionChatArgs(sectionId: itemDetails.sectionId,
     chatId: itemDetails.channelId,
     messageId: itemDetails.messageId,
-    threadId: itemDetails.threadId)
+    threadId: itemDetails.threadId,
+    preferOpenThreadPanel: true)
   self.events.emit(SIGNAL_MAKE_SECTION_CHAT_ACTIVE, data)
 
 proc getColorId*(self: Controller, pubkey: string): int =
