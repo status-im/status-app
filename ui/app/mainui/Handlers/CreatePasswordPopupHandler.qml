@@ -17,14 +17,15 @@ QtObject {
     required property SecureStorage secureStorage
     required property Keychain keychain
 
-    // onSuccess(password) runs after the popup has closed; onCancel when it closes without a password
+    // onSuccess(password) runs after the popup has closed; onCancel when it closes without a password.
+    // A request arriving while the popup is open waits for the same password.
     function requirePassword(title: string, onSuccess, onCancel) : void {
         if (d.popup) {
-            onCancel?.()
+            d.popup.requests.push({ onSuccess, onCancel })
             return
         }
         d.popup = popupComponent.createObject(root.popupParent, {
-            onSuccess, onCancel, title: title || qsTr("Create profile password")
+            requests: [{ onSuccess, onCancel }], title: title || qsTr("Create profile password")
         })
         d.popup.open()
     }
@@ -67,8 +68,7 @@ QtObject {
         CreatePasswordPopup {
             id: popup
 
-            property var onSuccess
-            property var onCancel
+            property var requests: []
             property string password
             property bool stayLoggedInOffered
             property bool stayLoggedIn
@@ -93,13 +93,13 @@ QtObject {
 
             onClosed: {
                 d.popup = null
+                const requests = popup.requests
                 if (!popup.passwordSet) {
-                    popup.onCancel?.()
+                    requests.forEach(request => request.onCancel?.())
                     return
                 }
-                const onSuccess = popup.onSuccess
                 const password = popup.password
-                Qt.callLater(() => onSuccess?.(password))
+                Qt.callLater(() => requests.forEach(request => request.onSuccess?.(password)))
             }
 
             readonly property Connections resultConnections: Connections {

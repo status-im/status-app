@@ -25,6 +25,7 @@ QtObject {
 
     required property bool swapEnabled
     required property bool routeOrderEnabled
+    property bool addressRevealNeedsPassword: false
 
     /** number of swap modals open now **/
     property int openModals: 0
@@ -152,6 +153,8 @@ QtObject {
         // TODO: Update the API to be explicit and avoid direct store access
         SwapModal {
             id: swapModal
+
+            addressRevealNeedsPassword: root.addressRevealNeedsPassword
 
             swapAdaptor: SwapModalAdaptor {
                 swapStore: d.swapStore

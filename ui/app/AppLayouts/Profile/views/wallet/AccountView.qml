@@ -32,11 +32,19 @@ ColumnLayout {
     signal runMoveKeypairToKeycardFlow()
     signal runStopUsingKeycardFlow()
     signal updateWatchAccountHiddenFromTotalBalance(string address, bool hideFromTotalBalance)
+    signal addressShown(string address)
 
     property var account
     property var keyPair
     property ProfileStores.WalletStore walletStore
     property string userProfilePublicKey
+    property bool addressRevealNeedsPassword: false
+
+    // Reports the address only while it is shown in full
+    function reportAddressShown() {
+        if (!!root.account && !!root.account.address && !d.revealNeedsPassword)
+            root.addressShown(root.account.address)
+    }
     required property var activeNetworks
 
     QtObject {
@@ -47,6 +55,11 @@ ColumnLayout {
         readonly property bool coldWalletKeypair: !!root.keyPair ? root.keyPair.migratedToColdWallet : false
         readonly property bool privateKeyAccount: !!root.keyPair? root.keyPair.pairType === Constants.keypair.type.privateKeyImport: false
         readonly property bool seedImport: !!root.keyPair? root.keyPair.pairType === Constants.keypair.type.seedImport: false
+        readonly property bool revealNeedsPassword: root.addressRevealNeedsPassword && !d.watchOnlyAccount && !d.coldWalletKeypair
+        onRevealNeedsPasswordChanged: {
+            if (!revealNeedsPassword)
+                root.reportAddressShown()
+        }
     }
 
     spacing: 0
@@ -138,7 +151,7 @@ ColumnLayout {
                 isInteractive: true
                 moreButtonEnabled: true
                 title: qsTr("Address")
-                subTitle: WalletUtils.preferredAddress(root.account)
+                subTitle: WalletUtils.ownAddressToDisplay(WalletUtils.preferredAddress(root.account), d.revealNeedsPassword)
                 onButtonClicked: addressMenu.openMenu(this)
             }
             Separator {
@@ -331,7 +344,7 @@ ColumnLayout {
         id: addressMenu
         flatNetworks: root.activeNetworks
         selectedAccount: root.account
-        onCopyToClipboard: ClipboardUtils.setText(address)
+        revealNeedsPassword: d.revealNeedsPassword
     }
 
     WalletKeypairAccountMenu {

@@ -85,6 +85,7 @@ Item {
     property bool dAppsEnabled
     property bool dAppsVisible
     property bool buyEnabled
+    property bool addressRevealNeedsPassword: false
 
     property var dAppsModel
 
@@ -433,6 +434,7 @@ Item {
             id: leftTab
             anchors.fill: parent
             viewState: leftPanelState
+            addressRevealNeedsPassword: root.addressRevealNeedsPassword
 
             onAddAccountPopupRequested: root.walletRootStore.runAddAccountPopup()
             onAddWatchOnlyAccountPopupRequested: root.walletRootStore.runAddWatchOnlyAccountPopup()
@@ -545,6 +547,7 @@ Item {
         sourceComponent: AddAccountPopup {
             isKeycardEnabled: root.isKeycardEnabled
             store.addAccountModule: walletSection.addAccountModule
+            store.addressRevealNeedsPassword: root.addressRevealNeedsPassword
         }
 
         onLoaded: {
@@ -558,6 +561,7 @@ Item {
 
         sourceComponent: KeypairImportPopup {
             store.keypairImportModule: RootStore.keypairImportModule
+            store.addressRevealNeedsPassword: root.addressRevealNeedsPassword
         }
 
         onLoaded: {

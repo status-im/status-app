@@ -41,6 +41,7 @@ StatusDialog {
     property var recentRecipientsModel
     /** resolve an ENS name typed into the receive-side recipient input **/
     property var fnResolveENS: function(ensName, uuid) {}
+    property bool addressRevealNeedsPassword: false
     signal ensNameResolved(string resolvedPubKey, string resolvedAddress, string uuid)
 
     objectName: "swapModal"
@@ -357,6 +358,7 @@ StatusDialog {
             accountsModel: root.swapAdaptor.accountsModel
             recentRecipientsModel: root.recentRecipientsModel
             fnResolveENS: root.fnResolveENS
+            addressRevealNeedsPassword: root.addressRevealNeedsPassword
             onRecipientSelected: function(address) {
                 root.swapInputParamsForm.toAccountAddress = address
             }

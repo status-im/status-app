@@ -239,6 +239,8 @@ Item {
             Layout.fillWidth: true
             Layout.margins: Theme.padding
             spacing: Theme.halfPadding
+            revealNeedsPassword: root.store.addressRevealNeedsPassword
+                                 && root.store.selectedOrigin.pairType === Constants.addAccountPopup.keyPairType.privateKeyImport
             visible: root.store.selectedOrigin.pairType === Constants.addAccountPopup.keyPairType.privateKeyImport ||
                      root.store.editMode &&
                      root.store.selectedOrigin.pairType === Constants.addAccountPopup.keyPairType.unknown &&

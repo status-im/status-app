@@ -24,6 +24,7 @@ StatusSectionLoader {
     required property TransactionStore transactionStore
 
     required property HandlersManagerLoader popupHandler
+    property bool addressRevealNeedsPassword: false
 
     asynchronous: false
 
@@ -100,6 +101,7 @@ StatusSectionLoader {
             networksStore:              Qt.binding(() => root.networksStore),
             connectorController:        Qt.binding(() => WalletStores.RootStore.dappsConnectorController),
             isDebugEnabled:             Qt.binding(() => root.advancedStore.isDebugEnabled),
+            addressRevealNeedsPassword: Qt.binding(() => root.addressRevealNeedsPassword),
             transactionStore:           Qt.binding(() => root.transactionStore),
             leftPanelWidthOverride:     Qt.binding(() => root.leftPanelWidthOverride),
             "anchors.fill":             root,

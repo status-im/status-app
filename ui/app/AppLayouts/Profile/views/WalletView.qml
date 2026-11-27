@@ -61,6 +61,7 @@ SettingsContentBase {
     readonly property string networksSectionTitle: qsTr("Networks")
 
     property bool isKeycardEnabled: true
+    property bool addressRevealNeedsPassword: false
 
     signal addressWasShownRequested(string address)
     // Saved network settings need a new login
@@ -262,19 +263,18 @@ SettingsContentBase {
             Layout.fillHeight: false
 
             walletStore: root.walletStore
+            addressRevealNeedsPassword: root.addressRevealNeedsPassword
             isKeycardEnabled: root.isKeycardEnabled
 
             onGoToNetworksView: priv.navigateToDetails(root.networksViewIndex)
 
             onGoToAccountView: (account) => {
-                if (!!account && !!account.address) {
-                    root.addressWasShownRequested(account.address)
-                }
-
                 root.walletStore.setSelectedAccount(account.address)
                 root.walletStore.selectedAccount = Qt.binding(function() { return root.walletStore.accountsModule.selectedAccount })
                 accountView.keyPair = Qt.binding(function() { return root.walletStore.accountsModule.selectedKeyPair })
                 priv.navigateToDetails(root.accountViewIndex)
+                // Once the account and its key pair are both in place
+                Qt.callLater(() => accountView.reportAddressShown())
             }
 
             onGoToAccountOrderView: priv.navigateToDetails(root.accountOrderViewIndex)
@@ -362,6 +362,8 @@ SettingsContentBase {
             walletStore: root.walletStore
             userProfilePublicKey: walletStore.userProfilePublicKey
             activeNetworks: root.networksStore.activeNetworks
+            addressRevealNeedsPassword: root.addressRevealNeedsPassword
+            onAddressShown: (address) => root.addressWasShownRequested(address)
             onGoBack: priv.navigateToDetails(root.mainViewIndex)
             onVisibleChanged: {
                 if (!visible && !!root.walletStore) {
@@ -569,6 +571,7 @@ SettingsContentBase {
 
             sourceComponent: KeypairImportPopup {
                 store.keypairImportModule: root.walletStore.walletModule.keypairImportModule
+                store.addressRevealNeedsPassword: root.addressRevealNeedsPassword
             }
 
             onLoaded: {

@@ -27,6 +27,7 @@ import AppLayouts.Communities.stores as CommunitiesStores
 import AppLayouts.Profile.helpers
 import AppLayouts.Profile.panels
 import AppLayouts.Profile.stores as ProfileStores
+import AppLayouts.Wallet
 import AppLayouts.Wallet.stores as WalletStores
 import AppLayouts.stores as AppLayoutStores
 
@@ -38,6 +39,7 @@ SettingsContentBase {
     property CommunitiesStores.CommunitiesStore communitiesStore
     property SharedStores.UtilsStore utilsStore
     required property SharedStores.NetworksStore networksStore
+    property bool addressRevealNeedsPassword: false
 
     property bool sendToAccountEnabled: false
 
@@ -409,7 +411,14 @@ SettingsContentBase {
 
             }
             onSetVisibilityRequested: function (key, toVisibility) {
-                priv.showcaseModels.setAccountVisibility(key, toVisibility)
+                const apply = () => priv.showcaseModels.setAccountVisibility(key, toVisibility)
+                // Showcasing reveals the address: only a hidden one needs the password first
+                const account = ModelUtils.getByKey(priv.showcaseModels.accountsSourceModel, "showcaseKey", key)
+                if (toVisibility !== Constants.ShowcaseVisibility.NoOne
+                        && WalletUtils.revealNeedsPassword(account, root.addressRevealNeedsPassword))
+                    Global.passwordRequiredFor(apply, null)
+                else
+                    apply()
             }
         }
 
@@ -466,6 +475,7 @@ SettingsContentBase {
                 utilsStore: root.utilsStore
                 networksStore: root.networksStore
                 sendToAccountEnabled: root.sendToAccountEnabled
+                addressRevealNeedsPassword: root.addressRevealNeedsPassword
                 onClosed: destroy()
 
                 showcaseCommunitiesModel: priv.showcaseModels.communitiesVisibleModel
@@ -489,6 +499,7 @@ SettingsContentBase {
                 utilsStore: root.utilsStore
                 networksStore: root.networksStore
                 sendToAccountEnabled: root.sendToAccountEnabled
+                addressRevealNeedsPassword: root.addressRevealNeedsPassword
 
                 showcaseCommunitiesModel: priv.showcaseModels.communitiesVisibleModel
                 showcaseAccountsModel: priv.showcaseModels.accountsVisibleModel

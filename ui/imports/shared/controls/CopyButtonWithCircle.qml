@@ -20,6 +20,8 @@ StatusRoundButton {
     type: StatusRoundButton.Type.Tertiary
 
     property bool successCircleVisible: false
+    // The copy waits until the profile has a password
+    property bool revealNeedsPassword: false
 
     implicitWidth: 32
     implicitHeight: 32
@@ -61,6 +63,10 @@ StatusRoundButton {
     }
 
     onClicked: {
+        if (root.revealNeedsPassword) {
+            Global.copyOwnAddressRequested(root.textToCopy)
+            return
+        }
         ClipboardUtils.setText(root.textToCopy)
         d.copied = true
         Backpressure.debounce(root, 1500, function () {

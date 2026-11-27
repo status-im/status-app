@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Effects
 import QtQuick.Layouts
 import QtQuick.Controls
 import SortFilterProxyModel
@@ -32,12 +33,18 @@ StatusModal {
     property var selectedAccount
 
     property bool switchingAccounsEnabled: true
+    // Blurred QR, elided address
+    property bool revealNeedsPassword: false
 
-    property string qrImageSource: root.store.getQrCode(root.selectedAccount.mixedcaseAddress)
+    // The real QR is never built while hidden
+    property string qrImageSource: root.store.getQrCode(root.revealNeedsPassword ? Constants.zeroAddress
+                                                                                 : root.selectedAccount.mixedcaseAddress)
 
     property WalletStores.RootStore store: WalletStores.RootStore
 
     signal updateSelectedAddress(string address)
+    signal setPasswordRequested()
+    signal addressShown(string address)
 
     width: 556
     contentHeight: content.implicitHeight + d.advanceFooterHeight
@@ -110,12 +117,12 @@ StatusModal {
                     verticalAlignment: Text.AlignVCenter
                     textFormat: TextEdit.RichText
                     wrapMode: Text.WrapAnywhere
-                    text: root.selectedAccount.mixedcaseAddress
+                    text: d.displayedAddress
                     font.pixelSize: Theme.primaryTextFontSize
                     color: Theme.palette.directColor1
 
                     Accessible.role: Accessible.StaticText
-                    Accessible.name: root.selectedAccount.mixedcaseAddress
+                    Accessible.name: d.displayedAddress
                 }
 
                 CopyButtonWithCircle {
@@ -127,6 +134,7 @@ StatusModal {
                     Layout.preferredHeight: 32
                     Layout.fillWidth: true
                     textToCopy: root.selectedAccount.mixedcaseAddress
+                    revealNeedsPassword: root.revealNeedsPassword
                     successCircleVisible: true
 
                     Accessible.role: Accessible.Button
@@ -136,14 +144,23 @@ StatusModal {
         }
     }
 
-    onOpened: {
-        root.store.addressWasShown(root.selectedAccount.address)
+    onOpened: d.reportAddressShown()
+    onRevealNeedsPasswordChanged: {
+        if (root.opened)
+            d.reportAddressShown()
     }
 
     QtObject {
         id: d
 
         readonly property int advanceFooterHeight: 88
+
+        function reportAddressShown() {
+            if (!root.revealNeedsPassword)
+                root.addressShown(root.selectedAccount.address)
+        }
+        readonly property string displayedAddress: WalletUtils.ownAddressToDisplay(root.selectedAccount.mixedcaseAddress,
+                                                                                   root.revealNeedsPassword)
     }
 
     Column {
@@ -172,6 +189,7 @@ StatusModal {
             Image {
                 id: qrCodeImage
                 objectName: "qrCodeImage"
+                visible: !root.revealNeedsPassword
                 anchors.centerIn: parent
                 height: parent.height
                 width: parent.width
@@ -185,8 +203,29 @@ StatusModal {
                 Accessible.name: qsTr("QR code for wallet address")
             }
 
+            MultiEffect {
+                objectName: "receiveModalQrBlur"
+                anchors.fill: qrCodeImage
+                visible: root.revealNeedsPassword
+                source: qrCodeImage
+                blurEnabled: true
+                blurMax: 64
+                blur: 1
+            }
+
+            StatusButton {
+                objectName: "receiveModalSetPasswordButton"
+                anchors.centerIn: parent
+                visible: root.revealNeedsPassword
+                text: qsTr("Set password")
+                type: StatusBaseButton.Type.Primary
+                onClicked: root.setPasswordRequested()
+            }
+
             Rectangle {
+                objectName: "receiveModalIdenticon"
                 anchors.centerIn: qrCodeImage
+                visible: !root.revealNeedsPassword
                 width: 88
                 height: 88
                 color: "white"

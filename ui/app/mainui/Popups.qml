@@ -306,11 +306,7 @@ QtObject {
     }
 
     function openBackUpSeedPopup() {
-        if (root.privacyStore?.zeroOnboarded) {
-            root.passwordRequired("", () => openPopup(backupSeedModalComponent), null)
-            return
-        }
-        openPopup(backupSeedModalComponent)
+        Global.passwordRequiredFor(() => openPopup(backupSeedModalComponent), null)
     }
 
     function openAuthenticationPopup(reason, keyUid, exportChatKey) {
@@ -654,16 +650,16 @@ QtObject {
     }
 
     function openBuyCryptoModal(parameters) {
-        openPopup(buyCryptoModal, {
-            buyCryptoInputParamsForm: parameters
-        })
+        Global.passwordRequiredFor(() => openPopup(buyCryptoModal, { buyCryptoInputParamsForm: parameters }), null)
     }
 
     function openPaymentRequestModal(onPaymentRequested, callback) {
-        openPopup(paymentRequestModalComponent, {}, popup => {
-                    popup.paymentRequested.connect(onPaymentRequested)
-                    callback(popup)
-                  })
+        const open = () => openPopup(paymentRequestModalComponent, {}, popup => {
+            popup.paymentRequested.connect(onPaymentRequested)
+            callback(popup)
+        })
+        // No password, no popup: the caller resets its own state
+        Global.passwordRequiredFor(open, () => callback(null))
     }
 
     function openNewsMessagePopup(notification, notificationId) {
@@ -982,6 +978,7 @@ QtObject {
                 property string publicKey
                 readonly property bool isCurrentUser: contactDetails.isCurrentUser
 
+                addressRevealNeedsPassword: root.privacyStore?.zeroOnboarded ?? false
                 profileStore: root.profileStore
                 contactsStore: root.contactsStore
                 walletStore: WalletStores.RootStore

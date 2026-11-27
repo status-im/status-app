@@ -64,6 +64,11 @@ QtObject {
     signal openConfirmHideCollectiblePopup(string collectibleSymbol, string collectibleName, string collectibleImage, bool isCommunityToken)
 
     signal requestOpenLink(string link)
+    // Own wallet addresses are revealed only once the profile has a password
+    signal copyOwnAddressRequested(string address)
+    signal openOwnAddressLinkRequested(string link)
+    // Runs action at once, or after the profile gets a password; onCancel when it does not
+    signal passwordRequiredFor(var action, var onCancel)
     signal linkOpenedExternally(string link)
     signal activateDeepLink(string link)
 

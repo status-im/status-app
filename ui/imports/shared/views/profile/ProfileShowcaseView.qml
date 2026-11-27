@@ -40,6 +40,7 @@ Control {
     required property string mainDisplayName
     required property bool readOnly
     required property bool sendToAccountEnabled
+    property bool addressRevealNeedsPassword: false
 
     signal closeRequested()
     signal copyToClipboard(string text)
@@ -139,6 +140,7 @@ Control {
             sendToAccountEnabled: root.sendToAccountEnabled
             accountsModel: accountsProxyModel
             networksStore: root.networksStore
+            addressRevealNeedsPassword: root.addressRevealNeedsPassword
 
             cellWidth: d.delegateWidthM
             cellHeight: d.delegateHeightM

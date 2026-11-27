@@ -7,6 +7,10 @@ import StatusQ.Controls
 import StatusQ.Core
 import StatusQ.Core.Theme
 
+import utils
+
+import AppLayouts.Wallet
+
 Item {
     id: root
 
@@ -17,11 +21,13 @@ Item {
     signal releaseUsernameRequested(string senderAddress)
     signal removeEnsUsernameRequested(int chainId, string username)
 
+    property bool revealNeedsPassword: false
+    readonly property string walletAddress: d.walletAddress
+
     function setDetails(chainId: int, ensName: string, address: string, pubkey: string,
                         isStatus: bool, expirationTime: int, isPreferred: bool) {
         d.chainId = chainId
         d.walletAddress = address
-        walletAddressLbl.subTitle = address
 
         d.key = pubkey
         keyLbl.subTitle = pubkey.substring(0, 20) + "..."
@@ -85,11 +91,16 @@ Item {
             Layout.fillWidth: true
 
             title: qsTr("Wallet address")
+            subTitle: WalletUtils.ownAddressToDisplay(d.walletAddress, root.revealNeedsPassword)
             visible: !!d.walletAddress && !root.isLoading
             asset.name: "copy"
             tooltip.text: qsTr("Copied to clipboard!")
             iconButton.onClicked: {
-                ClipboardUtils.setText(subTitle)
+                if (root.revealNeedsPassword) {
+                    Global.copyOwnAddressRequested(d.walletAddress)
+                    return
+                }
+                ClipboardUtils.setText(d.walletAddress)
                 tooltip.visible = !tooltip.visible
             }
         }

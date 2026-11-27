@@ -193,14 +193,34 @@ Item {
             compare(successCalls.length, 0)
         }
 
-        function test_secondRequestWhileOpenIsCancelled() {
+        // A request arriving while the popup is open waits for the same password
+        function test_secondRequestJoinsTheOpenPopup() {
             const handler = createTemporaryObject(handlerComponent, root)
-            require(handler)
+            const p = require(handler)
+            let secondPassword = ""
             let secondCancelled = false
-            handler.requirePassword("", () => {}, () => secondCancelled = true)
+            handler.requirePassword("", (password) => secondPassword = password, () => secondCancelled = true)
 
+            verify(!secondCancelled)
+            submit(p)
+            privacyStoreStub.profilePasswordSet(true, "")
+            tryCompare(successCalls, "length", 1)
+            tryVerify(() => secondPassword === validPassword)
+            verify(!secondCancelled)
+        }
+
+        function test_cancelCancelsEveryWaitingRequest() {
+            const handler = createTemporaryObject(handlerComponent, root)
+            const p = require(handler)
+            let secondCancelled = false
+            let secondSucceeded = false
+            handler.requirePassword("", () => secondSucceeded = true, () => secondCancelled = true)
+            mouseClick(findChild(p, "createPasswordCancelButton"))
+
+            tryVerify(() => !popup())
+            compare(cancelCalls, 1)
             verify(secondCancelled)
-            compare(cancelCalls, 0)
+            verify(!secondSucceeded)
         }
 
         // The toggles are applied only once the password is set

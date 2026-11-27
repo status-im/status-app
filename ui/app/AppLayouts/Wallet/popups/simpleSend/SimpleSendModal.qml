@@ -130,6 +130,7 @@ StatusDialog {
 
     /** input property to decide if send modal is interactive or prefilled **/
     property bool interactive: true
+    property bool addressRevealNeedsPassword: false
     /** input property to show only ERC20 assets and no collectibles **/
     property bool displayOnlyAssets
 
@@ -854,6 +855,7 @@ StatusDialog {
                             }
 
                             interactive: root.interactive
+                            addressRevealNeedsPassword: root.addressRevealNeedsPassword
 
                             recipientsModel: root.recipientsModel
                             recipientsFilterModel: root.recipientsFilterModel

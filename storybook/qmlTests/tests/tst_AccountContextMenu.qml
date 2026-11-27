@@ -1,6 +1,8 @@
 import QtQuick
 import QtTest
 
+import StatusQ
+
 import AppLayouts.Wallet.views
 
 import utils
@@ -20,6 +22,12 @@ Item {
         signalName: "hideFromTotalBalanceClicked"
     }
 
+    SignalSpy {
+        id: copySpy
+        target: Global
+        signalName: "copyOwnAddressRequested"
+    }
+
     TestCase {
         name: "AccountContextMenu"
         when: windowShown
@@ -29,6 +37,7 @@ Item {
         function cleanup() {
             hideSpy.target = null
             hideSpy.clear()
+            copySpy.clear()
             if (!!menu) {
                 menu.destroy()
                 menu = null
@@ -83,6 +92,34 @@ Item {
             hideAction().trigger()
             compare(hideSpy.count, 1)
             compare(hideSpy.signalArguments[0][0], false)
+        }
+
+        // Only an address that needs a password goes through the gate
+        function test_copyAddress_data() {
+            return [
+                { tag: "regular", restricted: false },
+                { tag: "restricted", restricted: true },
+            ]
+        }
+        function test_copyAddress(data) {
+            const m = createMenu({ address: "0xabc", name: "Main", revealNeedsPassword: data.restricted })
+            m.open()
+            tryCompare(m, "opened", true)
+            const copy = findChild(m, "AccountMenu-CopyAddressAction_Main")
+            ClipboardUtils.setText("before")
+            mouseClick(copy)
+
+            if (data.restricted) {
+                compare(copySpy.count, 1)
+                compare(copySpy.signalArguments[0][0], "0xabc")
+                compare(ClipboardUtils.text, "before")
+                verify(!copy.success)
+                tryCompare(m, "opened", false)
+            } else {
+                compare(copySpy.count, 0)
+                compare(ClipboardUtils.text, "0xabc")
+                verify(copy.success)
+            }
         }
     }
 }

@@ -33,6 +33,7 @@ QtObject {
     /** for ens flows **/
     required property string myPublicKey
     required property string ensRegisteredAddress
+    property bool addressRevealNeedsPassword: false
     /** TODO: This should probably be a property and not
     a function. Needs changes on  backend side **/
     property var getStatusTokenGroupKey: function() {}
@@ -356,6 +357,8 @@ QtObject {
         // TODO: Update the API to be explicit and avoid direct store access
         SimpleSendModal {
             id: simpleSendModal
+
+            addressRevealNeedsPassword: root.addressRevealNeedsPassword
 
             recipientIsNewAccount: !!handler.recipientIsNewAccountAggregator.value
             accountsModel: handler.accountsSelectorAdaptor.processedWalletAccounts
@@ -804,6 +807,13 @@ QtObject {
                 selectedRecipientAddress: simpleSendModal.selectedRecipientAddress
             }
 
+            ModelEntry {
+                id: recipientAccountEntry
+                sourceModel: root.walletAccountsModel
+                key: "address"
+                value: signSendAdaptor.recipientAddress.toLowerCase()
+            }
+
             Component {
                 id: sendSignModalCmp
 
@@ -829,6 +839,8 @@ QtObject {
                     accountColor: Utils.getColorForId(Theme.palette, signSendAdaptor.selectedAccount.colorId)
 
                     recipientAddress: signSendAdaptor.recipientAddress
+                    recipientRevealNeedsPassword: WalletUtils.revealNeedsPassword(recipientAccountEntry.item,
+                                                                                  root.addressRevealNeedsPassword)
                     recipientName: signSendAdaptor.recipientName
                     recipientEns: signSendAdaptor.recipientEns
                     recipientEmoji: signSendAdaptor.recipientEmoji

@@ -13,6 +13,7 @@ import StatusQ.Core.Utils as StatusQUtils
 import shared.panels as SharedPanels
 
 import utils
+import AppLayouts.Wallet
 
 import QtModelsToolkit
 
@@ -45,6 +46,7 @@ Rectangle {
 
     /** Can selector be interacted **/
     property bool interactive: true
+    property bool addressRevealNeedsPassword: false
 
     /** Visual height of the component. It might differ from actual height.
         The purpose is to be able to show non-interactive list with constant height for all tabs.
@@ -138,6 +140,7 @@ Rectangle {
             Layout.topMargin: Theme.smallPadding / 2
 
             interactive: root.interactive
+            addressRevealNeedsPassword: root.addressRevealNeedsPassword
 
             model: root.recipientsFilterModel
 
@@ -245,6 +248,8 @@ Rectangle {
                 walletColor: model.color ?? ""
                 walletColorId: model.colorId ?? ""
                 ens: model.ens ?? ""
+                revealNeedsPassword: model.which_model === Constants.RecipientAddressObjectType.Account
+                                     && WalletUtils.revealNeedsPassword(model, root.addressRevealNeedsPassword)
 
                 highlighted: d.searchInProgress && model.index === d.highlightedIndex
                 sensor.onContainsMouseChanged: d.highlightedIndex = sensor.containsMouse ? -1 : 0

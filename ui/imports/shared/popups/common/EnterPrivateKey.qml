@@ -134,6 +134,7 @@ Item {
 
             addressText: qsTr("Public address of private key")
             addressDetailsItem: root.store.privateKeyAccAddress
+            revealNeedsPassword: root.store.addressRevealNeedsPassword
             addressResolved: d.addressResolved
             displayCopyButton: false
             alreadyCreatedAccountIsAnError: root.store.isAddAccountPopup

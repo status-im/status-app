@@ -308,6 +308,7 @@ StatusSectionLayout {
                 communitiesStore: root.communitiesStore,
                 utilsStore: root.utilsStore,
                 networksStore: root.networksStore,
+                addressRevealNeedsPassword: Qt.binding(() => root.privacyStore.zeroOnboarded),
                 sendToAccountEnabled: Qt.binding(() => root.networkConnectionStore.walletReadyForTransactionsEnabled),
                 sectionTitle: Qt.binding(() => settingsEntriesModel.getNameForSubsection(Constants.settingsSubsection.profile)),
                 contentWidth: Qt.binding(() => d.contentWidth),
@@ -392,6 +393,7 @@ StatusSectionLayout {
             properties: ({
                 ensUsernamesStore: root.ensUsernamesStore,
                 walletAssetsStore: root.walletAssetsStore,
+                addressRevealNeedsPassword: Qt.binding(() => root.privacyStore.zeroOnboarded),
                 networkConnectionStore: root.networkConnectionStore,
                 profileContentWidth: Qt.binding(() => d.contentWidth)
             })
@@ -425,6 +427,7 @@ StatusSectionLayout {
                 contentWidth: Qt.binding(() => d.contentWidth),
                 settingsSubSubsection: Qt.binding(() => root.settingsSubSubsection),
                 isKeycardEnabled: Qt.binding(() => root.isKeycardEnabled),
+                addressRevealNeedsPassword: Qt.binding(() => root.privacyStore.zeroOnboarded),
                 walletStore: root.walletStore,
                 tokensStore: root.tokensStore,
                 networkConnectionStore: root.networkConnectionStore,

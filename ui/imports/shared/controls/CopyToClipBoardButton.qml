@@ -10,13 +10,14 @@ StatusRoundButton {
     property var onClick: function() {}
     property string textToCopy: ""
     property bool tooltipUnder: false
+    property bool showCopiedToolTip: true
 
     signal copyClicked(string textToCopy)
 
     icon.name: "copy"
 
     onPressed: {
-        if (!toolTip.visible) {
+        if (copyToClipboardButton.showCopiedToolTip && !toolTip.visible) {
             toolTip.visible = true
         }
     }

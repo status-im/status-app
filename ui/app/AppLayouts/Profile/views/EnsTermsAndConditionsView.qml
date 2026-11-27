@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 
 import utils
+import AppLayouts.Wallet
 
 import StatusQ
 import StatusQ.Core
@@ -23,6 +24,7 @@ Item {
 
     // Registrant details.
     property string walletAddress
+    property bool revealNeedsPassword: false
     property string pubkey
 
     // Available SNT balance; registration requires >= 10 SNT.
@@ -109,12 +111,17 @@ Item {
                 anchors.left: parent.left
                 anchors.right: parent.right
 
+                objectName: "ensWalletAddress"
                 title: qsTr("Wallet address")
-                subTitle: root.walletAddress
+                subTitle: WalletUtils.ownAddressToDisplay(root.walletAddress, root.revealNeedsPassword)
                 tooltip.text: qsTr("Copied to clipboard!")
                 asset.name: "copy"
                 iconButton.onClicked: {
-                    ClipboardUtils.setText(subTitle)
+                    if (root.revealNeedsPassword) {
+                        Global.copyOwnAddressRequested(root.walletAddress)
+                        return
+                    }
+                    ClipboardUtils.setText(root.walletAddress)
                     tooltip.visible = !tooltip.visible
                 }
                 anchors.top: ensUsername.bottom

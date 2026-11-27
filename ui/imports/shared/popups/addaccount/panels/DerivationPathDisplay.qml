@@ -30,6 +30,7 @@ GridLayout {
     component ReadonlyInputWithCopyButton: StatusInput {
         id: comp
         required property string textToCopy
+        property bool revealNeedsPassword: false
 
         input.edit.enabled: false
         input.edit.color: Theme.palette.baseColor1
@@ -37,6 +38,7 @@ GridLayout {
         input.background.border.color: Theme.palette.baseColor2
         input.rightComponent: CopyButton {
             textToCopy: comp.textToCopy
+            revealNeedsPassword: comp.revealNeedsPassword
         }
     }
 
@@ -60,6 +62,7 @@ GridLayout {
         Layout.preferredWidth: d.oneHalfWidth
         text: StatusQUtils.Utils.elideText(root.store.selectedDerivedAddress.address, 6, 8)
         textToCopy: root.store.selectedDerivedAddress.address
+        revealNeedsPassword: root.store.addressRevealNeedsPassword && !root.store.selectedOrigin.migratedToColdWallet
     }
 
     StatusBaseText {

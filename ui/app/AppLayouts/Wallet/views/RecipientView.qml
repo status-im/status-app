@@ -21,6 +21,7 @@ Loader {
 
     property string selectedRecipientAddress
     property bool interactive: true
+    property bool addressRevealNeedsPassword: false
 
     signal resolveENS(string ensName, string uuid)
     signal keyPressed(variant event)
@@ -198,6 +199,8 @@ Loader {
             emoji: !!modelData && !!modelData.emoji ? modelData.emoji : ""
 
             useAddressAsLetterIdenticon: !accountsSelectedEntry.available && !!d.validatedEns
+            revealNeedsPassword: !!modelData && modelData.which_model === Constants.RecipientAddressObjectType.Account
+                                 && WalletUtils.revealNeedsPassword(modelData, root.addressRevealNeedsPassword)
 
             components: [
                 StatusClearButton {

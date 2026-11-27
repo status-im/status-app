@@ -9,6 +9,7 @@ import StatusQ.Components
 import StatusQ.Popups
 
 import utils
+import AppLayouts.Wallet
 
 import SortFilterProxyModel
 
@@ -29,6 +30,8 @@ StatusMenu {
         property int currentPage: 0
         readonly property int lowerBound: root.itemsPerPage * d.currentPage
         readonly property int totalPages: Math.ceil(root.store.derivedAddressModel.count / root.itemsPerPage)
+        readonly property bool revealNeedsPassword: root.store.addressRevealNeedsPassword
+                                                    && !root.store.selectedOrigin.migratedToColdWallet
     }
 
     SortFilterProxyModel {
@@ -134,7 +137,7 @@ StatusMenu {
                         elide: Text.ElideMiddle
                         color: model.addressDetails.alreadyCreated ? Theme.palette.baseColor1 :
                                                                      Theme.palette.directColor1
-                        text: model.addressDetails.address
+                        text: WalletUtils.ownAddressToDisplay(model.addressDetails.address, d.revealNeedsPassword)
                     }
 
                     StatusIcon {
@@ -187,7 +190,11 @@ StatusMenu {
                         icon.width: 16
                         icon.height: 16
                         onClicked: {
-                            Global.requestOpenLink("https://etherscan.io/address/%1".arg(model.addressDetails.address))
+                            const link = "https://etherscan.io/address/%1".arg(model.addressDetails.address)
+                            if (d.revealNeedsPassword)
+                                Global.openOwnAddressLinkRequested(link)
+                            else
+                                Global.requestOpenLink(link)
                         }
                     }
                 }

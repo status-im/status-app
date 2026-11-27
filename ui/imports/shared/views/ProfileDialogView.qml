@@ -43,6 +43,7 @@ Pane {
     required property SharedStores.NetworksStore networksStore
     
     property alias sendToAccountEnabled: showcaseView.sendToAccountEnabled
+    property bool addressRevealNeedsPassword: false
 
     property var showcaseCommunitiesModel
     property var showcaseAccountsModel
@@ -514,6 +515,7 @@ Pane {
                     currentTabIndex: showcaseTabBar.currentIndex
                     mainDisplayName: d.mainDisplayName
                     readOnly: root.readOnly
+                    addressRevealNeedsPassword: root.isCurrentUser && root.addressRevealNeedsPassword
                     
                     communitiesModel: root.showcaseCommunitiesModel
                     accountsModel: root.showcaseAccountsModel

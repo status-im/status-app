@@ -1161,6 +1161,10 @@ Control {
             tokenButton.visible: root.paymentRequestButtonVisible
             tokenButton.onClicked: {
                 root.openPaymentRequestModal(popup => {
+                    if (!popup) {
+                        tokenButton.checked = false
+                        return
+                    }
                     popup.closed.connect(() => {
                         tokenButton.checked = false
                     })

@@ -1336,6 +1336,12 @@ Item {
         }
     }
 
+    ZeroOnboardingGate {
+        id: zeroOnboardingGate
+        zeroOnboarded: d.zeroOnboarded
+        onPasswordRequired: (title, onSuccess, onCancel) => popupRequestsHandler.requireProfilePassword(title, onSuccess, onCancel)
+    }
+
     PopupsLoader {
         id: popups
 
@@ -2473,6 +2479,7 @@ Item {
                         transactionStore: appMain.transactionStore
                         popupHandler: popupRequestsHandler
                         dappsServiceLoader: dAppsServiceLoader
+                        addressRevealNeedsPassword: d.zeroOnboarded
 
                         appMainVisible: appMain.visible
                         leftPanelWidthOverride: mainLayoutItem.leftPanelWidthOverride
@@ -2480,6 +2487,8 @@ Item {
 
                     BrowserLoader {
                         id: browserLayoutContainer
+
+                        addressRevealNeedsPassword: d.zeroOnboarded
 
                         // Do not unload section data from the memory once activated
                         active: false
@@ -3325,6 +3334,8 @@ Item {
 
         property bool showSingleAccount: false
         property bool showForSavedAddress: false
+        // A single address comes with its rule; the default account list applies it per account
+        property bool revealNeedsPassword: false
         property var params
         property var selectedAccount: ({
                                            name: "",
@@ -3336,6 +3347,7 @@ Item {
         function open(params = {}) {
             showQR.showSingleAccount = params.showSingleAccount?? false
             showQR.showForSavedAddress = params.showForSavedAddress?? false
+            showQR.revealNeedsPassword = params.revealNeedsPassword ?? false
             showQR.params = params
 
             if (showQR.showSingleAccount || showQR.showForSavedAddress) {
@@ -3361,6 +3373,11 @@ Item {
         }
 
         sourceComponent: WalletPopups.ReceiveModal {
+            revealNeedsPassword: showQR.showSingleAccount || showQR.showForSavedAddress
+                                 ? d.zeroOnboarded && showQR.revealNeedsPassword
+                                 : WalletUtils.revealNeedsPassword(selectedAccount, d.zeroOnboarded)
+            onAddressShown: (address) => appMain.walletRootStore.addressWasShown(address)
+            onSetPasswordRequested: popupRequestsHandler.openSetProfilePasswordPopup()
 
             ModelEntry {
                 id: selectedReceiverAccount
@@ -3465,7 +3482,11 @@ Item {
                 onDisconnectRequested: (topic, url, connectorId, clientId) => dAppsService.disconnect(topic, url, connectorId, clientId || "")
                 onPairingRequested: (uri) => dAppsService.pair(uri)
                 onPairingValidationRequested: (uri) => dAppsService.validatePairingUri(uri)
-                onConnectionAccepted: (pairingId, chainIds, selectedAccount) => dAppsService.approvePairSession(pairingId, chainIds, selectedAccount)
+                onConnectionAccepted: (pairingId, chainIds, selectedAccount) => {
+                    zeroOnboardingGate.runWithProfilePassword("",
+                        () => dAppsService.approvePairSession(pairingId, chainIds, selectedAccount),
+                        () => dAppsService.rejectPairSession(pairingId))
+                }
                 onConnectionDeclined: (pairingId) => dAppsService.rejectPairSession(pairingId)
                 onSignRequestAccepted: (connectionId, requestId) => dAppsService.sign(connectionId, requestId)
                 onSignRequestRejected: (connectionId, requestId) => dAppsService.rejectSign(connectionId, requestId, false /*hasError*/)

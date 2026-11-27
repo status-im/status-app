@@ -12,6 +12,8 @@ StatusIcon {
     id: root
 
     required property string textToCopy
+    // The copy waits until the profile has a password
+    property bool revealNeedsPassword: false
 
     readonly property bool hovered: mouseArea.containsMouse
 
@@ -29,6 +31,10 @@ StatusIcon {
         hoverEnabled: true
         cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor
         onClicked: {
+            if (root.revealNeedsPassword) {
+                Global.copyOwnAddressRequested(root.textToCopy)
+                return
+            }
             ClipboardUtils.setText(root.textToCopy)
             root.icon = "tiny/checkmark"
             root.color = Theme.palette.successColor1

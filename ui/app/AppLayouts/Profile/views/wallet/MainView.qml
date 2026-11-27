@@ -21,6 +21,7 @@ Column {
     property WalletStore walletStore
 
     property bool isKeycardEnabled: true
+    property bool addressRevealNeedsPassword: false
 
     signal goToNetworksView()
     signal goToAccountOrderView()
@@ -103,6 +104,7 @@ Column {
         sourceComponent: AddAccountPopup {
             isKeycardEnabled: root.isKeycardEnabled
             store.addAccountModule: walletSection.addAccountModule
+            store.addressRevealNeedsPassword: root.addressRevealNeedsPassword
         }
 
         onLoaded: {

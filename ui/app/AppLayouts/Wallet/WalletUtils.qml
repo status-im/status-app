@@ -34,6 +34,22 @@ QtObject {
         return hovered ? Utils.richColorText(finalAddress, palette.directColor1) : finalAddress
     }
 
+    function ownAddressToDisplay(address, revealNeedsPassword) {
+        return revealNeedsPassword ? StatusQUtils.Utils.elideAndFormatWalletAddress(address) : address
+    }
+
+    // account: a wallet account row; anything else (saved address, contact's account) is not owned
+    function isOwnedAccount(account) {
+        return !!account && typeof account.walletType === "string"
+                && account.walletType !== Constants.watchWalletType
+    }
+
+    // addressRevealNeedsPassword: the profile has no password yet. Then the addresses of key pairs
+    // protected by the profile password stay hidden; watch-only and cold-wallet accounts do not
+    function revealNeedsPassword(account, addressRevealNeedsPassword) {
+        return addressRevealNeedsPassword && isOwnedAccount(account) && !account.migratedToColdWallet
+    }
+
     function preferredAddress(account) {
         if (!account)
             return ""

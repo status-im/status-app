@@ -15,6 +15,7 @@ StatusMenu {
     property bool canDelete
     property bool hideFromTotalBalance
     property bool canAddWatchOnlyAccount: true
+    property bool revealNeedsPassword: false
 
     signal editAccountClicked()
     signal deleteAccountClicked()
@@ -25,12 +26,21 @@ StatusMenu {
     StatusSuccessAction {
         id: copyAddressAction
         objectName: "AccountMenu-CopyAddressAction_" + root.name
+        showSuccess: !root.revealNeedsPassword
         successText: qsTr("Address copied")
         text: qsTr("Copy address")
         icon.name: "copy"
         timeout: 1500
         enabled: !!root.address
-        onTriggered: ClipboardUtils.setText(root.address)
+        onTriggered: {
+            if (!root.revealNeedsPassword) {
+                ClipboardUtils.setText(root.address)
+                return
+            }
+            // Nothing is copied before the password is set, so no "copied" state either
+            Global.copyOwnAddressRequested(root.address)
+            root.close()
+        }
     }
 
     StatusMenuSeparator {

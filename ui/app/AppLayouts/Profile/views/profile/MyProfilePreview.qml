@@ -17,6 +17,7 @@ Item {
     property alias networksStore: profilePreview.networksStore
 
     property alias sendToAccountEnabled: profilePreview.sendToAccountEnabled
+    property alias addressRevealNeedsPassword: profilePreview.addressRevealNeedsPassword
 
     property alias showcaseCommunitiesModel: profilePreview.showcaseCommunitiesModel
     property alias showcaseAccountsModel: profilePreview.showcaseAccountsModel

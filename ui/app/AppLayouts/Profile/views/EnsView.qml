@@ -15,6 +15,7 @@ import utils
 import shared
 import shared.stores as SharedStores
 
+import AppLayouts.Wallet
 import AppLayouts.Wallet.stores
 import AppLayouts.Profile.stores
 
@@ -27,6 +28,7 @@ Item {
     property SharedStores.NetworkConnectionStore networkConnectionStore
 
     property int profileContentWidth
+    property bool addressRevealNeedsPassword: false
     property bool showSearchScreen: false
     property string addedUsername: ""
     property string selectedUsername: ""
@@ -50,6 +52,15 @@ Item {
         readonly property string registerENS: "RegisterENS"
         readonly property string setPubKey: "SetPubKey"
         readonly property string releaseENS: "ReleaseENS"
+
+        // Watch-only, cold-wallet and unknown addresses are shown in full
+        function revealNeedsPassword(address) {
+            // Re-evaluates when the accounts arrive or change
+            if (!address || !RootStore.accounts?.ModelCount.count)
+                return false
+            const account = ModelUtils.getByKey(RootStore.accounts, "address", address.toLowerCase())
+            return WalletUtils.revealNeedsPassword(account, ensView.addressRevealNeedsPassword)
+        }
     }
 
     DSM.StateMachine {
@@ -282,6 +293,7 @@ Item {
             etherscanAddressLink: ensView.ensUsernamesStore.getEtherscanAddressLink()
 
             walletAddress: ensView.ensUsernamesStore.getWalletDefaultAddress()
+            revealNeedsPassword: d.revealNeedsPassword(walletAddress)
             pubkey: ensView.ensUsernamesStore.pubkey
 
             sntBalance: {
@@ -390,6 +402,7 @@ Item {
             id: ensDetailsView
 
             username: selectedUsername
+            revealNeedsPassword: d.revealNeedsPassword(walletAddress)
             onBackBtnClicked: back()
 
             onReleaseUsernameRequested: (senderAddress) => {

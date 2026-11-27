@@ -38,6 +38,7 @@ SignTransactionModalBase {
 
     /** Input property holding recipient account address **/
     required property string recipientAddress
+    property bool recipientRevealNeedsPassword: false
     /** Input property holding recipient account name **/
     required property string recipientName
     /** Input property holding recipient account emoji **/
@@ -533,6 +534,7 @@ SignTransactionModalBase {
                 networkName: root.networkName
                 networkShortName: root.networkShortName
                 networkBlockExplorerUrl: root.networkBlockExplorerUrl
+                revealNeedsPassword: root.recipientRevealNeedsPassword
                 onOpenLink: (link) => root.requestOpenLink(link)
             }
         ]

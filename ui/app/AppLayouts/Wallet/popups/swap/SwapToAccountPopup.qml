@@ -16,6 +16,7 @@ StatusDialog {
 
     /** Resolve an ENS name typed into the recipient input **/
     property var fnResolveENS: function(ensName, uuid) {}
+    property bool addressRevealNeedsPassword: false
 
     /** Emitted once a recipient address is picked/resolved **/
     signal recipientSelected(string address)
@@ -49,6 +50,7 @@ StatusDialog {
 
         recipientsModel: recipientViewAdaptor.recipientsModel
         recipientsFilterModel: recipientViewAdaptor.recipientsFilterModel
+        addressRevealNeedsPassword: root.addressRevealNeedsPassword
 
         onResolveENS: root.fnResolveENS(ensName, uuid)
         onSelectedRecipientAddressChanged: {

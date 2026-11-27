@@ -11,6 +11,7 @@ import shared.controls
 import shared.views
 import shared.stores as SharedStores
 import utils
+import AppLayouts.Wallet
 
 // TODO: replace with StatusMenu
 Dialog {
@@ -24,6 +25,7 @@ Dialog {
     required property var activityStore
     required property SharedStores.CurrenciesStore currencyStore
     required property SharedStores.NetworksStore networksStore
+    property bool addressRevealNeedsPassword: false
 
     signal sendTriggered(string address)
     signal reload()
@@ -156,7 +158,17 @@ Dialog {
             anchors.verticalCenter: accountSelector.verticalCenter
             color: StatusColors.transparent
             textToCopy: accountSelector.currentAccountAddress
-            onCopyClicked: ClipboardUtils.setText(textToCopy)
+
+            readonly property bool revealNeedsPassword: WalletUtils.revealNeedsPassword(accountSelector.currentAccount,
+                                                                                       root.addressRevealNeedsPassword)
+            // Nothing is copied before the password is set
+            showCopiedToolTip: !revealNeedsPassword
+            onCopyClicked: {
+                if (revealNeedsPassword)
+                    Global.copyOwnAddressRequested(textToCopy)
+                else
+                    ClipboardUtils.setText(textToCopy)
+            }
         }
 
         StatusFlatRoundButton {

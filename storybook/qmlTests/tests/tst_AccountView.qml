@@ -5,6 +5,7 @@ import AppLayouts.Profile.views.wallet
 import AppLayouts.Profile.stores as ProfileStores
 
 import StatusQ.Core
+import StatusQ.Core.Utils as SQUtils
 
 import utils
 
@@ -38,6 +39,11 @@ Item {
 
     ListModel {
         id: emptyNetworks
+    }
+
+    SignalSpy {
+        id: shownSpy
+        signalName: "addressShown"
     }
 
     Component {
@@ -121,9 +127,9 @@ Item {
             return findChild(controlUnderTest, objectName)
         }
 
-        function createView(account, keyPair) {
+        function createView(account, keyPair, extraProps) {
             cleanup()
-            const props = { account: account }
+            const props = Object.assign({ account: account }, extraProps ?? {})
             if (keyPair)
                 props.keyPair = keyPair
             controlUnderTest = createTemporaryObject(componentUnderTest, root, props)
@@ -136,6 +142,27 @@ Item {
         function test_addressListItemShowsMixedcaseAddress() {
             createView(profileAccount())
             compare(child("Address_ListItem").subTitle, root.checksumAddress)
+        }
+
+        // Watch-only and cold-wallet accounts are shown in full even without a password
+        function test_addressRevealNeedsPassword_data() {
+            return [
+                { tag: "profile key pair", keyPair: null, elided: true },
+                { tag: "watch-only", keyPair: "watch", elided: false },
+                { tag: "cold wallet", keyPair: "cold", elided: false },
+            ]
+        }
+        function test_addressRevealNeedsPassword(data) {
+            let keyPair = null
+            if (data.keyPair === "watch")
+                keyPair = watchOnlyKeyPair()
+            else if (data.keyPair === "cold")
+                keyPair = { pairType: Constants.keypair.type.profile, migratedToColdWallet: true,
+                            operability: Constants.keypair.operability.fullyOperable, name: "Profile",
+                            pubKey: "", icon: "", image: "", accounts: [] }
+            createView(profileAccount(), keyPair, { addressRevealNeedsPassword: true })
+            compare(child("Address_ListItem").subTitle,
+                    data.elided ? SQUtils.Utils.elideAndFormatWalletAddress(root.checksumAddress) : root.checksumAddress)
         }
 
         function test_addressListItemFallsBackToAddress() {
@@ -173,6 +200,21 @@ Item {
             compare(toggleSpy.count, 1)
             compare(toggleSpy.signalArguments[0][0], root.lowercaseAddress)
             compare(toggleSpy.signalArguments[0][1], false)
+        }
+
+        // Reported as shown only while shown in full, and once a password reveals it
+        function test_addressShown() {
+            createView(profileAccount(), null, { addressRevealNeedsPassword: true })
+            shownSpy.target = controlUnderTest
+            shownSpy.clear()
+            controlUnderTest.reportAddressShown()
+            compare(shownSpy.count, 0)
+
+            controlUnderTest.addressRevealNeedsPassword = false
+            compare(shownSpy.count, 1)
+            controlUnderTest.reportAddressShown()
+            compare(shownSpy.count, 2)
+            compare(shownSpy.signalArguments[1][0], root.lowercaseAddress)
         }
     }
 }

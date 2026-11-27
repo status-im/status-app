@@ -67,6 +67,7 @@ QtObject {
     readonly property SwapModalHandler swapModalHandler: SwapModalHandler {
         swapEnabled: root.featureFlagsStore.swapEnabled && root.featureFlagsStore.swapProvidersEnabled
         routeOrderEnabled: root.featureFlagsStore.lifiEnabled
+        addressRevealNeedsPassword: root.privacyStore.zeroOnboarded
 
         function launchSwap() {
             const chainId = Utils.defaultSwapLaunchChainId(
@@ -94,6 +95,7 @@ QtObject {
     }
 
     readonly property SendModalHandler sendModalHandler: SendModalHandler {
+        addressRevealNeedsPassword: root.privacyStore.zeroOnboarded
 
         // TODO: Remove this and adapt new mechanism to launch BuyModal as done for SendModal
         property BuyCryptoParamsForm buyFormData: BuyCryptoParamsForm {}

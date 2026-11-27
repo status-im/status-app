@@ -14,6 +14,8 @@ import AppLayouts.Wallet.stores as WalletStores
 SplitView {
     orientation: Qt.Horizontal
 
+    Logs { id: logs }
+
     PopupBackground {
         id: popupBg
 
@@ -42,13 +44,18 @@ SplitView {
                 "name": "Hot wallet (generated)",
                 "emoji": "🚗",
                 "color": "#216266",
-                "address": "0x7F47C2e98a4BBf5487E6fb082eC2D9Ab0E6d8881",
+                "address": "0x7f47c2e98a4bbf5487e6fb082ec2d9ab0e6d8881",
+                "mixedcaseAddress": "0x7F47C2e98a4BBf5487E6fb082eC2D9Ab0E6d8881",
             }
             switchingAccounsEnabled: true
             hasFloatingButtons: true
             qrImageSource: "https://upload.wikimedia.org/wikipedia/commons/4/41/QR_Code_Example.svg"
 
             store: WalletStores.RootStore
+            revealNeedsPassword: ctrlRevealNeedsPassword.checked
+
+            onSetPasswordRequested: logs.logEvent("setPasswordRequested")
+            onAddressShown: (address) => logs.logEvent("addressShown", ["address"], arguments)
 
             onUpdateSelectedAddress: function(address) {
                 // Update the selected account based on the new address
@@ -57,9 +64,16 @@ SplitView {
         }
     }
 
-    Pane {
+    LogsAndControlsPanel {
         SplitView.minimumWidth: 300
         SplitView.preferredWidth: 300
+
+        logsView.logText: logs.logText
+
+        Switch {
+            id: ctrlRevealNeedsPassword
+            text: "Password needed (zero-onboarded)"
+        }
     }
 }
 

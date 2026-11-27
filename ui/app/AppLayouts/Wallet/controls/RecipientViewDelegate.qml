@@ -12,6 +12,8 @@ StatusListItem {
 
     property bool useAddressAsLetterIdenticon: false
     property bool elideAddressInTitle: false
+    // An own account of a profile without a password: never shown in full
+    property bool revealNeedsPassword: false
 
     property string name
     property string address
@@ -30,11 +32,11 @@ StatusListItem {
                 return root.ens
             }
             if (!!root.address) {
-                if (root.sensor.containsMouse) {
+                if (root.sensor.containsMouse && !root.revealNeedsPassword) {
                     return root.address
                 }
                 // NOTE elide text is used instead of elide wallet address because 0x00D7 shows incorrectly in identicon
-                return elideAddress ? StatusQUtils.Utils.elideText(root.address, 6, 4) : root.address
+                return elideAddress || root.revealNeedsPassword ? StatusQUtils.Utils.elideText(root.address, 6, 4) : root.address
             }
             return ""
         }

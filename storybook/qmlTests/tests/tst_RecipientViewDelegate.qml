@@ -145,6 +145,30 @@ Item {
             compare(delegate.sensor.containsMouse, false)
         }
 
+        // An own account of a profile without a password stays elided on hover
+        function test_hoverKeepsRestrictedAddressElided() {
+            const delegate = createTemporaryObject(testComponent, root, {
+                                                       name: "Main",
+                                                       address: "0xC5E457F6b85EaE1Fc807081Cc325E482268e4e40",
+                                                       revealNeedsPassword: true
+                                                   })
+            verify(delegate)
+            mouseMove(delegate, 10, 10)
+            compare(delegate.sensor.containsMouse, true)
+            compare(delegate.subTitle, "0xC5E4…4e40")
+            mouseMove(delegate, -10, -10)
+        }
+
+        // Without a name the title shows the address, elided as well
+        function test_titleElidedWithoutName() {
+            const delegate = createTemporaryObject(testComponent, root, {
+                                                       address: "0xC5E457F6b85EaE1Fc807081Cc325E482268e4e40",
+                                                       revealNeedsPassword: true
+                                                   })
+            verify(delegate)
+            compare(delegate.title, "0xC5E4…4e40")
+        }
+
         function test_useAddressAsLetterIdenticon() {
             const delegate = createTemporaryObject(testComponent, root, {
                                                        address: "0xC5E457F6b85EaE1Fc807081Cc325E482268e4e40",

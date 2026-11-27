@@ -23,6 +23,7 @@ StatusDialog {
     property alias networksStore: profileView.networksStore
 
     property alias sendToAccountEnabled: profileView.sendToAccountEnabled
+    property alias addressRevealNeedsPassword: profileView.addressRevealNeedsPassword
 
     property alias showcaseCommunitiesModel: profileView.showcaseCommunitiesModel
     property alias showcaseAccountsModel: profileView.showcaseAccountsModel

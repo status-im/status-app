@@ -56,6 +56,11 @@ StatusMenuItem {
        This property controls how long success state is showed.
     */
     property int timeout: 2000
+    /*!
+       \qmlproperty bool StatusSuccessAction::showSuccess
+       This property controls whether a click shows the success state. Default value is \c{true}.
+    */
+    property bool showSuccess: true
 
     /*! \internal Overriden signal to not close menu on click */
     signal triggered()
@@ -82,7 +87,8 @@ StatusMenuItem {
         cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor
         onClicked: {
             root.triggered()
-            root.success = true
+            if (root.showSuccess)
+                root.success = true
         }
     }
     Timer {

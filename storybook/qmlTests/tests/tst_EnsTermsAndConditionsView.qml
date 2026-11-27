@@ -1,7 +1,12 @@
 import QtQuick
 import QtTest
 
+import StatusQ
+
 import StatusQ.Core.Theme
+import StatusQ.Core.Utils as SQUtils
+
+import utils
 
 import AppLayouts.Profile.views
 
@@ -22,6 +27,12 @@ Item {
             pubkey: "0x0400112233445566778899aabbccddeeff00112233445566778899aabbccddeeff"
             sntBalance: 100
         }
+    }
+
+    SignalSpy {
+        id: copySpy
+        target: Global
+        signalName: "copyOwnAddressRequested"
     }
 
     TestCase {
@@ -46,6 +57,26 @@ Item {
             const button = findChild(controlUnderTest, "ensStartTransaction")
             verify(!!button)
             return button
+        }
+
+        // The registrant is the user's own default account: only a password-protected one is gated
+        function test_walletAddress_data() {
+            return [
+                { tag: "regular", restricted: false },
+                { tag: "restricted", restricted: true },
+            ]
+        }
+        function test_walletAddress(data) {
+            const address = controlUnderTest.walletAddress
+            controlUnderTest.revealNeedsPassword = data.restricted
+            const item = findChild(controlUnderTest, "ensWalletAddress")
+            compare(item.subTitle, data.restricted ? SQUtils.Utils.elideAndFormatWalletAddress(address) : address)
+
+            copySpy.clear()
+            ClipboardUtils.setText("before")
+            mouseClick(item.iconButton)
+            compare(copySpy.count, data.restricted ? 1 : 0)
+            compare(ClipboardUtils.text, data.restricted ? "before" : address)
         }
 
         function test_registerRequiresTermsAndBalance() {

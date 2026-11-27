@@ -12,6 +12,7 @@ import shared.controls.delegates
 import shared.popups
 import shared.stores
 import utils
+import AppLayouts.Wallet
 
 Item {
     id: root
@@ -21,6 +22,7 @@ Item {
     required property var accountsModel
     required property NetworksStore networksStore
 
+    property bool addressRevealNeedsPassword: false
     property alias cellWidth: accountsView.cellWidth
     property alias cellHeight: accountsView.cellHeight
 
@@ -67,7 +69,8 @@ Item {
                 return delegatesActionsMenu.createObject(accountInfoDelegate, {
                                                              accountAddress: model.address,
                                                              accountName: model.name,
-                                                             accountColorId: model.colorId
+                                                             accountColorId: model.colorId,
+                                                             revealNeedsPassword: WalletUtils.revealNeedsPassword(model, root.addressRevealNeedsPassword)
                                                          })
             }
 
@@ -104,16 +107,24 @@ Item {
             property string accountAddress: ""
             property string accountName: ""
             property string accountColorId: ""
+            property bool revealNeedsPassword: false
 
             onClosed: destroy()
 
             StatusSuccessAction {
                 id: copyAddressAction
+                showSuccess: !contextMenu.revealNeedsPassword
                 successText: qsTr("Copied")
                 text: qsTr("Copy address")
                 icon.name: "copy"
                 onTriggered: {
-                    root.copyToClipboard(accountAddress)
+                    if (!contextMenu.revealNeedsPassword) {
+                        root.copyToClipboard(contextMenu.accountAddress)
+                        return
+                    }
+                    // Nothing is copied before the password is set, so no "copied" state either
+                    Global.copyOwnAddressRequested(contextMenu.accountAddress)
+                    contextMenu.close()
                 }
             }
 
@@ -123,10 +134,12 @@ Item {
                 onTriggered: {
                     Global.openShowQRPopup({
                         showSingleAccount: true,
+                        revealNeedsPassword: contextMenu.revealNeedsPassword,
                         switchingAccounsEnabled: false,
                         hasFloatingButtons: false,
                         name: contextMenu.accountName,
                         address: contextMenu.accountAddress,
+                        mixedcaseAddress: contextMenu.accountAddress,
                         colorId: contextMenu.accountColorId
                     })
                 }
@@ -144,8 +157,11 @@ Item {
                 id: blockchainExplorersMenu
                 flatNetworks: root.networksStore.activeNetworks
                 onNetworkClicked: (shortname, isTestnet) => {
-                    let link = Utils.getUrlForAddressOnNetwork(shortname, isTestnet, contextMenu.accountAddress);
-                    Global.requestOpenLink(link)
+                    const link = Utils.getUrlForAddressOnNetwork(shortname, isTestnet, contextMenu.accountAddress)
+                    if (contextMenu.revealNeedsPassword)
+                        Global.openOwnAddressLinkRequested(link)
+                    else
+                        Global.requestOpenLink(link)
                 }
             }
         }

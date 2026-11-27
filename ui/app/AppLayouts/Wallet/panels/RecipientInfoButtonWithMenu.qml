@@ -18,6 +18,7 @@ StatusFlatButton {
     required property string networkShortName
     /** Input property holding selected network explorer url **/
     required property string networkBlockExplorerUrl
+    property bool revealNeedsPassword: false
 
     /** Signal to launch link **/
     signal openLink(string link)
@@ -45,17 +46,29 @@ StatusFlatButton {
             text:  qsTr("View receiver address on %1").arg(d.getExplorerName())
             icon.name: "external-link"
             onTriggered: {
-                var link = "%1/%2/%3".arg(root.networkBlockExplorerUrl).arg(Constants.networkExplorerLinks.addressPath).arg(root.recipientAddress)
-                root.openLink(link)
+                const link = "%1/%2/%3".arg(root.networkBlockExplorerUrl).arg(Constants.networkExplorerLinks.addressPath).arg(root.recipientAddress)
+                if (root.revealNeedsPassword)
+                    Global.openOwnAddressLinkRequested(link)
+                else
+                    root.openLink(link)
             }
         }
         StatusSuccessAction {
             objectName: "copyButton"
+            showSuccess: !root.revealNeedsPassword
             text: qsTr("Copy receiver address")
             successText: qsTr("Copied")
             icon.name: "copy"
             autoDismissMenu: true
-            onTriggered: ClipboardUtils.setText(root.recipientAddress)
+            onTriggered: {
+                if (!root.revealNeedsPassword) {
+                    ClipboardUtils.setText(root.recipientAddress)
+                    return
+                }
+                // Nothing is copied before the password is set, so no "copied" state either
+                Global.copyOwnAddressRequested(root.recipientAddress)
+                moreMenu.close()
+            }
         }
     }
 }

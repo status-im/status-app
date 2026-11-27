@@ -8,6 +8,8 @@ import StatusQ.Controls
 import utils
 import shared.controls
 
+import AppLayouts.Wallet
+
 Column {
     id: root
 
@@ -18,6 +20,7 @@ Column {
     property bool displayDetails: true
     property bool displayCopyButton: true
     property bool alreadyCreatedAccountIsAnError: true
+    property bool revealNeedsPassword: false
 
     spacing: Theme.halfPadding
 
@@ -27,7 +30,7 @@ Column {
 
     StatusInput {
         width: parent.width
-        text: root.addressDetailsItem.address
+        text: WalletUtils.ownAddressToDisplay(root.addressDetailsItem.address, root.revealNeedsPassword)
         input.edit.enabled: false
         input.edit.color: root.addressColor
         input.background.color: "transparent"
@@ -35,6 +38,7 @@ Column {
         input.rightComponent: CopyButton {
             visible: root.displayCopyButton
             textToCopy: root.addressDetailsItem.address
+            revealNeedsPassword: root.revealNeedsPassword
         }
     }
 

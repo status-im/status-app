@@ -34,6 +34,7 @@ StatusSectionLoader {
     required property Loader dappsServiceLoader
 
     property bool appMainVisible: false
+    property bool addressRevealNeedsPassword: false
 
     // Back-navigation contract for AppMain's back chain. The chrome is
     // interactive while the section item still incubates, so the loader must
@@ -201,6 +202,7 @@ StatusSectionLoader {
             swapEnabled:            Qt.binding(() => root.featureFlagsStore.swapEnabled),
             swapProvidersEnabled:   Qt.binding(() => root.featureFlagsStore.swapProvidersEnabled),
             buyEnabled:             Qt.binding(() => root.featureFlagsStore.buyEnabled),
+            addressRevealNeedsPassword: Qt.binding(() => root.addressRevealNeedsPassword),
             dAppsVisible:           Qt.binding(() => root.dappsServiceLoader.item
                                             ? root.dappsServiceLoader.item.serviceAvailableToCurrentAddress
                                             : false),

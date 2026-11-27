@@ -8,6 +8,7 @@ import StatusQ.Controls
 import StatusQ.Components
 
 import utils
+import AppLayouts.Wallet
 
 import "../stores"
 import "../../common"
@@ -141,7 +142,8 @@ GridLayout {
 
         title: {
             if (!!root.store.selectedDerivedAddress && root.store.selectedDerivedAddress.address !== "") {
-                return root.store.selectedDerivedAddress.address
+                return WalletUtils.ownAddressToDisplay(root.store.selectedDerivedAddress.address,
+                                                   root.store.addressRevealNeedsPassword && !root.store.selectedOrigin.migratedToColdWallet)
             }
             else if (root.store.derivedAddressModel.count > 1) {
                 return qsTr("Select address")

@@ -57,6 +57,7 @@ StatusSectionLayout {
     required property var connectorController
 
     property bool isDebugEnabled: false
+    property bool addressRevealNeedsPassword: false
     signal sendToRecipientRequested(string address)
 
     function openUrlInNewTab(url, initialTitle, activate=false) {
@@ -781,6 +782,7 @@ StatusSectionLayout {
             incognitoMode: _internal.currentTabIncognito
             accounts: root.browserWalletStore.accounts
             currentAccount: root.browserWalletStore.dappBrowserAccount
+            addressRevealNeedsPassword: root.addressRevealNeedsPassword
             activityStore: root.browserActivityStore
             currencyStore: root.currencyStore
             networksStore: root.networksStore

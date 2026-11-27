@@ -12,6 +12,7 @@ import StatusQ.Controls
 import StatusQ.Popups
 
 import utils
+import AppLayouts.Wallet
 import shared
 import shared.panels
 import shared.controls
@@ -27,6 +28,7 @@ Rectangle {
     objectName: "walletLeftTab"
 
     required property LeftTabViewState viewState
+    property bool addressRevealNeedsPassword: false
 
     // Child -> parent: user actions that require store/backend handling.
     signal addAccountPopupRequested()
@@ -75,6 +77,7 @@ Rectangle {
             walletType: account ? account.walletType : ""
             canDelete: account && !account.isWallet
             hideFromTotalBalance: account && account.hideFromTotalBalance
+            revealNeedsPassword: WalletUtils.revealNeedsPassword(account, root.addressRevealNeedsPassword)
 
             onClosed: {
                 walletAccountContextMenu.active = false

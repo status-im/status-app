@@ -170,7 +170,7 @@ Item {
             compare(signingFailedSpy.count, 1)
             verify(root.calls.includes("sign.teardown"))
         }
-    
+
         // A Keycard key pair is unlocked with the card's PIN: the regular prompt handles it
         function test_keycardKeyPairIsLeftToTheRegularPrompt_data() {
             return [ { tag: "authentication", sign: false }, { tag: "signing", sign: true } ]
@@ -190,5 +190,5 @@ Item {
             gate.authenticate("addAccount", "uid_zero")
             compare(root.calls, ["auth.isKeypairMigratedToColdWallet:uid_zero"])
         }
-}
+    }
 }
