@@ -439,6 +439,7 @@ proc mainProc() =
   singletonInstance.engine.setRootContextProperty("localAppSettings", localAppSettingsQVariant)
   singletonInstance.engine.setRootContextProperty("globalUtils", globalUtilsQVariant)
   singletonInstance.engine.setRootContextProperty("production", isProductionQVariant)
+  singletonInstance.engine.setRootContextProperty("backgroundLaunchRootContextProperty", newQVariant(BACKGROUND_LAUNCH))
 
   # Ensure we have the featureFlags instance available from the start
   singletonInstance.engine.setRootContextProperty("featureFlagsRootContextProperty", newQVariant(singletonInstance.featureFlags()))

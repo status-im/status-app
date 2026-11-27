@@ -25,6 +25,18 @@ Item {
     property bool autoLoginEnabled
     property string lastSelectedProfileKeyUid
     property bool biometricFlowPending
+    // Background launch (desktop): the app was started with the launch argument
+    property bool backgroundLaunchRequested
+    property bool systemTrayIconAvailable
+
+    // The window stays hidden while the background launch's silent login runs. Without
+    // a silent login or a tray the window shows: a hidden login screen would be useless.
+    readonly property bool keepWindowHidden: !!root.featureFlagsStore
+                                             && root.featureFlagsStore.resumeAfterRestartEnabled
+                                             && root.backgroundLaunchRequested
+                                             && root.systemTrayIconAvailable
+                                             && onboardingLayout.autoLoginAttempted
+                                             && !d.autoLoginFailed
 
     // Injectable for tests; the default instance is backed by the onboarding module
     // context property, exactly as before.
@@ -50,6 +62,7 @@ Item {
         id: d
 
         property bool loginRequestSent: false
+        property bool autoLoginFailed: false
     }
 
     Component {
@@ -92,8 +105,11 @@ Item {
             // manual-login error (possibly on another profile) finds nothing to
             // delete.
             const staleAutoLoginKeyUid = onboardingLayout.consumeAutoLoginFailure()
-            if (staleAutoLoginKeyUid !== "" && root.secureStorage)
-                root.secureStorage.deleteCredential(staleAutoLoginKeyUid)
+            if (staleAutoLoginKeyUid !== "") {
+                d.autoLoginFailed = true
+                if (root.secureStorage)
+                    root.secureStorage.deleteCredential(staleAutoLoginKeyUid)
+            }
 
             // Return to the existing login screen by popping whatever is above it
             // recreating it via unwindToLoginScreen would discard the error state.

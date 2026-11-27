@@ -52,6 +52,7 @@ const PUSH_TOPIC* {.strdefine.} = "app.status.mobile"
 let
   baseDir = absolutePath(expandTilde(desktopConfig.dataDir))
   OPENURI* = desktopConfig.uri
+  BACKGROUND_LAUNCH* = desktopConfig.backgroundLaunch
   DATADIR* = baseDir & sep
   STATUSGODIR* = joinPath(baseDir, "data") & sep
   ROOTKEYSTOREDIR* = joinPath(STATUSGODIR, "keystore")

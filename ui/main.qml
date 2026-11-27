@@ -51,6 +51,7 @@ Window {
         lifiEnabled: featureFlags ? featureFlags.lifiEnabled : false
         relayEnabled: featureFlags ? featureFlags.relayEnabled : false
         swapProvidersEnabled: featureFlags ? featureFlags.swapProvidersEnabled : false
+        resumeAfterRestartEnabled: featureFlags ? featureFlags.resumeAfterRestartEnabled : false
     }
 
     readonly property UtilsStore utilsStore: UtilsStore {}
@@ -156,6 +157,14 @@ Window {
         applicationWindow.width = geometry.width
         applicationWindow.height = geometry.height
 
+        // background launch: stay in the tray, showing the window later restores this visibility
+        if (sessionLoader.item?.keepWindowHidden ?? false) {
+            console.info("background launch: starting in the tray, silent login running")
+            d.lastNonMinVisibility = visibility
+            d.inBackgroundLaunch = true
+            return
+        }
+
         // finally set the visibility; might be e.g. Maximized but we still want to restore back to normal (windowed) geometry when unmaximizing
         applicationWindow.visibility = visibility
     }
@@ -163,8 +172,15 @@ Window {
     function storeAppState() : void {
         if (SQUtils.Utils.isMobile) // no point in storing geometry or visibility
             return
+        // background launch: keep the stored state until the window is shown
+        if (!d.windowShown)
+            return
 
-        localAppSettings.visibility = applicationWindow.visibility
+        // closed to the tray or minimized: keep the state the window is shown in
+        if (applicationWindow.visibility === Window.Hidden || applicationWindow.visibility === Window.Minimized)
+            localAppSettings.visibility = d.lastNonMinVisibility !== Window.Hidden ? d.lastNonMinVisibility : Window.Windowed
+        else
+            localAppSettings.visibility = applicationWindow.visibility
         let newRect = Qt.rect(applicationWindow.x, applicationWindow.y,
                               applicationWindow.width, applicationWindow.height)
         localAppSettings.geometry = newRect
@@ -189,6 +205,10 @@ Window {
         // The ended session's UI is unloaded and the next session's content not shown yet
         property bool awaitingSessionContent: false
         property double lastShakeShareMs: 0
+        // Started hidden in the tray, until the user shows the window or the login completes
+        property bool inBackgroundLaunch: false
+        property int lastApplicationState: Qt.ApplicationInactive
+        property bool windowShown: false
 
         readonly property bool macOSWindowed: SQUtils.Utils.isMacOS && applicationWindow.visibility !== Window.FullScreen
 
@@ -348,6 +368,8 @@ Window {
     Connections {
         target: applicationWindow
         function onVisibilityChanged(visibility) {
+            if (visibility !== Window.Hidden)
+                d.windowShown = true
             if (visibility === Window.Minimized) {
                 d.lastMinimizedScreen = applicationWindow.screen
                 return
@@ -430,6 +452,36 @@ Window {
         function onAboutToQuit() : void {
             applicationWindow.storeAppState()
         }
+        // macOS reopen (Dock click or launching the app again): Qt re-sends the active
+        // state while the app is already active. Shows the window hidden by a background launch.
+        function onStateChanged() : void {
+            const state = Application.state
+            const reopened = state === Qt.ApplicationActive && d.lastApplicationState === Qt.ApplicationActive
+            d.lastApplicationState = state
+            if (reopened && SQUtils.Utils.isMacOS && !applicationWindow.visible
+                    && applicationWindow.featureFlagsStore.resumeAfterRestartEnabled)
+                applicationWindow.makeStatusAppActive()
+        }
+    }
+
+    // Background launch: the window shows when the silent login fails; a completed login ends it
+    Connections {
+        target: sessionLoader.item
+        enabled: d.inBackgroundLaunch
+        ignoreUnknownSignals: true
+
+        function onKeepWindowHiddenChanged() : void {
+            if (!sessionLoader.item.keepWindowHidden && !sessionLoader.item.userLoggedIn) {
+                console.info("background launch: silent login failed, showing the window")
+                applicationWindow.makeStatusAppActive()
+            }
+        }
+        function onUserLoggedInChanged() : void {
+            if (sessionLoader.item.userLoggedIn) {
+                console.info("background launch: logged in, staying in the tray")
+                d.inBackgroundLaunch = false
+            }
+        }
     }
 
     Component.onCompleted: {
@@ -495,6 +547,7 @@ Window {
     }
 
     function makeStatusAppActive() : void {
+        d.inBackgroundLaunch = false
         d.restoreWindowState()
         applicationWindow.raise()
         applicationWindow.requestActivate()
@@ -549,6 +602,8 @@ Window {
                 languageStore: applicationWindow.languageStore
                 utilsStore: applicationWindow.utilsStore
                 systemTrayIconAvailable: systemTray.available
+                backgroundLaunchRequested: typeof backgroundLaunchRootContextProperty !== "undefined"
+                                           && backgroundLaunchRootContextProperty
                 portraitLayout: applicationWindow.portraitLayout
                 allowsAutoLogin: (keyUid) => sessionView.allowsAutoLogin(keyUid)
 

@@ -24,12 +24,16 @@ Item {
     required property ProfileStores.LanguageStore languageStore
     required property UtilsStore utilsStore
     required property bool systemTrayIconAvailable
+    // Started with the background launch argument (desktop)
+    required property bool backgroundLaunchRequested
     required property bool portraitLayout
     // Whether the login screen may log in silently with the stored credential of a profile:
     // (keyUid) => bool
     required property var allowsAutoLogin
 
     readonly property bool userLoggedIn: appMainLoader.item !== null
+    // The window stays hidden: background launch with a silent login running
+    readonly property bool keepWindowHidden: startupOnboardingLoader.item?.keepWindowHidden ?? false
 
     signal contentLoaded()
     signal storeAppStateRequested()
@@ -187,6 +191,8 @@ Item {
             item.secureStorage = appSecureStorage
             item.lastSelectedProfileKeyUid = Qt.binding(() => localAppSettings.selectedProfileKeyUid)
             item.biometricFlowPending = Qt.binding(() => d.biometricFlowPending)
+            item.backgroundLaunchRequested = root.backgroundLaunchRequested
+            item.systemTrayIconAvailable = Qt.binding(() => root.systemTrayIconAvailable)
             // MUST be assigned LAST: enabling triggers the one-shot auto-login
             // attempt, which needs the key UID (and storage) already in place.
             // Decided (and logged) on the Nim side: e2e runs never auto-login, and

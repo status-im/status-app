@@ -279,6 +279,10 @@ type StatusDesktopConfig = object
     defaultValue: ""
     desc: "status-app:// URI to open a chat or other"
     name: "uri" .}: string
+  backgroundLaunch* {.
+    defaultValue: false
+    desc: "Background launch: starts in the tray without a window and logs in silently (needs RESUME_AFTER_RESTART_ENABLED)"
+    name: "background" .}: bool
   testMode* {.
     defaultValue: false
     desc: "Determines if the app should be run in test mode"
