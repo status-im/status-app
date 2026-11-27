@@ -25,6 +25,7 @@ Item {
     readonly property ChatTextAppearance previewAppearance: ReplyTextAppearance {
         theme: root.Theme
     }
+    readonly property MessageHeaderServices messageHeaderServices: StatusMessageHeaderServices { theme: root.Theme }
 
     width: 800
     height: 600
@@ -48,6 +49,7 @@ Item {
         MessageView {
             textAppearance: root.textAppearance
             previewAppearance: root.previewAppearance
+            messageHeaderServices: root.messageHeaderServices
             width: 600
 
             rootStore: rootStoreMock
@@ -144,6 +146,39 @@ Item {
                     visibleContent = true
             }
             verify(visibleContent, "avatar content must be visible once ready")
+        }
+
+        function test_stackedThreadParentShowsAuthor() {
+            const timestamp = new Date(2026, 0, 15, 12).getTime()
+            const view = createTemporaryObject(messageViewComp, root, {
+                threadsFeatureEnabled: true,
+                messageTimestamp: timestamp,
+                prevMessageIndex: 1,
+                prevMessageTimestamp: timestamp - 1000,
+                prevMessageSenderId: "0xsender",
+                prevMessageContentType: Constants.messageContentType.messageType
+            })
+            verify(!!view)
+            const avatar = avatarLoader(view)
+            verify(!avatar.active)
+            compare(findChild(view, "StatusMessage_header"), null)
+
+            view.hasThread = true
+
+            tryVerify(() => avatar.status === Loader.Ready && avatar.visible)
+            const header = findChild(view, "StatusMessage_header")
+            verify(!!header && header.visible)
+            compare(header.displayName, "Sender")
+
+            const connector = findChild(view, "messageAttachmentConnector")
+            verify(!!connector)
+            tryVerify(() => connector.status === Loader.Ready && connector.height > 0)
+            tryVerify(() => {
+                const start = connector.mapToItem(view, 0, 0)
+                const avatarBottom = avatar.mapToItem(view, avatar.width / 2, avatar.height)
+                return Math.abs(start.x - avatarBottom.x) < 0.5
+                    && Math.abs(start.y - avatarBottom.y) < 0.5
+            })
         }
 
         function test_threadConnectorTracksCardGeometry_data() {

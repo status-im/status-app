@@ -15,7 +15,6 @@ from helpers.chat_helper import (
     chat_contains_message_text,
     close_activity_center_if_visible,
     latest_message_text,
-    skip_intro_if_visible,
     skip_message_backup_popup_if_visible,
 )
 from helpers.multiple_instances_helper import (
@@ -96,7 +95,6 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
 
         with step(f'User {user_three.name}, accept contact request from {user_one.name} via activity center'):
             switch_to_aut(aut_three, main_window)
-            skip_intro_if_visible()
             activity_center = main_window.left_panel.open_activity_center()
             request = activity_center.find_contact_request_in_list(user_one.name, configs.timeouts.APP_LOAD_TIMEOUT_MSEC)
             activity_center.accept_contact_request(request)
@@ -125,7 +123,7 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
             with step('Mention display name and real name (#22783, PR #22770)'):
                 with step(f'User {user_one.name} mentions {user_two.name}'):
                     messages_screen.group_chat.send_message_mentioning(user_two.name)
-                    assert driver.waitFor(
+                    assert driver.wait_until(
                         lambda: mention_is_resolved(user_two.name),
                         timeout,
                     ), (
@@ -142,7 +140,7 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
                     switch_to_aut(aut_two, main_window)
                     skip_message_backup_popup_if_visible()
                     messages_screen.left_panel.click_chat_by_name(group_chat_name)
-                    assert driver.waitFor(
+                    assert driver.wait_until(
                         lambda: mention_is_resolved(user_two.name),
                         timeout,
                     ), (
@@ -150,7 +148,7 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
                         f'{latest_message_text(messages_screen.chat)!r}'
                     )
                     messages_screen.group_chat.send_message_mentioning(user_three.profile_name)
-                    assert driver.waitFor(
+                    assert driver.wait_until(
                         lambda: mention_is_resolved(user_three.profile_name),
                         timeout,
                     ), (
@@ -166,7 +164,7 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
                     main_window.left_panel.open_messages_screen()
                     messages_screen.left_panel.click_chat_by_name(group_chat_name)
                     messages_screen.group_chat.wait_until_appears()
-                    assert driver.waitFor(
+                    assert driver.wait_until(
                         lambda: mention_is_resolved(user_three.profile_name),
                         timeout,
                     ), (
@@ -182,7 +180,7 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
                 edit_group_popup.save_changes()
 
             with step('Verify group chat name is changed'):
-                assert driver.waitFor(
+                assert driver.wait_until(
                     lambda: messages_screen.group_chat.group_name == group_chat_new_name,
                     configs.timeouts.UI_LOAD_TIMEOUT_MSEC
                 ), f"Group chat name was not changed. Expected: {group_chat_new_name}, Actual: {messages_screen.group_chat.group_name}"
@@ -191,13 +189,13 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
                 chat_message = random_text_message()
                 messages_screen.group_chat.send_message_to_group_chat(chat_message)
 
-                assert driver.waitFor(
+                assert driver.wait_until(
                     lambda: chat_contains_message_text(messages_screen.chat, chat_message), timeout), \
                     f"Message '{chat_message}' not found in group chat messages"
 
             with step('Send local image to group chat and verify it was sent'):
                 messages_screen.group_chat.send_image_to_chat(str(path))
-                assert driver.waitFor(lambda: (
+                assert driver.wait_until(lambda: (
                     messages_screen.chat.messages(0)[0].image_message is not None and
                     messages_screen.chat.messages(0)[0].image_message.visible
                 ), timeout), f"Local image is not found in the last message"
@@ -205,7 +203,7 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
             with step('Send GIF to group chat and verify it was sent'):
                 gif_url = GIF_URL
                 messages_screen.group_chat.send_gif_to_chat(gif_url)
-                assert driver.waitFor(
+                assert driver.wait_until(
                     lambda: chat_contains_message_text(messages_screen.chat, gif_url), timeout), \
                     f"GIF '{gif_url}' not found in group chat messages"
 
@@ -213,10 +211,10 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
                 messages_screen.group_chat.remove_member_from_chat(user_three.profile_name)
 
             with step('Verify members in a group members list'):
-                assert driver.waitFor(lambda: user_one.name in messages_screen.right_panel.members,
+                assert driver.wait_until(lambda: user_one.name in messages_screen.right_panel.members,
                                       configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
                 assert user_two.name in messages_screen.right_panel.members
-                assert driver.waitFor(lambda: user_three.profile_name not in messages_screen.right_panel.members,
+                assert driver.wait_until(lambda: user_three.profile_name not in messages_screen.right_panel.members,
                                       configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
                 assert len(messages_screen.right_panel.members) == 2
                 main_window.minimize()
@@ -225,16 +223,16 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
             switch_to_aut(aut_two, main_window)
             skip_message_backup_popup_if_visible()
 
-            assert driver.waitFor(lambda: group_chat_new_name in messages_screen.left_panel.get_chats_names,
+            assert driver.wait_until(lambda: group_chat_new_name in messages_screen.left_panel.get_chats_names,
                                   10000), f'{group_chat_new_name} is not present in chats list for {aut_two}'
             messages_screen.left_panel.click_chat_by_name(group_chat_new_name)
 
             with step('Verify members in a group members list'):
-                assert driver.waitFor(lambda: user_one.name in messages_screen.right_panel.members,
+                assert driver.wait_until(lambda: user_one.name in messages_screen.right_panel.members,
                                       configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
-                assert driver.waitFor(lambda: user_two.name in messages_screen.right_panel.members,
+                assert driver.wait_until(lambda: user_two.name in messages_screen.right_panel.members,
                                       configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
-                assert driver.waitFor(lambda: user_three.profile_name not in messages_screen.right_panel.members,
+                assert driver.wait_until(lambda: user_three.profile_name not in messages_screen.right_panel.members,
                                       configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
                 assert len(messages_screen.right_panel.members) == 2
 
@@ -242,7 +240,7 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
                 chat_message_2 = random_text_message()
                 messages_screen.group_chat.send_message_to_group_chat(chat_message_2)
 
-                assert driver.waitFor(
+                assert driver.wait_until(
                     lambda: chat_contains_message_text(messages_screen.chat, chat_message_2), timeout), \
                     f"Message '{chat_message_2}' not found in group chat messages after user removal"
 
@@ -256,7 +254,7 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
                 messages_screen.group_chat.type_message(message)
 
             with step('Verify text in the link preview bubble'):
-                assert driver.waitFor(
+                assert driver.wait_until(
                     lambda: Messaging.SHOW_PREVIEWS_TITLE.value == messages_screen.group_chat.get_show_link_preview_bubble_title(),
                     timeout), f'Actual title of the link preview is not correct'
                 assert Messaging.SHOW_PREVIEWS_TEXT.value == messages_screen.group_chat.get_show_link_preview_bubble_description(), \
@@ -270,7 +268,7 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
 
             with step('Verify that message was sent without preview'):
                 sent_message = messages_screen.chat.messages(0)
-                assert driver.waitFor(lambda: sent_message[0].link_preview_title_object is None,
+                assert driver.wait_until(lambda: sent_message[0].link_preview_title_object is None,
                                       timeout), f'Message was wrongly sent with preview'
 
             with step(f'Paste external link again and verify that there are still 3 options'):
@@ -298,13 +296,13 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
 
             with step('Verify image and link unfurl are present in the last sent message'):
                 # Re-check message object in case image wasn't found during initial init
-                assert driver.waitFor(lambda: (
+                assert driver.wait_until(lambda: (
                     messages_screen.chat.messages(0)[0].image_message is not None and
                     messages_screen.chat.messages(0)[0].image_message.visible
                 ), timeout), f"Image is not found in the last message"
-                assert driver.waitFor(lambda: messages_screen.chat.messages(0)[0].delegate_button.is_visible,
+                assert driver.wait_until(lambda: messages_screen.chat.messages(0)[0].delegate_button.is_visible,
                                       timeout), f"Link preview is not found in the last message"
-                assert driver.waitFor(
+                assert driver.wait_until(
                     lambda: domain_link_2 == messages_screen.chat.messages(0)[0].get_link_domain(),
                     timeout), f"Link domain is not '{domain_link_2}'"
 
@@ -316,7 +314,7 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
 
             with step('Verify title is correct for link preview of sent message'):
                 sent_message = messages_screen.chat.messages(0)
-                assert driver.waitFor(lambda: sent_message[0].get_link_preview_title() == user_two.name,
+                assert driver.wait_until(lambda: sent_message[0].get_link_preview_title() == user_two.name,
                                       timeout)
 
             with step(f'Clear group chat history'):
@@ -328,7 +326,7 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
                 messages_screen.group_chat.leave_group().confirm_leaving()
 
             with step('Check that group name is not displayed on left panel'):
-                assert driver.waitFor(lambda: group_chat_new_name not in messages_screen.left_panel.get_chats_names,
+                assert driver.wait_until(lambda: group_chat_new_name not in messages_screen.left_panel.get_chats_names,
                                       configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
             main_window.minimize()
 
@@ -336,17 +334,16 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
             with step(f'Check that {user_three.name} is not a member of a group'):
                 switch_to_aut(aut_three, main_window)
                 skip_message_backup_popup_if_visible()
-                skip_intro_if_visible()
                 close_activity_center_if_visible()
                 main_window.left_panel.open_messages_screen()
-                assert driver.waitFor(lambda: group_chat_new_name in messages_screen.left_panel.get_chats_names,
+                assert driver.wait_until(lambda: group_chat_new_name in messages_screen.left_panel.get_chats_names,
                                       10000), f'{group_chat_new_name} is not present in chats list for {aut_three}'
                 messages_screen.left_panel.click_chat_by_name(group_chat_new_name)
-                assert driver.waitFor(
+                assert driver.wait_until(
                     lambda: messages_screen.group_chat.group_name == group_chat_new_name,
                     configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
                 ), f'Group chat {group_chat_new_name!r} is not open for {aut_three}'
-                assert driver.waitFor(
+                assert driver.wait_until(
                     lambda: messages_screen.group_chat.gray_text_from_message_area
                     == Messaging.YOU_NEED_TO_BE_A_MEMBER.value,
                     timeout,
@@ -357,11 +354,11 @@ def test_group_chat_add_contact_in_ac(multiple_instances, community_name, domain
                 assert not messages_screen.group_chat.is_message_area_enabled
 
             with step('Verify members in a group members list'):
-                assert driver.waitFor(lambda: user_one.name in messages_screen.right_panel.members,
+                assert driver.wait_until(lambda: user_one.name in messages_screen.right_panel.members,
                                       configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
-                assert driver.waitFor(lambda: user_three.profile_name not in messages_screen.right_panel.members,
+                assert driver.wait_until(lambda: user_three.profile_name not in messages_screen.right_panel.members,
                                       configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
-                assert driver.waitFor(lambda: len(messages_screen.right_panel.members) == 2,
+                assert driver.wait_until(lambda: len(messages_screen.right_panel.members) == 2,
                                       configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
 
             with step('Leave group'):

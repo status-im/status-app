@@ -14,6 +14,11 @@ from gui.elements.text_edit import TextEdit
 from gui.objects_map import communities_names, messaging_names
 from driver.objects_access import walk_children
 from helpers.chat_helper import skip_message_backup_popup_if_visible
+from helpers.thread_helper import (
+    messages_list_notifications_count,
+    messages_list_row_muted,
+    wait_for_messages_list_row_muted,
+)
 
 
 class LeftPanel(QObject):
@@ -31,11 +36,23 @@ class LeftPanel(QObject):
     def get_chats_names(self) -> typing.List[str]:
         self._chat_list_item.real_name.pop('objectName', None)
         chats_list = []
-        for item in driver.findAllObjects(self._chat_list_item.real_name):
+        for item in driver.find_all(self._chat_list_item.real_name):
             name = str(getattr(item, 'objectName', ''))
             if name:
                 chats_list.append(name)
         return chats_list
+
+    @allure.step('Get notifications count for chat list item')
+    def notifications_count(self, chat_name: str) -> int:
+        return messages_list_notifications_count(self._chat_list_item.real_name, chat_name)
+
+    @allure.step('Chat list item is muted')
+    def row_is_muted(self, chat_name: str) -> bool:
+        return messages_list_row_muted(self._chat_list_item.real_name, chat_name)
+
+    @allure.step('Wait until chat list item {chat_name!r} is muted')
+    def wait_until_row_muted(self, chat_name: str):
+        wait_for_messages_list_row_muted(self._chat_list_item.real_name, chat_name)
 
     @allure.step('Click chat item')
     def click_chat_by_name(self, chat_name: str, attempts: int = 4):
@@ -93,16 +110,16 @@ class ToolBar(QObject):
 
     @allure.step('Remove member by clicking close icon on member tag')
     def click_contact_close_icon(self, member):
-        for item in driver.findAllObjects(self.contact_tag.real_name):
+        for item in driver.find_all(self.contact_tag.real_name):
             if str(getattr(item, 'text', '')) == str(member):
                 for child in walk_children(item):
                     if getattr(child, 'objectName', '') == 'close-icon':
-                        driver.mouseClick(child)
+                        driver.click(child)
                         break
 
     @allure.step('Open pinned messages panel')
     def open_pinned_messages_panel(self):
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.pinned_message_tooltip.is_visible,
             configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
         ), 'Pinned messages banner was not shown'
@@ -119,4 +136,4 @@ class Members(QObject):
     @property
     @allure.step('Get group members')
     def members(self) -> typing.List[str]:
-        return [str(member.userName) for member in driver.findAllObjects(self._member_item.real_name)]
+        return [str(member.userName) for member in driver.find_all(self._member_item.real_name)]

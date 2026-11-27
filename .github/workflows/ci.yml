@@ -92,7 +92,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: [desktop, android]
+        # tests is built on desktop: build-image.sh gets that one first.
+        image: [desktop, android, tests]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -284,6 +285,15 @@ jobs:
     timeout-minutes: 60
     steps:
       - *checkout
+      # Jenkins builds ci/tests.Dockerfile without BASE, so its default must name the current image.
+      - name: Test image base is current
+        run: |
+          base="$(sed -nE 's/^ARG BASE=(.*)$/\1/p' ci/tests.Dockerfile)"
+          image="$(ci/build-image.sh --image desktop)"
+          if [ "$base" != "$image" ]; then
+            echo "::error file=ci/tests.Dockerfile::BASE defaults to $base, but ci/Dockerfile now builds $image"
+            exit 1
+          fi
       - name: Fetch submodules
         run: scripts/ci-fetch-submodules.sh
       # linuxdeployqt and appimagetool are AppImages: without FUSE they unpack and run.
@@ -315,6 +325,72 @@ jobs:
           platform: linux-x86_64
           file: pkg/Status.tar.gz
           suffix: .tar.gz
+
+  # The desktop suite (test/e2e) against the builds of this run: each system
+  # starts when its own build is done, and only if that build succeeded.
+  # They run for pull requests and manual runs, not for a push to master.
+  e2e-linux:
+    needs: linux
+    if: ${{ !cancelled() && github.event_name != 'push' && needs.linux.result == 'success' }}
+    permissions: &e2e-permissions
+      contents: read
+      actions: read
+      packages: read
+    uses: ./.github/workflows/e2e.yml
+    secrets:
+      WALLET_TEST_USER_SEED: ${{ secrets.WALLET_TEST_USER_SEED }}
+    with:
+      os: linux
+      run-id: ${{ github.run_id }}
+
+  e2e-windows:
+    needs: windows
+    if: ${{ !cancelled() && github.event_name != 'push' && needs.windows.result == 'success' }}
+    permissions: *e2e-permissions
+    uses: ./.github/workflows/e2e.yml
+    secrets:
+      WALLET_TEST_USER_SEED: ${{ secrets.WALLET_TEST_USER_SEED }}
+    with:
+      os: windows
+      run-id: ${{ github.run_id }}
+
+  e2e-macos:
+    needs: macos
+    if: ${{ !cancelled() && github.event_name != 'push' && needs.macos.result == 'success' }}
+    permissions: *e2e-permissions
+    uses: ./.github/workflows/e2e.yml
+    secrets:
+      WALLET_TEST_USER_SEED: ${{ secrets.WALLET_TEST_USER_SEED }}
+    with:
+      os: macos
+      run-id: ${{ github.run_id }}
+
+  # The check a branch rule can require. It reports on every run; a skipped
+  # e2e-linux reports nothing under the name of its tests, and a rule that
+  # requires that name then waits forever. Windows and macOS are not counted:
+  # they do not fail the workflow yet.
+  e2e:
+    name: e2e
+    needs: [linux, e2e-linux]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Result
+        env:
+          BUILD: ${{ needs.linux.result }}
+          TESTS: ${{ needs.e2e-linux.result }}
+        run: |
+          echo "linux build: $BUILD, e2e-linux: $TESTS, event: $GITHUB_EVENT_NAME"
+          case "$BUILD/$TESTS" in
+            success/success) exit 0 ;;
+            # Nothing was built: a change in documentation only.
+            skipped/skipped) exit 0 ;;
+            # A push to master builds and does not run the suite.
+            success/skipped) [ "$GITHUB_EVENT_NAME" = push ] && exit 0 ;;
+          esac
+          echo "::error::The Linux e2e suite did not pass (build: $BUILD, tests: $TESTS)."
+          exit 1
 
   android:
     name: android
@@ -551,10 +627,10 @@ jobs:
           fetch https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.8/LLVM-22.1.8-win64.exe \
             16e5709785fef73c854646241c4a92c5cd574318d1b33c63330dd7721903e55c "$tools/llvm-setup.exe"
           extract "$tools/llvm-setup.exe" "$tools/llvm"
-          # Nim 2.2.10, the version nim_status_client.nimble pins: nimble takes it
+          # Nim 2.2.12, the version nim_status_client.nimble pins: nimble takes it
           # instead of building one from source.
-          fetch https://github.com/nim-lang/nightlies/releases/download/2026-04-24-version-2-2-bfeb3146d1638b39f69007a4ae5a23e23ae4e5ef/nim-2.2.10-windows_x64.zip \
-            fe0686a9b298e5b13d0a983df37e002a8c6320f8b16cc45a51d15cf4046a109f "$tools/nim.zip"
+          fetch https://github.com/nim-lang/nightlies/releases/download/2026-09-08-version-2-2-8e8fbf60693418dc95bb0d762fd660231d08a583/nim-2.2.12-windows_x64.zip \
+            dafe9c81f8118fac2e07ee24f3649448a590d8b0f3b55d1a97c66f99035cc8e6 "$tools/nim.zip"
           extract "$tools/nim.zip" "$tools"
           # nimble 0.26.2, which reuses the packages a restored cache holds
           fetch https://github.com/nim-lang/nimble/releases/download/v0.26.2/nimble-windows_x64.zip \
@@ -594,7 +670,7 @@ jobs:
             cygpath -w "$tools/mingw64/bin"
             # The compiler archive has a cmake of its own, which builds with Ninja.
             echo 'C:\Program Files\CMake\bin'
-            cygpath -w "$tools/nim-2.2.10/bin"
+            cygpath -w "$tools/nim-2.2.12/bin"
             # Nim ships an older nimble next to the compiler.
             cygpath -w "$tools/nimble"
           } >> "$GITHUB_PATH"

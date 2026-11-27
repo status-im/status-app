@@ -7,6 +7,7 @@ import allure
 import configs
 import constants.colors
 import driver
+from driver.obj import colour_hex
 from configs.timeouts import APP_LOAD_TIMEOUT_MSEC
 from constants import UserAccount, CommunityData
 from gui.components.activity_center import ActivityCenter
@@ -14,7 +15,7 @@ from gui.components.changes_detected_popup import ChangesDetectedToastMessage
 from gui.components.education_popup import EducationPopup
 from gui.objects_map.names import continue_StatusButton
 from gui.screens.market import MarketScreen
-from helpers.chat_helper import skip_message_backup_popup_if_visible, skip_intro_if_visible
+from helpers.chat_helper import skip_message_backup_popup_if_visible
 from gui.components.context_menu import ContextMenu
 from gui.components.splash_screen import SplashScreen
 from gui.components.online_identifier import OnlineIdentifier
@@ -130,7 +131,7 @@ class MainLeftPanel(QObject):
         locator = names.statusCommunityMainNavBarListView_CommunityNavBarButton.copy()
         locator.pop('objectName', None)
         community_names = []
-        for obj in driver.findAllObjects(locator):
+        for obj in driver.find_all(locator):
             try:
                 object_name = str(obj.objectName)
             except (AttributeError, RuntimeError):
@@ -150,12 +151,12 @@ class MainLeftPanel(QObject):
     @property
     @allure.step('Get user badge color')
     def user_badge_color(self) -> str:
-        return str(self.profile_button.object.badge.color.name)
+        return colour_hex(self.profile_button.object.badge.color)
 
     @property
     @allure.step('Get avatar background color')
     def avatar_background_color(self) -> str:
-        return str(self.profile_button.object.identicon.asset.bgColor.name).upper()
+        return colour_hex(self.profile_button.object.identicon.asset.bgColor).upper()
 
     @allure.step('Verify: User is online')
     def user_is_online(self) -> bool:
@@ -175,7 +176,6 @@ class MainLeftPanel(QObject):
         for attempt in range(1, attempts + 1):
             LOG.info('Attempt #%s to open Community portal', attempt)
             self.communities_portal_button.click()
-            skip_intro_if_visible()
             skip_message_backup_popup_if_visible()
             try:
                 portal = CommunitiesPortal()
@@ -204,7 +204,6 @@ class MainLeftPanel(QObject):
         self._get_community(name)
         self.community_template_button.click()
         skip_message_backup_popup_if_visible()
-        skip_intro_if_visible()
         community = CommunityScreen()
         community.wait_for_content_loaded()
         return community
@@ -217,7 +216,6 @@ class MainLeftPanel(QObject):
         self._get_community(name)
         self.community_template_button.click()
         skip_message_backup_popup_if_visible()
-        skip_intro_if_visible()
         community = CommunityScreen()
         check_interval = 0.1
         timeout_sec = timeout_msec / 1000

@@ -205,8 +205,8 @@ SplitView {
     LogsAndControlsPanel {
         id: logsAndControlsPanel
 
-        SplitView.minimumHeight: 350
-        SplitView.preferredHeight: 350
+        SplitView.minimumHeight: 400
+        SplitView.preferredHeight: 400
 
         logsView.logText: logs.logText
 

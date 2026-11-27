@@ -11,6 +11,7 @@ from constants.onboarding import OnboardingScreensHeaders
 import driver
 from constants import ColorCodes
 from constants.keycard import KEYCARD_NOT_VERIFIED_SNIPPET
+from driver.obj import colour_hex
 from driver.objects_access import walk_children
 from gui.components.onboarding.language_selector import LanguageSelector
 from gui.components.onboarding.login_by_syncing_checklist import LogInBySyncingDialog
@@ -192,7 +193,7 @@ class SyncDeviceFoundView(OnboardingView):
     @allure.step('Get device_found_notifications')
     def device_found_notifications(self) -> typing.List:
         device_found_notifications = []
-        for obj in driver.findAllObjects(self._sync_text_item.real_name):
+        for obj in driver.find_all(self._sync_text_item.real_name):
             device_found_notifications.append(str(obj.text))
         return device_found_notifications
 
@@ -210,7 +211,7 @@ class SyncResultView(OnboardingView):
     @allure.step('Get device synced notifications')
     def device_synced_notifications(self) -> typing.List:
         device_synced_notifications = []
-        for obj in driver.findAllObjects(self.synced_text_item.real_name):
+        for obj in driver.find_all(self.synced_text_item.real_name):
             device_synced_notifications.append(str(obj.text))
         return device_synced_notifications
 
@@ -259,7 +260,7 @@ class OnboardingImportSeedPhraseView(QObject):
                 if len(word) > 4:
                     word_to_put = word[:-1]
                 self.seed_phrase_input_text_edit.text = word_to_put
-                driver.type(self.seed_phrase_input_text_edit.object, "<Return>")
+                driver.type_text(self.seed_phrase_input_text_edit.object, "<Return>")
             else:
                 self.seed_phrase_input_text_edit.text = word
                 time.sleep(0.2)
@@ -282,7 +283,7 @@ class SeedPhraseInputView(OnboardingView):
     @property
     @allure.step('Get import button enabled state')
     def is_import_button_enabled(self) -> bool:
-        return driver.waitForObjectExists(self._import_button.real_name,
+        return driver.wait_exists(self._import_button.real_name,
                                           configs.timeouts.UI_LOAD_TIMEOUT_MSEC).enabled
 
     @allure.step('Input seed phrase')
@@ -306,7 +307,7 @@ class SeedPhraseInputView(OnboardingView):
                 if len(word) > 4:
                     word_to_put = word[:-1]
                 self._seed_phrase_input_text_edit.text = word_to_put
-                driver.type(self._seed_phrase_input_text_edit.object, "<Return>")
+                driver.type_text(self._seed_phrase_input_text_edit.object, "<Return>")
             else:
                 self._seed_phrase_input_text_edit.text = word
 
@@ -332,7 +333,7 @@ class YourProfileView(OnboardingView):
         self._image_crop_workflow = QObject(onboarding_names.profileImageCropper)
 
     def verify_profile_view_present(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
-        driver.waitFor(lambda: self._view_header_title.exists, timeout_msec)
+        driver.wait_until(lambda: self._view_header_title.exists, timeout_msec)
         assert (getattr(self._view_header_title.object, 'text') ==
                 OnboardingScreensHeaders.YOUR_PROFILE_SCREEN_TITLE.value), \
             f"YourProfileView is not shown or has wrong title, \
@@ -342,7 +343,7 @@ class YourProfileView(OnboardingView):
     @property
     @allure.step('Get next button enabled state')
     def is_next_button_enabled(self) -> bool:
-        return driver.waitForObjectExists(self._next_button.real_name, configs.timeouts.UI_LOAD_TIMEOUT_MSEC).enabled
+        return driver.wait_exists(self._next_button.real_name, configs.timeouts.UI_LOAD_TIMEOUT_MSEC).enabled
 
     @property
     @allure.step('Get profile image')
@@ -370,7 +371,7 @@ class YourProfileView(OnboardingView):
 
     @allure.step('Set profile picture without file upload dialog')
     def set_profile_picture(self, path) -> PictureEditPopup:
-        image_cropper = driver.waitForObjectExists(self._image_crop_workflow.real_name)
+        image_cropper = driver.wait_exists(self._image_crop_workflow.real_name)
         fileuri = pathlib.Path(str(path)).as_uri()
         image_cropper.cropImage(fileuri)
         return PictureEditPopup()
@@ -408,7 +409,7 @@ class YourEmojihashAndIdenticonRingView(OnboardingView):
         self._view_header_title = TextLabel(onboarding_names.mainWindow_Header_Title)
 
     def verify_emojihash_view_present(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
-        driver.waitFor(lambda: self._view_header_title.exists, timeout_msec)
+        driver.wait_until(lambda: self._view_header_title.exists, timeout_msec)
         assert (getattr(self._view_header_title.object, 'text') ==
                 OnboardingScreensHeaders.YOUR_EMOJIHASH_AND_IDENTICON_RING_SCREEN_TITLE.value), \
             f"YourEmojihashAndIdenticonRingView is not shown or has wrong title, \
@@ -427,7 +428,7 @@ class YourEmojihashAndIdenticonRingView(OnboardingView):
         # Profile image without identicon_ring
         self._profile_image.image.update_view()
         self._profile_image.image.crop(
-            driver.UiTypes.ScreenRectangle(
+            driver.Rect(
                 20, 20, self._profile_image.image.width - 40, self._profile_image.image.height - 40
             ))
         return self._profile_image.image
@@ -450,7 +451,7 @@ class YourEmojihashAndIdenticonRingView(OnboardingView):
     @allure.step
     @allure.step('Verify: User image contains text')
     def is_user_image_contains(self, text: str):
-        crop = driver.UiTypes.ScreenRectangle(
+        crop = driver.Rect(
             20, 20, self._profile_image.image.width - 40, self._profile_image.image.height - 40
         )
         return self.profile_image.has_text(text, constants.tesseract.text_on_profile_image, crop=crop)
@@ -458,7 +459,7 @@ class YourEmojihashAndIdenticonRingView(OnboardingView):
     @allure.step
     @allure.step('Verify: User image background color')
     def is_user_image_background_white(self):
-        crop = driver.UiTypes.ScreenRectangle(
+        crop = driver.Rect(
             20, 20, self._profile_image.image.width - 40, self._profile_image.image.height - 40
         )
         return self.profile_image.has_color(constants.Color.WHITE, crop=crop)
@@ -511,13 +512,13 @@ class CreatePasswordView(OnboardingView):
     @property
     @allure.step('Verify: Create password button enabled')
     def is_create_password_button_enabled(self) -> bool:
-        return driver.waitForObjectExists(self._create_button.real_name,
+        return driver.wait_exists(self._create_button.real_name,
                                           configs.timeouts.UI_LOAD_TIMEOUT_MSEC).enabled
 
     @property
     @allure.step('Get strength indicator color')
     def strength_indicator_color(self) -> str:
-        return self._strength_indicator.object.fillColor['name']
+        return colour_hex(self._strength_indicator.object.fillColor)
 
     @property
     @allure.step('Get strength indicator text')
@@ -530,8 +531,8 @@ class CreatePasswordView(OnboardingView):
         messages = []
         color = ColorCodes.GREEN.value
 
-        for item in driver.findAllObjects(self.password_component_indicator.real_name):
-            if str(item.color.name) == color:
+        for item in driver.find_all(self.password_component_indicator.real_name):
+            if colour_hex(item.color) == color:
                 messages.append(str(item.text))
         return messages
 
@@ -542,13 +543,13 @@ class CreatePasswordView(OnboardingView):
 
     @allure.step('Click show icon by index')
     def click_show_icon(self, index):
-        show_icons = driver.findAllObjects(self._show_icon.real_name)
-        driver.mouseClick(show_icons[index])
+        show_icons = driver.find_all(self._show_icon.real_name)
+        driver.click(show_icons[index])
 
     @allure.step('Click hide icon by index')
     def click_hide_icon(self, index):
-        hide_icons = driver.findAllObjects(self._hide_icon.real_name)
-        driver.mouseClick(hide_icons[index])
+        hide_icons = driver.find_all(self._hide_icon.real_name)
+        driver.click(hide_icons[index])
 
     @allure.step('Go back')
     def back(self):
@@ -574,7 +575,7 @@ class OnboardingCreatePasswordView(OnboardingView):
         if self.stay_logged_in_switch.is_checked == enabled:
             return
         self.stay_logged_in_switch.click()
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.stay_logged_in_switch.is_checked == enabled,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), f'Save password switch did not become {enabled}'
@@ -603,7 +604,7 @@ class OnboardingCreatePasswordView(OnboardingView):
     @property
     @allure.step('Get strength indicator color')
     def strength_indicator_color(self) -> str:
-        return self.password_strength_indicator.object.fillColor['name']
+        return colour_hex(self.password_strength_indicator.object.fillColor)
 
     @property
     @allure.step('Get strength indicator text')
@@ -616,8 +617,8 @@ class OnboardingCreatePasswordView(OnboardingView):
         messages = []
         color = ColorCodes.GREEN.value
 
-        for item in driver.findAllObjects(self.password_component_indicator.real_name):
-            if str(item.color.name) == color:
+        for item in driver.find_all(self.password_component_indicator.real_name):
+            if colour_hex(item.color) == color:
                 messages.append(str(item.text))
         return messages
 
@@ -639,7 +640,7 @@ class ConfirmPasswordView(OnboardingView):
     @property
     @allure.step('Get finalise password creation button enabled state')
     def is_confirm_password_button_enabled(self) -> bool:
-        return driver.waitForObjectExists(self._confirm_button.real_name,
+        return driver.wait_exists(self._confirm_button.real_name,
                                           configs.timeouts.UI_LOAD_TIMEOUT_MSEC).enabled
 
     @property
@@ -762,20 +763,20 @@ class KeycardLoginView(QObject):
 
     def _safe_info_text(self) -> str:
         try:
-            obj = driver.waitForObject(self._info_text.real_name, 200)
+            obj = driver.wait(self._info_text.real_name, 200)
             return str(obj.text)
         except (LookupError, RuntimeError, AttributeError, TypeError):
             return ''
 
     def _pin_value(self) -> str:
         try:
-            obj = driver.waitForObject(self.pin_input.real_name, 200)
+            obj = driver.wait(self.pin_input.real_name, 200)
             return str(getattr(obj, 'pinInput', '') or '')
         except (LookupError, RuntimeError, AttributeError, TypeError):
             return ''
 
     def _wait_for_info_containing(self, expected_info: str, timeout_msec: int):
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: expected_info in self._safe_info_text(),
             timeout_msec,
         ), f'Expected {expected_info!r} on login Keycard box, got {self._safe_info_text()!r}'
@@ -783,7 +784,7 @@ class KeycardLoginView(QObject):
     def _wait_for_pin_ready(self, expected_info: str, timeout_msec: int):
         self.pin_input.wait_until_appears(timeout_msec)
         self.pin_input.wait_until_stable()
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: expected_info in self._safe_info_text()
                     and self.pin_input.is_visible
                     and len(self._pin_value()) == 0,
@@ -796,7 +797,7 @@ class KeycardLoginView(QObject):
             self,
             timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
     ):
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: (
                 KEYCARD_NOT_VERIFIED_SNIPPET in self._safe_info_text()
                 and not self.pin_input.is_visible
@@ -882,7 +883,7 @@ class ConvertKeycardAccountView(QObject):
             timeout_msec: int = configs.timeouts.APP_LOAD_TIMEOUT_MSEC,
     ):
         self.wait_until_appears(timeout_msec)
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.title == expected_title,
             timeout_msec,
         ), f'Expected convert title {expected_title!r}, got {self.title!r}'

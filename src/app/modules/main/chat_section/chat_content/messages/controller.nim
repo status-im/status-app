@@ -134,7 +134,11 @@ proc init*(self: Controller) =
     let args = MessageMarkMessageAsUnreadArgs(e)
     if self.chatId != args.chatId:
       return
-    self.delegate.onMarkMessageAsUnread(args.messageId)
+    if self.threadId == args.threadId:
+      self.delegate.onMarkMessageAsUnread(args.messageId)
+    elif args.threadId.len == 0 and args.messageId == self.threadId:
+      # The thread ID is the root message ID, including after cache eviction.
+      self.delegate.onThreadRootMarkedAsUnread(args.messageId)
 
   self.events.on(SIGNAL_MESSAGE_REACTION_ADDED) do(e:Args):
     let args = MessageAddRemoveReactionArgs(e)
@@ -332,8 +336,8 @@ proc getThreadForParentMessage*(self: Controller, parentMessageId: string): Thre
 proc getThread*(self: Controller): lent ThreadDto =
   self.messageService.getThreadById(self.chatId, self.threadId)
 
-proc setThreadMuted*(self: Controller, interval: int) =
-  self.messageService.setThreadMuted(self.chatId, self.threadId, interval)
+proc setThreadMutedById*(self: Controller, threadId: string, interval: int) =
+  self.messageService.setThreadMuted(self.chatId, threadId, interval)
 
 proc getThreadById*(self: Controller, threadId: string): ThreadDto =
   self.messageService.getThreadById(self.chatId, threadId)

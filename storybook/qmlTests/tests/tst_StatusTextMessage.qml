@@ -27,6 +27,7 @@ Item {
         id: messageComponent
         StatusMessage {
             id: message
+            headerServices: null // showHeader: false, no header is created
             textAppearance: MessageTextAppearance {
                 theme: message.Theme
                 selectionPalette: message.palette
@@ -54,12 +55,12 @@ Item {
             const part = createTemporaryObject(partComponent, root, properties || {})
             verify(!!part)
             verify(waitForPolish(part))
-            verify(part.textField instanceof ChatTextItem)
+            verify(part instanceof ChatTextItem)
             return part
         }
-        function linkSpy(part) {
+        function linkSpy(target, signalName) {
             const spy = createTemporaryObject(spyComponent, root,
-                {target: part, signalName: "linkActivated"})
+                {target: target, signalName: signalName || "messageLinkActivated"})
             verify(!!spy && spy.valid)
             return spy
         }
@@ -85,73 +86,70 @@ Item {
 
         function test_sourceAccessibilityAndEditedMarker() {
             const part = createPart()
-            const field = part.textField
             // CI may have accessibility inactive. Attach explicitly before
             // content updates so the test exercises accessible-name updates.
-            field.Accessible.role = Accessible.StaticText
+            part.Accessible.role = Accessible.StaticText
             part.messageDetails.messageContent = "stale server content"
             part.messageDetails.mentionsMap = ({[root.pubKey]: "Alice"})
             part.messageDetails.unparsedText = "**Hello** @" + root.pubKey + "\n`<tag>&`"
-            field.selectAll()
+            part.selectAll()
             compare(part.selectedText, "Hello @Alice\n<tag>&")
-            compare(field.text, "Hello @Alice\n<tag>&")
-            compare(field.Accessible.name, field.text)
-            verify(field.segments.some(segment => segment.bold && segment.text === "Hello"))
-            verify(field.segments.some(segment => segment.code && segment.text === "<tag>&"))
+            compare(part.text, "Hello @Alice\n<tag>&")
+            compare(part.Accessible.name, part.text)
+            verify(part.segments.some(segment => segment.bold && segment.text === "Hello"))
+            verify(part.segments.some(segment => segment.code && segment.text === "<tag>&"))
             part.isEdited = true
-            field.selectAll()
+            part.selectAll()
             compare(part.selectedText, "Hello @Alice\n<tag>& (edited)")
-            compare(field.Accessible.name, "Hello @Alice\n<tag>& (edited)")
-            compare(field.text, field.Accessible.name)
+            compare(part.Accessible.name, "Hello @Alice\n<tag>& (edited)")
+            compare(part.text, part.Accessible.name)
             part.isEdited = false
-            verify(field.text.indexOf("(edited)") < 0)
+            verify(part.text.indexOf("(edited)") < 0)
         }
 
         function test_themeAndEmojiSettings() {
             const part = createPart()
-            const field = part.textField
-            compare(field.appearance.font.family, Fonts.baseFont.family)
-            compare(field.appearance.font.pixelSize, Theme.primaryTextFontSize)
-            compare(field.appearance.color, Theme.palette.directColor1)
-            compare(field.appearance.linkColor, Theme.palette.primaryColor1)
-            compare(field.appearance.hoverHighlightColor, Theme.palette.primaryColor3)
-            compare(field.appearance.codeFontFamily, Fonts.codeFont.family)
-            compare(field.appearance.codeBackground, Theme.palette.baseColor4)
-            compare(field.appearance.codeBorderColor, Theme.palette.baseColor2)
-            compare(field.appearance.quoteBarColor, Theme.palette.baseColor1)
-            compare(field.appearance.editedMarkerFontSize, Theme.tertiaryTextFontSize)
-            compare(field.appearance.editedMarkerColor, Theme.palette.baseColor1)
-            compare(field.appearance.emojiOnlyPixelSize, Math.round(field.appearance.font.pixelSize * 2.2))
+            compare(part.appearance.font.family, Fonts.baseFont.family)
+            compare(part.appearance.font.pixelSize, Theme.primaryTextFontSize)
+            compare(part.appearance.color, Theme.palette.directColor1)
+            compare(part.appearance.linkColor, Theme.palette.primaryColor1)
+            compare(part.appearance.hoverHighlightColor, Theme.palette.primaryColor3)
+            compare(part.appearance.codeFontFamily, Fonts.codeFont.family)
+            compare(part.appearance.codeBackground, Theme.palette.baseColor4)
+            compare(part.appearance.codeBorderColor, Theme.palette.baseColor2)
+            compare(part.appearance.quoteBarColor, Theme.palette.baseColor1)
+            compare(part.appearance.editedMarkerFontSize, Theme.tertiaryTextFontSize)
+            compare(part.appearance.editedMarkerColor, Theme.palette.baseColor1)
+            compare(part.appearance.emojiOnlyPixelSize, Math.round(part.appearance.font.pixelSize * 2.2))
             part.messageDetails.unparsedText = "😎"
-            verify(field.emojiOnly)
+            verify(part.emojiOnly)
             part.isEdited = true
-            verify(field.emojiOnly)
+            verify(part.emojiOnly)
             part.messageDetails.unparsedText = "**😎**"
-            compare(field.emojiOnly, false)
+            compare(part.emojiOnly, false)
             part.messageDetails.mentionsMap = ({[root.pubKey]: "Alice"})
             part.messageDetails.unparsedText = "> quoted\n\n@" + root.pubKey
-            const quoted = field.segments.find(segment => segment.quoteLevel > 0)
-            const mention = field.segments.find(segment => segment.href === root.pubKey)
+            const quoted = part.segments.find(segment => segment.quoteLevel > 0)
+            const mention = part.segments.find(segment => segment.href === root.pubKey)
             verify(quoted.quoteLevel > 0)
-            compare(field.appearance.quoteColor, Theme.palette.baseColor1)
+            compare(part.appearance.quoteColor, Theme.palette.baseColor1)
             verify(mention.mention)
-            compare(field.appearance.mentionColor, Theme.palette.primaryColor1)
-            compare(field.appearance.mentionBackground, Theme.palette.baseColor2)
+            compare(part.appearance.mentionColor, Theme.palette.primaryColor1)
+            compare(part.appearance.mentionBackground, Theme.palette.baseColor2)
         }
 
         function test_themeChangesDoNotReparseSegments() {
             const part = createPart()
-            const field = part.textField
             part.messageDetails.unparsedText = "> quote @" + root.pubKey
-            const spy = createTemporaryObject(spyComponent, root, {target: field, signalName: "segmentsChanged"})
-            field.selectAll()
-            const selected = field.selectedText
+            const spy = createTemporaryObject(spyComponent, root, {target: part, signalName: "segmentsChanged"})
+            part.selectAll()
+            const selected = part.selectedText
             for (const style of [Theme.Style.Dark, Theme.Style.Light]) {
                 part.Theme.style = style
-                compare(field.appearance.quoteColor, part.Theme.palette.baseColor1)
-                compare(field.appearance.mentionColor, part.Theme.palette.primaryColor1)
-                compare(field.appearance.mentionBackground, part.Theme.palette.baseColor2)
-                compare(field.selectedText, selected)
+                compare(part.appearance.quoteColor, part.Theme.palette.baseColor1)
+                compare(part.appearance.mentionColor, part.Theme.palette.primaryColor1)
+                compare(part.appearance.mentionBackground, part.Theme.palette.baseColor2)
+                compare(part.selectedText, selected)
                 compare(spy.count, 0)
             }
         }
@@ -180,9 +178,9 @@ Item {
                            ens: "//send-via-personal-chat//alice.eth"}
             part.messageDetails.mentionsMap = ({[root.pubKey]: "Alice"})
             part.messageDetails.unparsedText = sources[data.kind]
-            compare(part.textField.selectable, !data.mobile)
+            compare(part.selectable, !data.mobile)
             const spy = linkSpy(part)
-            activate(part.textField, linkPoint(part.textField, hrefs[data.kind]), data.device)
+            activate(part, linkPoint(part, hrefs[data.kind]), data.device)
             const blocked = data.disabled && (data.kind === "address" || data.kind === "ens")
             compare(spy.count, blocked ? 0 : 1)
             if (!blocked)
@@ -193,14 +191,13 @@ Item {
         function test_everyoneIsNotActionable() {
             const part = createPart()
             part.messageDetails.unparsedText = "@0x00001"
-            const field = part.textField
             const spy = linkSpy(part)
-            compare(field.segments[0].text, "@everyone")
-            compare(field.linkAt(10, 11), "")
-            activate(field, Qt.point(10, 11), "mouse")
-            activate(field, Qt.point(10, 11), "touch")
+            compare(part.segments[0].text, "@everyone")
+            compare(part.linkAt(10, 11), "")
+            activate(part, Qt.point(10, 11), "mouse")
+            activate(part, Qt.point(10, 11), "touch")
             compare(spy.count, 0)
-            field.selectAll()
+            part.selectAll()
             compare(part.selectedText, "@everyone")
         }
 
@@ -208,37 +205,36 @@ Item {
             mouseMove(root, 790, 790)
             const part = createPart()
             part.messageDetails.unparsedText = root.address
-            const field = part.textField
             const href = "//send-via-personal-chat//" + root.address
-            const point = linkPoint(field, href)
+            const point = linkPoint(part, href)
             const loader = findChild(part, "StatusTextMessage_disabledLinkTooltipLoader")
             verify(!!loader)
             compare(loader.item, null)
             compare(findChild(part, "StatusTextMessage_disabledLinkTooltip"), null)
-            mouseMove(field, point.x, point.y)
+            mouseMove(part, point.x, point.y)
             compare(part.hoveredLink, href)
             compare(loader.item, null)
             part.disabledTooltipText = "Not available"
             tryVerify(() => !!loader.item)
             const tooltip = loader.item
             compare(findChild(part, "StatusTextMessage_disabledLinkTooltip"), tooltip)
-            compare(tooltip.parent, field)
+            compare(tooltip.parent, part)
             compare(tooltip.delay, 100)
             compare(tooltip.opened, false)
             tryCompare(tooltip, "visible", true)
             tryCompare(tooltip, "opened", true)
             compare(tooltip.text, "Not available")
             part.highlightedLink = href
-            compare(field.highlightedLink, href)
+            compare(part.highlightedLink, href)
             part.disabledTooltipText = ""
             tryCompare(tooltip, "visible", false)
             mouseMove(root, 790, 790)
             compare(part.hoveredLink, "")
-            compare(field.highlightedLink, href)
+            compare(part.highlightedLink, href)
             compare(loader.item, tooltip)
             part.disabledTooltipText = "Another reason"
             compare(tooltip.visible, false)
-            mouseMove(field, point.x, point.y)
+            mouseMove(part, point.x, point.y)
             tryCompare(tooltip, "opened", true)
             compare(loader.item, tooltip)
             compare(tooltip.text, "Another reason")
@@ -261,15 +257,14 @@ Item {
             const part = createPart({disabledTooltipText: "Not available"})
             part.messageDetails.mentionsMap = ({[root.pubKey]: "Alice"})
             part.messageDetails.unparsedText = data.source
-            const field = part.textField
             const loader = findChild(part, "StatusTextMessage_disabledLinkTooltipLoader")
             compare(loader.item, null)
-            const point = data.href ? linkPoint(field, data.href) : Qt.point(5, 11)
-            mouseMove(field, point.x, point.y)
+            const point = data.href ? linkPoint(part, data.href) : Qt.point(5, 11)
+            mouseMove(part, point.x, point.y)
             if (data.wallet) {
                 tryVerify(() => !!loader.item && loader.item.opened)
                 compare(loader.item.text, "Not available")
-                mouseMove(field, field.width - 5, point.y)
+                mouseMove(part, part.width - 5, point.y)
                 tryCompare(loader.item, "visible", false)
             } else {
                 wait(150)
@@ -278,96 +273,96 @@ Item {
             mouseMove(root, 790, 790)
         }
 
-        function test_touchDoesNotCreateDisabledTooltip() {
+        function test_touchDoesNotCreateDisabledTooltip_data() {
+            return [{tag: "desktop", mobile: false}, {tag: "mobile", mobile: true}]
+        }
+
+        function test_touchDoesNotCreateDisabledTooltip(data) {
             mouseMove(root, 790, 790)
-            const part = createPart({isMobile: true, disabledTooltipText: "Not available"})
+            const part = createPart({isMobile: data.mobile, disabledTooltipText: "Not available"})
             part.messageDetails.unparsedText = root.address
-            const field = part.textField
             const loader = findChild(part, "StatusTextMessage_disabledLinkTooltipLoader")
             const spy = linkSpy(part)
-            activate(field, linkPoint(field, "//send-via-personal-chat//" + root.address), "touch")
+            const point = linkPoint(part, "//send-via-personal-chat//" + root.address)
+            const touch = touchEvent(part)
+            touch.press(0, part, point.x, point.y).commit()
+            compare(loader.item, null)
+            touch.release(0, part, point.x, point.y).commit()
             compare(spy.count, 0)
             wait(150)
             compare(loader.item, null)
+
+            mouseMove(root, 790, 790)
+            mouseMove(part, point.x, point.y)
+            tryVerify(() => !!loader.item && loader.item.opened)
+            compare(loader.item.text, "Not available")
+            mouseMove(root, 790, 790)
         }
 
         function test_focusPolicyAndMobileToggle() {
             const part = createPart()
-            const field = part.textField
-            field.forceActiveFocus()
-            field.selectAll()
+            part.forceActiveFocus()
+            part.selectAll()
             focusSink.forceActiveFocus()
             compare(part.selectedText, "")
             part.clearSelectionOnLostFocus = false
-            compare(field.persistentSelection, true)
-            field.forceActiveFocus()
-            field.selectAll()
+            compare(part.persistentSelection, true)
+            part.forceActiveFocus()
+            part.selectAll()
             focusSink.forceActiveFocus()
             compare(part.selectedText, "hello")
             part.clearSelectionOnLostFocus = true
-            compare(field.persistentSelection, false)
-            field.forceActiveFocus()
+            compare(part.persistentSelection, false)
+            part.forceActiveFocus()
             focusSink.forceActiveFocus()
             compare(part.selectedText, "")
-            field.forceActiveFocus()
-            field.selectAll()
+            part.forceActiveFocus()
+            part.selectAll()
             part.isMobile = true
-            compare(field.selectable, false)
+            compare(part.selectable, false)
             compare(part.selectedText, "")
             part.isMobile = false
-            compare(field.selectable, true)
+            compare(part.selectable, true)
         }
 
-        function test_showMoreAndAllowShowMore() {
+        function test_longMessageShownInFull() {
             const part = createPart()
             part.messageDetails.unparsedText = Array(30).fill("line").join("\n")
-            const field = part.textField
-            const loader = findChild(part, "StatusTextMessage_showMore")
-            verify(!!loader)
-            tryCompare(loader, "active", true)
-            tryVerify(() => !!loader.item && loader.height > 0)
-            verify(field.implicitHeight > 200)
-            compare(field.effectiveHeight, 200)
-            const collapsedHeight = part.implicitHeight
-            mouseClick(loader.item, loader.item.width / 2, loader.item.height / 2)
-            compare(field.effectiveHeight, field.implicitHeight)
-            verify(part.implicitHeight > collapsedHeight)
-            mouseClick(loader.item, loader.item.width / 2, loader.item.height / 2)
-            compare(field.effectiveHeight, 200)
-            part.allowShowMore = false
-            compare(loader.active, false)
-            compare(field.effectiveHeight, field.implicitHeight)
-            compare(part.implicitHeight, field.implicitHeight)
+            verify(part.implicitHeight > 200)
+            compare(findChild(part, "StatusTextMessage_showMore"), null)
+            compare(part.height, part.implicitHeight)
+            compare(part.implicitHeight, part.implicitHeight)
+            compare(part.clip, false)
+            compare(part.layer.enabled, false)
             part.messageDetails.unparsedText = "short"
-            compare(loader.active, false)
-            compare(part.implicitHeight, field.implicitHeight)
+            compare(part.height, part.implicitHeight)
+            compare(part.implicitHeight, part.implicitHeight)
         }
 
         function test_emptySourceCollapsesBody() {
             const part = createPart()
-            part.textField.selectAll()
+            part.selectAll()
             part.messageDetails.unparsedText = ""
             compare(part.selectedText, "")
-            compare(part.textField.contentHeight, 0)
+            compare(part.contentHeight, 0)
             compare(part.implicitHeight, 0)
-            compare(part.textField.text, "")
+            compare(part.text, "")
         }
 
         function test_detailsReplacementClearsInteraction() {
             const part = createPart()
             part.messageDetails.unparsedText = "https://status.app"
-            const field = part.textField
-            const point = linkPoint(field, "https://status.app")
-            field.hoverAt(point.x, point.y)
-            field.forceActiveFocus()
-            field.selectAll()
+            const point = linkPoint(part, "https://status.app")
+            part.hoverAt(point.x, point.y)
+            part.forceActiveFocus()
+            part.selectAll()
             const details = createTemporaryObject(detailsComponent, root,
                 {unparsedText: "replacement"})
             part.messageDetails = details
             compare(part.selectedText, "")
             compare(part.hoveredLink, "")
-            compare(field.text, "replacement")
-            field.selectAll()
+            compare(part.text, "replacement")
+            part.selectAll()
             compare(part.selectedText, "replacement")
         }
 
@@ -375,31 +370,32 @@ Item {
             const message = createTemporaryObject(messageComponent, root)
             verify(!!message)
             verify(waitForPolish(message))
-            const part = findChild(message, "StatusMessage_textMessage")
+            const part = findChild(message, "StatusTextMessage_chatText")
             verify(!!part)
-            const field = part.textField
-            verify(field instanceof ChatTextItem)
-            compare(field.appearance.selectionColor, message.palette.highlight)
-            compare(field.appearance.selectionTextColor, message.palette.highlightedText)
+            verify(part instanceof ChatTextItem)
+            compare(part.appearance.selectionColor, message.palette.highlight)
+            compare(part.appearance.selectionTextColor, message.palette.highlightedText)
             message.palette.highlight = "red"
-            compare(field.appearance.selectionColor, Qt.color("red"))
-            field.selectAll()
+            compare(part.appearance.selectionColor, Qt.color("red"))
+            part.selectAll()
             compare(message.selectedText, "hello")
             message.clearSelectionOnLostFocus = false
-            compare(field.persistentSelection, true)
+            compare(part.persistentSelection, true)
             message.highlightedLink = "https://status.app"
-            compare(field.highlightedLink, "https://status.app")
+            compare(part.highlightedLink, "https://status.app")
             message.messageDetails.unparsedText = "https://status.app"
-            const point = linkPoint(field, "https://status.app")
-            field.hoverAt(point.x, point.y)
+            // The Loader sizes the text from the message layout on its next polish.
+            tryVerify(() => part.height > 0 && part.height === part.implicitHeight)
+            const point = linkPoint(part, "https://status.app")
+            part.hoverAt(point.x, point.y)
             compare(message.hoveredLink, "https://status.app")
-            const spy = linkSpy(message)
-            activate(field, point, "mouse")
+            const spy = linkSpy(message, "linkActivated")
+            activate(part, point, "mouse")
             compare(spy.count, 1)
             compare(spy.signalArguments[0][0], "https://status.app")
+            const fullWidth = part.width
             message.isInPinnedPopup = true
-            compare(part.allowShowMore, false)
-            tryCompare(field, "width", part.width - Theme.xlPadding)
+            tryCompare(part, "width", fullWidth - Theme.xlPadding)
         }
     }
 }

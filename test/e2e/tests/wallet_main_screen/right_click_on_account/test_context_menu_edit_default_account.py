@@ -25,6 +25,6 @@ def test_context_menu_edit_default_account(main_screen: MainWindow, user_account
         account_popup.set_name(new_name).save_changes()
 
     with step('Verify that the account is correctly displayed in accounts list'):
-        assert driver.waitFor(lambda: new_name in [account.name for account in wallet.left_panel.accounts],
+        assert driver.wait_until(lambda: new_name in [account.name for account in wallet.left_panel.accounts],
                               10000), \
             f'Account with {name} is not displayed even it should be'

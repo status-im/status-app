@@ -1,13 +1,13 @@
 import time
 
-import squish
+from . import actions
 
 
 def move(obj: object, x: int, y: int, dx: int, dy: int, step: int, sleep: float = 0):
     while True:
         if x > dx:
             x -= step
-            if x < x:
+            if x < dx:
                 x = dx
         elif x < dx:
             x += step
@@ -21,7 +21,7 @@ def move(obj: object, x: int, y: int, dx: int, dy: int, step: int, sleep: float 
             y += step
             if y > dy:
                 y = dy
-        squish.mouseMove(obj, x, y)
+        actions.move(obj, x, y)
         time.sleep(sleep)
         if x == dx and y == dy:
             break
@@ -33,14 +33,14 @@ def press_and_move(
         y: int,
         dx: int,
         dy: int,
-        mouse: int = squish.MouseButton.LeftButton,
+        button: str = 'left',
         step: int = 1,
         sleep: float = 0
 ):
-    squish.mouseMove(obj, x, y)
-    squish.mousePress(obj, x, y, mouse)
+    actions.move(obj, x, y)
+    actions.press(obj, x, y, button)
     move(obj, x, y, dx, dy, step, sleep)
-    squish.mouseRelease(mouse)
+    actions.release(button)
     time.sleep(1)
 
 def scroll(
@@ -53,5 +53,5 @@ def scroll(
         sleep: float = 0
 ):
     for _ in range(steps):
-        squish.mouseWheel(obj, x, y, dx, dy, squish.Qt.NoModifier)
+        actions.wheel(obj, x, y, dx, dy)
         time.sleep(sleep)

@@ -8,6 +8,7 @@ from allure_commons._allure import step
 import configs
 import driver
 from constants import CommunityChannel
+from driver.obj import colour_hex
 from driver.objects_access import emoji_text, walk_children
 from gui.components.community.community_category_popup import NewCategoryPopup
 from gui.components.community.community_channel_popups import EditChannelPopup, NewChannelPopup
@@ -23,7 +24,9 @@ from gui.elements.object import QObject
 from gui.elements.scroll import Scroll, row_vertically_usable_in_scroll_viewport
 from gui.elements.text_label import TextLabel
 from gui.objects_map import names, communities_names, messaging_names
+from gui.components.messaging.message_context_menu_popup import MessageContextMenuPopup
 from gui.screens.community_settings import CommunitySettingsScreen
+from helpers.thread_helper import list_item_notifications_count
 from scripts.tools.image import Image
 from scripts.utils.parsers import remove_tags
 
@@ -167,7 +170,7 @@ class CommunityToolBar(QObject):
     @property
     @allure.step('Get channel color')
     def channel_color(self) -> str:
-        return str(self._channel_header.object.asset.color.name).lower()
+        return colour_hex(self._channel_header.object.asset.color)
 
     @property
     @allure.step('Get channel name')
@@ -282,7 +285,7 @@ class CommunityLeftPanel(QObject):
             except Exception:
                 return False
 
-        if not driver.waitFor(_name_matches, timeout_msec):
+        if not driver.wait_until(_name_matches, timeout_msec):
             raise TimeoutError(
                 f'Community name did not become {expected!r} within {timeout_msec} ms; '
                 f'last visible name was {last_name!r}'
@@ -304,8 +307,8 @@ class CommunityLeftPanel(QObject):
     def channels(self) -> typing.List[CommunityChannel]:
         time.sleep(0.5)
         channels_list = []
-        for obj in driver.findAllObjects(self.chatListItemDropAreaItem.real_name):
-            container = driver.objectMap.realName(obj)
+        for obj in driver.find_all(self.chatListItemDropAreaItem.real_name):
+            container = obj
             self._channel_icon_template.real_name['container'] = container
             channels_list.append(CommunityChannel(
                 str(obj.objectName),
@@ -317,7 +320,7 @@ class CommunityLeftPanel(QObject):
     @property
     @allure.step('Get categories')
     def categories_items(self) -> typing.List[CategoryItem]:
-        return [CategoryItem(item) for item in driver.findAllObjects(self.categoryItemDropAreaItem.real_name)]
+        return [CategoryItem(item) for item in driver.find_all(self.categoryItemDropAreaItem.real_name)]
 
     @allure.step('Get channel params')
     def get_channel_parameters(self, name) -> CommunityChannel:
@@ -345,7 +348,11 @@ class CommunityLeftPanel(QObject):
     def is_add_channels_button_visible(self) -> bool:
         return self._add_channels_button.is_visible
 
-    @allure.step('Select channel')
+    @allure.step('Get notifications count for channel or thread list item')
+    def notifications_count(self, name: str) -> int:
+        return list_item_notifications_count(self.chatListItemDropAreaItem.real_name, name)
+
+    @allure.step('Select channel or thread in community list')
     def select_channel(self, name: str):
         deadline = time.monotonic() + max(15.0, configs.timeouts.UI_LOAD_TIMEOUT_SEC * 3)
         scroll_obj = self._channels_scroll.object
@@ -368,7 +375,7 @@ class CommunityLeftPanel(QObject):
 
         while time.monotonic() < deadline:
             obj = next(
-                (o for o in driver.findAllObjects(self.chatListItemDropAreaItem.real_name)
+                (o for o in driver.find_all(self.chatListItemDropAreaItem.real_name)
                  if _object_name(o) == name),
                 None,
             )
@@ -385,8 +392,8 @@ class CommunityLeftPanel(QObject):
                 return obj
 
             try:
-                srect = driver.object.globalBounds(scroll_obj)
-                crect = driver.object.globalBounds(obj)
+                srect = driver.bounds(scroll_obj)
+                crect = driver.bounds(obj)
             except (RuntimeError, AttributeError):
                 time.sleep(0.1)
                 continue
@@ -396,7 +403,7 @@ class CommunityLeftPanel(QObject):
                 continue
 
             try:
-                driver.mouseClick(obj)
+                driver.click(obj)
                 return obj
             except RuntimeError as e:
                 last_error = e
@@ -525,7 +532,7 @@ class MembersListPanel(QObject):
     @property
     @allure.step('Get all members')
     def members(self) -> typing.List[str]:
-        return [str(member.userName) for member in driver.findAllObjects(self._member_item.real_name)]
+        return [str(member.userName) for member in driver.find_all(self._member_item.real_name)]
 
     @allure.step('Open banned tab')
     def click_banned_button(self):
@@ -537,16 +544,16 @@ class MembersListPanel(QObject):
 
     @allure.step('Click member by name')
     def click_member(self, member_name: str):
-        for member in driver.findAllObjects(self._member_item.real_name):
+        for member in driver.find_all(self._member_item.real_name):
             if getattr(member, 'userName', '') == member_name:
-                driver.mouseClick(member)
+                driver.click(member)
                 break
         return ProfilePopupFromMembers().wait_until_appears()
 
     @allure.step('Verify member is offline by index')
     def member_state(self, member_name: str) -> bool:
-        for member in driver.findAllObjects(self._member_item.real_name):
+        for member in driver.find_all(self._member_item.real_name):
             if getattr(member, 'userName', '') == member_name:
                 for child in walk_children(member):
                     if getattr(child, 'id', '') == 'statusBadge':
-                        return child.color.name
+                        return colour_hex(child.color)

@@ -37,6 +37,7 @@ Loader {
     // The message surface owns these instances; pooled rows borrow them.
     property ChatTextAppearance textAppearance
     property ChatTextAppearance previewAppearance
+    property MessageHeaderServices messageHeaderServices
 
     property ChatStores.RootStore rootStore
     property ChatStores.MessageStore messageStore
@@ -179,13 +180,16 @@ Loader {
     property bool threadFollowed: false
     property int threadMessagesCount: 0
     property bool threadMuted: false
+    property bool threadHasUnreadMessages: false
     property int threadNotificationCount: 0
     property var threadParticipantsModel: null
     property int threadParticipantsCount: 0
+    property string threadLastMessageSenderId: ""
     property string threadLastMessageSenderName: ""
     property string threadLastMessageSenderImage: ""
     property int threadLastMessageSenderColorId: 0
     property string threadLastMessageText: ""
+    property var threadLastMessageMentionsMap: ({})
     property double threadLastMessageTimestamp: 0
     property string disabledTooltipText
 
@@ -1035,6 +1039,7 @@ Loader {
                 id: delegate
                 textAppearance: root.textAppearance
                 previewAppearance: root.previewAppearance
+                headerServices: root.messageHeaderServices
                 Layout.fillWidth: true
                 Layout.topMargin: showHeader && !root.isInPinnedPopup ? 2 : 0
                 Layout.bottomMargin: !root.isInPinnedPopup ? 2 : 0
@@ -1075,7 +1080,8 @@ Loader {
                 paymentRequestModel: root.paymentRequestModel
                 gifLinks: root.gifLinks
 
-                showHeader: root.shouldRepeatHeader || dateGroupLabel.visible || isAReply ||
+                showHeader: d.showThreadCard || root.shouldRepeatHeader ||
+                            dateGroupLabel.visible || isAReply ||
                             root.prevMessageContentType === Constants.messageContentType.systemMessagePrivateGroupType ||
                             root.prevMessageContentType === Constants.messageContentType.systemMessagePinnedMessage ||
                             root.prevMessageContentType === Constants.messageContentType.systemMessageMutualEventSent ||
@@ -1362,6 +1368,7 @@ Loader {
                         originalMessageId: root.threadOriginalMessageId || root.messageId
                         title: root.threadTitle
                         threadState: root.threadDeleted ? ThreadCard.State.Deleted : ThreadCard.State.Active
+                        amISender: root.myPublicKey !== "" && root.threadLastMessageSenderId === root.myPublicKey
                         deletedMessage: ({
                             sender: {
                                 name: root.threadLastMessageSenderName,
@@ -1372,9 +1379,11 @@ Loader {
                         })
                         messagesCount: root.threadMessagesCount
                         muted: root.threadMuted
+                        hasUnreadMessages: root.threadHasUnreadMessages
                         notificationCount: root.threadNotificationCount
                         participantsPreviewModel: root.threadParticipantsModel
                         participantsCount: root.threadParticipantsCount
+                        lastMessageMentionsMap: root.threadLastMessageMentionsMap
                         lastMessage: ({
                             sender: {
                                 name: root.threadLastMessageSenderName,
@@ -1407,7 +1416,10 @@ Loader {
                             threadId: threadCard.threadId
                             isMobile: StatusQUtils.Utils.isMobile
                             followed: root.threadFollowed
-                            muted: false
+                            muted: root.threadMuted
+                            muteEnabled: !!root.messageStore
+                            onMuteRequested: interval => root.messageStore.setThreadMutedById(threadId, interval)
+                            onUnmuteRequested: root.messageStore.setThreadMutedById(threadId, Constants.MutingVariations.Unmuted)
                             pinned: false
                             pinEnabled: false
                             threadLinkToCopyShare: ""

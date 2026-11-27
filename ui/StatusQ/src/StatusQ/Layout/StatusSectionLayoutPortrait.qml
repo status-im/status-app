@@ -262,7 +262,7 @@ SwipeView {
                 return
             }
             if (root.currentIndex > 0)
-                root.currentIndex--
+                root.decrementCurrentIndex()
         }
     }
 

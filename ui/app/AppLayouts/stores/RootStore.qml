@@ -357,6 +357,10 @@ QtObject {
     function setActiveSectionChat(sectionId, chatId) {
         internal.mainModuleInst.switchTo(sectionId, chatId)
     }
+
+    function setActiveSectionThread(sectionId, chatId, threadId) {
+        internal.mainModuleInst.switchToThread(sectionId, chatId, threadId)
+    }
     // End of Chat related stuff
 
     // Communities related properties and functions that shall be moved to `CommunitiesRootStore`

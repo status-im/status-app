@@ -55,6 +55,9 @@ method markMessageAsUnread*(self: AccessInterface, messageId: string) {.base.} =
 method onMarkMessageAsUnread*(self: AccessInterface, messageId: string) {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method onThreadRootMarkedAsUnread*(self: AccessInterface, messageId: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method messagesAdded*(self: AccessInterface, messages: seq[MessageDto]) {.base.} =
   raise newException(ValueError, "No implementation available")
 
@@ -123,6 +126,9 @@ method updateThreadCanView*(self: AccessInterface, canView: bool) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method setThreadMuted*(self: AccessInterface, interval: int) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method setThreadMutedById*(self: AccessInterface, threadId: string, interval: int) {.base.} =
   raise newException(ValueError, "No implementation available")
 
 method canManageThreadById*(self: AccessInterface, threadId: string): bool {.base.} =

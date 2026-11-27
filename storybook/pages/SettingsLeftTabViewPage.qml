@@ -25,6 +25,7 @@ SplitView {
             isKeycardEnabled: ctrlIsKeycardEnabled.checked
             showWalletEntries: ctrlShowWalletEntries.checked
             showBackUpSeed: ctrlShowBackUpSeed.checked
+            showPassword: ctrlShowPassword.checked
             syncingBadgeCount: ctrlSyncingBadgeCount.value
             messagingBadgeCount: ctrlMessagingBadgeCount.value
             localBackupEnabled: ctrlLocalBackupEnabled.checked
@@ -76,6 +77,11 @@ SplitView {
                 id: ctrlShowWalletEntries
                 checked: true
                 text: "Show wallet entries"
+            }
+            Switch {
+                id: ctrlShowPassword
+                checked: true
+                text: "Show password"
             }
             Switch {
                 id: ctrlIsKeycardEnabled

@@ -24,7 +24,7 @@ Button {
     property bool selectMultiple
     property var disabledLanguageCodes: []
 
-    icon.name: "language"
+    icon.name: "translate"
 
     signal languageSelected(string languageCode)
     signal languageToggled(string languageCode, bool checked) // for selectMultiple

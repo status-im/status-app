@@ -54,7 +54,13 @@ RowLayout {
                                    bool hideIfPermissionsNotMet)
 
     signal toggleShowMembersRequested
-    signal editThreadRequested(string threadId)
+
+    function beginThreadNameEdit(threadId: string) {
+        Qt.callLater(() => {
+            if (messageStore.threadId === threadId && loader.item instanceof ThreadHeader)
+                loader.item.beginEditing()
+        })
+    }
 
     function addRemoveGroupMember() {
         root.state = d.stateMembersSelectorContent
@@ -113,13 +119,7 @@ RowLayout {
         StatusFlatRoundButton {
             id: membersButton
             objectName: "membersButton"
-            visible: {
-                if(!chatContentModule)
-                    return false
-
-                return true
-            }
-
+            visible: !!chatContentModule && !messageStore.threadId
             highlighted: root.showMembersButtonHighlighted
 
             icon.name: "info"
@@ -272,6 +272,8 @@ RowLayout {
     Component {
         id: threadHeader
         ThreadHeader {
+            id: selectedThreadHeader
+
             threadId: messageStore.threadId
             threadLinkToCopyShare: messageStore.createThreadLink(messageStore.chatId, messageStore.threadId)
             threadName: messageStore.threadName
@@ -284,7 +286,7 @@ RowLayout {
             }
             canEdit: messageStore.canEditThread
             pending: messageStore.threadEditPending
-            onEditNameRequested: root.editThreadRequested(messageStore.threadId)
+            onEditNameRequested: root.beginThreadNameEdit(messageStore.threadId)
             onMarkAsReadRequested: root.rootStore.chatCommunitySectionModule.markAllMessagesRead(messageStore.chatId, messageStore.threadId)
             deletePending: messageStore.threadDeletePending
             followed: messageStore.threadFollowed

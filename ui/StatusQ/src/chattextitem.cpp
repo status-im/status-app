@@ -1611,6 +1611,13 @@ void ChatTextItem::hoverEnterEvent(QHoverEvent* event)
 
 void ChatTextItem::hoverMoveEvent(QHoverEvent* event)
 {
+    // Qt Quick can deliver mouse hover at the touch point during a link press.
+    if (m_touchPressTimer.isValid()) {
+        clearHover();
+        event->ignore();
+        return;
+    }
+
     const QPointF position = event->position();
     hoverAt(position.x(), position.y());
     event->accept();
@@ -1832,8 +1839,8 @@ QSGNode* ChatTextItem::updatePaintNode(QSGNode* oldNode, UpdatePaintNodeData*)
         // Each call gets its own renderer engine, so paragraph-local ranges remain
         // local. Keep the original document layouts: no copying or extra shaping.
         //
-        // A clipped item -- a collapsed long message -- skips the blocks it
-        // cannot show; glyph nodes are the bulk of the paint cost.
+        // A clipped item skips the blocks it cannot show; glyph nodes are the
+        // bulk of the paint cost.
         const QRectF visible = clip() ? boundingRect() : QRectF();
         for (QTextBlock block = m_document->begin(); block.isValid(); block = block.next()) {
             if (!visible.isNull()) {

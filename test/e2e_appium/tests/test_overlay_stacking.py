@@ -99,6 +99,37 @@ def test_names_nothing_when_no_overlay_holds_focus():
     assert topmost_overlay(_page(NOTHING_FOCUSED), (POPUP, NAV_EDU)) is None
 
 
+def _ios_node(name):
+    return (
+        f'<XCUIElementTypeOther type="XCUIElementTypeOther" '
+        f'name="QGuiApplication.mainWindow.{name}" visible="true" />'
+    )
+
+
+def _ios_source(*nodes):
+    return f'{DECLARATION}<AppiumAUT><XCUIElementTypeApplication name="Status">{"".join(nodes)}</XCUIElementTypeApplication></AppiumAUT>'
+
+
+def test_ios_names_the_later_sibling_when_no_node_has_focus():
+    # XCUITest trees carry no "focused" attribute; a later sibling is drawn above.
+    source = _ios_source(_ios_node(POPUP), _ios_node(NAV_EDU))
+    assert topmost_overlay(_page(source), (POPUP, NAV_EDU)) == NAV_EDU
+
+
+def test_ios_follows_tree_order_not_the_order_names_are_given():
+    source = _ios_source(_ios_node(NAV_EDU), _ios_node(POPUP))
+    assert topmost_overlay(_page(source), (POPUP, NAV_EDU)) == POPUP
+
+
+def test_ios_recognises_an_overlay_from_its_children_only():
+    # The Qt container is often not an element on iOS; its children carry its name.
+    source = _ios_source(
+        _ios_node(f"{POPUP}.footer.btnLater"),
+        _ios_node(f"{NAV_EDU}.headerActionsCloseButton"),
+    )
+    assert topmost_overlay(_page(source), (POPUP, NAV_EDU)) == NAV_EDU
+
+
 def test_names_nothing_when_the_page_source_cannot_be_read():
     assert topmost_overlay(StubPage(BrokenDriver()), (POPUP, NAV_EDU)) is None
 

@@ -16,7 +16,7 @@ class OnboardingLoginUsersPopup(QObject):
         self.manage_profiles_button = Button(onboarding_names.manageProfilesDelegate)
 
     def select_user_by_name(self, user_name):
-        raw_data = driver.findAllObjects(self.user_login_item.real_name)
+        raw_data = driver.find_all(self.user_login_item.real_name)
         if not raw_data:
             raise ValueError(f"Can't find {user_name} in list of users as the list is empty")
         for _user in raw_data:

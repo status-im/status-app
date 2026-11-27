@@ -17,6 +17,8 @@ type
     LastMessageSenderColorId
     LastMessageText
     LastMessageTimestamp
+    LastMessageSenderId
+    HasUnreadMessages
 
   Row = object
     summary: ThreadSummary
@@ -44,6 +46,7 @@ QtObject:
       ModelRole.MessagesCount.int: "messagesCount",
       ModelRole.Muted.int: "muted",
       ModelRole.NotificationCount.int: "notificationCount",
+      ModelRole.HasUnreadMessages.int: "hasUnreadMessages",
       ModelRole.ParticipantsCount.int: "participantsCount",
       ModelRole.ParticipantsModel.int: "participantsModel",
       ModelRole.LastMessageSenderName.int: "lastMessageSenderName",
@@ -51,6 +54,7 @@ QtObject:
       ModelRole.LastMessageSenderColorId.int: "lastMessageSenderColorId",
       ModelRole.LastMessageText.int: "lastMessageText",
       ModelRole.LastMessageTimestamp.int: "lastMessageTimestamp",
+      ModelRole.LastMessageSenderId.int: "lastMessageSenderId",
     }.toTable
 
   method data(self: Model, index: QModelIndex, role: int): QVariant =
@@ -63,6 +67,7 @@ QtObject:
     of ModelRole.MessagesCount: result = newQVariant(row.summary.messagesCount)
     of ModelRole.Muted: result = newQVariant(row.summary.muted)
     of ModelRole.NotificationCount: result = newQVariant(row.summary.notificationCount)
+    of ModelRole.HasUnreadMessages: result = newQVariant(row.summary.hasUnreadMessages)
     of ModelRole.ParticipantsCount: result = newQVariant(row.summary.participantsCount)
     of ModelRole.ParticipantsModel: result = newQVariant(row.participants)
     of ModelRole.LastMessageSenderName: result = newQVariant(row.summary.lastMessageSenderName)
@@ -70,6 +75,7 @@ QtObject:
     of ModelRole.LastMessageSenderColorId: result = newQVariant(row.summary.lastMessageSenderColorId)
     of ModelRole.LastMessageText: result = newQVariant(row.summary.lastMessageText)
     of ModelRole.LastMessageTimestamp: result = newQVariant(row.summary.lastMessageTimestamp)
+    of ModelRole.LastMessageSenderId: result = newQVariant(row.summary.lastMessageSenderId)
     else: result = newQVariant()
 
   proc retain*(self: Model, threadIds: seq[string])
@@ -99,12 +105,14 @@ QtObject:
         addChangedRole(roles, previous.messagesCount, summary.messagesCount, ModelRole.MessagesCount.int): discard
         addChangedRole(roles, previous.muted, summary.muted, ModelRole.Muted.int): discard
         addChangedRole(roles, previous.notificationCount, summary.notificationCount, ModelRole.NotificationCount.int): discard
+        addChangedRole(roles, previous.hasUnreadMessages, summary.hasUnreadMessages, ModelRole.HasUnreadMessages.int): discard
         addChangedRole(roles, previous.participantsCount, summary.participantsCount, ModelRole.ParticipantsCount.int): discard
         addChangedRole(roles, previous.lastMessageSenderName, summary.lastMessageSenderName, ModelRole.LastMessageSenderName.int): discard
         addChangedRole(roles, previous.lastMessageSenderImage, summary.lastMessageSenderImage, ModelRole.LastMessageSenderImage.int): discard
         addChangedRole(roles, previous.lastMessageSenderColorId, summary.lastMessageSenderColorId, ModelRole.LastMessageSenderColorId.int): discard
         addChangedRole(roles, previous.lastMessageText, summary.lastMessageText, ModelRole.LastMessageText.int): discard
         addChangedRole(roles, previous.lastMessageTimestamp, summary.lastMessageTimestamp, ModelRole.LastMessageTimestamp.int): discard
+        addChangedRole(roles, previous.lastMessageSenderId, summary.lastMessageSenderId, ModelRole.LastMessageSenderId.int): discard
       return
     let parent = newQModelIndex()
     defer: parent.delete()

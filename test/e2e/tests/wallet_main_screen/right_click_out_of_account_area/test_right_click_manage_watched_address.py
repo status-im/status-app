@@ -30,7 +30,7 @@ def test_right_click_manage_watch_only_account_context_menu(main_screen: MainWin
         account_popup.set_name(new_name).save_changes()
 
     with step('Verify that the account is correctly displayed in accounts list'):
-        assert driver.waitFor(lambda: new_name in [account.name for account in wallet.left_panel.accounts],
+        assert driver.wait_until(lambda: new_name in [account.name for account in wallet.left_panel.accounts],
                               10000), \
             f'Account with {new_name} is not displayed even it should be'
 
@@ -39,5 +39,5 @@ def test_right_click_manage_watch_only_account_context_menu(main_screen: MainWin
 
 
     with step('Verify that the account is not displayed in accounts list'):
-        assert driver.waitFor(lambda: new_name not in [account.name for account in wallet.left_panel.accounts], 10000), \
+        assert driver.wait_until(lambda: new_name not in [account.name for account in wallet.left_panel.accounts], 10000), \
             f'Account with {new_name} is still displayed even it should not be'

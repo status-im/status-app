@@ -1,7 +1,4 @@
-import squish
-
 from constants.wallet import *
-from driver.objects_access import emoji_text
 from gui.screens.settings_wallet import *
 from gui.components.emoji_popup import EmojiPopup
 from gui.components.authenticate_popup import AuthenticatePopup
@@ -48,7 +45,7 @@ class AccountPopup(QObject):
         self._non_eth_checkbox = CheckBox(names.mainWallet_AddEditAccountPopup_NonEthDerivationPathCheckBox)
 
     def verify_add_account_popup_present(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
-        driver.waitFor(lambda: self._popup_header_title.is_visible, timeout_msec)
+        driver.wait_until(lambda: self._popup_header_title.is_visible, timeout_msec)
         assert (getattr(self._popup_header_title.object, 'text')
                 == WalletScreensHeaders.WALLET_ADD_ACCOUNT_POPUP_TITLE.value), \
             f"AccountPopup is not shown or has wrong title, \
@@ -56,7 +53,7 @@ class AccountPopup(QObject):
         return self
 
     def verify_edit_account_popup_present(self, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
-        driver.waitFor(lambda: self._popup_header_title.exists, timeout_msec)
+        driver.wait_until(lambda: self._popup_header_title.exists, timeout_msec)
         assert (getattr(self._popup_header_title.object, 'text')
                 == WalletScreensHeaders.WALLET_EDIT_ACCOUNT_POPUP_TITLE.value), \
             f"AccountPopup is not shown or has wrong title, \
@@ -76,7 +73,7 @@ class AccountPopup(QObject):
     def set_color(self, value: str):
         if 'radioButtonColor' in self._color_radiobutton.real_name.keys():
             del self._color_radiobutton.real_name['radioButtonColor']
-        colors = [str(item.radioButtonColor) for item in driver.findAllObjects(self._color_radiobutton.real_name)]
+        colors = [str(item.radioButtonColor) for item in driver.find_all(self._color_radiobutton.real_name)]
         assert value in colors, f'Color {value} not found in {colors}'
         self._color_radiobutton.real_name['radioButtonColor'] = value
         self._color_radiobutton.click()
@@ -85,7 +82,7 @@ class AccountPopup(QObject):
     def set_random_color(self):
         if 'radioButtonColor' in self._color_radiobutton.real_name.keys():
             del self._color_radiobutton.real_name['radioButtonColor']
-        colors = [str(item.radioButtonColor) for item in driver.findAllObjects(self._color_radiobutton.real_name)]
+        colors = [str(item.radioButtonColor) for item in driver.find_all(self._color_radiobutton.real_name)]
         random_color = random.choice(colors)
         self._color_radiobutton.real_name['radioButtonColor'] = random_color
         self._color_radiobutton.click()
@@ -142,14 +139,14 @@ class AccountPopup(QObject):
 
     @allure.step('Confirm non-Ethereum derivation path if confirmation is required')
     def _confirm_non_eth_derivation_path_if_needed(self):
-        if driver.waitFor(lambda: self._non_eth_checkbox.is_visible, configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
+        if driver.wait_until(lambda: self._non_eth_checkbox.is_visible, configs.timeouts.UI_LOAD_TIMEOUT_MSEC):
             self._scroll.vertical_scroll_down(self._non_eth_checkbox, extra_scrolls_after=1)
             self._non_eth_checkbox.hover().set(True)
         return self
 
     def _path_selection_applied(self, path_name: str) -> bool:
         try:
-            address_selector = driver.waitForObjectExists(
+            address_selector = driver.wait_exists(
                 self._address_combobox_button.real_name, 200)
             return (
                 getattr(address_selector, 'enabled', False)
@@ -175,7 +172,7 @@ class AccountPopup(QObject):
                 configs.timeouts.COMMUNITY_LOAD_TIMEOUT_MSEC if attempt == 0
                 else configs.timeouts.UI_LOAD_TIMEOUT_MSEC
             )
-            if driver.waitFor(lambda: self._path_selection_applied(path_name), timeout_msec):
+            if driver.wait_until(lambda: self._path_selection_applied(path_name), timeout_msec):
                 return self
         raise AssertionError(
             f'Derivation path "{path_name}" was not applied or addresses were not loaded in time',
@@ -239,9 +236,11 @@ class EditAccountFromSettingsPopup(QObject):
     def select_random_color_for_account(self):
         if 'radioButtonColor' in self.color_radiobutton.real_name.keys():
             del self.color_radiobutton.real_name['radioButtonColor']
-        colors = [str(item.radioButtonColor) for item in driver.findAllObjects(self.color_radiobutton.real_name)]
-        self.color_radiobutton.real_name['radioButtonColor'] = \
-            random.choice([color for color in colors if color != '#2a4af5'])  # exclude status default color
+        colors = [str(item.radioButtonColor) for item in driver.find_all(self.color_radiobutton.real_name)]
+        default = WalletNetworkSettings.STATUS_ACCOUNT_DEFAULT_COLOR.value
+        self.color_radiobutton.real_name['radioButtonColor'] = random.choice(
+            [color for color in colors if str(color).lower() != default]
+        )
         self.color_radiobutton.click()
         return self
 
@@ -249,7 +248,7 @@ class EditAccountFromSettingsPopup(QObject):
     def select_random_emoji_for_account(self):
         self.emoji_selector.click()
         EmojiPopup().wait_until_appears()
-        emojis = [str(item.objectName) for item in driver.findAllObjects(self.emoji_item.real_name)]
+        emojis = [str(item.objectName) for item in driver.find_all(self.emoji_item.real_name)]
         value = ((random.choice(emojis)).split('_', 1))[1]
         EmojiPopup().wait_until_appears().select(value)
         return self

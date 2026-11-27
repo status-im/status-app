@@ -8,6 +8,11 @@ import sys
 import time
 import urllib.request
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib"))
+from waku_fleet_scripts import nodes  # noqa: E402
+
+COMPOSE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "docker-compose.waku.yml")
+
 
 def get_host_port(project, service, container_port):
     result = subprocess.run(
@@ -44,21 +49,23 @@ def main():
     parser.add_argument("--fleet-name", default="status-app.test")
     parser.add_argument("--cluster-id", type=int, default=16)
     parser.add_argument("--output", default="assets/local-waku-fleets-config.json")
+    parser.add_argument("--no-docker", action="store_true",
+                        help="the nodes listen on the host itself, on the ports of the compose file")
     args = parser.parse_args()
 
-    services = {
-        "boot-1":  {"tcp_port": 39001, "rest_port": 8645, "role": "bootstrap"},
-        "store":   {"tcp_port": 39002, "rest_port": 8646, "role": "store"},
-        "store-2": {"tcp_port": 39003, "rest_port": 8647, "role": "store"},
-    }
+    with open(COMPOSE, encoding="utf-8") as f:
+        services = nodes(f.read())
 
     waku_nodes = []
     disc_v5_nodes = []
     store_nodes = []
 
     for service, cfg in services.items():
-        host_rest = get_host_port(args.project, service, cfg["rest_port"])
-        host_tcp = get_host_port(args.project, service, cfg["tcp_port"])
+        if args.no_docker:
+            host_rest, host_tcp = cfg["rest_port"], cfg["tcp_port"]
+        else:
+            host_rest = get_host_port(args.project, service, cfg["rest_port"])
+            host_tcp = get_host_port(args.project, service, cfg["tcp_port"])
 
         print(f"{service}: REST={host_rest}, TCP={host_tcp}")
 

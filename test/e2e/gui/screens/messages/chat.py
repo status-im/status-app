@@ -30,6 +30,7 @@ from gui.objects_map import messaging_names
 from gui.screens.community import BannedCommunityScreen, CommunityScreen
 from gui.screens.messages.message import Message, _nudge_outgoing_header, _qml_int
 from helpers.chat_helper import plain_text_from_message_object
+from scripts.utils.parsers import remove_tags
 from scripts.utils.generators import random_sticker
 
 
@@ -39,6 +40,21 @@ def _message_row(item) -> float:
     except (RuntimeError, AttributeError):
         row = None
     return row if row is not None else float('inf')
+
+
+def _item_contains_message_text(item, message_text: str) -> bool:
+    plain = plain_text_from_message_object(item)
+    if message_text in plain:
+        return True
+    # Chat bubbles expose markdown plain text, so a literal "<mark>…" body is read back without the tag.
+    visible = remove_tags(message_text).strip()
+    if visible and visible != message_text and visible in plain:
+        return True
+    for attr in ('unparsedText', 'messageText'):
+        raw = getattr(item, attr, None)
+        if raw and (message_text in str(raw) or (visible and visible in str(raw))):
+            return True
+    return False
 
 
 class ChatView(QObject):
@@ -62,7 +78,7 @@ class ChatView(QObject):
 
         messages = sorted(
             (
-                item for item in driver.findAllObjects(self._message_list_item.real_name)
+                item for item in driver.find_all(self._message_list_item.real_name)
                 if getattr(item, 'isMessage', True)
             ),
             key=_message_row,
@@ -104,7 +120,7 @@ class ChatView(QObject):
         indexes = (index, None) if index is not None else (None,)
         for current_index in indexes:
             for item in self._iter_message_objects(current_index, scroll_to_recent):
-                if message_text in plain_text_from_message_object(item):
+                if _item_contains_message_text(item, message_text):
                     return Message(item)
         return None
 
@@ -126,7 +142,7 @@ class ChatView(QObject):
                 return False
 
         timeout_msec = configs.timeouts.MESSAGING_TIMEOUT_SEC * 1000
-        if not driver.waitFor(message_found, timeout_msec):
+        if not driver.wait_until(message_found, timeout_msec):
             raise LookupError(
                 f'Message not found within {timeout_msec} ms: {message_text!r}; '
                 f'last error was {last_error!r}'
@@ -218,7 +234,7 @@ class ChatView(QObject):
                 return True
             return False
 
-        assert driver.waitFor(reached, timeout_msec), (
+        assert driver.wait_until(reached, timeout_msec), (
             f'Outgoing message was not marked {label} within {timeout_msec} ms'
             + (f': {message_text!r}' if message_text is not None else '')
             + f'; last seen: {last_seen}'
@@ -264,7 +280,7 @@ class ChatView(QObject):
                 return False
 
         state = 'pinned' if expected else 'unpinned'
-        if not driver.waitFor(state_matches, timeout_msec):
+        if not driver.wait_until(state_matches, timeout_msec):
             raise TimeoutError(
                 f'Message {message_text!r} did not become {state} within {timeout_msec} ms; '
                 f'last error was {last_error!r}'
@@ -333,7 +349,7 @@ class ChatView(QObject):
             message = self._find_invitation_message(community, index)
             return message is not None
 
-        if not driver.waitFor(invitation_found, timeout_msec):
+        if not driver.wait_until(invitation_found, timeout_msec):
             label = community or 'Community invitation'
             raise LookupError(f'{label} was not found within {timeout_msec} ms')
         return message
@@ -367,7 +383,7 @@ class ChatView(QObject):
                     return True
             return False
 
-        assert driver.waitFor(sticker_visible, timeout_msec), 'Sticker message not found in chat'
+        assert driver.wait_until(sticker_visible, timeout_msec), 'Sticker message not found in chat'
         return found[0]
 
 
@@ -389,7 +405,7 @@ class CreateChatView(QObject):
     @allure.step('Select contact in the list')
     def select_contact(self, contact: str):
         try:
-            driver.waitFor(
+            driver.wait_until(
                 lambda: contact in self.contact_names,
                 configs.timeouts.UI_LOAD_TIMEOUT_MSEC
             )
@@ -418,7 +434,7 @@ def _wait_visible_object_text(element: QObject, timeout_msec: int) -> str:
         except Exception:
             return False
 
-    if not driver.waitFor(ready, timeout_msec):
+    if not driver.wait_until(ready, timeout_msec):
         return ''
     return str(element.object.text)
 
@@ -475,7 +491,7 @@ class ChatMessagesView(QObject):
     @property
     @allure.step('Get gray text from message area')
     def gray_text_from_message_area(self) -> str:
-        placeholder = driver.waitForObjectExists(
+        placeholder = driver.wait_exists(
             self._message_input_area.real_name,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ).placeholderText
@@ -484,7 +500,7 @@ class ChatMessagesView(QObject):
     @property
     @allure.step('Get enabled state of message area')
     def is_message_area_enabled(self) -> bool:
-        return bool(driver.waitForObjectExists(
+        return bool(driver.wait_exists(
             self._message_input_area.real_name,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ).enabled)
@@ -532,10 +548,10 @@ class ChatMessagesView(QObject):
         self._message_field.wait_until_appears()
         self._message_field.click()
         self._message_field.clear(verify=False)
-        driver.type(self._message_field.object, '@')
+        driver.type_text(self._message_field.object, '@')
         self._mention_suggestions.wait_until_appears()
         filter_text = MentionSuggestionsPopup.mention_filter_text(display_name)
-        driver.type(self._message_field.object, filter_text)
+        driver.type_text(self._message_field.object, filter_text)
         self._mention_suggestions.select(display_name)
         self.confirm_sending_message()
 
@@ -547,14 +563,14 @@ class ChatMessagesView(QObject):
 
     @allure.step('Wait until spell check reports issues')
     def wait_for_spell_issues(self):
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self._message_field.has_spell_issues(),
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), 'Spell check did not report any issues'
 
     @allure.step('Wait until spell check reports no issues')
     def wait_for_no_spell_issues(self):
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self._message_field.has_no_spell_issues(),
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), 'Spell check still reports issues'
@@ -569,7 +585,7 @@ class ChatMessagesView(QObject):
 
     @allure.step('Confirm sending message')
     def confirm_sending_message(self):
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self._send_message_button.is_enabled,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), 'Send button stayed disabled after composing message'
@@ -654,7 +670,7 @@ class ChatMessagesView(QObject):
 
     @allure.step('Confirm sending message')
     def send_message(self):
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self._send_message_button.is_enabled,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), 'Send button stayed disabled'
@@ -704,8 +720,9 @@ class MessageQuickActions(QObject):
         self._delete_button = Button(messaging_names.chatMessageViewDelegate_messageContextMenuDeleteButton)
         self._reply_button = Button(messaging_names.chatMessageViewDelegate_messageContextMenuReplyButton)
         self._reply_menu_item = Button(messaging_names.chatMessageViewDelegate_messageContextMenuReplyMenuItem)
+        self._open_thread_menu_item = Button(
+            messaging_names.chatMessageViewDelegate_messageContextMenuOpenThreadMenuItem)
         self._reply_panel = QObject(messaging_names.mainWindow_replyPanel_StatusChatInputReplyPanel)
-        self._edit_message_input = QObject(messaging_names.mainWindow_statusChatInput_StatusChatInput)
         self._edit_message_field = TextEdit(messaging_names.inputScrollView_messageInputField_TextArea)
         self._message_input_area = TextEdit(messaging_names.inputScrollView_messageInputField_TextArea)
         self._send_message_button = Button(messaging_names.mainWindow_statusChatInputSendButton)
@@ -736,7 +753,7 @@ class MessageQuickActions(QObject):
                 return False
 
         timeout_msec = configs.timeouts.UI_LOAD_TIMEOUT_MSEC
-        if not driver.waitFor(menu_ready, timeout_msec):
+        if not driver.wait_until(menu_ready, timeout_msec):
             raise TimeoutError(
                 f'Message context menu was not ready within {timeout_msec} ms; '
                 f'last error was {last_error!r}'
@@ -752,7 +769,7 @@ class MessageQuickActions(QObject):
         except TimeoutError:
             return self
         self._expand_button.click()
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self.is_visible and self._pin_button.is_visible,
             timeout_msec,
         ), f'Message context menu did not expand within {timeout_msec} ms'
@@ -775,12 +792,18 @@ class MessageQuickActions(QObject):
         self._unpin_button.wait_until_appears().click()
 
     @allure.step('Edit message and save changes')
-    def edit_message(self, text: str):
+    def edit_message(self, text: str, thread_panel: bool = False):
         self._open_context_menu()
         self._edit_action().wait_until_appears().click()
-        self._edit_message_input.wait_until_appears()
-        self._edit_message_field.set_text_property(text)
-        self._send_message_button.wait_until_enabled().click()
+        if thread_panel:
+            field = TextEdit(messaging_names.threadMessageInputField)
+            send_button = Button(messaging_names.threadSendButton)
+        else:
+            field = self._edit_message_field
+            send_button = self._send_message_button
+        field.wait_until_appears()
+        field.set_text_property(text)
+        send_button.wait_until_enabled().click()
 
     @allure.step('Delete message')
     def delete_message(self):
@@ -788,30 +811,59 @@ class MessageQuickActions(QObject):
         self._delete_button.click()
         ConfirmationMessagePopup().wait_until_appears().delete_button.click()
 
-    @allure.step('Reply to own message')
-    def reply_own_message(self, text: str):
+    @allure.step('Create thread from message')
+    def create_thread(self):
+        self._open_context_menu()
+        self._expand_collapsed_menu()
+        self._open_thread_menu_item.wait_until_appears().click()
+
+    @allure.step('Pin action is visible in message context menu')
+    def is_pin_action_visible(self) -> bool:
+        return self._context_menu_action_visible(self._pin_button)
+
+    @allure.step('Start reply')
+    def reply(self):
         self._open_context_menu()
         self._reply_action().wait_until_appears().click()
+        return self
+
+    @allure.step('Reply to own message')
+    def reply_own_message(self, text: str):
+        self.reply()
         assert self._reply_panel.exists
         self._message_input_area.set_text_property(text)
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self._send_message_button.is_enabled,
             configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
         ), 'Send button stayed disabled after reply text'
         self._send_message_button.click()
 
     def _dismiss_context_menu(self):
-        MessageContextMenuPopup().dismiss_if_visible(self._message_input_area)
+        popup = MessageContextMenuPopup()
+        if not popup.is_visible:
+            return
+        # The menu can overlap the centre of the input, so hover the end of the input farther from it.
+        menu = driver.bounds(popup.object)
+        field = driver.bounds(self._message_input_area.object)
+        left_gap = menu.x - field.x
+        right_gap = (field.x + field.width) - (menu.x + menu.width)
+        x = 10 if left_gap >= right_gap else field.width - 10
+        driver.move(self._message_input_area.object, x, field.height // 2)
+        driver.wait_until(lambda: not popup.is_visible, MessageContextMenuPopup._DISMISS_TIMEOUT_MSEC)
 
-    @allure.step('Delete button is visible')
-    def is_delete_button_visible(self) -> bool:
+    def _context_menu_action_visible(self, action: Button) -> bool:
         try:
-            self.expand()
+            self._open_context_menu()
+            self._expand_collapsed_menu()
         except (LookupError, TimeoutError):
             self._dismiss_context_menu()
             return False
         try:
-            return self._delete_button.is_visible
+            return action.is_visible
         finally:
             self._dismiss_context_menu()
+
+    @allure.step('Delete button is visible')
+    def is_delete_button_visible(self) -> bool:
+        return self._context_menu_action_visible(self._delete_button)
 

@@ -25,11 +25,11 @@ def test_ens_name_purchase(main_window, user_account, ens_name):
         settings = main_window.left_panel.open_settings()
         ens_settings = settings.left_panel.open_ens_usernames_settings().start()
         ens_settings.enter_user_name(ens_name)
-        if driver.waitFor(lambda: 'Username already taken :(' in ens_settings.ens_text_notes(), UI_LOAD_TIMEOUT_SEC):
+        if driver.wait_until(lambda: 'Username already taken :(' in ens_settings.ens_text_notes(), UI_LOAD_TIMEOUT_SEC):
             ens_settings.enter_user_name(ens_name)
 
     with step('Verify that user name is available'):
-        assert driver.waitFor(lambda: '✓ Username available!' in ens_settings.ens_text_notes(), UI_LOAD_TIMEOUT_SEC)
+        assert driver.wait_until(lambda: '✓ Username available!' in ens_settings.ens_text_notes(), UI_LOAD_TIMEOUT_SEC)
 
     with step('Register ens username'):
         register_ens = ens_settings.click_next_button().register_ens_name()

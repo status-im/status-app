@@ -9346,29 +9346,6 @@ app: %2</source>
     </message>
 </context>
 <context>
-    <name>IntroduceYourselfPopup</name>
-    <message>
-        <source>Introduce yourself</source>
-        <translation>Представтеся</translation>
-    </message>
-    <message>
-        <source>Your Name</source>
-        <translation>Ваше ім’я</translation>
-    </message>
-    <message>
-        <source>Add an optional display name and profile picture so others can easily recognise you.</source>
-        <translation>За бажанням додайте відображуване ім’я та фото профілю, щоб інші легко вас упізнавали.</translation>
-    </message>
-    <message>
-        <source>Skip</source>
-        <translation>Пропустити</translation>
-    </message>
-    <message>
-        <source>Edit Profile in Settings</source>
-        <translation>Редагувати профіль у налаштуваннях</translation>
-    </message>
-</context>
-<context>
     <name>InvitationBubbleView</name>
     <message>
         <source>Verified community invitation</source>
@@ -11823,12 +11800,12 @@ to load</source>
         <translation>Відповісти</translation>
     </message>
     <message>
-        <source>Create Thread</source>
-        <translation>Створити гілку</translation>
-    </message>
-    <message>
         <source>Open thread</source>
         <translation>Відкрити гілку</translation>
+    </message>
+    <message>
+        <source>Reply in thread</source>
+        <translation type="unfinished">Відповісти в гілці</translation>
     </message>
     <message>
         <source>Edit</source>
@@ -16886,6 +16863,13 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>StatusChatInputSendButton</name>
+    <message>
+        <source>Send</source>
+        <translation type="unfinished">Надіслати</translation>
+    </message>
+</context>
+<context>
     <name>StatusChatInputToolBar</name>
     <message>
         <source>Formatting</source>
@@ -18508,6 +18492,21 @@ This action cannot be undone.</source>
     </message>
 </context>
 <context>
+    <name>ThirdpartyServicesLabel</name>
+    <message>
+        <source>Third-party services %1</source>
+        <translation type="unfinished">Сторонні сервіси %1</translation>
+    </message>
+    <message>
+        <source>enabled</source>
+        <translation type="unfinished">увімкнено</translation>
+    </message>
+    <message>
+        <source>disabled</source>
+        <translation type="unfinished">вимкнено</translation>
+    </message>
+</context>
+<context>
     <name>ThirdpartyServicesPopup</name>
     <message>
         <source>Third-party services</source>
@@ -18592,6 +18591,11 @@ This action cannot be undone.</source>
         <source>deleted this thread</source>
         <translation>видаляє цю гілку</translation>
     </message>
+    <message>
+        <source>deleted this thread</source>
+        <comment>Current user</comment>
+        <translation type="unfinished">видаляє цю гілку</translation>
+    </message>
     <message numerus="yes">
         <source>%n message(s)</source>
         <translation>
@@ -18599,6 +18603,10 @@ This action cannot be undone.</source>
             <numerusform>%n повідомлення</numerusform>
             <numerusform>%n повідомлень</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>You</source>
+        <translation type="unfinished">Ви</translation>
     </message>
 </context>
 <context>
@@ -18671,8 +18679,24 @@ This action cannot be undone.</source>
         <translation>Не вдалося перейменувати гілку: %1</translation>
     </message>
     <message>
+        <source>Thread name is required</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source>Max %n character(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
         <source>Thread name</source>
         <translation>Назва гілки</translation>
+    </message>
+    <message>
+        <source>Rename thread</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>in %1</source>
@@ -20864,18 +20888,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Log in</source>
         <translation>Увійти</translation>
-    </message>
-    <message>
-        <source>Third-party services %1</source>
-        <translation>Сторонні сервіси %1</translation>
-    </message>
-    <message>
-        <source>enabled</source>
-        <translation>увімкнено</translation>
-    </message>
-    <message>
-        <source>disabled</source>
-        <translation>вимкнено</translation>
     </message>
     <message>
         <source>By proceeding you accept Status&lt;br&gt;%1 and %2</source>

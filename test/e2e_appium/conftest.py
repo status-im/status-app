@@ -15,6 +15,7 @@ from core import collection_order, peer_containers
 from core.stash_keys import MULTI_DEVICE_MANAGERS_KEY, PEER_REFUSED_KEY
 from core.capacity_reserver import set_shared_pending_counter
 from core.shared_counter import FileBasedCounter, create_shared_counter
+from support.platform import target_platform
 
 
 # Expose fixture modules without star imports
@@ -294,27 +295,35 @@ def pytest_runtest_setup(item):
     )
 
 
+def pytest_itemcollected(item):
+    device_count_marker = item.get_closest_marker("device_count")
+    if device_count_marker:
+        count = None
+        if device_count_marker.args:
+            count = device_count_marker.args[0]
+        elif "count" in device_count_marker.kwargs:
+            count = device_count_marker.kwargs["count"]
+        elif "value" in device_count_marker.kwargs:
+            count = device_count_marker.kwargs["value"]
+        if count == 1:
+            item.add_marker(pytest.mark.single_device)
+
+
 # trylast so -m deselection has already run.
 @pytest.hookimpl(trylast=True)
 def pytest_collection_modifyitems(config, items):
-    """Automatically add single_device marker to tests with device_count(1)."""
     # Before anything else: loadscope hands modules out in collection order, so
     # the longest must be first or a worker starts it once the others are idle.
     # Deselection below only removes items, which keeps this order intact.
     items[:] = collection_order.heaviest_first(items)
 
+    on_ios = target_platform(config.getoption("--env")) == "ios"
+
     for item in items:
-        device_count_marker = item.get_closest_marker("device_count")
-        if device_count_marker:
-            count = None
-            if device_count_marker.args:
-                count = device_count_marker.args[0]
-            elif "count" in device_count_marker.kwargs:
-                count = device_count_marker.kwargs["count"]
-            elif "value" in device_count_marker.kwargs:
-                count = device_count_marker.kwargs["value"]
-            if count == 1:
-                item.add_marker(pytest.mark.single_device)
+        xfail_ios = item.get_closest_marker("xfail_ios")
+        if xfail_ios and on_ios:
+            reason = xfail_ios.args[0] if xfail_ios.args else xfail_ios.kwargs.get("reason", "")
+            item.add_marker(pytest.mark.xfail(reason=reason, strict=False))
 
     unrunnable = peer_containers.unrunnable_peer_items(
         items, bool(config.option.collectonly)

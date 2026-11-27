@@ -21,6 +21,7 @@ type
     originalMessageId*: string
     title*: string
     messagesCount*: int
+    hasUnreadMessages*: bool
     notificationCount*: int
     muted*: bool
     participantsCount*: int

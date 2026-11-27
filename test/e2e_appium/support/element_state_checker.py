@@ -39,7 +39,10 @@ class ElementStateChecker:
         except Exception:
             pass
         try:
-            return str(element.get_attribute("value")).lower() in ("1", "true")
+            if str(element.get_attribute("value")).lower() in ("1", "true"):
+                return True
+            # A checked Qt checkbox reports "selected" instead.
+            return _element_is_ios(element) and str(element.get_attribute("selected")).lower() == "true"
         except Exception:
             return False
 

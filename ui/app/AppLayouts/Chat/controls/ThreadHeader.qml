@@ -8,7 +8,9 @@ import StatusQ.Core
 import StatusQ.Core.Theme
 import StatusQ.Core.Utils as SQUtils
 
-import "../popups"
+import AppLayouts.Chat.popups
+
+import utils
 
 RowLayout {
     id: root
@@ -23,8 +25,8 @@ RowLayout {
     property bool followed: false
 
     readonly property bool editing: d.editing
-    readonly property StatusTextField editor: inputLoader.status === Loader.Ready
-                                             ? inputLoader.item as StatusTextField : null
+    readonly property StatusTextArea editor: inputLoader.status === Loader.Ready
+                                             ? inputLoader.item as StatusTextArea : null
 
     property bool muted: false
     signal muteRequested(int interval)
@@ -88,6 +90,7 @@ RowLayout {
         spacing: 0
 
         StatusBaseText {
+            objectName: "threadHeaderTitle"
             Layout.fillWidth: true
             visible: !root.editing
             text: root.threadName
@@ -106,31 +109,75 @@ RowLayout {
                 root.editor.forceActiveFocus(Qt.OtherFocusReason)
                 root.editor.selectAll()
             }
-            sourceComponent: StatusTextField {
+            sourceComponent: StatusTextArea {
+                function submit() {
+                    if (root.pending || d.submitted || inputMethodComposing)
+                        return
+                    if (text === "") {
+                        d.error = qsTr("Thread name is required")
+                        return
+                    }
+                    if (length > Constants.maxThreadNameLengthForRenaming) {
+                        d.error = qsTr("Max %n character(s)", "", Constants.maxThreadNameLengthForRenaming)
+                        return
+                    }
+                    d.error = ""
+                    d.submitted = true
+                    root.renameRequested(text.trim())
+                }
+
                 objectName: "threadNameInput"
                 placeholderText: qsTr("Thread name")
-                Accessible.name: qsTr("Thread name")
+                Accessible.name: placeholderText
                 font.bold: true
                 leftPadding: Theme.halfPadding
-                rightPadding: Theme.halfPadding
-                topPadding: 0
-                bottomPadding: 0
-                implicitHeight: 28
+                rightPadding: Theme.halfPadding + submitButton.width
+                topPadding: 3
+                bottomPadding: 3
                 readOnly: root.pending
                 onTextEdited: {
                     d.draft = text
                     d.error = ""
                 }
-                onAccepted: {
-                    if (root.pending || d.submitted || inputMethodComposing)
-                        return
-                    d.error = ""
-                    d.submitted = true
-                    root.renameRequested(text)
+                Keys.onPressed: function(event) {
+                    switch (event.key) {
+                    case Qt.Key_Escape:
+                        event.accepted = true
+                        d.reset()
+                        break
+                    case Qt.Key_Enter:
+                    case Qt.Key_Return:
+                        // e.g. Shift+Enter handled internally as newline
+                        if (event.modifiers !== Qt.NoModifier)
+                            return event.accepted = false
+                        event.accepted = true
+                        submit()
+                        break
+                    }
                 }
-                Keys.onEscapePressed: event => {
-                    d.reset()
-                    event.accepted = true
+
+                onActiveFocusChanged: {
+                    if (!activeFocus)
+                        d.reset()
+                }
+
+                StatusButton {
+                    id: submitButton
+                    objectName: "threadNameSubmitButton"
+                    icon.name: "checkmark"
+                    type: StatusRoundButton.Type.Primary
+                    size: StatusBaseButton.Size.XSmall
+                    height: parent.availableHeight
+                    width: height
+                    anchors.right: parent.right
+                    anchors.rightMargin: 4
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: parent.cursorVisible
+                    interactive: !!parent.text
+                    tooltip.orientation: StatusToolTip.Orientation.Bottom
+                    tooltip.text: qsTr("Rename thread")
+                    focusPolicy: Qt.NoFocus
+                    onClicked: parent.submit()
                 }
             }
         }
@@ -165,8 +212,9 @@ RowLayout {
         visible: !!root.threadId
         enabled: !root.pending && !root.deletePending
         icon.name: "more"
-        type: StatusFlatButton.Type.Secondary
+        icon.color: Theme.palette.directColor1
         tooltip.text: qsTr("More")
+        tooltip.orientation: StatusToolTip.Orientation.Bottom
         readonly property ThreadContextMenu menu: menuLoader.status === Loader.Ready
                                                   ? menuLoader.item as ThreadContextMenu : null
         onClicked: {

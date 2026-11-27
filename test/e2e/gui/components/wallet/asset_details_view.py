@@ -36,7 +36,7 @@ class AssetDetailsView(QObject):
         self,
         timeout_msec: int = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
     ) -> 'AssetDetailsView':
-        assert driver.waitFor(lambda: self._header_is_loaded(), timeout_msec), (
+        assert driver.wait_until(lambda: self._header_is_loaded(), timeout_msec), (
             f'Asset details header is still loading, title={self._header_text("primaryText")!r}'
         )
         return self
@@ -83,7 +83,7 @@ class AssetDetailsView(QObject):
     ) -> 'AssetDetailsView':
         self._chart_range_1y.wait_until_appears(timeout_msec)
         self._chart_range_1y.click()
-        assert driver.waitFor(self._yearly_chart_range_selected, timeout_msec), (
+        assert driver.wait_until(self._yearly_chart_range_selected, timeout_msec), (
             '1Y chart time range was not selected'
         )
         return self
@@ -93,6 +93,6 @@ class AssetDetailsView(QObject):
         self,
         timeout_msec: int = 60000,
     ) -> 'AssetDetailsView':
-        assert driver.waitFor(self._graph_is_loaded, timeout_msec), 'Price graph has no data'
+        assert driver.wait_until(self._graph_is_loaded, timeout_msec), 'Price graph has no data'
         return self
 

@@ -25,7 +25,7 @@ def _xdisplay():
 
 
 def save_failure_screenshot(screenshot: SystemPath) -> Tuple[bool, Optional[str]]:
-    """Capture AUT window via Squish bounds, then fall back to full-screen grab.
+    """Capture the AUT window by its bounds, then fall back to full-screen grab.
 
     Returns (success, failure_reason). failure_reason is set when both methods fail.
     """
@@ -33,8 +33,8 @@ def save_failure_screenshot(screenshot: SystemPath) -> Tuple[bool, Optional[str]
     errors = []
 
     try:
-        driver.waitForObjectExists(statusDesktop_mainWindow).setVisible(True)
-        rect = driver.object.globalBounds(driver.waitForObject(statusDesktop_mainWindow))
+        driver.wait_exists(statusDesktop_mainWindow).setVisible(True)
+        rect = driver.bounds(driver.wait(statusDesktop_mainWindow))
         img = ImageGrab.grab(
             bbox=(rect.x, rect.y, rect.x + rect.width, rect.y + rect.height),
             xdisplay=_xdisplay(),

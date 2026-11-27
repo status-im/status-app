@@ -152,6 +152,12 @@ LayoutChooser {
     property string backButtonName
 
     /*!
+        \qmlproperty bool StatusSectionLayout::landscapeBackButtonVisible
+        Controls visibility of the landscape header's back button independently of its text.
+    */
+    property bool landscapeBackButtonVisible: !!backButtonName
+
+    /*!
         \qmlproperty Item StatusSectionLayout::headerContent
         This property holds a reference to the custom header content of
         the header component.
@@ -188,6 +194,8 @@ LayoutChooser {
 
     function setCurrentIndex(index: int) {
         d.currentIndex = index
+        if (d.portrait)
+            d.portrait.setCurrentIndex(index)
     }
 
     /*!
@@ -290,6 +298,9 @@ LayoutChooser {
         slide starts one.
     */
     signal panelSwitchEnded()
+
+    // True while the portrait swipe is moving between pages.
+    readonly property bool panelSwitchOngoing: d.panelSwitchOngoing
 
     // While the slide runs, keep QML incubation gentle so heavy async section
     // loads don't steal the animation's frame budget. The signal pair is
@@ -442,6 +453,7 @@ LayoutChooser {
             showFooter: root.showFooter
             footerSpacing: root.footerSpacing
             backButtonName: root.backButtonName
+            backButtonVisible: root.landscapeBackButtonVisible
             headerContent: root.headerContent
             backgroundColor: root.backgroundColor
             panelsFrozen: root.geometryTransitionOngoing

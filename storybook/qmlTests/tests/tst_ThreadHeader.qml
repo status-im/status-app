@@ -5,16 +5,12 @@ import QtTest
 import AppLayouts.Chat.controls
 import Storybook.Testing
 
+import utils
+
 Item {
     id: root
     width: 700
     height: 300
-
-    Button {
-        id: outside
-        y: 200
-        text: "Outside"
-    }
 
     Component {
         id: headerComponent
@@ -110,19 +106,69 @@ Item {
             verify(error.text.includes("permission denied"))
         }
 
-        function test_enterSubmitsAndSuccessClosesEditor() {
+        function test_enterOrReturnSubmitsAndSuccessClosesEditor_data() {
+            return [
+                { tag: "Enter", keyCode: Qt.Key_Enter },
+                { tag: "Return", keyCode: Qt.Key_Return  }
+            ]
+        }
+
+        function test_enterOrReturnSubmitsAndSuccessClosesEditor(data) {
             const input = edit("Updated")
-            keyClick(Qt.Key_Return)
+            keyClick(data.keyCode)
             compare(renameSpy.count, 1)
             compare(renameSpy.signalArguments[0][0], "Updated")
             compare(header.editing, true)
             header.pending = true
-            keyClick(Qt.Key_Return)
+            keyClick(data.keyCode)
             compare(renameSpy.count, 1)
             header.threadName = "Updated"
             header.pending = false
             header.editFinished("")
             compare(header.editing, false)
+        }
+
+        function test_emptyNameDisplaysLocalError() {
+            const input = edit("Erased text")
+            input.clear()
+            tryCompare(input, "activeFocus", true)
+            keyClick(Qt.Key_Enter)
+            const err = findChild(header, "threadNameError")
+            verify(!!err)
+            tryCompare(err, "visible", true)
+            compare(renameSpy.count, 0)
+        }
+
+        function test_overlongNameDisplaysLocalError() {
+            const txt = "A".repeat(Constants.maxThreadNameLengthForRenaming + 1)
+            const input = edit(txt)
+            tryCompare(input, "activeFocus", true)
+            keyClick(Qt.Key_Enter)
+            const err = findChild(header, "threadNameError")
+            verify(!!err)
+            tryCompare(err, "visible", true)
+            compare(renameSpy.count, 0)
+        }
+
+        function test_inlineSubmitButton() {
+            const input = edit("Updated")
+            const btn = findChild(header, "threadNameSubmitButton")
+            verify(!!btn)
+            compare(btn.visible, true)
+            mouseClick(btn)
+            compare(renameSpy.count, 1)
+            compare(renameSpy.signalArguments[0][0], "Updated")
+            header.editFinished("")
+            compare(header.editing, false)
+        }
+
+        function test_lostFocusDiscardAndClosesEditor() {
+            const input = edit("Updated")
+            input.focus = false
+            compare(renameSpy.count, 0)
+            compare(header.editing, false)
+            compare(header.pending, false)
+            compare(header.threadName, "Original")
         }
 
         function test_escapeCancelsWithoutSending() {
@@ -156,17 +202,6 @@ Item {
             verify(input.readOnly)
             verify(findChild(header, "threadNameError").visible)
             compare(findChild(header, "threadHeaderMenuButton").enabled, false)
-        }
-
-        function test_clickingAwayKeepsDraftAndDoesNotSend() {
-            const input = edit("Draft")
-            mouseClick(outside)
-            compare(header.editing, true)
-            compare(input.text, "Draft")
-            compare(renameSpy.count, 0)
-            input.forceActiveFocus()
-            keyClick(Qt.Key_Return)
-            compare(renameSpy.signalArguments[0][0], "Draft")
         }
 
         function test_failureKeepsDraftAndAllowsRetry() {
@@ -365,24 +400,14 @@ Item {
             const input = edit("Draft")
             ime.setPreedit(input, "composition")
             compare(input.inputMethodComposing, true)
-            input.accepted()
+            tryCompare(input, "activeFocus", true)
+            keyClick(Qt.Key_Enter)
             compare(renameSpy.count, 0)
             ime.setPreedit(input, "")
             ime.commit(input, "!")
-            input.accepted()
+            tryCompare(input, "activeFocus", true)
+            keyClick(Qt.Key_Enter)
             compare(renameSpy.count, 1)
-        }
-
-        function test_unicodeDraftIsNotTruncated() {
-            header.beginEditing()
-            const input = findChild(header, "threadNameInput")
-            input.text = "👩‍👩‍👧‍👦".repeat(50)
-            input.accepted()
-            compare(renameSpy.signalArguments[0][0], input.text)
-            header.editFinished("name exceeds 50 characters")
-            input.text += "e\u0301"
-            input.accepted()
-            compare(renameSpy.signalArguments[1][0], input.text)
         }
     }
 }

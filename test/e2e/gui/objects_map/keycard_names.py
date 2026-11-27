@@ -1,4 +1,4 @@
-from objectmaphelper import *
+import re
 
 from gui.objects_map.names import statusDesktop_mainWindow, statusDesktop_mainWindow_overlay
 
@@ -81,7 +81,7 @@ keycardManagementRevealSeedPhraseButton = {"container": statusDesktop_mainWindow
                                            "visible": True}
 keycardManagementNextButton = {"container": statusDesktop_mainWindow_overlay,
                                "objectName": "keycardManagementNextButton", "type": "StatusButton", "visible": True}
-keycardManagementSeedPhraseWord = {"container": statusDesktop_mainWindow_overlay, "objectName": RegularExpression("SeedPhraseWordAtIndex-*"), "type": "StatusSeedPhraseInput", "visible": True}
+keycardManagementSeedPhraseWord = {"container": statusDesktop_mainWindow_overlay, "objectName": re.compile("SeedPhraseWordAtIndex-*"), "type": "StatusSeedPhraseInput", "visible": True}
 keycardManagementContinueButton = {"container": statusDesktop_mainWindow_overlay, "objectName": "keycardManagementContinueButton", "type": "StatusButton", "visible": True}
 keycardManagementSeedPhraseSwitchBar = {"container": statusDesktop_mainWindow_overlay, "objectName": "enterSeedPhraseSwitchBar", "type": "StatusSeedPhraseTabBar", "visible": True}
 keycardManagementSeedPhrase12Button = {"container": keycardManagementSeedPhraseSwitchBar, "objectName": "12SeedButton", "type": "StatusSwitchTabButton"}

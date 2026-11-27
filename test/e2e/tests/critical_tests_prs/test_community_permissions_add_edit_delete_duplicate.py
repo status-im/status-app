@@ -53,17 +53,17 @@ def test_add_edit_remove_duplicate_permissions(main_screen: MainWindow):
         changes_popup.update_permission()
         if permission_set.allowed_to is 'becomeAdmin' and permission_set.checkbox_state is True:
             if permission_set.asset_title is not False:
-                assert driver.waitFor(lambda: permission_set.asset_title not in permissions_settings.get_who_holds_tags_titles(),
+                assert driver.wait_until(lambda: permission_set.asset_title not in permissions_settings.get_who_holds_tags_titles(),
                                       configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
             if permission_set.second_asset_title is not False:
-                assert driver.waitFor(
+                assert driver.wait_until(
                     lambda: permission_set.second_asset_title not in permissions_settings.get_who_holds_tags_titles(),
                     configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
         elif permission_set.checkbox_state is False:
-            assert driver.waitFor(lambda: 'Become member' in permissions_settings.get_is_allowed_tags_titles(),
+            assert driver.wait_until(lambda: 'Become member' in permissions_settings.get_is_allowed_tags_titles(),
                                   configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
         else:
-            assert driver.waitFor(lambda: permissions_intro_view._hide_icon.is_visible,
+            assert driver.wait_until(lambda: permissions_intro_view._hide_icon.is_visible,
                                   configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
 
     with step('Delete permission'):
@@ -71,7 +71,7 @@ def test_add_edit_remove_duplicate_permissions(main_screen: MainWindow):
         delete_pop_up.confirm_delete_button.click()
 
     with step('Verify that permission was deleted'):
-        assert driver.waitFor(lambda: PermissionsIntroView().is_visible)
+        assert driver.wait_until(lambda: PermissionsIntroView().is_visible)
 
     with step('Create new permission'):
         new_permission_data = {
@@ -96,6 +96,6 @@ def test_add_edit_remove_duplicate_permissions(main_screen: MainWindow):
     # TODO: that has to be brought back when token name and token amount representations are fixed
 
     # with step('Duplicated permission is displayed on permission page'):
-    #     assert driver.waitFor(
+    #     assert driver.wait_until(
     #         lambda: '10 ANT' in permissions_settings.get_who_holds_tags_titles(),
     #         configs.timeouts.UI_LOAD_TIMEOUT_MSEC)

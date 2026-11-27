@@ -735,34 +735,22 @@ Control {
             anchors.fill: parent
             visible: root.isEdit
             color: Theme.palette.background
-            radius: 12
+            radius: Theme.radius
         }
 
         Rectangle {
-            id: backgroundRect
-
-            width: parent.width
-            height: 1
-            visible: true
-            border.color: Theme.palette.directColor7
+            anchors.fill: parent
+            anchors.margins: -border.width*2
+            visible: !root.isEdit
+            border.color: Theme.palette.separator
+            border.width: 1
             color: StatusColors.transparent
+            topLeftRadius: Theme.radius + anchors.margins
+            topRightRadius: Theme.radius + anchors.margins
         }
     }
 
     contentItem: ColumnLayout {
-        Rectangle {
-            id: expandHandler
-
-            Layout.preferredWidth: 32
-            Layout.preferredHeight: 5
-            Layout.alignment: Qt.AlignHCenter
-
-            radius: height / 2
-            color: Theme.palette.directColor7
-
-            visible: false
-        }
-
         ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: root.fillAvailableHeight
@@ -928,7 +916,7 @@ Control {
                             icon: "thread"
                             width: 16
                             height: 16
-                            color: Theme.palette.primaryColor1
+                            color: Theme.palette.baseColor1
                             anchors.left: parent.left
                             anchors.leftMargin: messageInputField.leftPadding
                             anchors.verticalCenter: parent.verticalCenter
@@ -944,6 +932,16 @@ Control {
                             anchors.rightMargin: messageInputField.rightPadding
                             anchors.verticalCenter: parent.verticalCenter
                             onClicked: parent.clear()
+                        }
+
+                        Rectangle {
+                            anchors.bottom: parent.bottom
+                            anchors.left: parent.left
+                            anchors.leftMargin: messageInputField.leftPadding
+                            anchors.rightMargin: messageInputField.rightPadding
+                            anchors.right: parent.right
+                            height: 1
+                            color: Theme.palette.separator
                         }
                     }
                 }

@@ -39,7 +39,7 @@ class AuthenticatePopup(QObject):
 
     @allure.step('Verify authentication popup does not appear')
     def assert_does_not_appear(self, timeout_msec: int = 2000):
-        appeared = driver.waitFor(lambda: self.is_visible, timeout_msec)
+        appeared = driver.wait_until(lambda: self.is_visible, timeout_msec)
         assert not appeared, (
             'Authentication popup should not appear when adding a generated account '
             'from profile keypair (xpub derivation)'

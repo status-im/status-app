@@ -74,6 +74,9 @@ Item {
         theme: appMain.Theme
         selectionPalette: appMain.ApplicationWindow.window?.palette ?? systemPalette
     }
+    readonly property MessageHeaderServices messageHeaderServices: StatusMessageHeaderServices {
+        theme: appMain.Theme
+    }
 
     focus: true
     Component.onCompleted: {
@@ -1181,15 +1184,6 @@ Item {
                 profileLoader.item.setCurrentIndex(StatusSectionLayout.LeftPanel)
         }
 
-        function maybeDisplayIntroduceYourselfPopup() {
-            if (!appMainLocalSettings.introduceYourselfPopupSeen
-                    && appMain.ownContactDetails?.displayName === "") {
-                introduceYourselfPopupComponent.createObject(appMain).open()
-                return true
-            }
-            return false
-        }
-
         function ensName(username) {
             if (!username.endsWith(".stateofus.eth") && !username.endsWith(".eth")) {
                 return "%1.%2".arg(username).arg("stateofus.eth")
@@ -1256,15 +1250,21 @@ Item {
             })
         }
 
-        function maybeDisplayMessagingSectionPopups() {
-            if (d.maybeDisplayIntroduceYourselfPopup())
-                return
-            popupRequestsHandler.maybeDisplayEnableMessageBackupPopup()
-        }
-
         function maybeDisplayEnablePushNotificationsPopup() {
             loginPopupsQueue.schedule("enablePushNotifications",
                                       () => popupRequestsHandler.maybeDisplayEnablePushNotificationsPopup())
+        }
+
+        function scheduleMessageBackupPrompt() {
+            if (!messageBackupPromptTriggerLoader.item)
+                return
+
+            popupRequestsHandler.invoke(() => {
+                loginPopupsQueue.schedule("enableMessageBackup", () => {
+                    if (messageBackupPromptTriggerLoader.item)
+                        popupRequestsHandler.maybeDisplayEnableMessageBackupPopup()
+                }, true)
+            })
         }
 
         function goToSupportChatBot() {
@@ -1291,8 +1291,10 @@ Item {
     Settings {
         id: appMainLocalSettings
         category: "AppMainLocalSettings_%1".arg(d.myPublicKey)
+        property bool enableMessageBackupPopupSeen: false
+        property int messageBackupVisitCount: 0
+        property bool messageBackupContactRequestCompleted: false
         property var whitelistedUnfurledDomains: []
-        property bool introduceYourselfPopupSeen
         property string skinColor  // a name, not a `#rrggbb` value
         property int theme: ThemeUtils.Style.System
         property int fontSize: {
@@ -1400,6 +1402,7 @@ Item {
         id: popupRequestsHandler
 
         popupParent: appMain
+        messageBackupSettings: appMainLocalSettings
 
         // Stores:
         rootStore: appMain.rootStore
@@ -1738,7 +1741,7 @@ Item {
             id: bannersLayout
 
             enabled: !localAppSettings.testEnvironment
-                     && (d.activeSectionType !== Constants.appSection.homePage && d.activeSectionType !== Constants.appSection.loadingSection)
+                     && d.activeSectionType !== Constants.appSection.loadingSection
             visible: enabled
 
             Layout.fillWidth: true
@@ -2337,12 +2340,6 @@ Item {
                             console.error("AppMain: Unknown section type")
                         }
                     }
-                    onCurrentIndexChanged: {
-                        // We cannot use isMessagingRelatedSectionType here because it is not updated yet
-                        if (d.activeSectionType === Constants.appSection.chat || d.activeSectionType === Constants.appSection.community)
-                            loginPopupsQueue.schedule("messagingSection", d.maybeDisplayMessagingSectionPopups)
-                    }
-
                     // NOTE:
                     // If we ever change stack layout component order we need to updade
                     // Constants.appViewStackIndex accordingly
@@ -2409,6 +2406,7 @@ Item {
                         rowPool: appMain.messageRowPool
                         textAppearance: appMain.textAppearance
                         previewAppearance: appMain.previewAppearance
+                        messageHeaderServices: appMain.messageHeaderServices
 
                         createChatViewOpened: createChatView.opened
                         isPortraitMode: appMain.isPortraitMode
@@ -2616,6 +2614,7 @@ Item {
                             rowPool: appMain.messageRowPool
                             textAppearance: appMain.textAppearance
                             previewAppearance: appMain.previewAppearance
+                            messageHeaderServices: appMain.messageHeaderServices
 
                             createChatViewOpened: createChatView.opened
                             isPortraitMode: appMain.isPortraitMode
@@ -2992,6 +2991,28 @@ Item {
                                                                   Utils.getSettingsSubsectionForSection(d.activeSectionType))
     }
 
+    Loader {
+        id: messageBackupPromptTriggerLoader
+
+        active: appMain.mainReady && !!d.myPublicKey && !appMainLocalSettings.enableMessageBackupPopupSeen
+
+        sourceComponent: MessageBackupPromptTrigger {
+            settings: appMainLocalSettings
+            sessionReady: appMain.mainReady
+            sectionId: appMain.rootStore.activeSectionId
+            sectionType: d.activeSectionType
+            onPromptRequested: Qt.callLater(d.scheduleMessageBackupPrompt)
+        }
+    }
+
+    Connections {
+        target: messageBackupPromptTriggerLoader.item ? appMain.contactsStore : null
+
+        function onLocalContactRequestCompleted() {
+            messageBackupPromptTriggerLoader.item?.recordSuccessfulContactRequest()
+        }
+    }
+
     DeferredActionQueue {
         id: loginPopupsQueue
 
@@ -3017,11 +3038,21 @@ Item {
             relativeX: appMain.width/2 - width/2
             relativeY: appMain.height/2 - height/2
             searchBoxPlaceholder: qsTr("Where do you want to go?")
-            model: rootStore.chatSearchModel
+            readonly property var appSearchModule: rootStore.appSearchStore.appSearchModule
 
-            onSelected: function (sectionId, chatId) {
-                rootStore.setActiveSectionChat(sectionId, chatId)
+            model: rootStore.chatSearchModel
+            threadModel: appMain.featureFlagsStore.threadsEnabled
+                         ? appSearchModule.switcherThreadModel : null
+
+            onAboutToShow: appSearchModule.setSwitcherOpen(true)
+            onAboutToHide: appSearchModule.setSwitcherOpen(false)
+
+            onSelected: function (sectionId, chatId, threadId) {
                 close()
+                if (threadId)
+                    rootStore.setActiveSectionThread(sectionId, chatId, threadId)
+                else
+                    rootStore.setActiveSectionChat(sectionId, chatId)
             }
         }
     }
@@ -3365,18 +3396,6 @@ Item {
             onClosed: {
                 savedAddressActivity.close()
             }
-        }
-    }
-
-    Component {
-        id: introduceYourselfPopupComponent
-        IntroduceYourselfPopup {
-            visible: true
-            destroyOnClose: true
-            pubKey: appMain.profileStore.compressedPubKey
-            colorId: appMain.profileStore.colorId
-            onClosed: appMainLocalSettings.introduceYourselfPopupSeen = true
-            onAccepted: Global.changeAppSectionBySectionType(Constants.appSection.profile)
         }
     }
 

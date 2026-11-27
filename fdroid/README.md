@@ -66,8 +66,8 @@ signing certificate).
 **Nim packages** (`make deps`):
 - `nimble setup` installs the Nim compiler and packages `nimble.lock` pins, so
   the recipe's Nim srclib must be the version `nim_status_client.nimble` pins
-  (2.2.10).
-- The nimble that Nim's `build_all.sh` builds (0.22.2 for Nim 2.2.10) does not
+  (2.2.12).
+- The nimble that Nim's `build_all.sh` builds (0.24.1 for Nim 2.2.12) does not
   honor version-pinned lock entries: `httputils`, `nat_traversal` and
   `testutils` resolve differently from the lock. None of them is compiled into
   the app, so the APK still matches. If F-Droid's rebuild stops matching after

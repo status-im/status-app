@@ -31,7 +31,7 @@ class MarketScreen(QObject):
         tokens = []
         
         while time.monotonic() - started_at < timeout_sec:
-            current_tokens = driver.findAllObjects(self.token.real_name)
+            current_tokens = driver.find_all(self.token.real_name)
             if len(current_tokens) > len(tokens):
                 tokens = current_tokens
             time.sleep(0.5)

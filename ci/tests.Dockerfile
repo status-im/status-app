@@ -1,4 +1,7 @@
-FROM harbor.status.im/status-im/status-desktop-build:20261021-qt6.11.0
+# Tag ci/build-image.sh gives ci/Dockerfile. The GitHub Actions job passes the
+# current one; this default is for Jenkins and a plain docker build.
+ARG BASE=ghcr.io/status-im/status-app-build:desktop-a41dc8662b7d
+FROM ${BASE}
 
 USER root
 
@@ -21,6 +24,7 @@ RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor --ba
     librocksdb-dev libfuse2 \
     libpython3-dev \
     pcscd \
+    openjdk-17-jre-headless \
 && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN groupadd -g 999 docker && usermod -aG docker jenkins
@@ -39,6 +43,6 @@ USER jenkins
 
 LABEL maintainer="marko@status.im"
 LABEL source="https://github.com/status-im/status-app"
-LABEL description="Build image for the Status Desktop e2e tests with Squish and Qt."
+LABEL description="Build image for the Status Desktop e2e tests with Qt."
 
 ENTRYPOINT [""]

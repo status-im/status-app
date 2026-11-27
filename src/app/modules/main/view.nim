@@ -213,6 +213,9 @@ QtObject:
     let item = self.model.getItemBySectionType(sectionType.SectionType)
     self.delegate.setActiveSection(item)
 
+  proc switchToThread*(self: View, sectionId: string, chatId: string, threadId: string) {.slot.} =
+    self.delegate.switchToThread(sectionId, chatId, threadId)
+
   proc switchTo*(self: View, sectionId: string, chatId: string) {.slot.} =
     self.delegate.switchTo(sectionId, chatId)
 

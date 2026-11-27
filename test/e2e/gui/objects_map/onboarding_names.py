@@ -1,4 +1,4 @@
-from objectmaphelper import RegularExpression
+import re
 
 from gui.objects_map.names import statusDesktop_mainWindow, statusDesktop_mainWindow_overlay
 
@@ -229,15 +229,15 @@ createProfileButton = {"container": statusDesktop_mainWindow_overlay, "objectNam
 returningLoginButton = {"container": statusDesktop_mainWindow_overlay, "objectName": "logInDelegate", "type": "LoginUserSelectorDelegate", "visible": True}
 manageProfilesDelegate = {"container": statusDesktop_mainWindow_overlay, "objectName": "manageProfilesDelegate", "type": "LoginUserSelectorDelegate", "visible": True}
 statusDropdown = {"container": statusDesktop_mainWindow_overlay, "objectName": "StatusDropdown", "type": "PopupItem", "visible": True}
-startupLanguageSelector_item = {"container": statusDesktop_mainWindow_overlay, "objectName": RegularExpression("itemDelegate_*"), "type": "ItemDelegate", "visible": True}
+startupLanguageSelector_item = {"container": statusDesktop_mainWindow_overlay, "objectName": re.compile("itemDelegate_*"), "type": "ItemDelegate", "visible": True}
 
 # Manage profiles / remove profile
 manageProfilesDialog = {"container": statusDesktop_mainWindow_overlay, "objectName": "manageProfilesDialog", "type": "PopupItem", "visible": True}
-manageProfilesRow = {"container": statusDesktop_mainWindow_overlay, "objectName": RegularExpression("manageProfilesDelegate-*"), "type": "LoginUserSelectorDelegate", "visible": True}
+manageProfilesRow = {"container": statusDesktop_mainWindow_overlay, "objectName": re.compile("manageProfilesDelegate-*"), "type": "LoginUserSelectorDelegate", "visible": True}
 doneBtnManageProfiles = {"container": statusDesktop_mainWindow_overlay, "objectName": "doneBtnManageProfiles", "type": "StatusButton", "visible": True}
 deleteMultiaccountConfirmationDialog = {"container": statusDesktop_mainWindow_overlay, "objectName": "deleteMultiaccountConfirmationDialog", "type": "PopupItem", "visible": True}
 confirmDeleteMultiaccountBtn = {"container": statusDesktop_mainWindow_overlay, "objectName": "confirmDeleteMultiaccountBtn", "type": "StatusButton", "visible": True}
-deleteProfileButton = {"container": statusDesktop_mainWindow_overlay, "objectName": RegularExpression("deleteProfileButton-.*"), "type": "StatusFlatButton", "visible": True}
+deleteProfileButton = {"container": statusDesktop_mainWindow_overlay, "objectName": re.compile("deleteProfileButton-.*"), "type": "StatusFlatButton", "visible": True}
 
 # Touch ID Auth View
 mainWindow_TouchIDAuthView = {"container": statusDesktop_mainWindow, "type": "TouchIDAuthView", "unnamed": 1, "visible": True}

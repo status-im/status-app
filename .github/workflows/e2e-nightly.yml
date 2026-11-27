@@ -1,0 +1,155 @@
+name: e2e nightly
+
+on:
+  schedule:
+    - cron: '0 1 * * *'
+  workflow_dispatch:
+  # A schedule runs only what is on master: a change to this workflow is tried in its pull request.
+  pull_request:
+    paths:
+      - .github/workflows/e2e-nightly.yml
+
+permissions:
+  contents: read
+  packages: read
+  actions: read
+
+concurrency:
+  group: e2e-nightly-${{ github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  GO_VERSION: 1.26.5
+  QT_VERSION: 6.11.0
+  NIMFLAGS: --colors:off
+  FLAG_SWAP_ENABLED: 1
+  FLAG_RELAY_ENABLED: 1
+  FLAG_LIFI_ENABLED: 0
+  FLAG_PARASWAP_ENABLED: 0
+  GOCACHE: ${{ github.workspace }}/.ci-cache/go-build
+  CCACHE_DIR: ${{ github.workspace }}/.ci-cache/ccache
+  CCACHE_MAXSIZE: 2G
+  IN_IMAGE: >-
+    docker exec --env STATUS_BUILD_LIFI_API_KEY --env STATUS_BUILD_RELAY_API_KEY
+    --env STATUS_BUILD_KLIPY_API_KEY --env USE_SIMULATED_KEYCARD build
+
+jobs:
+  package:
+    name: linux (${{ matrix.id }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: suite
+            simulated: 'false'
+          - id: keycard
+            simulated: 'true'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          filter: blob:none
+      - name: Fetch submodules
+        run: scripts/ci-fetch-submodules.sh
+      - uses: ./.github/actions/container
+        with:
+          image: desktop
+          env: |
+            APPIMAGE_EXTRACT_AND_RUN=1
+            USE_SIMULATED_KEYCARD=${{ matrix.simulated }}
+      # The caches the linux job of ci.yml saves on master. None is saved here.
+      - name: Cache keys
+        id: keys
+        run: |
+          {
+            echo "day=$(date -u +%F)"
+            echo "status-go=$(git rev-parse HEAD:vendor/status-go)"
+          } >> "$GITHUB_OUTPUT"
+      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        id: go
+        with:
+          path: .ci-cache/go-build
+          key: go-linux-${{ steps.keys.outputs.status-go }}
+          restore-keys: go-linux-
+      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        id: ccache
+        with:
+          path: .ci-cache/ccache
+          key: ccache-linux-${{ steps.keys.outputs.day }}
+          restore-keys: ccache-linux-
+      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        id: nimble
+        with:
+          path: nimbledeps
+          key: nimbledeps-${{ runner.os }}-${{ runner.arch }}-${{ env.IMAGE }}-${{ hashFiles('nimble.lock', 'nim_status_client.nimble') }}
+      - name: Nim packages
+        id: nim-packages
+        run: $IN_IMAGE make nimble-deps
+      - uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        if: ${{ steps.nim-packages.outcome == 'success' && steps.nimble.outputs.cache-hit != 'true' }}
+        with:
+          path: nimbledeps
+          key: ${{ steps.nimble.outputs.cache-primary-key }}
+      - name: Dependencies
+        run: $IN_IMAGE make update
+      - name: status-go
+        run: $IN_IMAGE make status-go
+      - name: Package
+        env:
+          STATUS_BUILD_LIFI_API_KEY: ${{ secrets.STATUS_BUILD_LIFI_API_KEY }}
+          STATUS_BUILD_RELAY_API_KEY: ${{ secrets.STATUS_BUILD_RELAY_API_KEY }}
+          STATUS_BUILD_KLIPY_API_KEY: ${{ secrets.STATUS_BUILD_KLIPY_API_KEY }}
+          USE_SIMULATED_KEYCARD: ${{ matrix.simulated }}
+        run: $IN_IMAGE make tgz-linux
+      - uses: ./.github/actions/build-artifact
+        with:
+          platform: linux-x86_64-${{ matrix.id }}
+          file: pkg/Status.tar.gz
+          suffix: .tar.gz
+
+  suite:
+    needs: package
+    # Whatever the other build did: a suite whose own build is missing fails when it unpacks it.
+    if: ${{ !cancelled() }}
+    permissions:
+      contents: read
+      actions: read
+      packages: read
+    uses: ./.github/workflows/e2e.yml
+    secrets:
+      WALLET_TEST_USER_SEED: ${{ secrets.WALLET_TEST_USER_SEED }}
+    with:
+      os: linux
+      run-id: ${{ github.run_id }}
+      pytest-args: not (keycard or benchmark)
+      artifact: '*-linux-x86_64-suite.tar.gz'
+      results-name: e2e-linux-suite
+      timeout-minutes: 120
+      allow-failure: false
+
+  keycard:
+    needs: package
+    # Whatever the other build did: a suite whose own build is missing fails when it unpacks it.
+    if: ${{ !cancelled() }}
+    permissions:
+      contents: read
+      actions: read
+      packages: read
+    uses: ./.github/workflows/e2e.yml
+    secrets:
+      WALLET_TEST_USER_SEED: ${{ secrets.WALLET_TEST_USER_SEED }}
+    with:
+      os: linux
+      run-id: ${{ github.run_id }}
+      pytest-args: keycard
+      artifact: '*-linux-x86_64-keycard.tar.gz'
+      results-name: e2e-linux-keycard
+      timeout-minutes: 120
+      allow-failure: false

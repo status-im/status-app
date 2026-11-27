@@ -10,6 +10,7 @@ import constants
 import driver
 from constants import WalletAccount
 from constants.wallet import WalletNetworkSettings
+from driver.obj import colour_hex
 from driver.objects_access import emoji_text, walk_children
 from gui.components.context_menu import ContextMenu
 from gui.components.wallet.add_saved_address_popup import AddEditSavedAddressPopup
@@ -48,7 +49,7 @@ def _wait_until(
         while not condition():
             time.sleep(check_interval)
         return
-    assert driver.waitFor(condition, timeout_msec), error_message
+    assert driver.wait_until(condition, timeout_msec), error_message
 
 
 class WalletScreen(QObject):
@@ -90,10 +91,10 @@ class WalletLeftPanel(QObject):
         accounts = []
         while time.monotonic() - start_time < timeout_sec:
             try:
-                raw_data = driver.findAllObjects(self.wallet_account_item.real_name)
+                raw_data = driver.find_all(self.wallet_account_item.real_name)
                 for account_item in raw_data:
                     name = str(account_item.title)
-                    color = str(account_item.asset.color.name).lower()
+                    color = colour_hex(account_item.asset.color)
                     emoji = emoji_text(account_item.asset.emoji)
                     accounts.append(constants.WalletAccount(name=name, color=color, emoji=emoji))
                 return accounts
@@ -123,7 +124,7 @@ class WalletLeftPanel(QObject):
                 self.wallet_account_item.click()
                 try:
                     account_view = WalletAccountView().wait_until_appears()
-                    assert driver.waitFor(
+                    assert driver.wait_until(
                         lambda: account_view.name == account_name,
                         configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
                     ), f'Wallet account view did not switch to {account_name}'
@@ -140,7 +141,7 @@ class WalletLeftPanel(QObject):
         timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
     ) -> 'WalletLeftPanel':
         self.all_accounts_button.click()
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: account_name in [account.name for account in self.accounts],
             timeout_msec,
         ), f'Wallet account list did not show {account_name}'
@@ -237,7 +238,7 @@ class SavedAddressesView(QObject):
 
     @allure.step('Get saved addresses list')
     def get_saved_addresses_list(self):
-        addresses = [str(address.name) for address in driver.findAllObjects(self._saved_address_item.real_name)]
+        addresses = [str(address.name) for address in driver.find_all(self._saved_address_item.real_name)]
         return addresses
 
     @allure.step('Open add new address popup')
@@ -434,7 +435,7 @@ class WalletAccountView(QObject):
         self._collectibles_view.wait_until_appears(timeout_msec)
 
         def collectibles_loaded():
-            items = driver.findAllObjects(self._collectible_item.real_name)
+            items = driver.find_all(self._collectible_item.real_name)
             if any(getattr(item, 'isLoading', False) for item in items):
                 return False
             if items:
@@ -474,7 +475,7 @@ class WalletAccountView(QObject):
         loading_timeout_msec: int | None = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
     ):
         self._assets_tab_button.click()
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self._assets_tab_button.is_checked,
             timeout_msec,
         ), 'Assets tab did not become selected'
@@ -492,7 +493,7 @@ class WalletAccountView(QObject):
         require_items: bool = False,
     ):
         self._collectibles_tab_button.click()
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self._collectibles_tab_button.is_checked,
             timeout_msec,
         ), 'Collectibles tab did not become selected'
@@ -513,7 +514,7 @@ class WalletAccountView(QObject):
         loading_timeout_msec: int | None = configs.timeouts.WALLET_SYNC_TIMEOUT_MSEC,
     ):
         self._activity_tab_button.click()
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: self._activity_tab_button.is_checked,
             timeout_msec,
         ), 'History tab did not become selected'
@@ -529,13 +530,13 @@ class WalletAccountView(QObject):
             self._new_transactions_button.click()
         return [
             TransactionRecord(item)
-            for item in driver.findAllObjects(self._activity_delegate.real_name)
+            for item in driver.find_all(self._activity_delegate.real_name)
         ]
 
     @allure.step('Enable networks in wallet header filter')
     def enable_networks(self, *network_names: str):
         self._network_filter.click()
-        network_options = driver.findAllObjects(self._network_selector_item.real_name)
+        network_options = driver.find_all(self._network_selector_item.real_name)
         assert network_options, 'Wallet network options are not displayed'
 
         for network_name in network_names:
@@ -545,7 +546,7 @@ class WalletAccountView(QObject):
                 QObject(matched_item).click()
                 time.sleep(0.2)
 
-        driver.type(self.object, '<Escape>')
+        driver.type_text(self.object, '<Escape>')
         return self
 
     @allure.step('Wait for new History transaction')
@@ -581,7 +582,7 @@ class WalletAccountView(QObject):
                     return True
             return False
 
-        found = driver.waitFor(_found, timeout_msec)
+        found = driver.wait_until(_found, timeout_msec)
         if failed is not None:
             raise AssertionError(f'History transaction failed: {failed!r}')
         assert found and matched is not None, (
@@ -602,11 +603,11 @@ class WalletAccountView(QObject):
     @allure.step('Choose sort by value')
     def choose_sort_by_value(self, sort_by_value: str):
         self._assets_combobox.click()
-        driver.mouseClick(self.get_sort_by_item_object(sort_by_value))
+        driver.click(self.get_sort_by_item_object(sort_by_value))
 
     @allure.step('Get sort by item')
     def get_sort_by_item_object(self, sort_by_value: str):
-        for item in driver.findAllObjects(self._asset_item_delegate.real_name):
+        for item in driver.find_all(self._asset_item_delegate.real_name):
             if getattr(item, 'text', '') == sort_by_value:
                 return item
 
@@ -622,12 +623,12 @@ class WalletAccountView(QObject):
     def get_list_of_assets(self) -> typing.List:
         time.sleep(1)
         token_list_items = []
-        for item in driver.findAllObjects(self._asset_item.real_name):
+        for item in driver.find_all(self._asset_item.real_name):
             token_list_items.append(item)
         sorted(token_list_items, key=lambda item: item.y)
         return token_list_items
 
     @allure.step('Open asset context menu')
     def open_asset_context_menu(self, index: int):
-        QObject(real_name=driver.objectMap.realName(self.get_list_of_assets()[index])).right_click()
+        QObject(real_name=self.get_list_of_assets()[index]).right_click()
         return AssetContextMenuPopup().wait_until_appears()

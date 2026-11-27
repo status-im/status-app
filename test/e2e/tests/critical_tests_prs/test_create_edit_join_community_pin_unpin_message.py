@@ -122,22 +122,22 @@ def test_create_edit_join_community_pin_unpin_message(multiple_instances):
         with step(f'User {user_one.name}, verify welcome community popup'):
             welcome_popup = community_screen.left_panel.open_welcome_community_popup()
             assert new_name in welcome_popup.title
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: welcome_popup.intro == new_introduction,
                 configs.timeouts.LOADING_LIST_TIMEOUT_MSEC,
             ), f'Welcome popup should show updated intro {new_introduction!r}'
             welcome_popup.join().authenticate(user_one.password)
-            assert driver.waitFor(lambda: not community_screen.left_panel.is_join_community_visible,
+            assert driver.wait_until(lambda: not community_screen.left_panel.is_join_community_visible,
                                   configs.timeouts.APP_LOAD_TIMEOUT_MSEC), 'Join community button not hidden'
 
         with step(f'User {user_one.name}, see two members in community members list'):
-            assert driver.waitFor(lambda: user_two.name in community_screen.right_panel.members, 10000)
-            assert driver.waitFor(lambda: '2' in community_screen.left_panel.members)
+            assert driver.wait_until(lambda: user_two.name in community_screen.right_panel.members, 10000)
+            assert driver.wait_until(lambda: '2' in community_screen.left_panel.members)
             main_screen.minimize()
 
         with step(f'User {user_two.name}, see two members in community members list'):
             switch_to_aut(aut_two, main_screen)
-            assert driver.waitFor(lambda: user_one.name in community_screen.right_panel.members, 10000)
+            assert driver.wait_until(lambda: user_one.name in community_screen.right_panel.members, 10000)
             assert '2' in community_screen.left_panel.members
 
         with step(f'Go to edit community for {user_two.name} and check that pin message checkbox is not checked'):
@@ -153,7 +153,7 @@ def test_create_edit_join_community_pin_unpin_message(multiple_instances):
             messages_screen.group_chat.send_message_to_group_chat(message_text)
             second_message_text = random_text_message()
             messages_screen.group_chat.send_message_to_group_chat(second_message_text)
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: any(
                     second_message_text in message_plain_text(message)
                     for message in messages_screen.chat.messages(0)

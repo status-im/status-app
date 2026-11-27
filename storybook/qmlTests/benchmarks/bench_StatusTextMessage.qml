@@ -7,10 +7,10 @@ import "../../../ui/StatusQ/src/StatusQ/Components/private/statusMessage"
 import Benchmark
 
 /*
-  StatusTextMessage, the text of a chat message, collapsed: 50 long
-  messages, 300 px wide, each cut at 200 px with its "show more" fade.
+  StatusTextMessage, the text of a chat message, shown in full: 50 long
+  messages, 300 px wide, each in a 230 px cell that clips the overflow.
 
-  Variant: collapsed (static, scroll).
+  Variant: full (static, scroll).
 */
 Item {
     id: root
@@ -34,6 +34,7 @@ Item {
 
             width: runner.cellWidth
             height: runner.cellHeight
+            clip: true
 
             StatusTextMessage {
                 width: parent.width
@@ -48,7 +49,7 @@ Item {
         name: "Bench"
         when: windowShown
 
-        function test_collapsed() {
+        function test_full() {
             runner.scenarios = ["static", "scroll"]
             runner.start()
             tryVerify(() => runner.result !== null, 300000)

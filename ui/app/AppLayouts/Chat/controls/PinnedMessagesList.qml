@@ -23,6 +23,9 @@ StatusListView {
         readonly property ChatTextAppearance textAppearance: MessageTextAppearance {
             theme: root.Theme
         }
+        readonly property MessageHeaderServices headerServices: StatusMessageHeaderServices {
+            theme: root.Theme
+        }
         readonly property ChatTextAppearance previewAppearance: ReplyTextAppearance {
             theme: root.Theme
         }
@@ -78,6 +81,7 @@ StatusListView {
             id: messageItem
             textAppearance: d.textAppearance
             previewAppearance: d.previewAppearance
+            messageHeaderServices: d.headerServices
 
             width: parent.width
 

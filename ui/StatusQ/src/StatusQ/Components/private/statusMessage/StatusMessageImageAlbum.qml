@@ -51,7 +51,7 @@ RowLayout {
                                                : 0
     }
 
-    spacing: 9
+    spacing: Theme.halfPadding
     Repeater {
         model: root.albumCount
 

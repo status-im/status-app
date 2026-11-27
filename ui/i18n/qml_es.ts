@@ -9305,29 +9305,6 @@ app: %2</translation>
     </message>
 </context>
 <context>
-    <name>IntroduceYourselfPopup</name>
-    <message>
-        <source>Introduce yourself</source>
-        <translation>Preséntate</translation>
-    </message>
-    <message>
-        <source>Your Name</source>
-        <translation>Tu nombre</translation>
-    </message>
-    <message>
-        <source>Add an optional display name and profile picture so others can easily recognise you.</source>
-        <translation>Agrega un nombre para mostrar opcional y una foto de perfil para que otros puedan reconocerte fácilmente.</translation>
-    </message>
-    <message>
-        <source>Skip</source>
-        <translation>Omitir</translation>
-    </message>
-    <message>
-        <source>Edit Profile in Settings</source>
-        <translation>Editar perfil en Configuración</translation>
-    </message>
-</context>
-<context>
     <name>InvitationBubbleView</name>
     <message>
         <source>Verified community invitation</source>
@@ -11757,12 +11734,12 @@ al cargar</translation>
         <translation>Responder</translation>
     </message>
     <message>
-        <source>Create Thread</source>
-        <translation>Crear hilo</translation>
-    </message>
-    <message>
         <source>Open thread</source>
         <translation>Abrir hilo</translation>
+    </message>
+    <message>
+        <source>Reply in thread</source>
+        <translation type="unfinished">Responder en el hilo</translation>
     </message>
     <message>
         <source>Edit</source>
@@ -16804,6 +16781,13 @@ al cargar</translation>
     </message>
 </context>
 <context>
+    <name>StatusChatInputSendButton</name>
+    <message>
+        <source>Send</source>
+        <translation type="unfinished">Enviar</translation>
+    </message>
+</context>
+<context>
     <name>StatusChatInputToolBar</name>
     <message>
         <source>Formatting</source>
@@ -18422,6 +18406,21 @@ Esta acción no se puede deshacer.</translation>
     </message>
 </context>
 <context>
+    <name>ThirdpartyServicesLabel</name>
+    <message>
+        <source>Third-party services %1</source>
+        <translation type="unfinished">Servicios de terceros %1</translation>
+    </message>
+    <message>
+        <source>enabled</source>
+        <translation type="unfinished">habilitado</translation>
+    </message>
+    <message>
+        <source>disabled</source>
+        <translation type="unfinished">deshabilitado</translation>
+    </message>
+</context>
+<context>
     <name>ThirdpartyServicesPopup</name>
     <message>
         <source>Third-party services</source>
@@ -18506,12 +18505,21 @@ Esta acción no se puede deshacer.</translation>
         <source>deleted this thread</source>
         <translation>eliminó este hilo</translation>
     </message>
+    <message>
+        <source>deleted this thread</source>
+        <comment>Current user</comment>
+        <translation>eliminaste este hilo</translation>
+    </message>
     <message numerus="yes">
         <source>%n message(s)</source>
         <translation>
             <numerusform>%n mensaje</numerusform>
             <numerusform>%n mensajes</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>You</source>
+        <translation>Tú</translation>
     </message>
 </context>
 <context>
@@ -18584,8 +18592,23 @@ Esta acción no se puede deshacer.</translation>
         <translation>No se pudo cambiar el nombre del hilo: %1</translation>
     </message>
     <message>
+        <source>Thread name is required</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source>Max %n character(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
         <source>Thread name</source>
         <translation>Nombre del hilo</translation>
+    </message>
+    <message>
+        <source>Rename thread</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>in %1</source>
@@ -20770,18 +20793,6 @@ Si una transacción con un nonce más bajo está pendiente, las transacciones co
     <message>
         <source>Log in</source>
         <translation>Iniciar sesión</translation>
-    </message>
-    <message>
-        <source>Third-party services %1</source>
-        <translation>Servicios de terceros %1</translation>
-    </message>
-    <message>
-        <source>enabled</source>
-        <translation>habilitado</translation>
-    </message>
-    <message>
-        <source>disabled</source>
-        <translation>deshabilitado</translation>
     </message>
     <message>
         <source>By proceeding you accept Status&lt;br&gt;%1 and %2</source>

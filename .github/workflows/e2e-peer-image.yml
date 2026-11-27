@@ -1,0 +1,56 @@
+name: E2E Peer Image
+# Only the default branch publishes: e2e runs on other branches execute branch
+# code, so they may pull this image but must never be able to replace it.
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'vendor/status-go'
+      - '.github/workflows/e2e-peer-image.yml'
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: e2e-peer-image-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  publish:
+    name: publish
+    # ref, not ref_name: a tag named like the default branch has the same ref_name.
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check out the vendored status-go
+        run: |
+          git submodule init vendor/status-go
+          git config submodule.vendor/status-go.url https://github.com/status-im/status-go.git
+          git submodule update --depth 1 vendor/status-go
+
+      - name: Build and publish
+        timeout-minutes: 35
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          sha=$(git ls-tree HEAD vendor/status-go | awk '{print $3}')
+          published="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/status-app-e2e-peer:${sha}"
+          echo "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin > /dev/null
+          if docker manifest inspect "$published" > /dev/null 2>&1; then
+            echo "${published} is already published"
+            exit 0
+          fi
+          # The source label links the package to this repository, so e2e runs can read it.
+          docker build vendor/status-go --tag "$published" \
+            --label "org.opencontainers.image.source=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" \
+            --label "org.opencontainers.image.revision=${sha}"
+          docker push "$published"
+          echo "Published ${published}" >> "$GITHUB_STEP_SUMMARY"

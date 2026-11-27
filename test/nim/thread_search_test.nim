@@ -7,8 +7,9 @@ import app/modules/main/app_search/io_interface as search_interface
 import app/modules/main/app_search/controller as search_controller
 import app/modules/main/app_search/module as search_module
 import app/modules/main/app_search/view
-import app/modules/main/app_search/models/location_menu_sub_model
+import app/modules/main/app_search/models/[chat_search_model, location_menu_sub_model]
 import app/modules/main/app_search/models/[location_menu_model, location_menu_item, location_menu_sub_item]
+import app_service/common/activity_center
 import app_service/service/message/service as message_service
 import app_service/service/message/dto/[message, thread]
 import app_service/service/chat/service as chat_service
@@ -18,12 +19,15 @@ import app/global/feature_flags
 import app/global/global_singleton
 import app/global/qt_settings
 import app/modules/main/io_interface as main_interface
+from app/modules/shared_models/section_item import SectionType
 import app/modules/main/chat_section/module as section_module
 import app/modules/main/chat_section/controller as section_controller
 import app/modules/main/chat_section/view as section_view
 import app/modules/main/chat_section/item as chat_item
 import app/modules/main/chat_section/model as section_model
 import app/modules/main/chat_section/chat_content/io_interface as content_interface
+import app/modules/main/chat_section/chat_content/messages/controller as messages_controller
+import app/modules/main/chat_section/chat_content/messages/io_interface as messages_interface
 
 privateAccess(search_controller.Controller)
 privateAccess(search_module.Module)
@@ -37,6 +41,65 @@ type SearchDelegate = ref object of search_interface.AccessInterface
 
 method onSearchMessagesDone(self: SearchDelegate, messages: seq[MessageDto]) =
   self.completions.add(messages)
+
+type SwitcherDelegate = ref object of main_interface.AccessInterface
+
+method getSectionId(self: SwitcherDelegate, sectionType: SectionType): string =
+  "personal"
+
+method getSectionName(self: SwitcherDelegate, sectionId: string): string =
+  "Chat"
+
+suite "thread switcher":
+  test "loads cached parent threads and follows archive, rename and delete updates":
+    if not THREADS_ENABLED:
+      skip()
+    else:
+      let events = createEventEmitter()
+      let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+      let chats = chat_service.newService(events, nil, nil)
+      chats.chats["group"] = ChatDto(id: "group", name: "Project", active: true, chatType: ChatType.PrivateGroupChat)
+      chats.chats["inactive"] = ChatDto(id: "inactive", chatType: ChatType.PrivateGroupChat)
+      let search = search_module.newModule(SwitcherDelegate(), events, nil, chats, nil, service)
+      defer: search.delete()
+      search.controller.init()
+      let model = search.view.switcherThreadModel()
+
+      service.onAsyncLoadChatThreadsForChats($(%* {
+        "chatIds": ["group", "inactive"],
+        "threads": [
+          {"chatId": "group", "threadId": "thread", "parentMessageId": "root", "name": "Planning"},
+          {"chatId": "inactive", "threadId": "hidden", "parentMessageId": "root", "name": "Hidden"}
+        ]
+      }))
+      check model.rowCount() == 0
+      search.setSwitcherOpen(true)
+      check model.rowCount() == 1
+
+      var roles: Table[string, int]
+      for role, name in model.roleNames():
+        roles[name] = role
+      let index = model.createIndex(0, 0, nil)
+      defer: index.delete()
+      check model.data(index, roles["sectionId"]).stringVal == "personal"
+      check model.data(index, roles["chatId"]).stringVal == "group"
+      check model.data(index, roles["threadId"]).stringVal == "thread"
+      check not model.data(index, roles["archived"]).boolVal
+
+      service.onAsyncLoadChatThreadsForChats($(%* {
+        "chatIds": ["group"],
+        "threads": [{"chatId": "group", "threadId": "thread", "parentMessageId": "root",
+          "name": "Project kickoff", "archived": true}]
+      }))
+      check model.rowCount() == 1
+      let updatedIndex = model.createIndex(0, 0, nil)
+      defer: updatedIndex.delete()
+      check model.data(updatedIndex, roles["name"]).stringVal == "Project kickoff"
+      check model.data(updatedIndex, roles["archived"]).boolVal
+
+      service.onAsyncLoadChatThreadsForChats($(%* {"chatIds": ["group"], "threads": []}))
+      check model.rowCount() == 0
+      search.setSwitcherOpen(false)
 
 suite "thread content search":
   test "global search keeps the active parent and thread without scanning other chats":
@@ -228,6 +291,9 @@ type
   ContentStub = ref object of content_interface.AccessInterface
     scrolledTo: seq[string]
     renamedTo: seq[string]
+  MessageUnreadStub = ref object of messages_interface.AccessInterface
+    marked: seq[string]
+    rootsMarked: seq[string]
   SectionHarness = ref object of section_module.Module
     activated: seq[string]
     panelClosed: bool
@@ -248,6 +314,15 @@ method onThreadRenamed(self: ContentStub, newName: string) =
 
 method delete(self: ContentStub) = discard
 method onNotificationsUpdated(self: ContentStub, hasUnreadMessages: bool, notificationsCount: int) = discard
+
+method updateThreadDetails(self: MessageUnreadStub) = discard
+method onChatThreadsLoaded(self: MessageUnreadStub, threads: seq[ThreadDto], listLoaded: bool) = discard
+
+method onMarkMessageAsUnread(self: MessageUnreadStub, messageId: string) =
+  self.marked.add(messageId)
+
+method onThreadRootMarkedAsUnread(self: MessageUnreadStub, messageId: string) =
+  self.rootsMarked.add(messageId)
 
 method setActiveItem(self: SectionHarness, itemId: string) =
   self.activated.add(itemId)
@@ -349,6 +424,108 @@ suite "thread search result navigation":
     service.threadMutePending.incl(("parent", "thread"))
     section.unmuteChat("thread")
     check(service.threadMuteQueued[("parent", "thread")] == 7)
+
+  test "marking a thread message unread updates the thread without changing its parent":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    let section = newSectionHarness(service, events)
+    defer: section.delete()
+    section.chatsLoaded = true
+    section.controller.init()
+    service.init()
+    service.onAsyncLoadChatThreadsForChats($(%* {
+      "chatIds": ["parent"], "threads": [{"chatId": "parent", "threadId": "thread",
+        "parentMessageId": "root", "name": "Thread"}]
+    }))
+    let parent = section.view.chatsModel().getItemById("parent")
+    let thread = section.view.chatsModel().getItemById("thread")
+    require(not thread.isNil)
+    service.onAsyncMarkMessageAsUnread($(%* {
+      "chatId": "parent", "messageId": "older-message", "threads": [],
+      "messagesCount": 4, "messagesWithMentionsCount": 2
+    }))
+    var marked: MessageMarkMessageAsUnreadArgs
+    events.on(SIGNAL_MESSAGE_MARKED_AS_UNREAD) do(e: Args):
+      marked = MessageMarkMessageAsUnreadArgs(e)
+
+    service.onAsyncMarkMessageAsUnread($(%* {
+      "chatId": "parent", "messageId": "reply",
+      "messagesCount": 0, "messagesWithMentionsCount": 0, "error": "",
+      "threads": [{"chatId": "parent", "threadId": "thread", "parentMessageId": "root",
+        "name": "Thread", "unviewedMessagesCount": 2, "unviewedMentionsCount": 1}]
+    }))
+    require(not marked.isNil)
+    check marked.threadId == "thread"
+    check thread.hasUnreadMessages
+    check thread.notificationsCount == 1
+    check parent.hasUnreadMessages
+    check parent.notificationsCount == 2
+    check section.controller.getChatDetails("parent").unviewedMessagesCount == 4
+    check service.getThreadById("parent", "thread").unviewedMessagesCount == 2
+
+  test "parent and reply responses reach the right conversation after thread cache eviction":
+    let events = createEventEmitter()
+    let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+    let section = newSectionHarness(service, events)
+    defer: section.delete()
+    section.chatsLoaded = true
+    section.controller.init()
+    service.init()
+    service.onAsyncLoadChatThreadsForChats($(%* {
+      "chatIds": ["parent"],
+      "threads": [{"chatId": "parent", "threadId": "root", "parentMessageId": "root", "name": "Thread"}]
+    }))
+    let parent = MessageUnreadStub()
+    let thread = MessageUnreadStub()
+    let other = MessageUnreadStub()
+    let parentController = messages_controller.newController(parent, events, "section", "parent",
+      false, nil, nil, nil, service, nil, nil)
+    let threadController = messages_controller.newController(thread, events, "section", "parent",
+      false, nil, nil, nil, service, nil, nil, "root")
+    let otherController = messages_controller.newController(other, events, "section", "parent",
+      false, nil, nil, nil, service, nil, nil, "other-root")
+    parentController.init()
+    threadController.init()
+    otherController.init()
+    defer:
+      parentController.delete()
+      threadController.delete()
+      otherController.delete()
+    service.onAsyncMarkMessageAsUnread($(%* {
+      "chatId": "parent", "messageId": "reply",
+      "threads": [{"chatId": "parent", "threadId": "root", "parentMessageId": "root",
+        "name": "Thread", "unviewedMessagesCount": 1}]
+    }))
+    check parent.marked.len == 0
+    check thread.marked == @["reply"]
+    check thread.rootsMarked.len == 0
+    check other.marked.len == 0
+
+    service.chatThreadsByParentIdByChat.del("parent")
+    check service.getThreadById("parent", "root").threadId == ""
+    var notifications: JsonNode
+    events.on(SIGNAL_PARSE_RAW_ACTIVITY_CENTER_NOTIFICATIONS) do(e: Args):
+      notifications = RawActivityCenterNotificationsArgs(e).activityCenterNotifications
+    service.onAsyncMarkMessageAsUnread($(%* {
+      "chatId": "parent", "messageId": "root",
+      "messagesCount": 3, "messagesWithMentionsCount": 1,
+      "activityCenterNotifications": [{"id": "notification"}]
+    }))
+    check parent.marked == @["root"]
+    check thread.marked == @["reply"]
+    check thread.rootsMarked == @["root"]
+    check other.marked.len == 0
+    check other.rootsMarked.len == 0
+    check section.controller.getChatDetails("parent").unviewedMessagesCount == 3
+    check notifications == %* [{"id": "notification"}]
+
+    service.onAsyncMarkMessageAsUnread($(%* {
+      "chatId": "parent", "messageId": "another-message", "threads": [],
+      "messagesCount": 2, "messagesWithMentionsCount": 0
+    }))
+    check parent.marked == @["root", "another-message"]
+    check thread.rootsMarked == @["root"]
+    check section.controller.getChatDetails("parent").unviewedMessagesCount == 2
 
   test "an uncached result survives a cached list and opens on an incremental update":
     if THREADS_ENABLED:

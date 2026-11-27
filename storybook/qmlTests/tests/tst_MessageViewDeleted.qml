@@ -14,6 +14,7 @@ Item {
     readonly property ChatTextAppearance previewAppearance: ReplyTextAppearance {
         theme: root.Theme
     }
+    readonly property MessageHeaderServices messageHeaderServices: StatusMessageHeaderServices { theme: root.Theme }
 
     width: 600
     height: 400
@@ -23,6 +24,7 @@ Item {
         MessageView {
             textAppearance: root.textAppearance
             previewAppearance: root.previewAppearance
+            messageHeaderServices: root.messageHeaderServices
             deleted: true
             deletedBy: "0x123"
             deletedByContactDisplayName: "Prod-Test-ABC with a very long name"

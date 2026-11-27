@@ -21,9 +21,9 @@ Item {
         id: title
         text: qsTr("Settings")
         anchors.top: parent.top
-        anchors.topMargin: 2 * Theme.bigPadding
+        anchors.topMargin: Theme.padding
         anchors.left: parent.left
-        anchors.leftMargin: Theme.bigPadding
+        anchors.leftMargin: Theme.padding
     }
 
     SettingsList {

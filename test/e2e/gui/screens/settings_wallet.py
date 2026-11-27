@@ -9,6 +9,7 @@ from constants.wallet import (
     WalletAccountListItem,
 )
 from driver import objects_access
+from driver.obj import colour_hex
 from driver.objects_access import emoji_text
 from gui.components.context_menu import ContextMenu
 from gui.components.wallet.remove_saved_address_popup import RemoveSavedAddressPopup
@@ -97,7 +98,7 @@ class WalletSettingsView(QObject):
 
     @allure.step('Get keypair location for {keypair_name}')
     def get_keypair_location(self, keypair_name: str) -> str:
-        for item in driver.findAllObjects(self.wallet_settings_keypair_item.real_name):
+        for item in driver.find_all(self.wallet_settings_keypair_item.real_name):
             if str(getattr(item, 'title', '')) == keypair_name:
                 return str(getattr(item, 'subTitle', ''))
         raise LookupError(f'Keypair {keypair_name!r} not found')
@@ -125,7 +126,7 @@ class WalletSettingsView(QObject):
     @allure.step('Get keypair settings_names')
     def get_keypairs_names(self):
         keypair_names = []
-        for item in driver.findAllObjects(self.wallet_settings_keypair_item.real_name):
+        for item in driver.find_all(self.wallet_settings_keypair_item.real_name):
             keypair_names.append(str(getattr(item, 'title', '')))
         if len(keypair_names) == 0:
             raise LookupError(
@@ -205,8 +206,7 @@ class AccountDetailsView(QObject):
 
     @allure.step('Get account color value')
     def get_account_color_value(self):
-        color_name = str(getattr(self._wallet_account_title.object, 'color')['name'])
-        return color_name
+        return colour_hex(getattr(self._wallet_account_title.object, 'color'))
 
     @allure.step('Get account emoji')
     def get_account_emoji(self):
@@ -263,7 +263,7 @@ class SavedAddressesWalletSettings(QObject):
 
     @allure.step('Get saved addresses settings_names list')
     def get_saved_address_names_list(self):
-        settings_names = [str(address.name) for address in driver.findAllObjects(self.saved_address_item.real_name)]
+        settings_names = [str(address.name) for address in driver.find_all(self.saved_address_item.real_name)]
         return settings_names
 
     @allure.step("Open context menu for saved address item")
@@ -332,14 +332,14 @@ class EditAccountOrderSettings(WalletSettingsView):
     @allure.step('Get accounts')
     def accounts(self) -> typing.List[WalletAccountListItem]:
         _accounts = []
-        for account_item in driver.findAllObjects(self._account_item.real_name):
-            element = QObject(real_name=driver.objectMap.realName(account_item))
+        for account_item in driver.find_all(self._account_item.real_name):
+            element = QObject(real_name=account_item)
             name = str(account_item.title)
             icon_color = None
             icon_emoji = None
             for child in objects_access.walk_children(account_item):
                 if getattr(child, 'objectName', '') == 'identicon':
-                    icon_color = str(child.color.name)
+                    icon_color = colour_hex(child.color)
                     icon_emoji = emoji_text(child)
                     break
             _accounts.append(WalletAccountListItem(name, icon_color, icon_emoji, element))
@@ -348,7 +348,7 @@ class EditAccountOrderSettings(WalletSettingsView):
 
     @allure.step('Get account in accounts list')
     def _get_account_item(self, name: str):
-        for obj in driver.findAllObjects(self._account_item.real_name):
+        for obj in driver.find_all(self._account_item.real_name):
             if getattr(obj, 'title', '') == name:
                 return obj
         raise LookupError(f'Account item: {name} not found')
@@ -378,8 +378,8 @@ class ManageTokensSettingsView(WalletSettingsView):
     @allure.step('Get tokens')
     def tokens(self) -> typing.List[TokenListItem]:
         _tokens = []
-        for token_item in driver.findAllObjects(self._token_item.real_name):
-            element = QObject(real_name=driver.objectMap.realName(token_item))
+        for token_item in driver.find_all(self._token_item.real_name):
+            element = QObject(real_name=token_item)
             name = str(token_item.title)
             _tokens.append(TokenListItem(name, element))
 
@@ -387,7 +387,7 @@ class ManageTokensSettingsView(WalletSettingsView):
 
     @allure.step('Drag token to change the order')
     def drag_token(self, name: str, index: int):
-        assert driver.waitFor(lambda: len([token for token in self.tokens if token.title == name]) == 1), \
+        assert driver.wait_until(lambda: len([token for token in self.tokens if token.title == name]) == 1), \
             'Token not found or found more then one'
         bounds = [token for token in self.tokens if token.title == name][0].object.bounds
         d_bounds = self.tokens[index].object.bounds

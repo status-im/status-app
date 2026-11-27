@@ -2,6 +2,7 @@ AppMain 1.0 AppMain.qml
 BalancesOnScreenTracker 1.0 BalancesOnScreenTracker.qml
 DeferredActionQueue 1.0 DeferredActionQueue.qml
 GlobalBanner 1.0 GlobalBanner.qml
+MessageBackupPromptTrigger 1.0 MessageBackupPromptTrigger.qml
 SplashScreen 1.0 SplashScreen.qml
 Popups 1.0 Popups.qml
 ProfileEncryptionMigrationFlow 1.0 ProfileEncryptionMigrationFlow.qml

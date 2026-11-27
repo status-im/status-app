@@ -6,6 +6,7 @@ import allure
 
 import configs
 import driver
+from driver.obj import colour_hex
 from constants import CommunityData
 from gui.components.community.color_select_popup import ColorSelectPopup
 from helpers.chat_helper import skip_message_backup_popup_if_visible
@@ -46,7 +47,7 @@ class CreateNewCommunityPopup(QObject):
 
     @allure.step('Get next button enabled state')
     def is_next_button_enabled(self) -> bool:
-        return driver.waitForObjectExists(self.next_button.real_name, configs.timeouts.UI_LOAD_TIMEOUT_MSEC).enabled
+        return driver.wait_exists(self.next_button.real_name, configs.timeouts.UI_LOAD_TIMEOUT_MSEC).enabled
 
     @allure.step('Get archive support checkbox state')
     def is_archive_checkbox_checked(self) -> bool:
@@ -100,7 +101,7 @@ class CreateNewCommunityPopup(QObject):
 
     @allure.step('Get community color')
     def get_color(self):
-        return self._select_color_button.object.bgColor.name
+        return colour_hex(self._select_color_button.object.bgColor)
 
     @allure.step('Set community color')
     def set_color(self, value: str):

@@ -9265,29 +9265,6 @@ app: %2</source>
     </message>
 </context>
 <context>
-    <name>IntroduceYourselfPopup</name>
-    <message>
-        <source>Introduce yourself</source>
-        <translation>자기소개하기</translation>
-    </message>
-    <message>
-        <source>Your Name</source>
-        <translation>이름</translation>
-    </message>
-    <message>
-        <source>Add an optional display name and profile picture so others can easily recognise you.</source>
-        <translation>선택으로 표시 이름과 프로필 사진을 추가해, 다른 사람이 당신을 쉽게 알아볼 수 있게 하세요.</translation>
-    </message>
-    <message>
-        <source>Skip</source>
-        <translation>건너 뛰기</translation>
-    </message>
-    <message>
-        <source>Edit Profile in Settings</source>
-        <translation>설정에서 프로필 편집</translation>
-    </message>
-</context>
-<context>
     <name>InvitationBubbleView</name>
     <message>
         <source>Verified community invitation</source>
@@ -11696,12 +11673,12 @@ to load</source>
         <translation>답장</translation>
     </message>
     <message>
-        <source>Create Thread</source>
-        <translation>스레드 만들기</translation>
-    </message>
-    <message>
         <source>Open thread</source>
         <translation>스레드 열기</translation>
+    </message>
+    <message>
+        <source>Reply in thread</source>
+        <translation type="unfinished">스레드에서 답장</translation>
     </message>
     <message>
         <source>Edit</source>
@@ -16723,6 +16700,13 @@ to load</source>
     </message>
 </context>
 <context>
+    <name>StatusChatInputSendButton</name>
+    <message>
+        <source>Send</source>
+        <translation type="unfinished">보내기</translation>
+    </message>
+</context>
+<context>
     <name>StatusChatInputToolBar</name>
     <message>
         <source>Formatting</source>
@@ -18337,6 +18321,21 @@ This action cannot be undone.</source>
     </message>
 </context>
 <context>
+    <name>ThirdpartyServicesLabel</name>
+    <message>
+        <source>Third-party services %1</source>
+        <translation type="unfinished">타사 서비스 %1</translation>
+    </message>
+    <message>
+        <source>enabled</source>
+        <translation type="unfinished">활성화</translation>
+    </message>
+    <message>
+        <source>disabled</source>
+        <translation type="unfinished">비활성화</translation>
+    </message>
+</context>
+<context>
     <name>ThirdpartyServicesPopup</name>
     <message>
         <source>Third-party services</source>
@@ -18421,11 +18420,20 @@ This action cannot be undone.</source>
         <source>deleted this thread</source>
         <translation>이 스레드를 삭제했습니다</translation>
     </message>
+    <message>
+        <source>deleted this thread</source>
+        <comment>Current user</comment>
+        <translation type="unfinished">이 스레드를 삭제했습니다</translation>
+    </message>
     <message numerus="yes">
         <source>%n message(s)</source>
         <translation>
             <numerusform>메시지 %n개</numerusform>
         </translation>
+    </message>
+    <message>
+        <source>You</source>
+        <translation type="unfinished">사용자</translation>
     </message>
 </context>
 <context>
@@ -18498,8 +18506,22 @@ This action cannot be undone.</source>
         <translation>스레드 이름을 변경할 수 없습니다: %1</translation>
     </message>
     <message>
+        <source>Thread name is required</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <source>Max %n character(s)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
         <source>Thread name</source>
         <translation>스레드 이름</translation>
+    </message>
+    <message>
+        <source>Rename thread</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>in %1</source>
@@ -20677,18 +20699,6 @@ If a transaction with a lower nonce is pending, higher nonce transactions will r
     <message>
         <source>Log in</source>
         <translation>로그인</translation>
-    </message>
-    <message>
-        <source>Third-party services %1</source>
-        <translation>타사 서비스 %1</translation>
-    </message>
-    <message>
-        <source>enabled</source>
-        <translation>활성화</translation>
-    </message>
-    <message>
-        <source>disabled</source>
-        <translation>비활성화</translation>
     </message>
     <message>
         <source>By proceeding you accept Status&lt;br&gt;%1 and %2</source>

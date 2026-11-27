@@ -39,6 +39,9 @@ SortFilterProxyModel {
     // Determines if keycard-related entries should be included
     property bool isKeycardEnabled: true
 
+    // Determines if the change password entry is included
+    property bool showPassword: true
+
     // Determines if local (on-device) backup entries are included
     property bool localBackupEnabled: true
 
@@ -164,7 +167,7 @@ SortFilterProxyModel {
         {
             subsection: Constants.settingsSubsection.language,
             text: qsTr("Language & Currency"),
-            icon: "language",
+            icon: "translate",
             group: root.preferencesGroupTitle,
             isExperimental: false
         },
@@ -215,6 +218,8 @@ SortFilterProxyModel {
                         return root.showBrowserEntries
                     case Constants.settingsSubsection.backUpSeed:
                         return root.showBackUpSeed
+                    case Constants.settingsSubsection.password:
+                        return root.showPassword
                     case Constants.settingsSubsection.keycardNew:
                         return root.isKeycardEnabled
                     case Constants.settingsSubsection.contacts:

@@ -98,7 +98,7 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
         with step(f'User {user_one.name} send  a message to {user_two.name}'):
             switch_to_aut(aut_one, main_window)
             left_panel_chat = main_window.left_panel.open_messages_screen().left_panel
-            assert driver.waitFor(lambda: user_two.name in left_panel_chat.get_chats_names,
+            assert driver.wait_until(lambda: user_two.name in left_panel_chat.get_chats_names,
                                   configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
             chat = left_panel_chat.click_chat_by_name(user_two.name)
             chat_message1 = WalletAddress.RECEIVER_ADDRESS.value
@@ -131,7 +131,7 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
                     and '(edited)' in plain
                 )
 
-            assert driver.waitFor(_edited_message_visible, timeout), 'Message was not updated after edit'
+            assert driver.wait_until(_edited_message_visible, timeout), 'Message was not updated after edit'
             main_window.minimize()
 
 
@@ -153,7 +153,7 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
 
         with step(f'User {user_two.name} send emoji to {user_one.name}'):
             messages_screen.group_chat.send_emoji_to_chat(chat_emoji.keyword)
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: (
                     len(messages_screen.chat.messages(0)) > 0 and
                     chat_emoji.glyph in str(messages_screen.chat.messages(0)[0].text)
@@ -163,7 +163,7 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
 
         with step(f'User {user_two.name} send image to {user_one.name} and verify it was sent'):
             messages_screen.group_chat.send_image_to_chat(str(BASE_64_IMAGE_JPEG))
-            assert driver.waitFor(lambda: (
+            assert driver.wait_until(lambda: (
                 messages_screen.chat.messages(0)[0].image_message is not None and
                 messages_screen.chat.messages(0)[0].image_message.visible
             ), timeout), f"Image is not found in the last message"
@@ -171,7 +171,7 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
 
         with step(f'User {user_one.name}, received reply from {user_two.name}'):
             switch_to_aut(aut_one, main_window)
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: (
                     len(messages_screen.chat.messages(2)) > 0 and
                     chat_message2 in str(messages_screen.chat.messages(2)[0].text)
@@ -180,7 +180,7 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
             ), f"Message text is not found in the last message"
 
         with step(f'User {user_one.name}, received emoji from {user_two.name}'):
-            assert driver.waitFor(
+            assert driver.wait_until(
                 lambda: (
                     len(messages_screen.chat.messages(1)) > 0 and
                     chat_emoji.glyph in str(messages_screen.chat.messages(1)[0].text)
@@ -189,7 +189,7 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
             ), f"Emoji not found in message text"
 
         with step(f'User {user_one.name}, received image from {user_two.name}'):
-            assert driver.waitFor(lambda: (
+            assert driver.wait_until(lambda: (
                 messages_screen.chat.messages(0)[0].image_message is not None and
                 messages_screen.chat.messages(0)[0].image_message.visible
             ), timeout), f"There is no image in the last message"
@@ -207,7 +207,7 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
         with step(f'User {user_one.name}, add reaction to the last message and verify it was added'):
             context_menu = message.open_context_menu_for_message()
             context_menu.add_reaction_to_message(1)
-            assert driver.waitFor(lambda: len(message.get_emoji_reactions_pathes()) > 0,
+            assert driver.wait_until(lambda: len(message.get_emoji_reactions_pathes()) > 0,
                                   timeout), \
                 f"No emoji reaction was added to the message"
             expected_emoji_code = message.get_emoji_reactions_pathes()[0]
@@ -216,7 +216,7 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
         with step(f'User {user_two.name}, also see emoji reaction on the last message'):
             switch_to_aut(aut_two, main_window)
             message = chat.find_message_by_text(chat_message_reply, 0)
-            assert driver.waitFor(lambda: expected_emoji_code in message.get_emoji_reactions_pathes(),
+            assert driver.wait_until(lambda: expected_emoji_code in message.get_emoji_reactions_pathes(),
                                   timeout), \
                 f"Emoji reaction is not correct. Expected: {expected_emoji_code}, Got: {message.get_emoji_reactions_pathes()}"
             main_window.minimize()
@@ -252,6 +252,6 @@ def test_1x1_chat_add_contact_in_settings(multiple_instances):
 
         with step(f'User {user_one.name} sees chat in the list'):
             switch_to_aut(aut_one, main_window)
-            assert driver.waitFor(lambda: user_two.name in messages_screen.left_panel.get_chats_names,
+            assert driver.wait_until(lambda: user_two.name in messages_screen.left_panel.get_chats_names,
                                   timeout), f'{chat} is present in chats list'
 

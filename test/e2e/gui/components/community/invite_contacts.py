@@ -29,20 +29,20 @@ class InviteContactsPopup(QObject):
     @property
     @allure.step('Get contacts')
     def contacts(self) -> typing.List[str]:
-        return [str(user.userName) for user in driver.findAllObjects(self.member_item.real_name)]
+        return [str(user.userName) for user in driver.find_all(self.member_item.real_name)]
 
     @property
     @allure.step('Invite contacts')
     def invited_contacts(self) -> typing.List[str]:
-        return [str(user.userName) for user in driver.findAllObjects(self.invited_member_item.real_name)]
+        return [str(user.userName) for user in driver.find_all(self.invited_member_item.real_name)]
 
     def invite(self, contacts: typing.List[str], message: str):
         for contact in contacts:
-            assert driver.waitFor(lambda: contact in self.contacts, configs.timeouts.UI_LOAD_TIMEOUT_MSEC), \
+            assert driver.wait_until(lambda: contact in self.contacts, configs.timeouts.UI_LOAD_TIMEOUT_MSEC), \
                 f'Contact: {contact} not found in {self.contacts}'
 
         selected = []
-        for member in driver.findAllObjects(self.member_checkbox.real_name):
+        for member in driver.find_all(self.member_checkbox.real_name):
             if str(getattr(member, 'objectName', '')).split('contactCheckbox-')[1] in contacts:
                 CheckBox(member).set(True)
                 assert member.checkState != 0, f"Member item checkbox is not checked"
@@ -54,7 +54,7 @@ class InviteContactsPopup(QObject):
         self.message_text_edit.set_text_property(message)
 
         for contact in contacts:
-            assert driver.waitFor(lambda: contact in self.invited_contacts, configs.timeouts.UI_LOAD_TIMEOUT_MSEC), \
+            assert driver.wait_until(lambda: contact in self.invited_contacts, configs.timeouts.UI_LOAD_TIMEOUT_MSEC), \
                 f'Contact: {contact} not found in {self.invited_contacts}'
 
         self.send_button.click()

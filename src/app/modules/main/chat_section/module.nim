@@ -1397,24 +1397,14 @@ method onCommunityCategoryEdited*(self: Module, cat: Category, chats: seq[ChatDt
     cat.name,
     cat.position
   )
-  # Update chat items that have that category
-  self.view.chatsModel().updateItemsWithCategoryDetailsById(
-    chats,
-    cat.id,
-    cat.position,
-  )
+  self.view.chatsModel().reorderChats(chats)
 
 method onCommunityCategoryCreated*(self: Module, cat: Category, chats: seq[ChatDto], communityId: string) =
   if (self.doesCatOrChatExist(cat.id)):
     return
 
   discard self.addCategoryItem(cat, self.controller.getMyCommunity().memberRole, communityId)
-  # Update chat items that now belong to that category
-  self.view.chatsModel().updateItemsWithCategoryDetailsById(
-    chats,
-    cat.id,
-    cat.position,
-  )
+  self.view.chatsModel().reorderChats(chats)
 
 method onCommunityCategoryDeleted*(self: Module, cat: Category, chats: seq[ChatDto]) =
   self.view.chatsModel().removeCategory(cat.id, chats)
@@ -1490,6 +1480,7 @@ proc refreshHiddenBecauseNotPermittedState(self: Module) =
 method onCommunityChannelEdited*(self: Module, chat: ChatDto) =
   if(not self.chatContentModules.contains(chat.id)):
     return
+  self.view.chatsModel().reorderChats(@[chat])
   self.changeCanPostValues(chat.id, chat.canPost, chat.canView, chat.canPostReactions, chat.viewersCanPostReactions)
   discard self.view.chatsModel().updateCommunityItemDetailsById(chat.id, chat.name, chat.description, chat.emoji, chat.color, chat.hideIfPermissionsNotMet)
   self.refreshHiddenBecauseNotPermittedState()

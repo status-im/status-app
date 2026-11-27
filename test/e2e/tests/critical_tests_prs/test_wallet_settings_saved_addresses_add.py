@@ -31,7 +31,7 @@ def test_wallet_settings_add_saved_address(main_screen: MainWindow, address: str
         add_saved_address_popup.add_saved_address(name, address)
 
     with step('Verify recently added saved address is present in the list'):
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: name in settings_saved_addresses.get_saved_address_names_list(),
             configs.timeouts.LOADING_LIST_TIMEOUT_MSEC), f'Address: {name} not found'
 
@@ -40,6 +40,6 @@ def test_wallet_settings_add_saved_address(main_screen: MainWindow, address: str
         settings_saved_addresses.delete_saved_address_with_confirmation(name)
 
     with step('Verify recently added saved address is present in the list'):
-        assert driver.waitFor(
+        assert driver.wait_until(
             lambda: name not in settings_saved_addresses.get_saved_address_names_list(),
             configs.timeouts.LOADING_LIST_TIMEOUT_MSEC), f'Address: {name} was not deleted'
