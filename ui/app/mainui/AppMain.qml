@@ -1351,7 +1351,6 @@ Item {
         buyCryptoStore: appMain.buyCryptoStore
         networkConnectionStore: appMain.networkConnectionStore
         networksStore: appMain.networksStore
-        activityCenterStore: appMain.activityCenterStore
         advancedStore: appMain.advancedStore
         aboutStore: appMain.aboutStore
         contactsStore: appMain.contactsStore
@@ -3072,18 +3071,13 @@ Item {
         clip: false
 
         delegate: StatusToastMessage {
-            readonly property bool isSquare : isSquareShape(model.actionData)
+            id: toast
 
-            // Specific method to calculate image radius depending on if the toast represents some info about a collectible or an asset
-            function isSquareShape(data) {
-                // It expects the data is a JSON file containing `tokenType`
-                if(data) {
-                    var parsedData = JSON.parse(data)
-                    var tokenType = parsedData.tokenType
-                    return tokenType === Constants.TokenType.ERC721
-                }
-                return false
-            }
+            readonly property bool isTokenToast:
+                model.actionType === ToastsManager.ActionType.OpenFirstCommunityTokenPopup ||
+                model.actionType === ToastsManager.ActionType.ViewTransactionDetails
+            readonly property bool isSquare: isTokenToast && !!model.actionData &&
+                                            JSON.parse(model.actionData).tokenType === Constants.TokenType.ERC721
 
             objectName: "statusToastMessage"
             width: ListView.view.width
@@ -3099,14 +3093,19 @@ Item {
             actionRequired: model.actionType !== ToastsManager.ActionType.None
             duration: model.durationInMs
             onClicked: {
-                appMain.rootStore.ephemeralNotificationClicked(model.timestamp)
-                this.open = false
+                if (model.actionType === ToastsManager.ActionType.OpenNewsMessagePopup)
+                    toastsManager?.doAction(model.actionType, model.actionData)
+                else
+                    appMain.rootStore.ephemeralNotificationClicked(model.timestamp)
+                toast.open = false
             }
-            onLinkActivated: {
-                this.open = false
-                if(actionRequired) {
-                    if (toastsManager)
-                        toastsManager.doAction(model.actionType, model.actionData)
+            onLinkActivated: (link) => {
+                // Closing can remove the model row before the action runs.
+                const actionType = model.actionType
+                const actionData = model.actionData
+                toast.open = false
+                if (actionType !== ToastsManager.ActionType.None) {
+                    toastsManager?.doAction(actionType, actionData)
                     return
                 }
 

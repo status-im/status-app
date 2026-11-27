@@ -61,7 +61,6 @@ QtObject {
     required property NetworksStore networksStore
 
     property AppLayoutStores.ContactsStore contactsStore
-    property AppLayoutStores.ActivityCenterStore activityCenterStore
     property ChatStores.RootStore chatStore
     property UtilsStore utilsStore
     property CommunitiesStore communitiesStore
@@ -634,8 +633,8 @@ QtObject {
                   })
     }
 
-    function openNewsMessagePopup(notification, notificationId) {
-        openPopup(newsMessageComponent, {notification: notification, notificationId: notificationId})
+    function openNewsMessagePopup(notification) {
+        openPopup(newsMessageComponent, {notification: notification})
     }
 
     function openInfoPopup(title, message) {
@@ -1784,7 +1783,7 @@ QtObject {
             id: newsMessageComponent
 
             NewsMessagePopup {
-                activityCenterNotifications: root.activityCenterStore.activityCenterNotifications
+                destroyOnClose: true
                 onLinkClicked: (link) => {
                                    if (Utils.isStatusDeepLink(link))
                                        Global.activateDeepLink(link)

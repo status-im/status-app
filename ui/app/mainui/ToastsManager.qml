@@ -200,14 +200,14 @@ QtObject {
     readonly property Connections _mainConnections: Connections {
         target: root.rootStore
 
-        function onShowEphemeralNewsNotification(newsTitle: string, notificationId: string) {
+        function onShowEphemeralNewsNotification(newsTitle: string, newsArticleJson: string) {
             Global.displayImageToastWithActionMessage(
                 newsTitle,
                 qsTr("Read more"),
                 Assets.png("status-logo"),
                 Constants.ephemeralNotificationType.normal,
                 ToastsManager.ActionType.OpenNewsMessagePopup,
-                notificationId
+                newsArticleJson
             )
         }
     }
@@ -288,14 +288,14 @@ QtObject {
         }
     }
 
-    // It will cover all specific actions (different than open external links) that can be done after clicking toast link text
+    // Handles application actions triggered by a toast.
     function doAction(actionType, actionData) {
         switch(actionType) {
         case ToastsManager.ActionType.NavigateToCommunityAdmin:
             root.rootChatStore.setActiveCommunity(actionData)
             return
         case ToastsManager.ActionType.OpenNewsMessagePopup:
-            Global.openNewsMessagePopupRequested(actionData)
+            Global.openNewsMessagePopupRequested(JSON.parse(actionData))
             return
         case ToastsManager.ActionType.OpenFinaliseOwnershipPopup:
             Global.openFinaliseOwnershipPopup(actionData)

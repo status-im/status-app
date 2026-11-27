@@ -26,7 +26,6 @@ Loader {
     required property NetworksStore networksStore
 
     property AppLayoutStores.ContactsStore contactsStore
-    property AppLayoutStores.ActivityCenterStore activityCenterStore
     property ChatStores.RootStore chatStore
     property UtilsStore utilsStore
     property CommunitiesStore communitiesStore
@@ -93,7 +92,6 @@ Loader {
             communityTokensStore:   Qt.binding(() => root.communityTokensStore),
             networksStore:          Qt.binding(() => root.networksStore),
             contactsStore:          Qt.binding(() => root.contactsStore),
-            activityCenterStore:    Qt.binding(() => root.activityCenterStore),
             chatStore:              Qt.binding(() => root.chatStore),
             utilsStore:             Qt.binding(() => root.utilsStore),
             communitiesStore:       Qt.binding(() => root.communitiesStore),
@@ -325,8 +323,8 @@ Loader {
         function onTermsOfUseRequested() {
             root.invoke(() => root.item.openTermsOfUsePopup())
         }
-        function onOpenNewsMessagePopupRequested(notification, notificationId) {
-            root.invoke(() => root.item.openNewsMessagePopup(notification, notificationId))
+        function onOpenNewsMessagePopupRequested(notification) {
+            root.invoke(() => root.item.openNewsMessagePopup(notification))
         }
         function onSignOutRequested() {
             root.invoke(() => root.item.openSignOutConfirmPopup())

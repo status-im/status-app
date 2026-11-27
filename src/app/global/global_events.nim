@@ -59,4 +59,4 @@ QtObject:
 
   proc showCommunityMemberUnbannedNotification*(self: GlobalEvents, sectionId: string, title: string, message: string) {.signal.}
 
-  proc showNewsMessageNotification*(self: GlobalEvents, id: string, title: string) {.signal.}
+  proc showNewsMessageNotification*(self: GlobalEvents, title: string, newsArticleJson: string) {.signal.}

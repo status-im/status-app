@@ -1859,7 +1859,7 @@ method displayEphemeralNotification*[T](self: Module[T], title: string, subTitle
     )
 
   elif details.notificationType == NotificationType.NewsFeedMessage:
-    self.view.newsFeedEphemeralNotification(title, details.notificationId)
+    self.view.newsFeedEphemeralNotification(title, details.newsArticleJson)
 
   else:
     self.displayEphemeralNotification(

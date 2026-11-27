@@ -1,6 +1,8 @@
 import QtQuick
 import QtTest
 
+import StatusQ.Core.Theme
+
 import AppLayouts.stores
 import AppLayouts.Chat.stores as ChatStores
 import AppLayouts.Profile.stores
@@ -8,6 +10,7 @@ import shared.stores as SharedStores
 
 import mainui
 import utils
+import "helpers"
 
 Item {
     id: root
@@ -16,6 +19,8 @@ Item {
 
     RootStore {
         id: mockRootStore
+
+        signal showEphemeralNewsNotification(string newsTitle, string newsArticleJson)
 
         property int notificationCount: 0
         property var notifications: []
@@ -41,6 +46,11 @@ Item {
                                                   }])
             notificationCount = notifications.length
         }
+    }
+
+    PopupsTestFixture {
+        id: popupFixture
+        popupParent: root
     }
 
     ContactsStore {
@@ -186,6 +196,47 @@ Item {
             verify(toast.title.indexOf("MyCommunity") !== -1)
             compare(toast.icon, "crown-off")
             compare(toast.ephNotifType, Constants.ephemeralNotificationType.danger)
+        }
+
+        function test_newsToastsOpenTheirOwnArticles() {
+            const olderArticle = {
+                notificationId: "older-id",
+                newsTitle: "Older news",
+                newsContent: "Content of the older article",
+                newsImageUrl: Assets.png("status-logo"),
+                newsLink: "https://status.app/",
+                newsLinkLabel: "Read the older article",
+                timestamp: Date.now() - 1000
+            }
+            const newerArticle = {
+                notificationId: "newer-id",
+                newsTitle: "Newer news",
+                newsContent: "Content of the newer article",
+                timestamp: Date.now()
+            }
+            mockRootStore.showEphemeralNewsNotification(olderArticle.newsTitle, JSON.stringify(olderArticle))
+            mockRootStore.showEphemeralNewsNotification(newerArticle.newsTitle, JSON.stringify(newerArticle))
+            compare(mockRootStore.notificationCount, 2)
+
+            popupFixture.prepare(this)
+            const articles = [olderArticle, newerArticle]
+            for (let i = 0; i < articles.length; ++i) {
+                const article = articles[i]
+                const toast = mockRootStore.notifications[i]
+                compare(toast.title, article.newsTitle)
+                compare(toast.subTitle, "Read more")
+                compare(toast.actionType, ToastsManager.ActionType.OpenNewsMessagePopup)
+                manager.doAction(toast.actionType, toast.actionData)
+
+                tryVerify(() => popupFixture.popups.item?.currentPopup?.opened)
+                const popup = popupFixture.popups.item.currentPopup
+                compare(popup.title, article.newsTitle)
+                compare(popup.notification, article)
+                compare(!!findChild(popup, "newsImage"), !!article.newsImageUrl)
+                compare(popup.footer.visible, !!article.newsLink)
+                popup.close()
+                tryVerify(() => !popup || !popup.visible)
+            }
         }
     }
 }
