@@ -365,6 +365,33 @@ jobs:
       os: macos
       run-id: ${{ github.run_id }}
 
+  # The check a branch rule can require. It reports on every run; a skipped
+  # e2e-linux reports nothing under the name of its tests, and a rule that
+  # requires that name then waits forever. Windows and macOS are not counted:
+  # they do not fail the workflow yet.
+  e2e:
+    name: e2e
+    needs: [linux, e2e-linux]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Result
+        env:
+          BUILD: ${{ needs.linux.result }}
+          TESTS: ${{ needs.e2e-linux.result }}
+        run: |
+          echo "linux build: $BUILD, e2e-linux: $TESTS, event: $GITHUB_EVENT_NAME"
+          case "$BUILD/$TESTS" in
+            success/success) exit 0 ;;
+            # Nothing was built: a change in documentation only.
+            skipped/skipped) exit 0 ;;
+            # A push to master builds and does not run the suite.
+            success/skipped) [ "$GITHUB_EVENT_NAME" = push ] && exit 0 ;;
+          esac
+          echo "::error::The Linux e2e suite did not pass (build: $BUILD, tests: $TESTS)."
+          exit 1
+
   android:
     name: android
     needs: [changes, image]
