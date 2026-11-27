@@ -44,7 +44,7 @@ constexpr int QuoteRightToLeftProperty = QTextFormat::UserProperty + 4; // bool,
 // bool, left-to-right code in a right-to-left quote: its box sits on the
 // right, so its left margin is fitted to the widest line after layout.
 constexpr int FittedCodeProperty = QTextFormat::UserProperty + 5;
-constexpr int InlineLinkProperty = QTextFormat::UserProperty + 6; // QML paints rounded backgrounds
+constexpr int InlineLinkProperty = QTextFormat::UserProperty + 6; // painted by computeInlineBackgrounds
 
 // A paint key's colour, compared as one QRgb. An invalid colour means "use the
 // default" and must not compare equal to opaque black, which its rgba() is.
@@ -94,11 +94,15 @@ struct BackgroundPaintKey {
     quint64 revision;
     QString hoveredLink, highlightedLink;
     KeyColor highlight, mention;
+    qreal inlineLinkRadius;
+    qreal devicePixelRatio;
 
     bool operator==(const BackgroundPaintKey& other) const {
-        return std::tie(revision, hoveredLink, highlightedLink, highlight, mention)
+        return std::tie(revision, hoveredLink, highlightedLink, highlight, mention, inlineLinkRadius,
+                        devicePixelRatio)
                 == std::tie(other.revision, other.hoveredLink, other.highlightedLink,
-                            other.highlight, other.mention);
+                            other.highlight, other.mention, other.inlineLinkRadius,
+                            other.devicePixelRatio);
     }
 };
 
@@ -190,9 +194,13 @@ QSGGeometry::ColoredPoint2D vertex(QPointF point, const QColor& color)
 // covers it. Every edge gets a one-device-pixel ramp to transparent (or from
 // border to fill) across it, which is what antialiases it: ramps in logical
 // pixels would leave a 1 px border no solid band on a high-DPI screen.
+//
+// Only the corners on `roundedEdges` are rounded; the others are square, as a
+// wrapped inline link's line ends are.
 QSGGeometryNode* createRoundedRectNode(const QRectF& rect, qreal radius, qreal border,
                                        const QColor& fill, const QColor& borderColor,
-                                       qreal devicePixelRatio)
+                                       qreal devicePixelRatio,
+                                       Qt::Edges roundedEdges = Qt::LeftEdge | Qt::RightEdge)
 {
     constexpr int segmentsPerCorner = 8;
     constexpr int pointsPerContour = 4 * (segmentsPerCorner + 1);
@@ -211,6 +219,9 @@ QSGGeometryNode* createRoundedRectNode(const QRectF& rect, qreal radius, qreal b
     }();
 
     const qreal r = qBound<qreal>(0, radius, qMin(rect.width(), rect.height()) / 2);
+    const qreal left = roundedEdges.testFlag(Qt::LeftEdge) ? r : 0;
+    const qreal right = roundedEdges.testFlag(Qt::RightEdge) ? r : 0;
+    const qreal radii[4] = {left, right, right, left};
 
     struct Contour { qreal inset; QColor color; };
     std::array<Contour, 4> contours;
@@ -228,10 +239,10 @@ QSGGeometryNode* createRoundedRectNode(const QRectF& rect, qreal radius, qreal b
     }
 
     const QPointF centres[4] = {
-        {rect.left() + r, rect.top() + r},     // top left, angles 180..270
-        {rect.right() - r, rect.top() + r},    // top right, 270..360
-        {rect.right() - r, rect.bottom() - r}, // bottom right, 0..90
-        {rect.left() + r, rect.bottom() - r},  // bottom left, 90..180
+        {rect.left() + left, rect.top() + left},       // top left, angles 180..270
+        {rect.right() - right, rect.top() + right},    // top right, 270..360
+        {rect.right() - right, rect.bottom() - right}, // bottom right, 0..90
+        {rect.left() + left, rect.bottom() - left},    // bottom left, 90..180
     };
 
     const int vertexCount = contourCount * pointsPerContour + 1;
@@ -245,9 +256,9 @@ QSGGeometryNode* createRoundedRectNode(const QRectF& rect, qreal radius, qreal b
     int v = 0;
     for (int contourIndex = 0; contourIndex < contourCount; ++contourIndex) {
         const Contour& contour = contours[contourIndex];
-        const qreal cornerRadius = qMax<qreal>(0, r - contour.inset);
-        const qreal shrink = qMax<qreal>(0, contour.inset - r);
         for (int corner = 0; corner < 4; ++corner) {
+            const qreal cornerRadius = qMax<qreal>(0, radii[corner] - contour.inset);
+            const qreal shrink = qMax<qreal>(0, contour.inset - radii[corner]);
             // Each corner centre moves inward when the radius is used up.
             const QPointF centre = centres[corner]
                     + QPointF(corner == 0 || corner == 3 ? shrink : -shrink,
@@ -630,7 +641,8 @@ void ChatTextItem::rebuildFromSegments(bool preserveInteraction)
                 cursor.insertText(QStringLiteral("\u202f"), format);
         }
         if (!icons.isEmpty() || !segment.copyText.isEmpty())
-            m_inlineSpans.append({start, cursor.position(), int(segmentIndex), icons, trailingPadding});
+            m_inlineSpans.append({start, cursor.position(), int(segmentIndex), icons, trailingPadding,
+                                  !segment.inlineIconOffsets.isEmpty()});
         int kinds = 0;
         if (role == ChatTextFormat::ForegroundRole::Mention)
             kinds |= MentionForegroundAppearance;
@@ -1345,10 +1357,12 @@ QVariantList ChatTextItem::inlineIconRects() const
 QVariantList ChatTextItem::inlineLinkRects() const
 {
     QVariantList result;
-    for (const auto& background : computeBackgrounds(true)) {
-        const QRectF& rect = background.first;
-        result.append(QVariantMap{{QStringLiteral("rect"), rect},
-                                 {QStringLiteral("href"), linkAt(rect.center().x(), rect.center().y())}});
+    for (const auto& background : computeInlineBackgrounds()) {
+        result.append(QVariantMap{{QStringLiteral("rect"), background.rect},
+                                  {QStringLiteral("href"), background.href},
+                                  {QStringLiteral("color"), background.color},
+                                  {QStringLiteral("roundLeft"), background.roundLeft},
+                                  {QStringLiteral("roundRight"), background.roundRight}});
     }
     return result;
 }
@@ -1777,7 +1791,7 @@ void ChatTextItem::setHoveredLink(const QString& link)
 // Use visual runs: a logical anchor or mention can occupy disjoint regions
 // within a bidirectional line. Backgrounds cover each run's advance width and
 // the full line height. A highlight replaces the mention background.
-QVector<std::pair<QRectF, QColor>> ChatTextItem::computeBackgrounds(bool inlineLinks) const
+QVector<std::pair<QRectF, QColor>> ChatTextItem::computeBackgrounds() const
 {
     QVector<std::pair<QRectF, QColor>> backgrounds;
     const QColor highlight = m_appearance->hoverHighlightColor();
@@ -1789,7 +1803,7 @@ QVector<std::pair<QRectF, QColor>> ChatTextItem::computeBackgrounds(bool inlineL
         for (auto it = block.begin(); !it.atEnd(); ++it) {
             const QTextFragment fragment = it.fragment();
             const QTextCharFormat format = fragment.charFormat();
-            if (format.boolProperty(InlineLinkProperty) != inlineLinks)
+            if (format.boolProperty(InlineLinkProperty))
                 continue;
             QColor color;
             const QString href = highlighting ? format.anchorHref() : QString();
@@ -1797,7 +1811,7 @@ QVector<std::pair<QRectF, QColor>> ChatTextItem::computeBackgrounds(bool inlineL
                 color = highlight;
             else if (format.boolProperty(MentionProperty))
                 color = m_appearance->mentionBackground();
-            if (!inlineLinks && (!color.isValid() || color.alpha() == 0))
+            if (!color.isValid() || color.alpha() == 0)
                 continue;
 
             const int from = fragment.position() - block.position();
@@ -1835,6 +1849,58 @@ QVector<std::pair<QRectF, QColor>> ChatTextItem::computeBackgrounds(bool inlineL
                     }
                 }
             }
+        }
+    }
+    return backgrounds;
+}
+
+// Inline links paint the whole span, including the space reserved for icons,
+// so cursor positions rather than glyph runs give their extent on each line.
+// A side is rounded when the span really starts or ends there; a side cut by a
+// line break stays square. Trailing spaces at a break are not covered.
+QVector<ChatTextItem::InlineBackground> ChatTextItem::computeInlineBackgrounds() const
+{
+    QVector<InlineBackground> backgrounds;
+    const QColor highlight = m_appearance->hoverHighlightColor();
+    const QColor mention = m_appearance->mentionBackground();
+
+    for (const auto& span : m_inlineSpans) {
+        if (!span.pill)
+            continue;
+        const QTextBlock block = m_document->findBlock(span.start);
+        const QTextLayout* layout = block.layout();
+        if (!layout)
+            continue;
+        const QPointF origin = layout->position();
+        const QString text = block.text();
+        const QString& href = m_segments.at(span.segmentIndex).href;
+        const bool highlighted = highlight.isValid() && !href.isEmpty()
+                && (href == m_hoveredLink || href == m_highlightedLink);
+        const QColor color = highlighted ? highlight : mention;
+        const int spanStart = span.start - block.position();
+        const int spanEnd = span.end - block.position();
+
+        for (int i = 0; i < layout->lineCount(); ++i) {
+            const QTextLine line = layout->lineAt(i);
+            const int from = qMax(spanStart, line.textStart());
+            int to = qMin(spanEnd, line.textStart() + line.textLength());
+            if (from >= to)
+                continue;
+            const bool starts = from == spanStart;
+            const bool ends = to == spanEnd;
+            if (!ends) {
+                while (to > from && text.at(to - 1) == QLatin1Char(' '))
+                    --to;
+            }
+            const qreal x1 = line.cursorToX(from);
+            const qreal x2 = line.cursorToX(to);
+            // In a right-to-left run the span starts on the right.
+            const bool leftToRight = x1 <= x2;
+            backgrounds.append({QRectF(origin.x() + qMin(x1, x2), origin.y() + line.y(),
+                                       qAbs(x2 - x1), line.height()),
+                                color, href,
+                                leftToRight ? starts : ends,
+                                leftToRight ? ends : starts});
         }
     }
     return backgrounds;
@@ -1984,15 +2050,56 @@ QSGNode* ChatTextItem::updatePaintNode(QSGNode* oldNode, UpdatePaintNodeData*)
     }
     const BackgroundPaintKey backgroundKey{m_layoutRevision, m_hoveredLink, m_highlightedLink,
                                            m_appearance->hoverHighlightColor(),
-                                           m_appearance->mentionBackground()};
+                                           m_appearance->mentionBackground(),
+                                           m_appearance->inlineLinkRadius(), devicePixelRatio};
     if (!root->backgroundKey || !(*root->backgroundKey == backgroundKey)) {
         root->backgroundKey = backgroundKey;
-        deleteChildren(backgroundsNode);
-        for (const auto& [rect, color] : computeBackgrounds()) {
-            QSGRectangleNode* background = window()->createRectangleNode();
-            background->setRect(rect);
-            background->setColor(color);
-            backgroundsNode->appendChildNode(background);
+        auto backgrounds = computeBackgrounds();
+        const auto inlineBackgrounds = computeInlineBackgrounds();
+        if (software) {
+            // Square, and updated in place: the software renderer does not
+            // draw a rectangle node that replaces a removed one in the same
+            // update, so a recolour would leave the area blank.
+            for (const auto& background : inlineBackgrounds) {
+                if (background.color.isValid() && background.color.alpha() > 0)
+                    backgrounds.append({background.rect, background.color});
+            }
+            QSGNode* child = backgroundsNode->firstChild();
+            for (const auto& [rect, color] : std::as_const(backgrounds)) {
+                auto* node = static_cast<QSGRectangleNode*>(child);
+                if (!node) {
+                    node = window()->createRectangleNode();
+                    backgroundsNode->appendChildNode(node);
+                } else {
+                    child = child->nextSibling();
+                }
+                node->setRect(rect);
+                node->setColor(color);
+            }
+            while (child) {
+                QSGNode* next = child->nextSibling();
+                backgroundsNode->removeChildNode(child);
+                delete child;
+                child = next;
+            }
+        } else {
+            deleteChildren(backgroundsNode);
+            for (const auto& [rect, color] : std::as_const(backgrounds)) {
+                QSGRectangleNode* background = window()->createRectangleNode();
+                background->setRect(rect);
+                background->setColor(color);
+                backgroundsNode->appendChildNode(background);
+            }
+            for (const auto& background : inlineBackgrounds) {
+                if (!background.color.isValid() || background.color.alpha() == 0)
+                    continue;
+                Qt::Edges rounded;
+                rounded.setFlag(Qt::LeftEdge, background.roundLeft);
+                rounded.setFlag(Qt::RightEdge, background.roundRight);
+                backgroundsNode->appendChildNode(createRoundedRectNode(
+                        background.rect, m_appearance->inlineLinkRadius(), 0, background.color, {},
+                        devicePixelRatio, rounded));
+            }
         }
     }
 
@@ -2187,7 +2294,8 @@ void ChatTextItem::applyAppearance(ChatTextAppearance::Change change)
         });
         break;
     }
-    case ChatTextAppearance::MentionBackground: {
+    case ChatTextAppearance::MentionBackground:
+    case ChatTextAppearance::InlineLinkRadius: {
         update();
         break;
     }

@@ -75,25 +75,6 @@ Item {
 
     Repeater {
         parent: root.textItem
-        model: root.textItem.inlineLinkRects
-        delegate: Rectangle {
-            required property var modelData
-            readonly property bool highlighted: !!modelData.href
-                                               && (root.textItem.hoveredLink === modelData.href || root.textItem.highlightedLink === modelData.href)
-            objectName: "inlineLinkBackground"
-            z: -1
-            x: modelData.rect.x
-            y: modelData.rect.y
-            width: modelData.rect.width
-            height: modelData.rect.height
-            radius: Math.min(Theme.radius, height / 2)
-            color: root.textItem.appearance ? (highlighted ? root.textItem.appearance.hoverHighlightColor : root.textItem.appearance.mentionBackground)
-                                   : (highlighted ? Theme.palette.primaryColor3 : Theme.palette.baseColor2)
-        }
-    }
-
-    Repeater {
-        parent: root.textItem
         model: root.textItem.inlineIconRects
         delegate: Loader {
             id: decoration

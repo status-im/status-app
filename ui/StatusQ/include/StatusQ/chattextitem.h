@@ -59,7 +59,6 @@ class ChatTextItem : public QQuickItem
     Q_PROPERTY(QList<ChatTextSegment> segments READ segments WRITE setSegments NOTIFY segmentsChanged)
     // Positions reserved for QML decorations, indexed by the source segment.
     Q_PROPERTY(QVariantList inlineIconRects READ inlineIconRects NOTIFY inlineIconRectsChanged)
-    Q_PROPERTY(QVariantList inlineLinkRects READ inlineLinkRects NOTIFY inlineIconRectsChanged)
 
     // Localized, selectable " (edited)" suffix. Inline after normal text;
     // outside the decoration after a trailing quote or code block. Empty
@@ -122,7 +121,9 @@ public:
     QList<ChatTextSegment> segments() const;
     void setSegments(const QList<ChatTextSegment>& segments);
     QVariantList inlineIconRects() const;
-    QVariantList inlineLinkRects() const;
+    // Inline link backgrounds ({rect, href, color, roundLeft, roundRight}) in
+    // item coordinates, as painted. For tests.
+    Q_INVOKABLE QVariantList inlineLinkRects() const;
 
     bool edited() const;
     void setEdited(bool edited);
@@ -275,7 +276,18 @@ private:
     // Mention backgrounds and link highlights, in item coordinates. Painted
     // under the text by the item, so hover and highlight changes touch
     // neither the document nor its layout.
-    QVector<std::pair<QRectF, QColor>> computeBackgrounds(bool inlineLinks = false) const;
+    QVector<std::pair<QRectF, QColor>> computeBackgrounds() const;
+
+    // Inline link backgrounds: one per line a span occupies, rounded only at
+    // the span's real start and end, so a wrapped link reads as one thing.
+    struct InlineBackground {
+        QRectF rect;
+        QColor color;
+        QString href;
+        bool roundLeft;
+        bool roundRight;
+    };
+    QVector<InlineBackground> computeInlineBackgrounds() const;
 
     // Snaps a character position to the nearest grapheme-cluster boundary at or
     // before it. Without this a drag can cut an emoji ZWJ sequence or a
@@ -296,6 +308,7 @@ private:
         int segmentIndex;
         QList<InlineIcon> icons;
         bool trailingPadding;
+        bool pill; // has a background: inlineIconOffsets were supplied
     };
     QVector<InlineSpan> m_inlineSpans;
     bool m_edited = false;
