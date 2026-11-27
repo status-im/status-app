@@ -342,11 +342,14 @@ def log_test_start(test_name: str, **context):
     )
 
 
-def log_test_end(test_name: str, success: bool, duration_ms: int, **context):
+def log_test_end(test_name: str, success: bool, duration_ms: int, *, xfail: bool = False, **context):
     """Log test completion with results."""
     logger = get_logger("tests")
-    emoji = "✅" if success else "❌"
-    status = "PASSED" if success else "FAILED"
+    if xfail:
+        emoji, status = "⚠️", "XFAIL"
+    else:
+        emoji = "✅" if success else "❌"
+        status = "PASSED" if success else "FAILED"
 
     logger.info(
         f"{emoji} Test {status}: {test_name} ({duration_ms}ms)",
