@@ -22,6 +22,7 @@ StatusDialog {
     // Whether "Clear site data" is available on the current backend (see ADR 0004).
     property bool clearSiteDataSupported: false
     property bool canShareFile: false
+    property bool canSaveFile: false
     // True while a data-clearing operation is in flight.
     property bool clearing: false
 
@@ -34,6 +35,7 @@ StatusDialog {
     signal clearSiteData
     signal clearBrowsingData
     signal shareFileRequested
+    signal saveFileRequested
     signal supportedFormatsRequested
     signal settingsRequested
 
@@ -77,6 +79,16 @@ StatusDialog {
             asset.name: SQUtils.Utils.isIOS ? "share-ios" : "share-android"
             onClicked: {
                 root.shareFileRequested()
+                root.close()
+            }
+        }
+        SettingsListItem {
+            objectName: "saveFileItem"
+            visible: root.canSaveFile
+            title: qsTr("Save to Downloads")
+            asset.name: "download"
+            onClicked: {
+                root.saveFileRequested()
                 root.close()
             }
         }

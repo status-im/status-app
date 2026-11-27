@@ -34,6 +34,8 @@ AbstractWebView {
 
     readonly property QtObject d: QtObject {
         property bool crashed: false
+        // A file to open once the view is built: [fileUrl, readAccessUrl].
+        property var pendingFile: null
     }
 
     function _handleRenderProcessTerminated() {
@@ -111,9 +113,14 @@ AbstractWebView {
             ensureLoaded()
     }
     /// Local-file load with a directory read grant; url syncs back via Connections.
+    /// A Tab not built yet opens the file when ensureLoaded() builds it.
     function loadFileUrl(fileUrl, readAccessUrl) {
-        ensureLoaded()
-        if (loader.item && loader.item.loadFileUrl)
+        if (!loader.item) {
+            d.pendingFile = [fileUrl, readAccessUrl || ""]
+            root.url = fileUrl
+            return
+        }
+        if (loader.item.loadFileUrl)
             loader.item.loadFileUrl(fileUrl, readAccessUrl || "")
         else
             console.warn("LazyWebViewAdapter: loadFileUrl unavailable")
@@ -186,7 +193,12 @@ AbstractWebView {
         id: loader
         anchors.fill: parent
         onLoaded: {
-            if (root.url.toString()) loader.item.url = root.url
+            const file = d.pendingFile
+            d.pendingFile = null
+            if (file)
+                root.loadFileUrl(file[0], file[1])
+            else if (root.url.toString())
+                loader.item.url = root.url
             root.syncFromAdapterItem()
         }
 

@@ -40,13 +40,6 @@ Item {
             compare(acknowledged.count, 0)
         }
 
-        function test_hintsAtAnotherAppOnTopOnlyWhenAndroidAsks() {
-            const banner = createTemporaryObject(bannerComponent, root)
-            verify(findChild(banner, "defaultViewerHint").visible)
-            banner.confirmed = true
-            verify(!findChild(banner, "defaultViewerHint").visible)
-        }
-
         function test_aConfirmationIsOnlyAcknowledged() {
             const banner = createTemporaryObject(bannerComponent, root, { confirmed: true })
             const accepted = spy(banner, "acceptRequested")

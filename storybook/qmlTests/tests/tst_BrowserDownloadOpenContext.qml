@@ -29,12 +29,14 @@ Item {
         property var openedFileUrls: []
         property var openedPaths: []
         property var openedTitles: []
+        property var openedFailed: []
 
         function createContext() {
             openedUrls = []
             openedFileUrls = []
             openedPaths = []
             openedTitles = []
+            openedFailed = []
             const ctx = createTemporaryObject(openContextComponent, root)
             ctx.mediaPlayerDirectory = "/tmp/status-player"
             ctx.ensureDirectoryFn = function(path) { return true }
@@ -46,6 +48,7 @@ Item {
                     openedUrls.push(String(plan.url))
                 openedPaths.push(plan.openedFilePath || "")
                 openedTitles.push(plan.title || "")
+                openedFailed.push(!!plan.failed)
             }
             // The player page is what the desktop Backend needs; tests that
             // exercise the direct route flip this Capability themselves.
@@ -391,6 +394,28 @@ Item {
             verify(!ctx.openOpenedFile("file:///Users/me/a.pdf", false))
             verify(ctx.openOpenedFile("file:///Users/me/a.pdf", true))
             compare(openedFileUrls.length, 1)
+        }
+
+        // A file that cannot be shown still gets a Tab, which says it could not be opened.
+        function test_openOpenedFile_showsWhyAFileItCannotShowDidNotOpen() {
+            const ctx = openedFileContext(["/Users/me/setup.exe", "/Users/me/a.txt"])
+
+            verify(!ctx.openOpenedFile("file:///Users/me/setup.exe", true))
+            verify(!ctx.openOpenedFile("file:///Users/me/a.txt", true, true))
+
+            compare(openedFailed, [true, true])
+            compare(openedPaths, ["/Users/me/setup.exe", "/Users/me/a.txt"])
+            compare(openedTitles, ["setup.exe", "a.txt"])
+            compare(openedFileUrls.length, 0)
+        }
+
+        function test_openOpenedFile_titlesAFileItCannotFindWithAFallback() {
+            const ctx = openedFileContext([])
+
+            verify(!ctx.openOpenedFile("", false))
+
+            compare(openedFailed, [true])
+            compare(openedTitles, ["Couldn't open the file"])
         }
 
         function test_openOpenedFile_refusesAFileThatIsGone() {

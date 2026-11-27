@@ -75,7 +75,8 @@ function buildTabDto(webView, savedTabs, determineRealURL, keepOpenedFiles = fal
         return null
 
     const rawUrl = webView.url.toString()
-    const normalizedUrl = determineRealURL(rawUrl)
+    // A url value is truthy even when empty; an empty address is not a page to restore.
+    const normalizedUrl = String(determineRealURL(rawUrl) ?? "")
     if (!normalizedUrl)
         return null
 

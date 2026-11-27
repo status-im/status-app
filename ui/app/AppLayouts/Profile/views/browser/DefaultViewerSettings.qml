@@ -31,18 +31,33 @@ ColumnLayout {
     function reset() {
         resetFn()
         refresh()
+        d.awaitingReturn = true
+    }
+
+    /// The app is active again; only a return from Stop's system screen can
+    /// have changed the types.
+    function applicationActivated() {
+        if (!d.awaitingReturn)
+            return
+        d.awaitingReturn = false
+        refresh()
     }
 
     spacing: 0
 
     Component.onCompleted: refresh()
+    onVisibleChanged: if (visible) refresh()
 
-    // The user comes back from Status's app settings.
+    QtObject {
+        id: d
+        property bool awaitingReturn: false
+    }
+
     readonly property Connections appState: Connections {
         target: Qt.application
         function onStateChanged() {
             if (Qt.application.state === Qt.ApplicationActive)
-                root.refresh()
+                root.applicationActivated()
         }
     }
 
@@ -51,8 +66,6 @@ ColumnLayout {
         leftPadding: 0
         bgColor: StatusColors.transparent
         title: qsTr("Suggest opening files in Status")
-        subTitle: qsTr("Shows an offer above a file another app sent to Status.")
-        statusListItemSubTitle.font.pixelSize: Theme.fontSize(13)
         components: [
             StatusSwitch {
                 id: suggestSwitch

@@ -17,9 +17,10 @@ Item {
         DefaultViewerSettings {
             property var platform: []
             property int resets: 0
+            property int reads: 0
 
             width: 600
-            typesFn: () => platform
+            typesFn: () => { reads++; return platform }
             resetFn: () => { resets++; platform = []; return true }
         }
     }
@@ -84,6 +85,32 @@ Item {
             compare(settings.resets, 1)
             compare(settings.types, [])
             verify(!findChild(settings, "defaultViewerTypesItem").visible)
+        }
+
+        function test_comingBackToTheAppDoesNotAskThePlatformAgain() {
+            const settings = makeSettings()
+            const reads = settings.reads
+            settings.applicationActivated()
+            compare(settings.reads, reads)
+        }
+
+        function test_comingBackFromStopReadsTheTypesAgain() {
+            const settings = makeSettings({ platform: ["image/png"] })
+            mouseClick(findChild(settings, "resetDefaultViewerButton"))
+            settings.platform = ["text/plain"]
+            settings.applicationActivated()
+            compare(settings.types, ["text/plain"])
+            const reads = settings.reads
+            settings.applicationActivated()
+            compare(settings.reads, reads)
+        }
+
+        function test_showingThePageReadsTheTypesAgain() {
+            const settings = makeSettings()
+            settings.visible = false
+            settings.platform = ["text/plain"]
+            settings.visible = true
+            compare(settings.types, ["text/plain"])
         }
 
         function test_readsTheTypesAgainOnRefresh() {

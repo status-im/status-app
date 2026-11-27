@@ -188,8 +188,8 @@ QtObject {
         return downloadOpenContext.openInBrowser(record, supportsPdfFn())
     }
 
-    function openOpenedFile(fileUrl) {
-        return downloadOpenContext.openOpenedFile(fileUrl, supportsPdfFn())
+    function openOpenedFile(fileUrl, refused) {
+        return downloadOpenContext.openOpenedFile(fileUrl, supportsPdfFn(), refused)
     }
 
     function openedFilePlan(fileUrl) {

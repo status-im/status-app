@@ -20,6 +20,7 @@
 #include <StatusQ/attachmentpreparer.h>
 #include <StatusQ/backgroundgraphicsrelease.h>
 #include <StatusQ/networkaccessfactory.h>
+#include <StatusQ/openedfileintake.h>
 #include <StatusQ/typesregistration.h>
 #include <StatusQ/osnotification.h>
 #include <StatusQ/shareintake.h>
@@ -363,6 +364,11 @@ Q_DECL_EXPORT void statusq_urlscheme_emit_appbackgrounded(void* obj) {
 
 Q_DECL_EXPORT void statusq_urlscheme_emit_file(void* obj, const char* fileUrl, bool copied) {
     static_cast<Status::UrlSchemeEvent*>(obj)->emitFileToQt(QString::fromUtf8(fileUrl), copied);
+}
+
+// Releases what the platform holds for an Opened File that will not be opened.
+Q_DECL_EXPORT void statusq_release_opened_file(const char* fileUrl) {
+    Status::OpenedFileIntake::releaseUrl(QString::fromUtf8(fileUrl));
 }
 
 // imagePathsJson: JSON array of absolute paths of app-private cached copies

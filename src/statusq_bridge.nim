@@ -34,6 +34,8 @@ proc statusq_urlscheme_emit_appbackgrounded*(obj: pointer) {.cdecl, importc.}
 proc statusq_urlscheme_emit_share*(obj: pointer, text: cstring, imagePathsJson: cstring) {.cdecl, importc.}
 proc statusq_urlscheme_emit_file*(obj: pointer, fileUrl: cstring, copied: bool) {.cdecl, importc.}
 proc statusq_urlscheme_delete*(obj: pointer) {.cdecl, importc.}
+# Releases what the platform holds for an Opened File that will not be opened.
+proc statusq_release_opened_file*(fileUrl: cstring) {.cdecl, importc.}
 
 # Pending intake slot dir (iOS share-extension App Group hand-off); "" on
 # platforms without an App Group container. Pointer valid for process lifetime.

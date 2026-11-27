@@ -63,6 +63,27 @@ class BrowserScreen(QObject):
         )
         assert not self.open_failed, f'{file_name} opened as "Couldn\'t open the file"'
 
+    def built_tabs(self) -> list:
+        """For each Tab, whether its web view has been built."""
+        built = self.object._eval(
+            '(function () { const r = [];'
+            ' for (let i = 0; i < tabs.count; i++) r.push(!!webViewContext.getWebView(i).adapterItem);'
+            ' return r.join(",") })()')
+        return [part == 'true' for part in str(built).split(',')]
+
+    @allure.step('Set "Restore open tabs" to {on}')
+    def set_restore_open_tabs(self, on: bool) -> None:
+        self.object._eval(f'root.browserPreferencesStore.setRestoreOpenTabs({str(on).lower()})')
+
+    @allure.step('Open an empty Tab')
+    def open_empty_tab(self) -> None:
+        self.new_tab_button.click()
+        driver.wait_until(lambda: self.address_field.text == '', configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
+
+    @allure.step('Show Tab {index}')
+    def show_tab(self, index: int) -> None:
+        self.object._eval(f'tabs.activateTab({index})')
+
     @allure.step('Wait for "Couldn\'t open the file" for {file_name}')
     def wait_for_open_failed(
             self, file_name: str, timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC) -> None:

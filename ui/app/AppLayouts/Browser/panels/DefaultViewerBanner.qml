@@ -29,30 +29,13 @@ Rectangle {
         anchors.leftMargin: Theme.padding
         spacing: Theme.halfPadding
 
-        ColumnLayout {
+        StatusBaseText {
             Layout.fillWidth: true
-            spacing: 2
-
-            StatusBaseText {
-                Layout.fillWidth: true
-                wrapMode: Text.Wrap
-                font.pixelSize: Theme.additionalTextSize
-                text: root.confirmed
-                      ? qsTr("Status opens your %1 now.").arg(root.typeName)
-                      : qsTr("Open %1 in Status? Choose Status, then Always.").arg(root.typeName)
-            }
-
-            // Android offers Always only to the app on top when the user picked
-            // another app for the type before, and Status cannot tell.
-            StatusBaseText {
-                objectName: "defaultViewerHint"
-                Layout.fillWidth: true
-                visible: !root.confirmed
-                wrapMode: Text.Wrap
-                font.pixelSize: Theme.additionalTextSize
-                color: Theme.palette.baseColor1
-                text: qsTr("If Android suggests another app on top, clear that app's defaults in its settings first.")
-            }
+            wrapMode: Text.Wrap
+            font.pixelSize: Theme.additionalTextSize
+            text: root.confirmed
+                  ? qsTr("Status opens your %1 now.").arg(root.typeName)
+                  : qsTr("Open %1 in Status? Choose Status, then Always.").arg(root.typeName)
         }
 
         StatusFlatButton {

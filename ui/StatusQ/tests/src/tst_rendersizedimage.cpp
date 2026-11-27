@@ -230,6 +230,35 @@ private slots:
         QCOMPARE(server.requests, 1);
     }
 
+    void missingLocalSourceIsNotReloaded()
+    {
+        QQmlComponent component(m_engine);
+        component.setData(R"(
+            import QtQuick
+            import StatusQ.Components
+            Window {
+                width: 300; height: 300; visible: true
+                property alias image: img
+                StatusImage { id: img; width: 24; height: 24 }
+            })", QUrl());
+        std::unique_ptr<QObject> root(component.create());
+        QVERIFY2(root, qPrintable(component.errorString()));
+        QVERIFY(QTest::qWaitForWindowExposed(qobject_cast<QQuickWindow*>(root.get())));
+        auto image = root->property("image").value<QQuickItem*>();
+        QVERIFY(image);
+
+        int finished = 0;
+        QObject::connect(qobject_cast<QQuickImageBase*>(image), &QQuickImageBase::statusChanged,
+                         image, [&] { ++finished; });
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(QStringLiteral("Cannot open")));
+        image->setProperty("source", QUrl::fromLocalFile(QStringLiteral("/nonexistent/missing.png")));
+        QTRY_COMPARE(image->property("status").toInt(), int(QQuickImageBase::Error));
+
+        const int afterError = finished;
+        QTest::qWait(100);
+        QCOMPARE(finished, afterError);
+    }
+
     void dprChangesKeepSourceSizeLogical_data()
     {
         QTest::addColumn<QString>("asset");

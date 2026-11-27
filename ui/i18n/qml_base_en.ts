@@ -2630,6 +2630,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <source>This file cannot be played here. Open it with another app.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Couldn&apos;t open the file</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>BrowserFormatSupportContext</name>
@@ -2704,10 +2708,6 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
 </context>
 <context>
     <name>BrowserLayout</name>
-    <message>
-        <source>Couldn&apos;t open the file</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message>
         <source>Server&apos;s certificate not trusted</source>
         <translation type="unfinished"></translation>
@@ -5715,10 +5715,6 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>If Android suggests another app on top, clear that app&apos;s defaults in its settings first.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Not now</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5735,10 +5731,6 @@ Remember your password and don&apos;t share it with anyone.</source>
     <name>DefaultViewerSettings</name>
     <message>
         <source>Suggest opening files in Status</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Shows an offer above a file another app sent to Status.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -12285,6 +12277,10 @@ to load</source>
     </message>
     <message>
         <source>Share file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Save to Downloads</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

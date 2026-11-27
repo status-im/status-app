@@ -61,6 +61,11 @@ QString Status::OpenedFileIntake::releaseKey(const QString &fileUrl)
     return QUrl(fileUrl).toLocalFile();
 }
 
+void Status::OpenedFileIntake::releaseUrl(const QString &fileUrl)
+{
+    release(releaseKey(fileUrl));
+}
+
 void Status::OpenedFileIntake::forget(const QString &fileUrl)
 {
     QMutexLocker locker(&lock());

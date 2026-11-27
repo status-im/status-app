@@ -2643,6 +2643,10 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
         <source>This file cannot be played here. Open it with another app.</source>
         <translation>Tento soubor zde nelze přehrát. Otevřete jej v jiné aplikaci.</translation>
     </message>
+    <message>
+        <source>Couldn&apos;t open the file</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>BrowserFormatSupportContext</name>
@@ -2717,10 +2721,6 @@ z &quot;%1&quot; na &quot;%2&quot;</translation>
 </context>
 <context>
     <name>BrowserLayout</name>
-    <message>
-        <source>Couldn&apos;t open the file</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message>
         <source>Server&apos;s certificate not trusted</source>
         <translation>Certifikát serveru není důvěryhodný</translation>
@@ -5749,10 +5749,6 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>If Android suggests another app on top, clear that app&apos;s defaults in its settings first.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Not now</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5769,10 +5765,6 @@ Pamatujte si své heslo a s nikým ho nesdílejte.</translation>
     <name>DefaultViewerSettings</name>
     <message>
         <source>Suggest opening files in Status</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Shows an offer above a file another app sent to Status.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -12367,6 +12359,10 @@ selhalo</translation>
     <message>
         <source>Share file</source>
         <translation type="unfinished">Sdílet soubor</translation>
+    </message>
+    <message>
+        <source>Save to Downloads</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Zoom</source>

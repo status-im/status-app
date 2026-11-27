@@ -40,7 +40,6 @@ type
   UrlIntakeRoute* = enum
     UrlIntakeDeepLink   ## existing Status deep-link routing
     UrlIntakeBrowserTab ## new tab in the in-app browser
-    UrlIntakeOpenedFile ## a local file in a Preview Tab
 
   ExternalIntake* = ref object
     ready: bool
@@ -60,8 +59,9 @@ type
     onOpenedFileRefused*: proc(fileUrl: string)
       ## The file cannot be opened; "" stands for the rest of a burst over
       ## the limit.
-    onOpenedFileCopyDiscarded*: proc(fileUrl: string)
-      ## A copy made at receipt will not be opened and must be deleted.
+    onOpenedFileDiscarded*: proc(fileUrl: string)
+      ## A file that will not be opened: the platform releases what it holds
+      ## for it (a copy made at receipt, a security scope, its description).
 
 const
   OpenedFileBurstLimit* = 10
@@ -110,8 +110,6 @@ proc routeForUrl*(url: string): UrlIntakeRoute =
   ## deep-link pipeline already falls back for unsupported links).
   if isStatusWebUrl(url):
     return UrlIntakeDeepLink
-  if isOpenedFileUrl(url):
-    return UrlIntakeOpenedFile
   let scheme = parseUri(url).scheme.toLowerAscii()
   if scheme == "http" or scheme == "https":
     return UrlIntakeBrowserTab
@@ -133,9 +131,9 @@ proc copyFits(self: ExternalIntake, fileUrl: string): bool =
   except OSError:
     false
 
-proc discardCopy(self: ExternalIntake, event: ExternalIntakeEvent) =
-  if event.copied and not self.onOpenedFileCopyDiscarded.isNil:
-    self.onOpenedFileCopyDiscarded(event.fileUrl)
+proc discardFile(self: ExternalIntake, event: ExternalIntakeEvent) =
+  if not self.onOpenedFileDiscarded.isNil:
+    self.onOpenedFileDiscarded(event.fileUrl)
 
 proc refuse(self: ExternalIntake, fileUrl: string) =
   if not self.onOpenedFileRefused.isNil:
@@ -150,14 +148,14 @@ proc dispatchFile(self: ExternalIntake, event: ExternalIntakeEvent) =
   if self.burstCount > OpenedFileBurstLimit:
     if self.burstCount == OpenedFileBurstLimit + 1:
       self.refuse("")
-    self.discardCopy(event)
+    self.discardFile(event)
     return
   if event.copied and not self.copyFits(event.fileUrl):
     self.refuse(event.fileUrl)
-    self.discardCopy(event)
+    self.discardFile(event)
     return
   if self.onOpenedFile.isNil:
-    self.discardCopy(event)
+    self.discardFile(event)
     return
   self.onOpenedFile(event.fileUrl)
 
@@ -174,8 +172,6 @@ proc dispatch(self: ExternalIntake, event: ExternalIntakeEvent) =
     of UrlIntakeBrowserTab:
       if not self.onBrowserTabUrl.isNil:
         self.onBrowserTabUrl(event.url)
-    of UrlIntakeOpenedFile:
-      self.dispatchFile(ExternalIntakeEvent(kind: ExternalIntakeFile, fileUrl: event.url))
   of ExternalIntakeShare:
     if not self.onShare.isNil:
       self.onShare(event.text, event.imagePaths)
@@ -193,7 +189,7 @@ proc discardPendingCopies(self: ExternalIntake) =
     if pending.imagePaths.len > 0 and not self.onShareImagesDiscarded.isNil:
       self.onShareImagesDiscarded(pending.imagePaths)
   of ExternalIntakeFile:
-    self.discardCopy(pending)
+    self.discardFile(pending)
   of ExternalIntakeUrl:
     discard
 

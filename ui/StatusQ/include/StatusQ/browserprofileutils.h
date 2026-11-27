@@ -48,15 +48,15 @@ public:
 
     // Install the local-preview policy on `profile`: file:// navigation is
     // allowed under the downloads location, the generated player-page
-    // directory and each view's Read Grant (grantFileRead), and blocked
+    // directory and any live Read Grant (grantFileRead), and blocked
     // everywhere else. Only for the profile backing tabs
     // that display a downloaded file — never for a browsing profile. The default
     // profile keeps the browsing policy (see installBrowsingUrlPolicy).
     Q_INVOKABLE void installLocalPreviewUrlPolicy(QObject *profile);
 
-    // Let the local-preview `view` reach `readAccessUrl` (a file, or a directory
-    // holding the files it shows) until the view is destroyed; replaces its
-    // earlier grant. Browsing profiles ignore grants.
+    // Let the local-preview profile reach `readAccessUrl` (a file, or a directory
+    // holding the files `view` shows) until `view` is destroyed; replaces the
+    // view's earlier grant. Browsing profiles ignore grants.
     Q_INVOKABLE void grantFileRead(QObject *view, const QUrl &readAccessUrl);
 
     // Clears profile-wide browsing data: HTTP cache and all cookies.

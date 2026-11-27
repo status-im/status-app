@@ -13,6 +13,12 @@ class TestBrowserLocalFileGrants : public QObject
 private:
     QTemporaryDir m_dir;
 
+    // What the interceptor does before it asks.
+    static bool covered(const BrowserLocalFileGrants &grants, const QString &path)
+    {
+        return grants.covers(BrowserLocalFileGrants::canonicalPath(path));
+    }
+
     QString touch(const QString &name)
     {
         const QString path = m_dir.filePath(name);
@@ -36,9 +42,9 @@ private slots:
 
         grants.grant(&view, a);
 
-        QVERIFY(grants.covers(a));
-        QVERIFY(!grants.covers(b));
-        QVERIFY(!grants.covers(m_dir.path()));
+        QVERIFY(covered(grants, a));
+        QVERIFY(!covered(grants, b));
+        QVERIFY(!covered(grants, m_dir.path()));
     }
 
     void aDirectoryGrantCoversWhatItHolds()
@@ -50,9 +56,9 @@ private slots:
 
         grants.grant(&view, m_dir.filePath("docs"));
 
-        QVERIFY(grants.covers(m_dir.filePath("docs/inner/x.txt")));
-        QVERIFY(!grants.covers(m_dir.filePath("docs-evil/x.txt")));
-        QVERIFY(!grants.covers(m_dir.filePath("docs/../other.txt")));
+        QVERIFY(covered(grants, m_dir.filePath("docs/inner/x.txt")));
+        QVERIFY(!covered(grants, m_dir.filePath("docs-evil/x.txt")));
+        QVERIFY(!covered(grants, m_dir.filePath("docs/../other.txt")));
     }
 
     void aGrantEndsWithItsView()
@@ -62,10 +68,10 @@ private slots:
         auto *view = new QObject;
 
         grants.grant(view, a);
-        QVERIFY(grants.covers(a));
+        QVERIFY(covered(grants, a));
 
         delete view;
-        QVERIFY(!grants.covers(a));
+        QVERIFY(!covered(grants, a));
     }
 
     void aLaterGrantReplacesTheViewsEarlierOne()
@@ -78,8 +84,8 @@ private slots:
         grants.grant(&view, first);
         grants.grant(&view, second);
 
-        QVERIFY(!grants.covers(first));
-        QVERIFY(grants.covers(second));
+        QVERIFY(!covered(grants, first));
+        QVERIFY(covered(grants, second));
     }
 
     void eachViewKeepsItsOwnGrant()
@@ -94,8 +100,8 @@ private slots:
             grants.grant(&closed, b);
         }
 
-        QVERIFY(grants.covers(a));
-        QVERIFY(!grants.covers(b));
+        QVERIFY(covered(grants, a));
+        QVERIFY(!covered(grants, b));
     }
 
     void aSymlinkedPathMatchesItsTarget()
@@ -108,7 +114,21 @@ private slots:
 
         grants.grant(&view, link);
 
-        QVERIFY(grants.covers(real));
+        QVERIFY(covered(grants, real));
+    }
+
+    void aCheckTakesItsPathAsGiven()
+    {
+        BrowserLocalFileGrants grants;
+        QObject view;
+        const QString real = touch("given.txt");
+        const QString link = m_dir.filePath("given-link.txt");
+        QVERIFY(QFile::link(real, link));
+
+        grants.grant(&view, real);
+
+        QVERIFY(grants.covers(BrowserLocalFileGrants::canonicalPath(real)));
+        QVERIFY(!grants.covers(link));
     }
 };
 

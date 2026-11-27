@@ -143,6 +143,34 @@ Item {
             compare(savedIndex, 0)
         }
 
+        // The app resolves addresses to url values; an empty one is still not saved.
+        function test_anEmptyTabIsNotSavedAndDoesNotShiftTheCurrentTab() {
+            const host = createTemporaryObject(tabHostComponent, root)
+            const params = createTemporaryObject(paramsComponent, root)
+            let savedIndex = -1
+            const session = createTemporaryObject(sessionComponent, root, {
+                webViewContext: host,
+                tabs: host,
+                defaultProfileParams: params,
+                determineRealURL: url => Qt.url(String(url)),
+                preferencesStore: {
+                    getRestoreOpenTabs: () => true,
+                    setOpenTabs: tabs => {},
+                    setCurrentTabIndex: index => savedIndex = index
+                }
+            })
+            host.createEmptyTab(params, false, false, "https://a.example", "A", "", "a")
+            host.createEmptyTab(params, false, false, "", "", "", "empty")
+            host.createEmptyTab(params, false, false, "https://b.example", "B", "", "b")
+            host.createEmptyTab(params, false, false, "https://c.example", "C", "", "c")
+            host.currentIndex = 2
+
+            session.saveSession()
+
+            compare(session.persistedTabs.map(t => t.uuid), ["a", "b", "c"])
+            compare(savedIndex, 1)
+        }
+
         function test_aGoneFileIsLeftOut() {
             const t = createSession(2, false)
 

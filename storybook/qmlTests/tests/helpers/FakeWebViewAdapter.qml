@@ -52,9 +52,14 @@ Item {
 
     property int reloadCalls: 0
     property var loadedUrls: []
+    property var loadedFiles: []
 
     function reload() { root.reloadCalls += 1 }
     function loadUrl(u) { root.url = u; root.loadedUrls = root.loadedUrls.concat([String(u)]) }
+    function loadFileUrl(fileUrl, readAccessUrl) {
+        root.url = fileUrl
+        root.loadedFiles = root.loadedFiles.concat([[String(fileUrl), String(readAccessUrl)]])
+    }
     function goBack() {}
     function goForward() {}
     function goBackOrForward(offset) {}

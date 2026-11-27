@@ -29,11 +29,12 @@ import "DownloadFormatUtils.js" as DownloadFormatUtils
 QtObject {
     id: root
 
-    /// Opens a Preview Tab for a plan {url, readAccessUrl, openedFilePath, title};
+    /// Opens a Preview Tab for a plan {url, readAccessUrl, openedFilePath, title, failed};
     /// injected by the owner. The file loads through a Read Grant for
     /// readAccessUrl, or, when that is "", as a page (the player page).
     /// openedFilePath names the Opened File the Tab shows, "" for a Download;
-    /// title holds until the page gives one.
+    /// title holds until the page gives one. A failed plan loads nothing: its
+    /// Tab says the file could not be opened.
     property var openPreviewFn: function(plan) {
         console.warn("BrowserDownloadOpenContext: openPreviewFn not set")
     }
@@ -213,9 +214,16 @@ QtObject {
     }
 
     /// An Opened File through the same allowlist and player page as a Record,
-    /// read-granted to the file alone. False when it cannot be shown here.
-    function openOpenedFile(fileUrl, supportsPdf) {
-        return d.open(openedFilePlan(fileUrl, supportsPdf))
+    /// read-granted to the file alone. One the platform refused, or that cannot
+    /// be shown here, gets a Tab saying so instead, and the result is false.
+    function openOpenedFile(fileUrl, supportsPdf, refused = false) {
+        if (!refused && d.open(openedFilePlan(fileUrl, supportsPdf)))
+            return true
+        const openedFile = openedFileTag(fileUrl)
+        root.openPreviewFn({ url: "", readAccessUrl: "", openedFilePath: openedFile,
+                             title: openedFileName(openedFile) || qsTr("Couldn't open the file"),
+                             failed: true })
+        return false
     }
 
     /// How an Opened File opens, or null when it cannot be shown here.

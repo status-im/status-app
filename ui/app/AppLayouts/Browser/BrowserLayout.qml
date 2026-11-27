@@ -75,17 +75,7 @@ StatusSectionLayout {
     /// An Opened File in a Preview Tab, or a Preview Tab saying it could not
     /// be opened; never handed back to the OS.
     function openOpenedFile(fileUrl, refused) {
-        if (!refused && downloadsContext.openOpenedFile(fileUrl))
-            return
-        const openedFile = downloadsContext.openedFileTag(fileUrl)
-        Qt.callLater(() => {
-            const tab = _internal.addLocalPreviewTab(
-                "", downloadsContext.openedFileName(openedFile) || qsTr("Couldn't open the file"))
-            if (!tab)
-                return
-            tab.openedFilePath = openedFile
-            tab.openFailed = true
-        })
+        downloadsContext.openOpenedFile(fileUrl, refused)
     }
 
     // Drive the current tab from Storybook / automation (web content is not in AX).
@@ -297,11 +287,6 @@ StatusSectionLayout {
             return tab;
         }
 
-        function addLocalPreviewTab(url, title = "") {
-            return webViewContext.createEmptyTab(
-                browserConfig.localPreviewProfileParams, false, true, url, title)
-        }
-
         function addPreviewTab(plan, focus, uid = undefined) {
             const tab = webViewContext.createEmptyTab(
                 browserConfig.localPreviewProfileParams, false, focus,
@@ -309,8 +294,12 @@ StatusSectionLayout {
             if (!tab)
                 return null
             tab.openedFilePath = plan.openedFilePath
-            if (plan.readAccessUrl)
+            tab.openFailed = !!plan.failed
+            if (plan.readAccessUrl) {
                 tab.loadFileUrl(plan.url, plan.readAccessUrl)
+                if (focus)
+                    tab.ensureLoaded()
+            }
             return tab
         }
 
@@ -928,6 +917,12 @@ StatusSectionLayout {
         clearing: _internal.currentWebView?.clearing ?? false
         canShareFile: _internal.currentOpenedFilePath !== ""
         onShareFileRequested: root.downloadsStore.sharePath(_internal.currentOpenedFilePath)
+        // Android: a file another app handed over is not in Downloads; a download saves a copy there.
+        canSaveFile: SQUtils.Utils.isAndroid && _internal.currentShownOpenedFile.startsWith("content:")
+        onSaveFileRequested: {
+            const fileUrl = _internal.currentShownOpenedFile
+            _internal.currentWebView.downloadUrl(fileUrl, downloadsContext.openedFileName(fileUrl))
+        }
         onForceReload: webViewContext.forceReloadCurrent()
         onClearSiteData: webViewContext.clearSiteDataCurrent()
         onClearBrowsingData: root.clearBrowsingDataOnCurrentTab()

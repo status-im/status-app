@@ -2631,6 +2631,10 @@ de &quot;%1&quot; à &quot;%2&quot;</translation>
         <source>This file cannot be played here. Open it with another app.</source>
         <translation>Ce fichier ne peut pas être lu ici. Ouvrez-le avec une autre application.</translation>
     </message>
+    <message>
+        <source>Couldn&apos;t open the file</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>BrowserFormatSupportContext</name>
@@ -2705,10 +2709,6 @@ de &quot;%1&quot; à &quot;%2&quot;</translation>
 </context>
 <context>
     <name>BrowserLayout</name>
-    <message>
-        <source>Couldn&apos;t open the file</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message>
         <source>Server&apos;s certificate not trusted</source>
         <translation>Le certificat du serveur n’est pas approuvé</translation>
@@ -5725,10 +5725,6 @@ N’oubliez pas votre mot de passe et ne le partagez avec personne.</translation
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>If Android suggests another app on top, clear that app&apos;s defaults in its settings first.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Not now</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5745,10 +5741,6 @@ N’oubliez pas votre mot de passe et ne le partagez avec personne.</translation
     <name>DefaultViewerSettings</name>
     <message>
         <source>Suggest opening files in Status</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Shows an offer above a file another app sent to Status.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -12298,6 +12290,10 @@ chargement</translation>
     <message>
         <source>Share file</source>
         <translation type="unfinished">Partager le fichier</translation>
+    </message>
+    <message>
+        <source>Save to Downloads</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Zoom</source>

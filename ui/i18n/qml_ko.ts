@@ -2618,6 +2618,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
         <source>This file cannot be played here. Open it with another app.</source>
         <translation>이 파일은 여기에서 재생할 수 없습니다. 다른 앱으로 여세요.</translation>
     </message>
+    <message>
+        <source>Couldn&apos;t open the file</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>BrowserFormatSupportContext</name>
@@ -2692,10 +2696,6 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
 </context>
 <context>
     <name>BrowserLayout</name>
-    <message>
-        <source>Couldn&apos;t open the file</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message>
         <source>Server&apos;s certificate not trusted</source>
         <translation>서버의 인증서를 신뢰할 수 없습니다</translation>
@@ -5704,10 +5704,6 @@ Remember your password and don&apos;t share it with anyone.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>If Android suggests another app on top, clear that app&apos;s defaults in its settings first.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Not now</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5724,10 +5720,6 @@ Remember your password and don&apos;t share it with anyone.</source>
     <name>DefaultViewerSettings</name>
     <message>
         <source>Suggest opening files in Status</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Shows an offer above a file another app sent to Status.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -12241,6 +12233,10 @@ to load</source>
     <message>
         <source>Share file</source>
         <translation type="unfinished">파일 공유</translation>
+    </message>
+    <message>
+        <source>Save to Downloads</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Zoom</source>

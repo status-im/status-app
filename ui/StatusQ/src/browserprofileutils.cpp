@@ -183,8 +183,8 @@ constexpr char kMediaPlayerDirName[] = "status-browser-player";
 // path in the address bar dead-ends. The local-preview profile, which backs
 // only the tabs that display a downloaded file, reaches the two directories the
 // browser itself writes: the platform downloads location (Download Targets) and
-// the temp directory holding generated player pages, plus each preview Tab's
-// own Read Grant (the file it shows, wherever it lives). Owned here rather than
+// the temp directory holding generated player pages, plus the preview Tabs'
+// Read Grants (the files they show, wherever they live; any Tab reaches any). Owned here rather than
 // injected from QML so both Backends keep the policy library-side; mobilewebview
 // has the equivalent guard.
 //

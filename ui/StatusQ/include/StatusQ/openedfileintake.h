@@ -33,6 +33,9 @@ namespace Status::OpenedFileIntake
 
     // What release() takes for a file handed over as `fileUrl`.
     QString releaseKey(const QString &fileUrl);
+
+    // release() of a file handed over as `fileUrl`.
+    void releaseUrl(const QString &fileUrl);
 }
 
 #endif // STATUSQ_OPENED_FILE_INTAKE_H

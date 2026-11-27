@@ -21,6 +21,7 @@ JAVA_SOURCES=(
   "$JAVA_ROOT/src/app/status/mobile/ipc/SignalFanout.java"
   "$JAVA_ROOT/src/app/status/mobile/ipc/SignalTypeResolver.java"
   "$JAVA_ROOT/src/app/status/mobile/DefaultViewerRules.java"
+  "$JAVA_ROOT/src/app/status/mobile/IntakeSerials.java"
   "$JAVA_ROOT/src/app/status/mobile/OpenedFileRules.java"
   "$JAVA_ROOT/src/app/status/mobile/PickedFileRules.java"
   "$JAVA_ROOT/src/app/status/mobile/ShareIntakeRules.java"

@@ -62,10 +62,10 @@ public class StatusQtActivity extends QtActivity {
     private static String pendingIntakeShareText = null;
     private static String[] pendingIntakeShareImagePaths = null;
     private static OpenedFileIntake.OpenedFile pendingIntakeFile = null;
-    // Bumped (under intakeLock) by every intake, URL or share. A share whose
-    // streams finish copying after a newer intake arrived is stale: its copies
-    // are deleted, never delivered — last-wins across kinds, like the slot.
-    private static int intakeSerial = 0;
+    // A ticket per intake (under intakeLock). A share or file whose background
+    // work finishes after a newer intake is stale: before login any newer
+    // intake wins, like the slot; logged in, only a newer one of its kind.
+    private static final IntakeSerials intakeSerials = new IntakeSerials();
 
     // Shared streams and opened files are vetted, type-resolved and copied off
     // the Android UI thread: the copy reads provider-backed (possibly
@@ -253,7 +253,7 @@ public class StatusQtActivity extends QtActivity {
                 return;
             }
             synchronized (intakeLock) {
-                intakeSerial++;
+                intakeSerials.next();
                 if (!userLoggedIn) {
                     pendingIntakeUrl = data.toString();
                     clearPendingShareLocked();
@@ -273,24 +273,25 @@ public class StatusQtActivity extends QtActivity {
     // "Open with": the file is looked at off the UI thread (the provider may
     // be slow), then passed on like a URL, or parked until login.
     private void handleFileIntake(Uri uri, String type) {
-        final int serial;
+        final IntakeSerials.Ticket ticket;
         synchronized (intakeLock) {
-            serial = ++intakeSerial;
+            ticket = intakeSerials.next();
         }
         final Context app = getApplicationContext();
         final Handler ui = new Handler(Looper.getMainLooper());
         intakeExecutor.execute(() -> {
             final OpenedFileIntake.OpenedFile file = OpenedFileIntake.receive(app, uri, type);
-            ui.post(() -> deliverFile(app, serial, file));
+            ui.post(() -> deliverFile(app, ticket, file));
         });
     }
 
     // UI thread. Logged in, every file opens; before login the slot keeps the
     // newest intake and a file overtaken by a later one is dropped.
-    private static void deliverFile(Context ctx, int serial, OpenedFileIntake.OpenedFile file) {
+    private static void deliverFile(Context ctx, IntakeSerials.Ticket ticket,
+                                    OpenedFileIntake.OpenedFile file) {
         synchronized (intakeLock) {
             if (!userLoggedIn) {
-                if (serial != intakeSerial) {
+                if (intakeSerials.isStale(ticket, false)) {
                     OpenedFileIntake.discard(ctx, file);
                     return;
                 }
@@ -337,9 +338,9 @@ public class StatusQtActivity extends QtActivity {
 
         final String shareText = text;
         final boolean fileAttached = hasStream(intent);
-        final int serial;
+        final IntakeSerials.Ticket ticket;
         synchronized (intakeLock) {
-            serial = ++intakeSerial;
+            ticket = intakeSerials.nextShare();
         }
         final Context app = getApplicationContext();
         final Handler ui = new Handler(Looper.getMainLooper());
@@ -347,18 +348,18 @@ public class StatusQtActivity extends QtActivity {
             final String[] imagePaths = isImageShare
                     ? copySharedImagesToCache(app, extractStreamUris(app, intent, isSendMultiple))
                     : new String[0];
-            ui.post(() -> deliverShare(app, serial, isImageShare, fileAttached, shareText,
+            ui.post(() -> deliverShare(app, ticket, isImageShare, fileAttached, shareText,
                     imagePaths));
         });
     }
 
     // UI thread. The decision the synchronous path used to make, now applied
     // to the copied result: pass to Qt when logged in, else park.
-    private static void deliverShare(Context ctx, int serial, boolean isImageShare,
+    private static void deliverShare(Context ctx, IntakeSerials.Ticket ticket, boolean isImageShare,
                                      boolean fileAttached, String text, String[] imagePaths) {
         final boolean usable = !text.isEmpty() || imagePaths.length > 0;
         synchronized (intakeLock) {
-            if (serial != intakeSerial) {
+            if (intakeSerials.isStale(ticket, userLoggedIn)) {
                 deleteFiles(imagePaths);
                 return;
             }

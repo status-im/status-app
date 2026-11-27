@@ -30,9 +30,8 @@ void BrowserLocalFileGrants::revoke(QObject *view)
     m_grants.remove(view);
 }
 
-bool BrowserLocalFileGrants::covers(const QString &localPath) const
+bool BrowserLocalFileGrants::covers(const QString &path) const
 {
-    const QString path = canonicalPath(localPath);
     if (path.isEmpty())
         return false;
 

@@ -1,6 +1,7 @@
 import std/os
 import nimqml, strutils, json, chronicles
 import ./url_scheme_event
+import statusq_bridge
 import app/global/single_instance
 import ../eventemitter
 import ../intake/external_intake
@@ -192,11 +193,8 @@ QtObject:
     result.intake.onOpenedFileRefused = proc(fileUrl: string) =
       self.events.emit(SIGNAL_EXTERNAL_FILE_INTAKE,
         ExternalFileIntakeArgs(fileUrl: fileUrl, refused: true))
-    result.intake.onOpenedFileCopyDiscarded = proc(fileUrl: string) =
-      try:
-        removeFile(openedFilePath(fileUrl))
-      except OSError:
-        warn "an opened file copy could not be deleted"
+    result.intake.onOpenedFileDiscarded = proc(fileUrl: string) =
+      statusq_release_opened_file(fileUrl.cstring)
     result.intake.onShareImagesDiscarded = proc(imagePaths: seq[string]) =
       # A pending share was replaced last-wins before delivery: its cached
       # image copies are unreferenced now and must not accumulate.

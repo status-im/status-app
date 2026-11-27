@@ -2631,6 +2631,10 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
         <source>This file cannot be played here. Open it with another app.</source>
         <translation>Este archivo no se puede reproducir aquí. Ábrelo con otra aplicación.</translation>
     </message>
+    <message>
+        <source>Couldn&apos;t open the file</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>BrowserFormatSupportContext</name>
@@ -2705,10 +2709,6 @@ de &quot;%1&quot; a &quot;%2&quot;</translation>
 </context>
 <context>
     <name>BrowserLayout</name>
-    <message>
-        <source>Couldn&apos;t open the file</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message>
         <source>Server&apos;s certificate not trusted</source>
         <translation>Certificado del servidor no confiable</translation>
@@ -5727,10 +5727,6 @@ Recuerda tu contraseña y no la compartas con nadie.</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>If Android suggests another app on top, clear that app&apos;s defaults in its settings first.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Not now</source>
         <translation type="unfinished"></translation>
     </message>
@@ -5747,10 +5743,6 @@ Recuerda tu contraseña y no la compartas con nadie.</translation>
     <name>DefaultViewerSettings</name>
     <message>
         <source>Suggest opening files in Status</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Shows an offer above a file another app sent to Status.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -12304,6 +12296,10 @@ al cargar</translation>
     <message>
         <source>Share file</source>
         <translation type="unfinished">Compartir archivo</translation>
+    </message>
+    <message>
+        <source>Save to Downloads</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Zoom</source>

@@ -18,7 +18,7 @@ type Capture = ref object
   discardedImagePaths: seq[seq[string]]
   openedFiles: seq[string]
   refusedFiles: seq[string]
-  discardedCopies: seq[string]
+  discardedFiles: seq[string]
 
 proc newCapturingIntake(capture: Capture): ExternalIntake =
   result = newExternalIntake()
@@ -35,8 +35,8 @@ proc newCapturingIntake(capture: Capture): ExternalIntake =
     capture.openedFiles.add(fileUrl)
   result.onOpenedFileRefused = proc(fileUrl: string) =
     capture.refusedFiles.add(fileUrl)
-  result.onOpenedFileCopyDiscarded = proc(fileUrl: string) =
-    capture.discardedCopies.add(fileUrl)
+  result.onOpenedFileDiscarded = proc(fileUrl: string) =
+    capture.discardedFiles.add(fileUrl)
 
 proc urlIntake(url: string): ExternalIntakeEvent =
   ExternalIntakeEvent(kind: ExternalIntakeUrl, url: url)
@@ -348,10 +348,9 @@ suite "external_intake pending slot":
 
 suite "external_intake opened files":
 
-  test "a file url no longer takes the deep-link route":
-    check routeForUrl("file:///Users/me/a.pdf") == UrlIntakeOpenedFile
-    check routeForUrl("FILE:///Users/me/a.pdf") == UrlIntakeOpenedFile
+  test "a file url is told apart from other urls":
     check isOpenedFileUrl("file:///Users/me/a.pdf")
+    check isOpenedFileUrl("FILE:///Users/me/a.pdf")
     check not isOpenedFileUrl("https://example.com/a.pdf")
     check not isOpenedFileUrl("status-app://c/x")
 
@@ -363,16 +362,6 @@ suite "external_intake opened files":
     intake.submit(fileIntake("file:///Users/me/My Docs/a  b.pdf"))
 
     check capture.openedFiles == @["file:///Users/me/My Docs/a  b.pdf"]
-    check capture.deepLinks.len == 0
-
-  test "a file url submitted as a url opens as a file":
-    let capture = Capture()
-    let intake = newCapturingIntake(capture)
-    intake.setReady()
-
-    intake.submit(urlIntake("file:///Users/me/a b.pdf"))
-
-    check capture.openedFiles == @["file:///Users/me/a b.pdf"]
     check capture.deepLinks.len == 0
 
   test "a burst opens ten files and refuses the rest once":
@@ -389,7 +378,7 @@ suite "external_intake opened files":
     check capture.openedFiles.len == OpenedFileBurstLimit
     check capture.openedFiles[^1] == "file:///f10.txt"
     check capture.refusedFiles == @[""]
-    check capture.discardedCopies == @["file:///f12.txt"]
+    check capture.discardedFiles == @["file:///f11.txt", "file:///f12.txt"]
 
   test "a pause ends the burst":
     let capture = Capture()
@@ -420,7 +409,7 @@ suite "external_intake opened files":
 
     check capture.openedFiles.len == 0
     check capture.refusedFiles == @["file://" & big]
-    check capture.discardedCopies == @["file://" & big]
+    check capture.discardedFiles == @["file://" & big]
 
   test "the size limit applies to copies only":
     let dir = createTempDir("intake", "")
@@ -456,7 +445,18 @@ suite "external_intake opened files":
 
     check capture.openedFiles == @["file:///last.pdf"]
     check capture.browserTabs.len == 0
-    check capture.discardedCopies == @["file:///first.pdf"]
+    check capture.discardedFiles == @["file:///first.pdf"]
+
+  test "a pending file replaced while locked is released even when it is not a copy":
+    let capture = Capture()
+    let intake = newCapturingIntake(capture)
+
+    intake.submit(fileIntake("content://provider/first.pdf"))
+    intake.submit(fileIntake("content://provider/last.pdf"))
+    intake.setReady()
+
+    check capture.openedFiles == @["content://provider/last.pdf"]
+    check capture.discardedFiles == @["content://provider/first.pdf"]
 
   test "a file replacing a pending image share releases the images":
     let capture = Capture()
