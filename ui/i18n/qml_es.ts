@@ -9241,6 +9241,29 @@ app: %2</translation>
     </message>
 </context>
 <context>
+    <name>InlineLinkResolver</name>
+    <message>
+        <source>Unknown channel</source>
+        <translation>Canal desconocido</translation>
+    </message>
+    <message>
+        <source>Unknown thread name</source>
+        <translation>Nombre de hilo desconocido</translation>
+    </message>
+    <message>
+        <source>No access</source>
+        <translation>Sin acceso</translation>
+    </message>
+    <message>
+        <source>Unknown community</source>
+        <translation>Comunidad desconocida</translation>
+    </message>
+    <message>
+        <source>Unknown chat</source>
+        <translation>Chat desconocido</translation>
+    </message>
+</context>
+<context>
     <name>InlineSelectorPanel</name>
     <message>
         <source>No results found</source>

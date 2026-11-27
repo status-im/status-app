@@ -376,9 +376,21 @@ QtObject {
         return matches[0].substring(3)
     }
 
+    function canonicalStatusUrl(link) {
+        const url = String(link || "")
+        const webPrefix = Constants.externalStatusLinkWithHttps + "/"
+        const httpPrefix = "http://" + Constants.externalStatusLink + "/"
+        const lowerUrl = url.toLowerCase()
+        for (const prefix of [Constants.deepLinkPrefix, httpPrefix, webPrefix]) {
+            if (lowerUrl.startsWith(prefix))
+                return webPrefix + url.slice(prefix.length)
+        }
+        return url
+    }
+
     function isStatusDeepLink(link) {
         const linkString = String(link || "")
-        if (linkString.startsWith(Constants.deepLinkPrefix)) {
+        if (linkString.toLowerCase().startsWith(Constants.deepLinkPrefix)) {
             return true
         }
 

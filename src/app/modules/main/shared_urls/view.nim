@@ -33,6 +33,15 @@ QtObject:
 
   proc profileUrlsResolved*(self: View, profilesJson: string) {.signal.}
 
+  proc parseSharedUrl*(self: View, url: string): string {.slot.} =
+    return $(%self.delegate.parseSharedUrl(url))
+
+  proc parseMessageUrl*(self: View, url: string): string {.slot.} =
+    return $(%self.delegate.parseMessageUrl(url))
+
+  proc parseThreadUrl*(self: View, url: string): string {.slot.} =
+    return $(%self.delegate.parseThreadUrl(url))
+
   proc createMessageUrl*(self: View, chatId: string, messageId: string): string {.slot.} =
     return self.delegate.createMessageUrl(chatId, messageId)
 

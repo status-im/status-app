@@ -21,6 +21,8 @@ import ./dto/pinned_message_update as pinned_msg_update_dto
 import ./dto/removed_message as removed_msg_dto
 import ./dto/urls_unfurling_plan
 import ./dto/link_preview
+import std/[monotimes, options]
+from seaqt/qtimer import QTimer, create, setSingleShot, onTimeout, start, stop
 import ./message_cursor
 import ./payment_request_tokens
 import ./mention_names
@@ -42,9 +44,13 @@ logScope:
 
 const MESSAGES_PER_PAGE* = 20
 const MESSAGES_PER_PAGE_MAX* = 40
+const InlineLinkCacheLimit* = 256
+const InlineLookupPendingLimit = 16
+const InlineLookupRetryDelay = initDuration(seconds = 5)
 
 # Signals which may be emitted by this service:
 const SIGNAL_MESSAGES_LOADED* = "messagesLoaded"
+const SIGNAL_INLINE_MESSAGE_DATA_CHANGED* = "inlineMessageDataChanged"
 const SIGNAL_CHAT_THREADS_FOR_CHATS_LOADED* = "chatThreadsForChatsLoaded"
 const SIGNAL_CHAT_THREADS_LOADING_FAILED* = "chatThreadsLoadingFailed"
 const SIGNAL_CHAT_THREADS_INVALIDATED* = "chatThreadsInvalidated"
@@ -239,6 +245,11 @@ QtObject:
     tokenService: token_service.Service
     walletAccountService: wallet_account_service.Service
     networkService: network_service.Service
+    inlineMessageThreads: OrderedTable[string, tuple[chatId, threadId: string, retryAt: Option[MonoTime]]]
+    inlineMessageRetryTimer: QTimer
+    inlineMessageRetryTarget: ref Service
+    inlineMessageRequests: Table[UUID, tuple[key, chatId, messageId: string, superseded: bool]]
+    inlineMessageWaitingChats: HashSet[string]
     msgCursor: Table[string, MessageCursor]
     threadMsgCursor: Table[string, MessageCursor]
     pinnedMsgCursor: Table[string, MessageCursor]
@@ -588,10 +599,13 @@ QtObject:
 
     self.threadpool.startLocalRead(arg)
 
-  proc asyncLoadChatThreadSummaries*(self: Service, chatId: string, forceReload: bool = false) =
+  proc asyncLoadChatThreadSummaries*(self: Service, chatId: string, forceReload: bool = false,
+      notifyIfCached: bool = true) =
     if not THREADS_ENABLED or chatId.len == 0 or chatId in self.chatThreadSummariesLoadingChats:
       return
     if not forceReload and chatId in self.chatThreadSummariesLoadedChats:
+      if not notifyIfCached:
+        return
       var threads: seq[ThreadDto]
       for _, thread in self.chatThreadsByParentIdByChat.getOrDefault(chatId):
         threads.add(thread)
@@ -954,7 +968,92 @@ QtObject:
     self.events.emit(SIGNAL_MESSAGES_MARKED_AS_READ, data)
     checkAndEmitACNotificationsFromResponse(self.events, activityCenterNotifications)
 
+  proc armInlineMessageRetry(self: Service)
+
+  proc onInlineMessageRetry(self: Service) =
+    let now = getMonoTime()
+    var expired: seq[string]
+    var chats: HashSet[string]
+    for key, cached in self.inlineMessageThreads:
+      if cached.retryAt.isSome and cached.retryAt.get <= now:
+        expired.add(key)
+        chats.incl(cached.chatId)
+    for key in expired:
+      self.inlineMessageThreads.del(key)
+    self.armInlineMessageRetry()
+    for chatId in chats:
+      self.events.emit(SIGNAL_INLINE_MESSAGE_DATA_CHANGED, ChatArgs(chatId: chatId))
+
+  proc armInlineMessageRetry(self: Service) =
+    var nextRetry = none(MonoTime)
+    for cached in self.inlineMessageThreads.values:
+      if cached.retryAt.isSome and (nextRetry.isNone or cached.retryAt.get < nextRetry.get):
+        nextRetry = cached.retryAt
+    if nextRetry.isNone:
+      if not self.inlineMessageRetryTimer.h.isNil:
+        self.inlineMessageRetryTimer.stop()
+      return
+    if self.inlineMessageRetryTimer.h.isNil:
+      self.inlineMessageRetryTimer = QTimer.create()
+      self.inlineMessageRetryTimer.setSingleShot(true)
+      new(self.inlineMessageRetryTarget)
+      let target = self.inlineMessageRetryTarget
+      target[] = self
+      self.inlineMessageRetryTimer.onTimeout(proc() {.closure, raises: [].} =
+        let service = target[]
+        if service.isNil:
+          return
+        try:
+          service.onInlineMessageRetry()
+        except Exception as e:
+          error "inline message retry failed", msg = e.msg)
+    let delayMs = max(1'i64, (nextRetry.get - getMonoTime()).inMilliseconds + 1)
+    self.inlineMessageRetryTimer.start(delayMs.cint)
+
+  proc cacheInlineMessage(self: Service, key, chatId, threadId: string, retryAt: Option[MonoTime] = none(MonoTime)) =
+    var retryChanged = retryAt.isSome or self.inlineMessageThreads.getOrDefault(key).retryAt.isSome
+    self.inlineMessageThreads.del(key)
+    if self.inlineMessageThreads.len >= InlineLinkCacheLimit:
+      var oldest: string
+      for candidate in self.inlineMessageThreads.keys:
+        oldest = candidate
+        break
+      retryChanged = retryChanged or self.inlineMessageThreads[oldest].retryAt.isSome
+      self.inlineMessageThreads.del(oldest)
+    self.inlineMessageThreads[key] = (chatId, threadId, retryAt)
+    if retryChanged: self.armInlineMessageRetry()
+
+  proc updateInlineMessageThreads(self: Service, chatId: string, messages: seq[MessageDto]) =
+    if self.inlineMessageThreads.len == 0 and self.inlineMessageRequests.len == 0:
+      return
+    var changed = false
+    for message in messages:
+      let key = chatId & ":" & message.id
+      var pending: seq[UUID]
+      for requestId, request in self.inlineMessageRequests:
+        if request.key == key:
+          pending.add(requestId)
+      for requestId in pending:
+        self.inlineMessageRequests[requestId].superseded = true
+      if self.inlineMessageThreads.hasKey(key) or pending.len > 0:
+        let cached = self.inlineMessageThreads.getOrDefault(key)
+        if not self.inlineMessageThreads.hasKey(key) or cached.retryAt.isSome or cached.threadId != message.threadId:
+          self.cacheInlineMessage(key, chatId, message.threadId)
+          changed = true
+    if changed:
+      self.events.emit(SIGNAL_INLINE_MESSAGE_DATA_CHANGED, ChatArgs(chatId: chatId))
+
   proc init*(self: Service) =
+    self.events.on(SIGNAL_MESSAGES_LOADED) do(e: Args):
+      let args = MessagesLoadedArgs(e)
+      self.updateInlineMessageThreads(args.chatId, args.messages)
+    self.events.on(SIGNAL_NEW_MESSAGE_RECEIVED) do(e: Args):
+      let args = MessagesArgs(e)
+      self.updateInlineMessageThreads(args.chatId, args.messages)
+    self.events.on(SIGNAL_MESSAGE_EDITED) do(e: Args):
+      let args = MessageEditedArgs(e)
+      self.updateInlineMessageThreads(args.chatId, @[args.message])
+
     self.events.on(chat_service.SIGNAL_CHAT_THREADS_UPDATED) do(e: Args):
       let args = chat_service.ChatThreadsUpdatedArgs(e)
       self.handleThreadsUpdate(args.threads)
@@ -1673,29 +1772,48 @@ QtObject:
       result.error = e.msg
       error "error: ", procName="getMessageByMessageId", errName = e.name, errDesription = e.msg
 
+  proc finishInlineMessageRead(self: Service, data: GetMessageResult) =
+    if not self.inlineMessageRequests.hasKey(data.requestId):
+      return
+    let target = self.inlineMessageRequests[data.requestId]
+    self.inlineMessageRequests.del(data.requestId)
+    if not target.superseded:
+      let valid = data.error.len == 0 and data.message.localChatId == target.chatId and data.message.id == target.messageId
+      if valid:
+        self.cacheInlineMessage(target.key, target.chatId, data.message.threadId)
+      else:
+        self.cacheInlineMessage(target.key, target.chatId, "", some(getMonoTime() + InlineLookupRetryDelay))
+    if not target.superseded or not self.inlineMessageThreads.hasKey(target.key):
+      self.events.emit(SIGNAL_INLINE_MESSAGE_DATA_CHANGED, ChatArgs(chatId: target.chatId))
+    # Copy before emitting: callbacks may register interest again.
+    let waiting = toSeq(self.inlineMessageWaitingChats)
+    self.inlineMessageWaitingChats.clear()
+    for chatId in waiting:
+      self.events.emit(SIGNAL_INLINE_MESSAGE_DATA_CHANGED, ChatArgs(chatId: chatId))
+
   proc onAsyncGetMessageById*(self: Service, response: string) {.slot.} =
+    var requestId: UUID
     try:
       let responseObj = response.parseJson
       if responseObj.kind != JObject:
         raise newException(RpcException, "getMessageById response is not an json object")
-
+      requestId = parseUUID(responseObj["requestId"].getStr)
       var signalData = GetMessageResult(
-        requestId: parseUUID(responseObj["requestId"].getStr),
+        requestId: requestId,
         messageId: responseObj["messageId"].getStr,
         error: responseObj["error"].getStr,
       )
-
       if signalData.error == "":
         signalData.message = responseObj["message"].toMessageDto()
-
       if signalData.message.id.len == 0:
         signalData.error = "message doesn't exist"
-
+      self.finishInlineMessageRead(signalData)
       self.events.emit(SIGNAL_GET_MESSAGE_FINISHED, signalData)
-
     except Exception as e:
       error "response processing failed", procName="asyncGetMessageByMessageId", errName = e.name, errDesription = e.msg
-      self.events.emit(SIGNAL_GET_MESSAGE_FINISHED, GetMessageResult( error: e.msg ))
+      let failed = GetMessageResult(requestId: requestId, error: e.msg)
+      self.finishInlineMessageRead(failed)
+      self.events.emit(SIGNAL_GET_MESSAGE_FINISHED, failed)
 
   proc asyncGetMessageById*(self: Service, messageId: string): UUID =
     let requestId = genUUID()
@@ -1708,6 +1826,31 @@ QtObject:
     )
     self.threadpool.startLocalRead(arg)
     return requestId
+
+  proc inlineMessageThreadId*(self: Service, chatId, messageId: string): string =
+    if chatId.len == 0 or messageId.len == 0:
+      return ""
+    let key = chatId & ":" & messageId
+    let now = getMonoTime()
+    if self.inlineMessageThreads.hasKey(key):
+      let cached = self.inlineMessageThreads[key]
+      if cached.retryAt.isNone:
+        self.cacheInlineMessage(key, chatId, cached.threadId)
+        return cached.threadId
+      if now < cached.retryAt.get:
+        return ""
+    for request in self.inlineMessageRequests.values:
+      if request.key == key:
+        return ""
+    if self.inlineMessageRequests.len >= InlineLookupPendingLimit:
+      if self.inlineMessageWaitingChats.len < InlineLinkCacheLimit:
+        self.inlineMessageWaitingChats.incl(chatId)
+      return ""
+    try:
+      let requestId = self.asyncGetMessageById(messageId)
+      self.inlineMessageRequests[requestId] = (key, chatId, messageId, false)
+    except CatchableError:
+      self.cacheInlineMessage(key, chatId, "", some(now + InlineLookupRetryDelay))
 
   proc onAsyncSearchMessages*(self: Service, response: string) {.slot.} =
     var chatId = ""
@@ -2173,4 +2316,10 @@ proc deleteCommunityMemberMessages*(self: Service, communityId: string, memberPu
     error "error: ", procName="deleteCommunityMemberMessages", errName = e.name, errDesription = e.msg
 
 proc delete*(self: Service) =
+  if not self.inlineMessageRetryTimer.h.isNil:
+    # Invalidate any pending callback before releasing the timer.
+    self.inlineMessageRetryTarget[] = nil
+    self.inlineMessageRetryTarget = nil
+    self.inlineMessageRetryTimer.stop()
+    self.inlineMessageRetryTimer = default(QTimer)
   self.QObject.delete

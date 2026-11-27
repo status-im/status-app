@@ -1039,11 +1039,18 @@ Loader {
             StatusMessage {
                 id: delegate
 
-                ProfileLinkResolver {
-                    id: profileLinks
+                InlineLinkResolver {
+                    id: inlineLinkResolver
                     messageDetails: details
                     contactsModel: root.rootStore?.contactsModel ?? null
                     profileUrlResolver: root.messageStore?.profileUrlResolver ?? null
+                    parseLink: root.messageStore ? url => root.messageStore.parseInlineLink(url) : null
+                    resolveLink: root.messageStore ? target => root.messageStore.resolveInlineLink(target) : null
+                    metadataSource: root.messageStore
+                    chatModelForLink: root.messageStore ? communityId => root.messageStore.chatModelForInlineLink(communityId) : null
+                    communitiesModel: root.messageStore?.inlineCommunitiesModel ?? null
+                    revision: root.messageStore?.inlineLinkRevision ?? 0
+                    previewModel: root.linkPreviewModel
                 }
 
                 textAppearance: root.textAppearance
@@ -1137,8 +1144,8 @@ Loader {
                         return
                     }
 
-                    if (profileLinks.links[link]) {
-                        Global.activateDeepLink(link)
+                    if (inlineLinkResolver.links[link]) {
+                        Global.activateDeepLink(Utils.canonicalStatusUrl(link))
                         return
                     }
 
@@ -1242,7 +1249,7 @@ Loader {
                     }
                     unparsedText: d.gifOnlyMessage ? "" : root.unparsedText
                     mentionsMap: root.mentionsMap
-                    inlineLinks: profileLinks.links
+                    inlineLinks: inlineLinkResolver.links
                     messageContent: {
                         switch (delegate.contentType)
                         {
@@ -1318,7 +1325,7 @@ Loader {
                     LinksMessageView {
                         id: linksMessageView
 
-                        inlineLinks: profileLinks.links
+                        inlineLinks: inlineLinkResolver.links
 
                         linkPreviewModel: root.linkPreviewModel
                         gifLinks: root.gifLinks
