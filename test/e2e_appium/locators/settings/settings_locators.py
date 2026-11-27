@@ -1,3 +1,5 @@
+import re
+
 from ..base_locators import BaseLocators, object_name_pred
 
 
@@ -17,6 +19,8 @@ class SettingsLocators(BaseLocators):
     PASSWORD_MENU_ITEM_TEXT = BaseLocators.text_contains("Password")
     MESSAGING_MENU_ITEM = BaseLocators.tid("4-MenuItem")
     CONTACTS_MENU_ITEM = BaseLocators.tid("2-MenuItem")
+    MENU_ITEM_RESOURCE_ID = re.compile(r"(?:^|[./])(\d+-MenuItem)$")
+    MENU_ITEM_TEST_ID = re.compile(r"\[tid:(\d+-MenuItem)\]")
 
     SIGN_OUT_MENU_ITEM = BaseLocators.tid("100-MenuItem")
     SIGN_OUT_MENU_ITEM_TEXT = BaseLocators.text_contains("Sign out")
