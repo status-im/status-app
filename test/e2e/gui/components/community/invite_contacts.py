@@ -42,11 +42,15 @@ class InviteContactsPopup(QObject):
                 f'Contact: {contact} not found in {self.contacts}'
 
         selected = []
-        for member in driver.find_all(self.member_checkbox.real_name):
-            if str(getattr(member, 'objectName', '')).split('contactCheckbox-')[1] in contacts:
+        checkboxes = {str(getattr(m, 'objectName', '')).split('contactCheckbox-')[1]: m
+                      for m in driver.find_all(self.member_checkbox.real_name)}
+        for contact in contacts:
+            # The checkbox is named after the display name; a contact without one is shown by alias.
+            member = checkboxes.get(contact) or (checkboxes.get('') if contact not in checkboxes else None)
+            if member is not None:
                 CheckBox(member).set(True)
                 assert member.checkState != 0, f"Member item checkbox is not checked"
-                selected.append(str(getattr(member, 'objectName', '')).split('contactCheckbox-')[1])
+                selected.append(contact)
 
         assert set(contacts) == set(selected), f'Selected contacts: {selected}, expected: {contacts}'
 

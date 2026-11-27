@@ -1,6 +1,9 @@
+import typing
+
 import allure
 
 import configs
+import driver
 from gui.elements.object import QObject
 from gui.objects_map import messaging_names
 
@@ -29,3 +32,14 @@ class MentionSuggestionsPopup(QObject):
         self._suggestion_item.wait_until_appears(timeout_msec).click()
         self.wait_until_hidden(timeout_msec)
         return self
+
+    @property
+    @allure.step('Get mention suggestion names in display order')
+    def names(self) -> typing.List[str]:
+        self._suggestion_list.wait_until_appears(configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
+        # select() writes objectName into the shared locator; read every row.
+        locator = {k: v for k, v in messaging_names.suggestionsBox_mentionSuggestion_Rectangle.items()
+                   if k != 'objectName'}
+        rows = [r for r in driver.find_all(locator) if str(getattr(r, 'objectName', '') or '')]
+        rows.sort(key=lambda r: driver.bounds(r).y)
+        return [str(r.objectName) for r in rows]

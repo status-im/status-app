@@ -149,3 +149,17 @@ mainWindow_titleText_StatusBaseText = {"container": statusDesktop_mainWindow, "o
 mainWindow_subtitleText_StatusBaseText = {"container": statusDesktop_mainWindow, "objectName": "subtitleText", "type": "StatusBaseText", "visible": True}
 linkPreviewTitle_StatusBaseText = {"container": chatLogView_chatMessageViewDelegate_MessageView, "objectName": "linkPreviewTitle", "type": "StatusBaseText", "visible": True}
 linkPreviewEmojiHash_EmojiHash = {"container": chatLogView_chatMessageViewDelegate_MessageView, "objectName": "linkPreviewEmojiHash", "type": "EmojiHash", "visible": True}
+
+# Threads (FLAG_THREADS_ENABLED=1)
+messageContextMenu_openThread_StatusMenuItem = {"container": messageContextView, "objectName": "messageContextMenu_openThread", "type": "StatusMenuItem", "visible": True}
+newThreadLoader = {"container": statusDesktop_mainWindow, "objectName": "newThreadLoader", "type": "Loader", "visible": True}
+newThread_messageInputField_TextArea = {"container": newThreadLoader, "objectName": "messageInputField", "type": "TextArea", "visible": True}
+newThread_suggestionsBox = {"container": newThreadLoader, "objectName": "suggestionsBox", "type": "Control", "visible": True}
+newThread_suggestionBoxList = {"container": newThread_suggestionsBox, "objectName": "suggestionBoxList", "type": "StatusListView", "visible": True}
+newThread_mentionSuggestion_Rectangle = {"container": newThread_suggestionBoxList, "type": "Rectangle", "visible": True}
+newThread_sendButton = {"container": newThreadLoader, "objectName": "statusChatInputSendButton", "type": "Control", "visible": True}
+closeThreadPanelButton = {"container": statusDesktop_mainWindow, "objectName": "closeThreadPanelButton", "type": "StatusFlatRoundButton", "visible": True}
+chatInfoThreadsTab = {"container": statusDesktop_mainWindow, "objectName": "chatInfoThreadsTab", "visible": True}
+chatInfoThreadsList = {"container": statusDesktop_mainWindow, "objectName": "chatInfoThreadsList", "type": "StatusListView", "visible": True}
+chatInfoThreadsList_threadCardMessageSender = {"container": chatInfoThreadsList, "objectName": "threadCardMessageSender", "type": "StatusBaseText", "visible": True}
+chatInfoThreadsList_threadCardMessagePreview = {"container": chatInfoThreadsList, "objectName": "threadCardMessagePreview", "type": "StatusBaseText", "visible": True}

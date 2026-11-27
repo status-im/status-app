@@ -555,6 +555,19 @@ class ChatMessagesView(QObject):
         self._mention_suggestions.select(display_name)
         self.confirm_sending_message()
 
+    @allure.step('Read @mention suggestions')
+    def mention_suggestion_names(self, filter_text: str = '') -> typing.List[str]:
+        self._message_field.wait_until_appears()
+        self._message_field.click()
+        self._message_field.clear(verify=False)
+        driver.type_text(self._message_field.object, '@' + filter_text)
+        self._mention_suggestions.wait_until_appears()
+        names = []
+        driver.wait_until(lambda: bool(names.extend(self._mention_suggestions.names) or names),
+                          configs.timeouts.UI_LOAD_TIMEOUT_MSEC)
+        self._message_field.clear(verify=False)
+        return names
+
     @allure.step('Type text to message field')
     def type_message(self, message: str):
         self._message_field.wait_until_appears()
