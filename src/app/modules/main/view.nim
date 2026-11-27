@@ -117,6 +117,10 @@ QtObject:
     read = getEphemeralNotificationModel
     notify = ephemeralNotificationModelChanged
 
+  proc setEphemeralNotificationLimit*(self: View, limit: int) {.slot.} =
+    if limit > 0:
+      self.ephemeralNotificationModel.setMaxItems(limit)
+
   proc displayEphemeralNotification*(self: View,
       title: string,
       subTitle: string,

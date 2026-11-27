@@ -1,5 +1,5 @@
 import app/modules/shared_models/model_utils
-import nimqml, tables
+import nimqml, sequtils, tables
 import ephemeral_notification_item
 
 type
@@ -21,12 +21,14 @@ type
 QtObject:
   type Model* = ref object of QAbstractListModel
     items*: seq[Item]
+    maxItems: Positive
 
   proc setup(self: Model)
   proc delete(self: Model)
   proc newModel*(): Model =
     new(result, delete)
     result.setup
+    result.maxItems = 3 # Retain enough startup toasts for either viewport orientation.
 
   method rowCount(self: Model, index: QModelIndex = nil): int =
     return self.items.len
@@ -95,7 +97,24 @@ QtObject:
       return
     return self.items[ind]
 
+  proc removeItems(self: Model, first, last: int) =
+    let parentModelIndex = newQModelIndex()
+    defer: parentModelIndex.delete
+
+    self.beginRemoveRows(parentModelIndex, first, last)
+    self.items.delete(first .. last)
+    self.endRemoveRows()
+
+  proc setMaxItems*(self: Model, limit: Positive) =
+    self.maxItems = limit
+    let overflow = self.items.len - limit
+    if overflow > 0:
+      self.removeItems(0, overflow - 1)
+
   proc addItem*(self: Model, item: Item) =
+    if self.items.len == self.maxItems:
+      self.removeItems(0, 0)
+
     let parentModelIndex = newQModelIndex()
     defer: parentModelIndex.delete
 
@@ -108,12 +127,7 @@ QtObject:
     if(ind == -1):
       return
 
-    let parentModelIndex = newQModelIndex()
-    defer: parentModelIndex.delete
-
-    self.beginRemoveRows(parentModelIndex, ind, ind)
-    self.items.delete(ind)
-    self.endRemoveRows()
+    self.removeItems(ind, ind)
 
   proc setup(self: Model) =
     self.QAbstractListModel.setup
