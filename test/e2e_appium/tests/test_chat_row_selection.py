@@ -23,6 +23,7 @@ class _Row:
     def __init__(self, name: str, ordinal: int, content_desc: str = ""):
         self.resource_id = f"{PREFIX}{name}.StatusDraggableListItem_QMLTYPE_336_QML_{ordinal}"
         self._attrs = {
+            "name": self.resource_id,
             "resource-id": self.resource_id,
             "content-desc": content_desc,
             "text": "",
@@ -32,8 +33,9 @@ class _Row:
         return self._attrs.get(name)
 
 
-def _page(*rows: _Row) -> ChatPage:
+def _page(*rows: _Row, platform: str = "Android") -> ChatPage:
     driver = MagicMock()
+    driver.capabilities = {"platformName": platform}
     driver.find_elements.return_value = list(rows)
     return ChatPage(driver)
 
@@ -68,6 +70,27 @@ def test_a_row_named_after_the_peer_wins_over_exclusion():
     named = _Row("aVIVawpkfxhW", 699)
     locator = _page(BOT, PEER, named)._find_chat_row("Lgrvz5", display_name="aVIVawpkfxhW")
     assert locator == ("xpath", f'//*[@resource-id="{named.resource_id}"]')
+
+
+@pytest.mark.gate
+@pytest.mark.component
+@pytest.mark.parametrize(
+    ("identifier", "expected"),
+    [
+        ("Burlywood Valuable Tayra", ("xpath", f'//*[@resource-id="{PEER.resource_id}"]')),
+        ("Unlisted Peer", None),
+    ],
+)
+def test_strict_selection_requires_a_matching_row(identifier, expected):
+    assert _page(BOT, PEER)._find_chat_row(identifier, allow_unique_row=False) == expected
+
+
+@pytest.mark.gate
+@pytest.mark.component
+def test_ios_unique_row_fallback_respects_strict_selection():
+    page = _page(BOT, PEER, platform="iOS")
+    assert page._find_chat_row("Unlisted Peer") == ("xpath", f'//*[@name="{PEER.resource_id}"]')
+    assert page._find_chat_row("Unlisted Peer", allow_unique_row=False) is None
 
 
 @pytest.mark.gate

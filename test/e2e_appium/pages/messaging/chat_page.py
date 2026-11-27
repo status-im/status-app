@@ -5,7 +5,7 @@ import time
 
 from constants.support_bot import SUPPORT_BOT_DISPLAY_NAME
 from locators.messaging.chat_locators import ChatLocators
-
+from support.exceptions import ElementInteractionError
 from support.platform import is_ios
 
 from ..base_page import BasePage
@@ -82,15 +82,15 @@ class ChatPage(BasePage):
         return rows
 
     def _find_chat_row(
-        self, chat_identifier: str, display_name: str | None = None
+        self, chat_identifier: str, display_name: str | None = None,
+        *, allow_unique_row: bool = True,
     ) -> tuple | None:
         """Locator pinned to the peer's chat row, or None.
 
         A row named with ``chat_identifier`` or ``display_name`` wins. Rows
         are normally named with the peer's generated three-word name, which
-        the caller cannot know, so otherwise the peer is the one row that is
-        not the support bot's. Two or more such rows is no answer: the
-        caller fails instead of opening whichever comes first.
+        the caller may not know. If allowed, fall back to the sole row other
+        than the support bot's.
         """
         wanted = [value for value in (chat_identifier, display_name) if value]
         row_locator = (
@@ -103,7 +103,7 @@ class ChatPage(BasePage):
             if SUPPORT_BOT_DISPLAY_NAME in name or SUPPORT_BOT_DISPLAY_NAME in label:
                 continue
             peers.append(resource_id)
-        if len(peers) == 1:
+        if allow_unique_row and len(peers) == 1:
             return row_locator(peers[0])
         if peers:
             self.logger.debug(
@@ -135,13 +135,14 @@ class ChatPage(BasePage):
         *,
         display_name: str | None = None,
         timeout: int | None = 15,
+        allow_unique_row: bool = True,
     ) -> bool:
         self._ensure_chat_list_visible()
         deadline = time.time() + (timeout or 15)
-        locator = self._find_chat_row(chat_identifier, display_name)
+        locator = self._find_chat_row(chat_identifier, display_name, allow_unique_row=allow_unique_row)
         while locator is None and time.time() < deadline:
             time.sleep(1.0)
-            locator = self._find_chat_row(chat_identifier, display_name)
+            locator = self._find_chat_row(chat_identifier, display_name, allow_unique_row=allow_unique_row)
         if locator is None:
             self.dump_page_source(f"open_chat_by_suffix_failure_{chat_identifier}")
             return False
