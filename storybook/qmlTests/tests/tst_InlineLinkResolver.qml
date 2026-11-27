@@ -26,6 +26,9 @@ Item {
     Component {
         id: resolverComponent
         InlineLinkResolver {
+            id: textResolver
+            property string text
+            messageDetails: StatusMessageDetails { unparsedText: textResolver.text }
             parseLink: url => root.destinations[url] ? Object.assign({url}, root.destinations[url]) : null
             resolveLink: target => { ++root.resolveCalls; return root.destinations[target.url] || null }
         }

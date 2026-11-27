@@ -336,7 +336,7 @@ Item {
             verify(field.text.includes("JohnDoe.ETH"))
             const avatar = findChild(pageFixture, "inlineLinkAvatar")
             verify(avatar)
-            verify(avatar.asset.name.startsWith("data:image/svg+xml,"))
+            verify(avatar.source.toString().startsWith("data:image/svg+xml,"))
             for (const style of [Theme.Style.Dark, Theme.Style.Light]) {
                 pageFixture.Theme.style = style
                 compare(field.inlineIconRects.length, 1)

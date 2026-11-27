@@ -15,8 +15,9 @@ import utils
 QObject {
     id: root
 
-    property string text
-    property StatusMessageDetails messageDetails: StatusMessageDetails { unparsedText: root.text }
+    // Required: a default instance would be created for every resolver even
+    // when, as in MessageView, the message's own details are supplied.
+    required property StatusMessageDetails messageDetails
     property alias contactsModel: profiles.contactsModel
     property alias profileUrlResolver: profiles.profileUrlResolver
     // (url) -> destination metadata, or null for an unsupported/invalid URL.

@@ -2,6 +2,7 @@ import QtQuick
 import QtQml.Models
 import QtTest
 
+import StatusQ.Components
 import AppLayouts.Chat.controls
 import utils
 
@@ -26,7 +27,9 @@ Item {
         id: messages
         model: 200
         delegate: InlineLinkResolver {
-            text: root.variant === "plain" ? "Hello team" : "Before " + root.url + " after"
+            messageDetails: StatusMessageDetails {
+                unparsedText: root.variant === "plain" ? "Hello team" : "Before " + root.url + " after"
+            }
             previewModel: root.variant === "preview" ? previews : null
             revision: root.revision
             parseLink: url => ({url, communityId: "community"})

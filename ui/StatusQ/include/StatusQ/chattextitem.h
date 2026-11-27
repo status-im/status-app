@@ -57,9 +57,12 @@ class ChatTextItem : public QQuickItem
     // `hasSourceClassification` distinguishes a supplied false classification
     // from an unspecified one when values are copied through QML.
     Q_PROPERTY(QList<ChatTextSegment> segments READ segments WRITE setSegments NOTIFY segmentsChanged)
-    // Positions reserved for QML decorations, indexed by the source segment.
+    // Squares reserved for QML decorations ({segmentIndex, href, iconIndex,
+    // rect}) as of the last layout. Notifies only when they change.
     Q_PROPERTY(QVariantList inlineIconRects READ inlineIconRects NOTIFY inlineIconRectsChanged)
-    Q_PROPERTY(QVariantList inlineLinkRects READ inlineLinkRects NOTIFY inlineIconRectsChanged)
+    // Notifies only when the number of icons changes: a model for a Repeater
+    // that keeps its delegates across relayouts.
+    Q_PROPERTY(int inlineIconCount READ inlineIconCount NOTIFY inlineIconCountChanged)
 
     // Localized, selectable " (edited)" suffix. Inline after normal text;
     // outside the decoration after a trailing quote or code block. Empty
@@ -122,7 +125,10 @@ public:
     QList<ChatTextSegment> segments() const;
     void setSegments(const QList<ChatTextSegment>& segments);
     QVariantList inlineIconRects() const;
-    QVariantList inlineLinkRects() const;
+    int inlineIconCount() const;
+    // Inline link backgrounds ({rect, href, color, roundLeft, roundRight}) in
+    // item coordinates, as painted. For tests.
+    Q_INVOKABLE QVariantList inlineLinkRects() const;
 
     bool edited() const;
     void setEdited(bool edited);
@@ -184,6 +190,7 @@ signals:
     void appearanceChanged();
     void segmentsChanged();
     void inlineIconRectsChanged();
+    void inlineIconCountChanged();
     void editedChanged();
     void textChanged();
     void contentHeightChanged();
@@ -275,7 +282,18 @@ private:
     // Mention backgrounds and link highlights, in item coordinates. Painted
     // under the text by the item, so hover and highlight changes touch
     // neither the document nor its layout.
-    QVector<std::pair<QRectF, QColor>> computeBackgrounds(bool inlineLinks = false) const;
+    QVector<std::pair<QRectF, QColor>> computeBackgrounds() const;
+
+    // Inline link backgrounds: one per line a span occupies, rounded only at
+    // the span's real start and end, so a wrapped link reads as one thing.
+    struct InlineBackground {
+        QRectF rect;
+        QColor color;
+        QString href;
+        bool roundLeft;
+        bool roundRight;
+    };
+    QVector<InlineBackground> computeInlineBackgrounds() const;
 
     // Snaps a character position to the nearest grapheme-cluster boundary at or
     // before it. Without this a drag can cut an emoji ZWJ sequence or a
@@ -296,8 +314,11 @@ private:
         int segmentIndex;
         QList<InlineIcon> icons;
         bool trailingPadding;
+        bool pill; // has a background: inlineIconOffsets were supplied
     };
     QVector<InlineSpan> m_inlineSpans;
+    QVariantList computeInlineIconRects() const;
+    QVariantList m_inlineIconRects; // as of the last layout
     bool m_edited = false;
     QString m_hoveredLink;
     QString m_highlightedLink;

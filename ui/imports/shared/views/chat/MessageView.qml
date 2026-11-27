@@ -502,6 +502,9 @@ Loader {
         id: d
 
         readonly property int chatButtonSize: 32
+        // Cheap pre-check before any parsing; the resolver filters precisely.
+        readonly property bool mayHaveInlineLinks: /status(?:\.app\/|-app:\/\/)/i.test(root.unparsedText)
+        readonly property var noInlineLinks: ({})
         readonly property bool gifOnlyMessage: root.gifUnfurlingEnabled
                                                && root.gifLinks.length > 0
                                                && Utils.isGifOnlyText(root.unparsedText)
@@ -1044,18 +1047,24 @@ Loader {
             StatusMessage {
                 id: delegate
 
-                InlineLinkResolver {
+                // Only rows whose text can carry a Status link pay for the resolver.
+                Loader {
                     id: inlineLinkResolver
-                    messageDetails: details
-                    contactsModel: root.rootStore?.contactsModel ?? null
-                    profileUrlResolver: root.messageStore?.profileUrlResolver ?? null
-                    parseLink: root.messageStore ? url => root.messageStore.parseInlineLink(url) : null
-                    resolveLink: root.messageStore ? target => root.messageStore.resolveInlineLink(target) : null
-                    metadataSource: root.messageStore
-                    chatModelForLink: root.messageStore ? communityId => root.messageStore.chatModelForInlineLink(communityId) : null
-                    communitiesModel: root.messageStore?.inlineCommunitiesModel ?? null
-                    revision: root.messageStore?.inlineLinkRevision ?? 0
-                    previewModel: root.linkPreviewModel
+                    readonly property var links: item?.links ?? d.noInlineLinks
+                    function refreshLink(url) { return item?.refreshLink(url) ?? null }
+                    active: d.mayHaveInlineLinks
+                    sourceComponent: InlineLinkResolver {
+                        messageDetails: details
+                        contactsModel: root.rootStore?.contactsModel ?? null
+                        profileUrlResolver: root.messageStore?.profileUrlResolver ?? null
+                        parseLink: root.messageStore ? url => root.messageStore.parseInlineLink(url) : null
+                        resolveLink: root.messageStore ? target => root.messageStore.resolveInlineLink(target) : null
+                        metadataSource: root.messageStore
+                        chatModelForLink: root.messageStore ? communityId => root.messageStore.chatModelForInlineLink(communityId) : null
+                        communitiesModel: root.messageStore?.inlineCommunitiesModel ?? null
+                        revision: root.messageStore?.inlineLinkRevision ?? 0
+                        previewModel: root.linkPreviewModel
+                    }
                 }
 
                 textAppearance: root.textAppearance

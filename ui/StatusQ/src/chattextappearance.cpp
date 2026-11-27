@@ -120,6 +120,15 @@ void ChatTextAppearance::setCodeBlockRadius(qreal value)
     emit changed(CodeBlockRadius);
 }
 
+void ChatTextAppearance::setInlineLinkRadius(qreal value)
+{
+    if (m_inlineLinkRadius == value)
+        return;
+    m_inlineLinkRadius = value;
+    emit inlineLinkRadiusChanged();
+    emit changed(InlineLinkRadius);
+}
+
 void ChatTextAppearance::setLineHeight(int value)
 {
     if (m_lineHeight == value)
@@ -305,5 +314,7 @@ quint32 ChatTextAppearance::differences(const ChatTextAppearance& other) const
         changes |= 1u << (QuoteColor - 1);
     if (editedMarkerText() != other.editedMarkerText())
         changes |= 1u << (EditedMarkerText - 1);
+    if (m_inlineLinkRadius != other.m_inlineLinkRadius)
+        changes |= 1u << (InlineLinkRadius - 1);
     return changes;
 }

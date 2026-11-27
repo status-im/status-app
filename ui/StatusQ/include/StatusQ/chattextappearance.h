@@ -49,6 +49,9 @@ class ChatTextAppearance : public QObject
     Q_PROPERTY(QColor mentionBackground READ mentionBackground WRITE setMentionBackground
                NOTIFY mentionBackgroundChanged)
     Q_PROPERTY(QColor quoteColor READ quoteColor WRITE setQuoteColor NOTIFY quoteColorChanged)
+    // Corner radius of inline link backgrounds, capped at half the line height.
+    Q_PROPERTY(qreal inlineLinkRadius READ inlineLinkRadius WRITE setInlineLinkRadius
+               NOTIFY inlineLinkRadiusChanged)
 public:
     enum Change {
         All = 0,
@@ -73,7 +76,8 @@ public:
         MentionColor,
         MentionBackground,
         QuoteColor,
-        EditedMarkerText
+        EditedMarkerText,
+        InlineLinkRadius
     };
     Q_ENUM(Change)
     explicit ChatTextAppearance(QObject* parent = nullptr)
@@ -139,6 +143,8 @@ public:
     void setMentionBackground(const QColor& value);
     QColor quoteColor() const { return m_quoteColor; }
     void setQuoteColor(const QColor& value);
+    qreal inlineLinkRadius() const { return m_inlineLinkRadius; }
+    void setInlineLinkRadius(qreal value);
 signals:
     void changed(ChatTextAppearance::Change change);
     void fontChanged();
@@ -163,6 +169,7 @@ signals:
     void mentionColorChanged();
     void mentionBackgroundChanged();
     void quoteColorChanged();
+    void inlineLinkRadiusChanged();
 
 private:
     QFont m_font = {};
@@ -189,4 +196,5 @@ private:
     QColor m_mentionColor = QColor(0x43, 0x60, 0xDF);
     QColor m_mentionBackground = QColor(0, 0, 0, 20);
     QColor m_quoteColor = Qt::gray;
+    qreal m_inlineLinkRadius = 8;
 };

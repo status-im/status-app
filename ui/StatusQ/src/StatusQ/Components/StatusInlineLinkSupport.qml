@@ -73,87 +73,85 @@ Item {
         }
     }
 
+    // One delegate per icon, kept across relayouts: the model is the icon
+    // count, and positions update through bindings.
     Repeater {
         parent: root.textItem
-        model: root.textItem.inlineLinkRects
-        delegate: Rectangle {
-            required property var modelData
-            readonly property bool highlighted: !!modelData.href
-                                               && (root.textItem.hoveredLink === modelData.href || root.textItem.highlightedLink === modelData.href)
-            objectName: "inlineLinkBackground"
-            z: -1
-            x: modelData.rect.x
-            y: modelData.rect.y
-            width: modelData.rect.width
-            height: modelData.rect.height
-            radius: Math.min(Theme.radius, height / 2)
-            color: root.textItem.appearance ? (highlighted ? root.textItem.appearance.hoverHighlightColor : root.textItem.appearance.mentionBackground)
-                                   : (highlighted ? Theme.palette.primaryColor3 : Theme.palette.baseColor2)
+        model: root.textItem.inlineIconCount
+        delegate: Loader {
+            required property int index
+            readonly property var placement: root.textItem.inlineIconRects[index] ?? null
+            readonly property var icon: placement ? d.definitions[placement.href]?.icons[placement.iconIndex] ?? null : null
+            readonly property color linkColor: root.textItem.appearance ? root.textItem.appearance.linkColor
+                                                                        : Theme.palette.primaryColor1
+            x: placement?.rect.x ?? 0
+            y: placement?.rect.y ?? 0
+            width: placement?.rect.width ?? 0
+            height: placement?.rect.height ?? 0
+            active: !!icon
+            sourceComponent: icon?.emoji ? emojiComponent
+                           : icon?.avatar ? (icon.image ? avatarImageComponent : avatarLetterComponent)
+                           : icon?.image ? imageComponent : glyphComponent
         }
     }
 
-    Repeater {
-        parent: root.textItem
-        model: root.textItem.inlineIconRects
-        delegate: Loader {
-            id: decoration
-            required property var modelData
-            readonly property var segment: root.textItem.segments[modelData.segmentIndex]
-            readonly property var definition: segment ? d.definitions[segment.href] : null
-            readonly property var icon: definition?.icons[modelData.iconIndex]
-            x: modelData.rect.x
-            y: modelData.rect.y
-            width: modelData.rect.width
-            height: modelData.rect.height
-            active: !!icon
-            sourceComponent: icon?.emoji ? emojiComponent : icon?.avatar ? avatarComponent : icon?.image ? imageComponent : glyphComponent
+    // Shared by every instance. The loaded item reads its icon from the
+    // Loader it is loaded into, its parent.
+    Component {
+        id: emojiComponent
+        StatusEmoji {
+            objectName: "inlineLinkEmoji"
+            emoji: parent?.icon?.emoji ?? ""
+        }
+    }
 
-            Component {
-                id: emojiComponent
-                StatusEmoji {
-                    objectName: "inlineLinkEmoji"
-                    emoji: decoration.icon?.emoji || ""
-                }
-            }
+    Component {
+        id: imageComponent
+        StatusImage {
+            objectName: "inlineLinkImage"
+            source: parent?.icon?.image ?? ""
+            fillMode: Image.PreserveAspectFit
+        }
+    }
 
-            Component {
-                id: imageComponent
-                StatusImage {
-                    objectName: "inlineLinkImage"
-                    source: decoration.icon?.image || ""
-                    fillMode: Image.PreserveAspectFit
-                }
-            }
+    // Avatars are a round image or a letter, each one light item, not a
+    // StatusSmartIdenticon with its badge, ring and loaders. Both keep a
+    // 1 px margin inside the reserved square.
+    Component {
+        id: avatarImageComponent
+        StatusRoundedImage {
+            objectName: "inlineLinkAvatar"
+            image.source: parent?.icon?.image ?? ""
+            border.width: 1
+            border.color: "transparent"
+        }
+    }
 
-            Component {
-                id: avatarComponent
-                StatusSmartIdenticon {
-                    objectName: "inlineLinkAvatar"
-                    name: decoration.icon?.name || ""
-                    asset.name: decoration.icon?.image || ""
-                    asset.isImage: true
-                    asset.isLetterIdenticon: !asset.name
-                    asset.width: Math.max(0, width - 2)
-                    asset.height: Math.max(0, height - 2)
-                    asset.color: Theme.palette.miscColor5
-                    asset.letterSize: Math.max(7, height / 2)
-                }
-            }
-            Component {
-                id: glyphComponent
-                StatusRoundIcon {
-                    objectName: "inlineLinkIcon"
-                    readonly property color linkColor: root.textItem.appearance ? root.textItem.appearance.linkColor : Theme.palette.primaryColor1
-                    asset.name: decoration.icon?.icon || ""
-                    asset.width: decoration.icon?.filled ? Math.max(0, width - 4) : width
-                    asset.height: decoration.icon?.filled ? Math.max(0, height - 4) : height
-                    asset.bgWidth: width
-                    asset.bgHeight: height
-                    asset.bgRadius: 4
-                    asset.bgColor: decoration.icon?.filled ? linkColor : "transparent"
-                    asset.color: decoration.icon?.filled ? "white" : linkColor
-                }
-            }
+    Component {
+        id: avatarLetterComponent
+        StatusLetterIdenticon {
+            objectName: "inlineLinkAvatar"
+            name: parent?.icon?.name ?? ""
+            letterIdenticonColor: Theme.palette.miscColor5
+            letterSize: Math.max(7, height / 2)
+            scale: width > 2 ? (width - 2) / width : 1
+        }
+    }
+
+    Component {
+        id: glyphComponent
+        StatusRoundIcon {
+            objectName: "inlineLinkIcon"
+            readonly property bool filled: !!parent?.icon?.filled
+            readonly property color linkColor: parent?.linkColor ?? Theme.palette.primaryColor1
+            asset.name: parent?.icon?.icon ?? ""
+            asset.width: filled ? Math.max(0, width - 4) : width
+            asset.height: filled ? Math.max(0, height - 4) : height
+            asset.bgWidth: width
+            asset.bgHeight: height
+            asset.bgRadius: 4
+            asset.bgColor: filled ? linkColor : "transparent"
+            asset.color: filled ? "white" : linkColor
         }
     }
 }

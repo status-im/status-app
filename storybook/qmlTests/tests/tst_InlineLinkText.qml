@@ -86,7 +86,7 @@ Item {
             item.sourceSegments = MarkdownUtils.toChatTextSegments(data.source)
             const spy = createTemporaryObject(spyComponent, root, {target: item})
             const icon = item.inlineIconRects[0].rect
-            const background = item.inlineLinkRects[0].rect
+            const background = item.inlineLinkRects()[0].rect
             const points = [Qt.point(icon.x + icon.width / 2, icon.y + icon.height / 2),
                             Qt.point(icon.x + icon.width + 12, background.y + background.height / 2)]
             for (const point of points) {
@@ -119,6 +119,48 @@ Item {
             compare(item.text, "Before " + root.url + " after")
         }
 
+        // A relayout moves the icons, and a link change that keeps their
+        // number reuses them: neither recreates them.
+        function test_iconsSurviveRelayoutAndLinkChange() {
+            const item = createText({title: "Status App", path: [{text: "# feedback-desktop"}], trailingIcons: ["chat"]})
+            const glyph = findChild(item, "inlineLinkIcon")
+            verify(glyph)
+            // Copied: a rect read from a property is a live reference.
+            const before = Qt.point(item.inlineIconRects[1].rect.x, item.inlineIconRects[1].rect.y)
+
+            item.width = 160
+            const after = item.inlineIconRects[1].rect
+            verify(after.x !== before.x || after.y !== before.y, "the icon moved")
+            compare(findChild(item, "inlineLinkIcon"), glyph)
+            compare(glyph.parent.x, after.x)
+            compare(glyph.parent.y, after.y)
+
+            item.links = ({[root.url]: {title: "Renamed", path: [{text: "# general"}], trailingIcons: ["chat"]}})
+            verify(item.text.includes("Renamed"))
+            compare(findChild(item, "inlineLinkIcon"), glyph)
+            compare(glyph.parent.x, item.inlineIconRects[1].rect.x)
+        }
+
+        // At any width an icon keeps its size, and the avatar stays on the
+        // line its label starts on.
+        function test_iconsKeepSizeAndLabelWhenWrapping() {
+            const item = createText({title: "Status App", path: [{text: "# feedback-desktop"}], trailingIcons: ["chat"]})
+            const sizes = item.inlineIconRects.map(icon => icon.rect.width)
+            compare(sizes.length, 2)
+            for (const size of sizes)
+                fuzzyCompare(size, item.appearance.font.pixelSize, 1) // an em
+            for (let width = 100; width <= 400; width += 3) {
+                item.width = width
+                const icons = item.inlineIconRects
+                compare(icons.length, 2)
+                for (const icon of icons)
+                    fuzzyCompare(icon.rect.width, sizes[icon.iconIndex], 0.5)
+                const avatar = icons[0].rect
+                compare(item.linkAt(avatar.x + avatar.width + 3, avatar.y + avatar.height / 2), root.url,
+                        "label follows the avatar at width " + width)
+            }
+        }
+
         function test_storybookGallery() {
             const page = createTemporaryObject(pageComponent, root, {width: 1000, height: 1000})
             verify(page)
@@ -146,7 +188,7 @@ Item {
                 const span = item.segments.find(segment => segment.copyText === expectedUrls[i])
                 verify(span)
                 compare(span.href, expectedUrls[i])
-                const rect = item.inlineLinkRects[0].rect
+                const rect = item.inlineLinkRects()[0].rect
                 compare(item.linkAt(rect.x + rect.width / 2, rect.y + rect.height / 2), expectedUrls[i])
                 if (i === 0)
                     mouseClick(item, rect.x + rect.width / 2, rect.y + rect.height / 2)
@@ -216,19 +258,26 @@ Item {
 
         function test_paddingRoundedBackgroundAndHover() {
             const item = createText({title: "Status App", path: [{text: "# feedback-desktop"}, {text: "Release summary", icon: "thread"}], trailingIcons: ["chat"]})
-            const background = findChild(item, "inlineLinkBackground")
-            verify(background)
-            verify(background.radius > 0 && background.radius <= background.height / 2)
+            const backgrounds = item.inlineLinkRects()
+            compare(backgrounds.length, 1)
+            verify(backgrounds[0].roundLeft && backgrounds[0].roundRight)
             const avatar = item.inlineIconRects[0].rect
-            verify(avatar.x > background.x, "Keep padding before the first avatar")
+            verify(avatar.x > backgrounds[0].rect.x, "Keep padding before the first avatar")
             item.hoverAt(avatar.x + avatar.width / 2, avatar.y + avatar.height / 2)
-            compare(background.color, item.appearance.hoverHighlightColor)
+            verify(Qt.colorEqual(item.inlineLinkRects()[0].color, item.appearance.hoverHighlightColor))
             item.clearHover()
-            compare(background.color, item.appearance.mentionBackground)
+            verify(Qt.colorEqual(item.inlineLinkRects()[0].color, item.appearance.mentionBackground))
+
+            // Wrapped: one piece per line, rounded only at the link's real ends.
             item.width = 160
-            verify(item.inlineLinkRects.length > 1)
-            for (const rect of item.inlineLinkRects)
-                compare(rect.href, root.url)
+            const pieces = item.inlineLinkRects()
+            verify(pieces.length > 1)
+            for (let i = 0; i < pieces.length; ++i) {
+                compare(pieces[i].href, root.url)
+                compare(pieces[i].roundLeft, i === 0)
+                compare(pieces[i].roundRight, i === pieces.length - 1)
+                verify(pieces[i].rect.width > 0)
+            }
             item.selectAll()
             compare(item.selectedText, "Before " + root.url + " after")
         }
@@ -240,7 +289,7 @@ Item {
                                   pixelSize: item.appearance.font.pixelSize, bold: true})
             const metrics = createTemporaryObject(metricsComponent, root, {font, text: label})
             verify(metrics)
-            const background = item.inlineLinkRects[0].rect
+            const background = item.inlineLinkRects()[0].rect
             const avatar = item.inlineIconRects[0].rect
             const leadingPadding = avatar.x - background.x
             const labelEnd = avatar.x + avatar.width + leadingPadding + metrics.advanceWidth
@@ -256,7 +305,7 @@ Item {
             compare(item.selectedText, "Before " + root.url + " after")
 
             item.links = ({[root.url]: {title: label, trailingIcons: ["chat"]}})
-            const rect = item.inlineLinkRects[0].rect
+            const rect = item.inlineLinkRects()[0].rect
             const icons = item.inlineIconRects
             const first = icons[0].rect
             const last = icons[icons.length - 1].rect
