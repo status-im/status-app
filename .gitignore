@@ -38,6 +38,7 @@ mobile/android/qt6/.gradle/
 .use_simulated_keycard_previous
 *.qm
 .direnv/
+.envrc.local
 
 # Squish test ================================================================
 
