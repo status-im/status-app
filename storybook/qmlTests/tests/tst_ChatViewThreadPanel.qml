@@ -196,7 +196,7 @@ Item {
                 header = harness.findChildByTypePrefix(view.headerContent, "ThreadHeader")
                 return !!header
             })
-            findChild(header, "threadHeaderMenuButton").clicked()
+            findChild(header, "threadHeaderMenuButton").clicked(null)
             const menu = findChild(header, "threadHeaderContextMenu")
             tryCompare(menu, "opened", true)
             verifyThreadMuteMenu(menu, messages)
@@ -268,7 +268,7 @@ Item {
                 centralStore.messageModule = messages
                 const centralHeader = harness.findChildByTypePrefix(view.headerContent, "ThreadHeader")
                 verify(!!centralHeader)
-                findChild(centralHeader, "threadHeaderMenuButton").clicked()
+                findChild(centralHeader, "threadHeaderMenuButton").clicked(null)
                 menu = findChild(centralHeader, "threadHeaderContextMenu")
             }
             tryCompare(menu, "opened", true)
@@ -340,7 +340,7 @@ Item {
             keyClick(Qt.Key_Return)
             messages.threadEditFinished("")
             compare(panelHeader.editing, false)
-            findChild(panelHeader, "threadHeaderMenuButton").clicked()
+            findChild(panelHeader, "threadHeaderMenuButton").clicked(null)
             const panelMenu = findChild(panelHeader, "threadHeaderContextMenu")
             tryCompare(panelMenu, "opened", true)
             if (data.fromList && !data.activeThread)
@@ -387,6 +387,16 @@ Item {
             const header = data.portrait ? view.threadToolbarHeader : view.rightPanel.item
             const button = findChild(header, data.portrait ? "searchThreadToolbarButton" : "searchThreadButton")
             verify(!!button)
+            compare(button.tooltip.y, button.height + Theme.padding)
+            if (!data.portrait) {
+                const menu = findChild(header, "threadHeaderMenuButton")
+                verify(!!menu)
+                tryVerify(() => menu.width > 0 && button.width > 0
+                          && menu.mapToItem(button, menu.width, 0).x === 0)
+                const close = findChild(header, "closeThreadPanelButton")
+                verify(!!close)
+                compare(close.tooltip.y, close.height + Theme.padding)
+            }
             const spy = createTemporaryObject(searchSpyComponent, this, {target: view})
             button.clicked(null)
             compare(spy.count, 1)
