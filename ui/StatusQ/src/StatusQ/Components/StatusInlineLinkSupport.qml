@@ -90,7 +90,7 @@ Item {
             height: placement?.rect.height ?? 0
             active: !!icon
             sourceComponent: icon?.emoji ? emojiComponent
-                           : icon?.avatar ? avatarComponent
+                           : icon?.avatar ? (icon.image ? avatarImageComponent : avatarLetterComponent)
                            : icon?.image ? imageComponent : glyphComponent
         }
     }
@@ -114,18 +114,27 @@ Item {
         }
     }
 
+    // Avatars are a round image or a letter, each one light item, not a
+    // StatusSmartIdenticon with its badge, ring and loaders. Both keep a
+    // 1 px margin inside the reserved square.
     Component {
-        id: avatarComponent
-        StatusSmartIdenticon {
+        id: avatarImageComponent
+        StatusRoundedImage {
+            objectName: "inlineLinkAvatar"
+            image.source: parent?.icon?.image ?? ""
+            border.width: 1
+            border.color: "transparent"
+        }
+    }
+
+    Component {
+        id: avatarLetterComponent
+        StatusLetterIdenticon {
             objectName: "inlineLinkAvatar"
             name: parent?.icon?.name ?? ""
-            asset.name: parent?.icon?.image ?? ""
-            asset.isImage: true
-            asset.isLetterIdenticon: !asset.name
-            asset.width: Math.max(0, width - 2)
-            asset.height: Math.max(0, height - 2)
-            asset.color: Theme.palette.miscColor5
-            asset.letterSize: Math.max(7, height / 2)
+            letterIdenticonColor: Theme.palette.miscColor5
+            letterSize: Math.max(7, height / 2)
+            scale: width > 2 ? (width - 2) / width : 1
         }
     }
 
