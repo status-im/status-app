@@ -70,6 +70,29 @@ Item {
             compare(field.text, "")
         }
 
+        function test_labelIsShownInsteadOfTheUrl() {
+            const field = createTemporaryObject(fieldComponent, root, { label: "report.pdf" })
+            compare(field.text, "report.pdf")
+        }
+
+        function test_editingALabelledFieldStartsFromTheUrl() {
+            const field = createTemporaryObject(fieldComponent, root, { label: "report.pdf" })
+            field.forceActiveFocus()
+            compare(field.text, "https://status.app/")
+            field.focus = false
+            waitForRendering(field)
+            compare(field.text, "report.pdf")
+        }
+
+        function test_editedTextRevertsToTheLabelOnBlur() {
+            const field = createTemporaryObject(fieldComponent, root, { label: "report.pdf" })
+            field.forceActiveFocus()
+            field.text = "https://example.com"
+            field.focus = false
+            waitForRendering(field)
+            compare(field.text, "report.pdf")
+        }
+
         function test_incognitoUsesPrivacyTextColor() {
             const field = createTemporaryObject(fieldComponent, root, { incognitoMode: true })
             compare(field.color, Theme.palette.privacyColors.tertiary)

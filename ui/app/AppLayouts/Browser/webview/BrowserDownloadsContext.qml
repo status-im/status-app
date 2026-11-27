@@ -199,6 +199,18 @@ QtObject {
         return downloadOpenContext.openOpenedFile(fileUrl, supportsPdfFn())
     }
 
+    function openedFileTag(fileUrl) {
+        return downloadOpenContext.openedFileTag(fileUrl)
+    }
+
+    function openedFileName(openedFile) {
+        return downloadOpenContext.openedFileName(openedFile)
+    }
+
+    function openedFileAddressLabel(view) {
+        return downloadOpenContext.openedFileAddressLabel(view)
+    }
+
     function retryRecord(record) {
         if (!downloadsStore.canRetryFromMenu(record) && !downloadsStore.canRetryFromTap(record))
             return false

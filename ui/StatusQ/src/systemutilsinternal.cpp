@@ -172,6 +172,11 @@ void SystemUtilsInternal::releaseOpenedFile(const QString &path) const
     Status::OpenedFileIntake::release(path);
 }
 
+QVariantMap SystemUtilsInternal::openedFileInfo(const QString &fileUrl) const
+{
+    return Status::OpenedFileIntake::description(fileUrl);
+}
+
 bool SystemUtilsInternal::ensureDirectory(const QString &path) const
 {
     if (path.isEmpty())

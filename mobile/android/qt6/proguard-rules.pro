@@ -21,7 +21,9 @@
 # ShareUtils (sharePaths), MediaStoreHelper (insertImageFromPath);
 # RegisterNatives on DensityListener, ShakeDetector and KeyboardUtil
 # (nativeOnKeyboardHeightChanged).
+# ui/StatusQ/src/openedfileintake_android.cpp: OpenedFileIntake (release).
 -keep class app.status.mobile.StatusQtActivity { *; }
+-keep class app.status.mobile.OpenedFileIntake { *; }
 -keep class app.status.mobile.KeyboardUtil { *; }
 -keep class app.status.mobile.StatusBarUtil { *; }
 -keep class app.status.mobile.ShareUtils { *; }

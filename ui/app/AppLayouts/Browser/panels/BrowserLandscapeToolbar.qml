@@ -17,6 +17,8 @@ BrowserToolbarBase {
     id: root
 
     required property url url
+    // Shown in place of the URL, such as an Opened File's name.
+    property string addressLabel: ""
 
     function activateAddressBar() {
         addressBar.forceActiveFocus()
@@ -75,6 +77,7 @@ BrowserToolbarBase {
             Layout.fillWidth: true
 
             url: root.url
+            label: root.addressLabel
             incognitoMode: root.currentTabIncognito
             bgColor: {
                 if (!addressBar.cursorVisible)
