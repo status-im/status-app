@@ -1,3 +1,6 @@
+import logging
+from collections.abc import Callable
+
 import pytest
 
 from pages.app import App
@@ -7,6 +10,9 @@ from support.multi_device_helpers import StepMixin
 from support.platform import is_android
 
 SIGN_OUT = "100-MenuItem"
+MAX_SWIPES_PER_SWEEP = 6
+MAX_RECOVERY_ROUNDS = 3
+logger = logging.getLogger(__name__)
 EXPECTED_MENU_ITEMS = {
     "101-MenuItem": "Recovery phrase",
     "0-MenuItem": "Profile",
@@ -41,18 +47,35 @@ def _assert_accessible_settings_menu(app: App, settings: SettingsPage) -> None:
         seen.update(current)
         return added_rows
 
-    for _ in range(6):
-        if SIGN_OUT in seen:
-            break
-        settings.swipe_toward_end_of_menu()
-        settings.wait_for_condition(record_new_rows, timeout=5, poll_interval=0.3)
+    def sweep(swipe: Callable[[], None]) -> None:
+        for _ in range(MAX_SWIPES_PER_SWEEP):
+            if EXPECTED_MENU_ITEMS.keys() <= seen:
+                return
+            swipe()
+            settings.wait_for_condition(record_new_rows, timeout=5, poll_interval=0.3)
 
-    missing = [f"{name} ({tid})" for tid, name in EXPECTED_MENU_ITEMS.items() if tid not in seen]
+    def missing_rows() -> list[str]:
+        return [f"{name} ({tid})" for tid, name in EXPECTED_MENU_ITEMS.items() if tid not in seen]
+
+    sweep(settings.swipe_toward_end_of_menu)
+    if missing := missing_rows():
+        logger.warning("Retrying Settings rows missing after the first sweep: %s", ", ".join(missing))
+        for _ in range(MAX_RECOVERY_ROUNDS):
+            sweep(settings.swipe_toward_start_of_menu)
+            sweep(settings.swipe_toward_end_of_menu)
+            if EXPECTED_MENU_ITEMS.keys() <= seen:
+                break
+
+    missing = missing_rows()
     assert not missing, f"Settings rows missing from the on-screen accessibility tree: {', '.join(missing)}"
 
 
 class TestSettingsAccessibility(StepMixin):
-    """Check access to the full Settings list on Android."""
+    """Check the full Settings list on Android.
+
+    Emulators can omit buffered rows from the tree; scrolling away and back
+    gives their delegates another chance to be created in view.
+    """
 
     @pytest.mark.device_count(1)
     @pytest.mark.portrait

@@ -47,11 +47,17 @@ class SettingsPage(BasePage):
         return items
 
     def swipe_toward_end_of_menu(self) -> None:
+        self._swipe_menu(0.8, 0.3)
+
+    def swipe_toward_start_of_menu(self) -> None:
+        self._swipe_menu(0.3, 0.8)
+
+    def _swipe_menu(self, start: float, end: float) -> None:
         size = self.driver.get_window_size()
         x = int(size["width"] * 0.2)
         height = size["height"]
         # Leave overlap between viewports so each row is sampled.
-        self.driver.swipe(x, int(height * 0.8), x, int(height * 0.3), duration=1000)
+        self.driver.swipe(x, int(height * start), x, int(height * end), duration=1000)
 
     def open_sign_out(self) -> bool:
         return self.try_click(
