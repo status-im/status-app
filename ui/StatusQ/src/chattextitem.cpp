@@ -1165,7 +1165,16 @@ void ChatTextItem::ensureLayout()
     if (m_hasFittedCode && fitCodeMargins(true))
         height = m_document->documentLayout()->documentSize().height();
 
-    emit inlineIconRectsChanged();
+    // Only real changes notify, so icon delegates are neither recreated nor
+    // rebound by a relayout that leaves them in place.
+    QVariantList iconRects = computeInlineIconRects();
+    if (iconRects != m_inlineIconRects) {
+        const bool countChanged = iconRects.size() != m_inlineIconRects.size();
+        m_inlineIconRects = std::move(iconRects);
+        if (countChanged)
+            emit inlineIconCountChanged();
+        emit inlineIconRectsChanged();
+    }
     if (qFuzzyCompare(m_contentHeight, height))
         return;
 
@@ -1330,6 +1339,16 @@ QString ChatTextItem::selectedText() const
 
 QVariantList ChatTextItem::inlineIconRects() const
 {
+    return m_inlineIconRects;
+}
+
+int ChatTextItem::inlineIconCount() const
+{
+    return int(m_inlineIconRects.size());
+}
+
+QVariantList ChatTextItem::computeInlineIconRects() const
+{
     QVariantList result;
     for (const auto& span : m_inlineSpans) {
         const QTextBlock block = m_document->findBlock(span.start);
@@ -1346,6 +1365,7 @@ QVariantList ChatTextItem::inlineIconRects() const
             const qreal x2 = line.cursorToX(position + 1);
             const qreal size = qMin(qAbs(x2 - x1), line.height());
             result.append(QVariantMap{{QStringLiteral("segmentIndex"), span.segmentIndex},
+                                     {QStringLiteral("href"), m_segments.at(span.segmentIndex).href},
                                      {QStringLiteral("iconIndex"), icon.index},
                                      {QStringLiteral("rect"), QRectF(origin.x() + qMin(x1, x2),
                                          origin.y() + line.y() + (line.height() - size) / 2, size, size)}});

@@ -119,6 +119,28 @@ Item {
             compare(item.text, "Before " + root.url + " after")
         }
 
+        // A relayout moves the icons, and a link change that keeps their
+        // number reuses them: neither recreates them.
+        function test_iconsSurviveRelayoutAndLinkChange() {
+            const item = createText({title: "Status App", path: [{text: "# feedback-desktop"}], trailingIcons: ["chat"]})
+            const glyph = findChild(item, "inlineLinkIcon")
+            verify(glyph)
+            // Copied: a rect read from a property is a live reference.
+            const before = Qt.point(item.inlineIconRects[1].rect.x, item.inlineIconRects[1].rect.y)
+
+            item.width = 160
+            const after = item.inlineIconRects[1].rect
+            verify(after.x !== before.x || after.y !== before.y, "the icon moved")
+            compare(findChild(item, "inlineLinkIcon"), glyph)
+            compare(glyph.parent.x, after.x)
+            compare(glyph.parent.y, after.y)
+
+            item.links = ({[root.url]: {title: "Renamed", path: [{text: "# general"}], trailingIcons: ["chat"]}})
+            verify(item.text.includes("Renamed"))
+            compare(findChild(item, "inlineLinkIcon"), glyph)
+            compare(glyph.parent.x, item.inlineIconRects[1].rect.x)
+        }
+
         // At any width an icon keeps its size, and the avatar stays on the
         // line its label starts on.
         function test_iconsKeepSizeAndLabelWhenWrapping() {
