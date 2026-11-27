@@ -51,6 +51,7 @@ OnboardingStackView {
 
     required property bool biometricsAvailable
     property bool stayLoggedInAvailable: false
+    property bool existingProfileUnavailable: false
     // stored "Save password" preference of the profile selected on the login screen
     property bool stayLoggedIn: false
     required property bool displayKeycardPromoBanner
@@ -180,6 +181,7 @@ OnboardingStackView {
 
             privacyModeFeatureEnabled: root.privacyModeFeatureEnabled
             thirdpartyServicesEnabled: root.thirdpartyServicesEnabled
+            existingProfileUnavailable: root.existingProfileUnavailable
 
             onCreateProfileRequested: {
                 root.newProfileFlowStarted()

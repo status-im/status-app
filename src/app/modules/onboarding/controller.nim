@@ -164,6 +164,9 @@ proc restoreAccountAndLogin*(self: Controller, password, mnemonic: string,
 proc deleteMultiaccount*(self: Controller, keyUid: string): string =
   return self.accountsService.deleteMultiaccount(keyUid)
 
+proc removeLocalProfileData*(self: Controller, keyUid: string) =
+  self.accountsService.removeLocalProfileData(keyUid)
+
 proc restoreKeycardAccountAndLogin*(self: Controller, keyUid, instanceUid: string, keycardSecureChannelV2: bool,
   keycardKeys: KeycardExportedKeysDto, thirdpartyServicesEnabled: bool): string =
   return self.accountsService.restoreKeycardAccountAndLoginV2(
@@ -187,6 +190,9 @@ proc loginLocalPairingAccount*(self: Controller, account: AccountDto, password, 
 
 proc finishPairingThroughSeedPhraseProcess*(self: Controller, installationId: string) =
   self.devicesService.finishPairingThroughSeedPhraseProcess(installationId)
+
+proc getLoggedInAccountKeyUid*(self: Controller): string =
+  return self.accountsService.getLoggedInAccount().keyUid
 
 proc getOpenedAccounts*(self: Controller): seq[AccountDto] =
   return self.accountsService.openedAccounts()

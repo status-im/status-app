@@ -16,6 +16,8 @@ import Models
 Item {
     id: root
 
+    property var pendingCredentialsAtStart: []
+
     width: 1200
     height: 700
 
@@ -140,6 +142,10 @@ Item {
                     deleteMultiaccountCalls.push(keyUid)
                     if (keyUid === zeroOnboardedKeyUid)
                         zeroOnboardedKeyUid = ""
+                }
+                property var zeroOnboardedCredentialsToRemove: root.pendingCredentialsAtStart.slice()
+                function confirmZeroOnboardedCredentialRemoved(keyUid) {
+                    zeroOnboardedCredentialsToRemove = zeroOnboardedCredentialsToRemove.filter(k => k !== keyUid)
                 }
                 property var selectLoginAccountCalls: []
                 function selectLoginAccount(keyUid) {
@@ -456,6 +462,94 @@ Item {
             wrapper.autoLoginEnabled = false
             wrapper.autoLoginEnabled = true
             compare(wrapper.onboardingStore.startZeroOnboardingCalls, 1)
+        }
+
+        function notice(wrapper) {
+            return findChild(wrapper, "existingProfileUnavailableNotice")
+        }
+
+        // The profile exists but could not be opened this run
+        function test_unavailableProfileNotice_data() {
+            return [
+                { tag: "storage unreachable", unreachable: true, unavailable: false, loginFails: false },
+                { tag: "storage unavailable", unreachable: false, unavailable: true, loginFails: false },
+                { tag: "login failed", unreachable: false, unavailable: false, loginFails: true },
+            ]
+        }
+        function test_unavailableProfileNotice(data) {
+            const wrapper = createWrapper(zeroKeyUid, false)
+            wrapper.secureStorage.creds[zeroKeyUid] = "dek:" + root.dummyDekHex
+            if (data.unreachable)
+                wrapper.secureStorage.getStatus = SecureStorage.StatusUnavailable
+            if (data.unavailable)
+                wrapper.secureStorage.available = false
+            wrapper.autoLoginEnabled = true
+            if (data.loginFails)
+                wrapper.onboardingStore.accountLoginError("file is not a database", false)
+
+            tryCompare(layoutOf(wrapper), "currentPageName", "WelcomePage")
+            tryVerify(() => !!notice(wrapper) && notice(wrapper).visible)
+            compare(notice(wrapper).text, qsTr("Your existing profile couldn't be opened on this device. Restart the app to try again. Creating a new profile or logging in will delete it."))
+        }
+
+        // After "Create / Log in" → Continue the user already knows
+        function test_noNoticeAfterSignOut() {
+            const wrapper = createWrapper(zeroKeyUid, false)
+            wrapper.secureStorage.getStatus = SecureStorage.StatusUnavailable
+            verify(!notice(wrapper) || !notice(wrapper).visible)
+        }
+
+        function test_noNoticeWithoutZeroOnboardedProfile() {
+            const wrapper = createWrapper("", false)
+            wrapper.secureStorage.available = false
+            wrapper.autoLoginEnabled = true
+            verify(!notice(wrapper) || !notice(wrapper).visible)
+        }
+
+        function test_removedProfilesCredentialsDeleted() {
+            const wrapper = createWrapper("", false)
+            wrapper.secureStorage.creds["uid_old"] = "dek:" + root.dummyDekHex
+            wrapper.secureStorage.deleteCalls = []
+            wrapper.onboardingStore.zeroOnboardedCredentialsToRemove = ["uid_old", "uid_older"]
+
+            compare(wrapper.secureStorage.deleteCalls, ["uid_old", "uid_older"])
+            verify(wrapper.secureStorage.creds["uid_old"] === undefined)
+            compare(wrapper.onboardingStore.zeroOnboardedCredentialsToRemove, [])
+        }
+
+        // The start-up removal runs before the wrapper exists, and the storage arrives later
+        function test_credentialsPendingAtStartDeleted() {
+            root.pendingCredentialsAtStart = ["uid_old"]
+            const wrapper = createWrapper("", false)
+            root.pendingCredentialsAtStart = []
+            compare(wrapper.onboardingStore.zeroOnboardedCredentialsToRemove, [])
+
+            const storage = wrapper.secureStorage
+            wrapper.secureStorage = null
+            wrapper.onboardingStore.zeroOnboardedCredentialsToRemove = ["uid_older"]
+            compare(wrapper.onboardingStore.zeroOnboardedCredentialsToRemove, ["uid_older"])
+            wrapper.secureStorage = storage
+            compare(wrapper.onboardingStore.zeroOnboardedCredentialsToRemove, [])
+        }
+
+        // NotSupported comes only from the stub backend, which never stored anything
+        function test_notSupportedCountsAsRemoved() {
+            const wrapper = createWrapper("", false)
+            wrapper.secureStorage.deleteStatus = SecureStorage.StatusNotSupported
+            wrapper.onboardingStore.zeroOnboardedCredentialsToRemove = ["uid_old"]
+            compare(wrapper.onboardingStore.zeroOnboardedCredentialsToRemove, [])
+        }
+
+        function test_failedCredentialDeletionStaysPending() {
+            const wrapper = createWrapper("", false)
+            wrapper.secureStorage.deleteStatus = SecureStorage.StatusUnavailable
+            wrapper.onboardingStore.zeroOnboardedCredentialsToRemove = ["uid_old"]
+            compare(wrapper.onboardingStore.zeroOnboardedCredentialsToRemove, ["uid_old"])
+
+            wrapper.secureStorage.deleteStatus = SecureStorage.StatusSuccess
+            wrapper.secureStorage = wrapper.secureStorage
+            wrapper.onboardingStore.zeroOnboardedCredentialsToRemove = ["uid_old"]
+            compare(wrapper.onboardingStore.zeroOnboardedCredentialsToRemove, [])
         }
 
         // Opened although it is not in the login list

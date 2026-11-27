@@ -45,6 +45,12 @@ QtObject {
         return d.onboardingModuleInst.startZeroOnboarding()
     }
 
+    readonly property var zeroOnboardedCredentialsToRemove: JSON.parse(d.onboardingModuleInst.zeroOnboardedCredentialsToRemove || "[]")
+
+    function confirmZeroOnboardedCredentialRemoved(keyUid: string) : void {
+        d.onboardingModuleInst.confirmZeroOnboardedCredentialRemoved(keyUid)
+    }
+
     readonly property bool stayLoggedIn: localAccountSettings.stayLoggedIn
 
     function setStayLoggedIn(value) {

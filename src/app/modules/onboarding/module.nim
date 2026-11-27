@@ -48,6 +48,8 @@ type
     listedKeyUids: Option[HashSet[string]]
     zeroOnboardedKeyUid: string
     zeroOnboardingAllowed: bool
+    # Seen at load: nothing is fetched once logged in, which would re-initialise status-go
+    zeroOnboardedAtLoad: seq[string]
     tmpKeyUid: string # TODO: remove this, once we switch fully to new keycard approach
     keycardModule: keycard_management_module.Module[Module[T]]
     events: EventEmitter
@@ -147,13 +149,15 @@ proc resetFlowTasks[T](self: Module[T]) =
   self.postOnboardingTasks = newSeq[PostOnboardingTask]()
   self.postLoginTasks = newSeq[PostOnboardingTask]()
 
-proc buildLoginAccountsModel[T](self: Module[T]): Result[void, string] =
-  var openedAccounts: seq[AccountDto]
+proc openedAccounts[T](self: Module[T]): Result[seq[AccountDto], string] =
   try:
-    openedAccounts = self.controller.getOpenedAccounts()
+    return ok(self.controller.getOpenedAccounts())
   except Exception as e:
     error "failed to load opened accounts", msg = e.msg
     return err(e.msg)
+
+proc buildLoginAccountsModel[T](self: Module[T]): Result[void, string] =
+  let openedAccounts = ?self.openedAccounts()
 
   let listed = openedAccounts.listedOnLoginScreen()
   if listed.len > 0:
@@ -175,7 +179,42 @@ proc buildLoginAccountsModel[T](self: Module[T]): Result[void, string] =
   # The zero-onboarded profile counts too: it is not new on this device.
   self.listedKeyUids = some(openedAccounts.mapIt(it.keyUid).toHashSet())
   self.setZeroOnboardedKeyUid(openedAccounts.zeroOnboardedKeyUid())
+  self.zeroOnboardedAtLoad = openedAccounts.zeroOnboardedKeyUids()
   ok()
+
+proc forgetDeletedAccount[T](self: Module[T], keyUid: string) =
+  if self.listedKeyUids.isSome:
+    self.listedKeyUids.get.excl(keyUid)
+  self.zeroOnboardedAtLoad.keepItIf(it != keyUid)
+  self.view.removeLoginAccountItem(keyUid)
+  if keyUid == self.zeroOnboardedKeyUid:
+    self.setZeroOnboardedKeyUid("")
+
+proc setCredentialsToRemove[T](self: Module[T], keyUids: seq[string]) =
+  singletonInstance.localAppSettings.setZeroOnboardedCredentialsToRemove(keyUids)
+  self.view.setZeroOnboardedCredentialsToRemove(keyUids)
+
+proc removeZeroOnboarded[T](self: Module[T], keyUids: seq[string]) =
+  if keyUids.len == 0:
+    return
+  var pending = singletonInstance.localAppSettings.getZeroOnboardedCredentialsToRemove()
+  for keyUid in keyUids:
+    let err = self.controller.deleteMultiaccount(keyUid)
+    if err.len > 0:
+      # The record may already be gone with files left behind; a surviving record is retried
+      # at the next start
+      error "failed to remove a zero-onboarded profile", keyUid, err
+      self.controller.removeLocalProfileData(keyUid)
+    else:
+      info "zero-onboarded profile removed", keyUid
+    self.forgetDeletedAccount(keyUid)
+    if keyUid notin pending:
+      pending.add(keyUid)
+  self.setCredentialsToRemove(pending)
+
+method confirmZeroOnboardedCredentialRemoved*[T](self: Module[T], keyUid: string) =
+  self.setCredentialsToRemove(
+    singletonInstance.localAppSettings.getZeroOnboardedCredentialsToRemove().filterIt(it != keyUid))
 
 proc setZeroOnboardingAllowed[T](self: Module[T], value: bool) =
   self.zeroOnboardingAllowed = value
@@ -202,7 +241,16 @@ method load*[T](self: Module[T], coldStart: bool): Result[void, string] =
     self.finishAppLoading2()
     return ok()
 
+  # Credentials left from earlier runs are retried too
+  self.view.setZeroOnboardedCredentialsToRemove(
+    singletonInstance.localAppSettings.getZeroOnboardedCredentialsToRemove())
+  let dueForRemoval = zeroOnboardedToRemoveAtStart(self.openedAccounts().get(@[]),
+    singletonInstance.localAppSettings.getMainAppProfileKeyUid())
+  self.removeZeroOnboarded(dueForRemoval)
   let accountsLoaded = self.buildLoginAccountsModel()
+  # A failed removal must not reopen the profile: the login screen shows, the next start retries
+  if self.zeroOnboardedKeyUid in dueForRemoval:
+    self.setZeroOnboardedKeyUid("")
   self.decideZeroOnboarding(coldStart)
 
   self.delegate.onboardingDidLoad()
@@ -474,6 +522,7 @@ method onMessengerStarted*[T](self: Module[T], err: string) =
     self.onAccountLoginError(err)
     return
 
+
   if self.localPairingStatus != nil and self.localPairingStatus.installation != nil and
       self.localPairingStatus.installation.id != "" and self.localPairingStatus.state == LocalPairingState.Error:
     # We tried to login by pairing, so finalize the process
@@ -548,16 +597,17 @@ method requestSaveStayLoggedIn*[T](self: Module[T], account: string, credential:
 method requestDeleteStayLoggedIn*[T](self: Module[T], account: string) =
   self.view.stayLoggedInDeleteRequested(account)
 
+method removeZeroOnboardedAfterLogin*[T](self: Module[T]) =
+  self.removeZeroOnboarded(zeroOnboardedToRemoveOnLogin(self.zeroOnboardedAtLoad,
+    self.controller.getLoggedInAccountKeyUid()))
+  self.zeroOnboardedAtLoad = @[]
+
 method requestDeleteMultiaccount*[T](self: Module[T], keyUid: string): string =
   let err = self.controller.deleteMultiaccount(keyUid)
   if err.len > 0:
     return err
 
-  if self.listedKeyUids.isSome:
-    self.listedKeyUids.get.excl(keyUid)
-  self.view.removeLoginAccountItem(keyUid)
-  if keyUid == self.zeroOnboardedKeyUid:
-    self.setZeroOnboardedKeyUid("")
+  self.forgetDeletedAccount(keyUid)
   return ""
 
 proc runPostLoginTasks*[T](self: Module[T]) =

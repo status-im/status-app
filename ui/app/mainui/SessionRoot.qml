@@ -128,10 +128,15 @@ Item {
             // screen's profileSelected only covers profiles picked THERE — a freshly
             // onboarded profile never passes through it, yet startup auto-login
             // ("Stay logged in") targets exactly this key UID on the next launch.
-            if (typeof userProfile !== "undefined" && userProfile.keyUid)
+            if (typeof userProfile !== "undefined" && userProfile.keyUid) {
                 localAppSettings.selectedProfileKeyUid = userProfile.keyUid
+                localAppSettings.mainAppProfileKeyUid = userProfile.keyUid
+            }
 
             appMainFadeIn.running = true
+            // Before the startup screen goes: it deletes the removed profiles' stored credentials
+            if (typeof onboardingModule !== "undefined" && !!onboardingModule)
+                onboardingModule.removeZeroOnboardedAfterLogin()
             startupOnboardingLoader.active = false
             root.contentLoaded()
             if (typeof onboardingModule !== "undefined"

@@ -19,6 +19,7 @@ QtObject:
       keycardModule: QVariant
       zeroOnboardedKeyUid: string
       zeroOnboardingAllowed: bool
+      zeroOnboardedCredentialsToRemove: seq[string]
 
   proc delete*(self: View)
   proc newView*(delegate: io_interface.AccessInterface): View =
@@ -172,6 +173,26 @@ QtObject:
   QtProperty[bool] zeroOnboardingAllowed:
     read = getZeroOnboardingAllowed
     notify = zeroOnboardingAllowedChanged
+
+  # Removed zero-onboarded profiles whose stored credential QML still has to delete (JSON array)
+  proc zeroOnboardedCredentialsToRemoveChanged*(self: View) {.signal.}
+  proc getZeroOnboardedCredentialsToRemove(self: View): string {.slot.} =
+    return $(%self.zeroOnboardedCredentialsToRemove)
+  proc setZeroOnboardedCredentialsToRemove*(self: View, keyUids: seq[string]) =
+    if self.zeroOnboardedCredentialsToRemove == keyUids:
+      return
+    self.zeroOnboardedCredentialsToRemove = keyUids
+    self.zeroOnboardedCredentialsToRemoveChanged()
+  QtProperty[string] zeroOnboardedCredentialsToRemove:
+    read = getZeroOnboardedCredentialsToRemove
+    notify = zeroOnboardedCredentialsToRemoveChanged
+
+  # Called once the logged-in profile's main app has loaded
+  proc removeZeroOnboardedAfterLogin(self: View) {.slot.} =
+    self.delegate.removeZeroOnboardedAfterLogin()
+
+  proc confirmZeroOnboardedCredentialRemoved(self: View, keyUid: string) {.slot.} =
+    self.delegate.confirmZeroOnboardedCredentialRemoved(keyUid)
 
   proc convertKeycardAccountStateChanged*(self: View) {.signal.}
   proc getConvertKeycardAccountState(self: View): int {.slot.} =

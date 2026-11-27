@@ -28,3 +28,16 @@ proc zeroOnboardedKeyUid*(accounts: seq[AccountDto]): string =
     if account.zeroOnboarded and account.timestamp >= newest:
       newest = account.timestamp
       result = account.keyUid
+
+proc zeroOnboardedKeyUids*(accounts: seq[AccountDto]): seq[string] =
+  accounts.filterIt(it.zeroOnboarded).mapIt(it.keyUid)
+
+proc zeroOnboardedToRemoveOnLogin*(zeroOnboardedKeyUids: seq[string], loggedInKeyUid: string): seq[string] =
+  ## Every zero-onboarded profile but the one just logged in.
+  zeroOnboardedKeyUids.filterIt(it != loggedInKeyUid)
+
+proc zeroOnboardedToRemoveAtStart*(accounts: seq[AccountDto], mainAppKeyUid: string): seq[string] =
+  ## All go once a regular profile reached the main app; otherwise the newest stays.
+  let regularReachedMain = accounts.anyIt(not it.zeroOnboarded and it.keyUid == mainAppKeyUid)
+  zeroOnboardedToRemoveOnLogin(accounts.zeroOnboardedKeyUids(),
+    if regularReachedMain: "" else: accounts.zeroOnboardedKeyUid())

@@ -106,7 +106,9 @@ QtObject:
       error "error: ", procName="validateMnemonic", errName = e.name, errDesription = e.msg
 
   proc openedAccounts*(self: Service): seq[AccountDto] =
-    if self.accounts.len > 0:
+    # Fetching is InitializeApplication: with a profile logged in it would restart the media
+    # server and reset logging, so the cache is all there is
+    if self.accounts.len > 0 or self.loggedInAccount.isValid():
       return self.accounts
 
     try:
@@ -388,6 +390,12 @@ QtObject:
     self.clearOpenedAccountsCache()
     singletonInstance.localAccountSettings.removeAccount(keyUid, displayName, otherProfiles)
     return ""
+
+  proc removeLocalProfileData*(self: Service, keyUid: string) =
+    ## The profile's qt/<keyUid> settings, for a delete that failed after removing the record.
+    let (displayName, otherProfiles) = self.localProfileNames(keyUid)
+    self.clearOpenedAccountsCache()
+    singletonInstance.localAccountSettings.removeAccount(keyUid, displayName, otherProfiles)
 
   proc createAccountFromPrivateKey*(self: Service, privateKey: string): GeneratedAccountDto =
     if privateKey.len == 0:

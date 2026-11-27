@@ -156,6 +156,9 @@ Loader {
     function openBackUpSeedPopup() {
         invoke(() => root.item.openBackUpSeedPopup())
     }
+    function openCreateOrLoginPopup() {
+        invoke(() => root.item.openCreateOrLoginPopup())
+    }
     function openDiscordImportProgressPopup(importingSingleChannel) {
         invoke(() => root.item.openDiscordImportProgressPopup(importingSingleChannel))
     }

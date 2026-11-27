@@ -1177,7 +1177,7 @@ Item {
         }
 
         function openCreateOrLoginPopup() {
-            console.warn("Create / Log in is not available yet")
+            popups.openCreateOrLoginPopup()
         }
 
         function openSettingsRoot() {

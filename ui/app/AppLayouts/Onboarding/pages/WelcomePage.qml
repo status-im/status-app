@@ -21,6 +21,8 @@ OnboardingPage {
     required property bool thirdpartyServicesEnabled
 
     required property var availableLanguages
+    // A profile exists on this device but could not be opened
+    property bool existingProfileUnavailable: false
     required property string currentLanguage
 
     signal createProfileRequested()
@@ -147,6 +149,16 @@ OnboardingPage {
                 Layout.maximumWidth: d.maximumWidth
                 Layout.alignment: Qt.AlignBottom | Qt.AlignHCenter
                 spacing: Theme.smallPadding
+                StatusBaseText {
+                    objectName: "existingProfileUnavailableNotice"
+                    Layout.fillWidth: true
+                    Layout.bottomMargin: Theme.halfPadding
+                    visible: root.existingProfileUnavailable
+                    text: qsTr("Your existing profile couldn't be opened on this device. Restart the app to try again. Creating a new profile or logging in will delete it.")
+                    wrapMode: Text.WordWrap
+                    horizontalAlignment: Text.AlignHCenter
+                    color: Theme.palette.baseColor1
+                }
                 StatusButton {
                     objectName: "btnCreateProfile"
                     id: btnCreateProfile

@@ -54,7 +54,29 @@ Item {
         id: d
 
         property bool loginRequestSent: false
+        property bool removingCredentials: false
+
+        // Also run at creation: the start-up removal happens before main.qml exists
+        function removeZeroOnboardedCredentials() : void {
+            const keyUids = root.onboardingStore.zeroOnboardedCredentialsToRemove
+            // Each confirmation changes the list, which calls back in here
+            if (d.removingCredentials || !root.secureStorage || !keyUids || keyUids.length === 0)
+                return
+            d.removingCredentials = true
+            for (const keyUid of keyUids) {
+                const status = root.secureStorage.deleteCredential(keyUid)
+                if (status === SecureStorage.StatusSuccess || status === SecureStorage.StatusNotFound
+                        || status === SecureStorage.StatusNotSupported)
+                    root.onboardingStore.confirmZeroOnboardedCredentialRemoved(keyUid)
+                else
+                    console.warn("zero-onboarding: removing the credential of", keyUid, "failed (status:", status + ")")
+            }
+            d.removingCredentials = false
+        }
     }
+
+    onSecureStorageChanged: d.removeZeroOnboardedCredentials()
+    Component.onCompleted: d.removeZeroOnboardedCredentials()
 
     Component {
         id: splashScreenV2
@@ -69,6 +91,10 @@ Item {
 
     Connections {
         target: root.onboardingStore
+
+        function onZeroOnboardedCredentialsToRemoveChanged() {
+            d.removeZeroOnboardedCredentials()
+        }
 
         function onAppLoaded() {
             root.appReady()

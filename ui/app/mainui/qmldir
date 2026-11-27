@@ -1,5 +1,6 @@
 AppMain 1.0 AppMain.qml
 BalancesOnScreenTracker 1.0 BalancesOnScreenTracker.qml
+CreateOrLoginConfirmationPopup 1.0 CreateOrLoginConfirmationPopup.qml
 DeferredActionQueue 1.0 DeferredActionQueue.qml
 GlobalBanner 1.0 GlobalBanner.qml
 MessageBackupPromptTrigger 1.0 MessageBackupPromptTrigger.qml

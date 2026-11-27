@@ -1,4 +1,4 @@
-import nimqml, strutils, os
+import nimqml, strutils, os, json, sequtils, chronicles
 import app/global/qt_settings
 
 import constants
@@ -22,6 +22,8 @@ const DEFAULT_SEEN_NETWORK_CHAINS = "[]"
 const LS_KEY_SEEN_MANAGE_NETWORKS_CHAINS = "global/seenManageNetworksChains"
 const DEFAULT_SEEN_MANAGE_NETWORKS_CHAINS = "[]"
 const LAS_KEY_SELECTED_PROFILE_KEY_UID = "global/selected_profile_key_uid"
+const LAS_KEY_MAIN_APP_PROFILE_KEY_UID = "global/main_app_profile_key_uid"
+const LAS_KEY_ZERO_ONBOARDED_CREDENTIALS_TO_REMOVE = "global/zero_onboarded_credentials_to_remove"
 # Per-profile marker set when a sign-out could not verifiably remove the "Stay logged in"
 # credential (transient secure-storage failure): startup auto-login is suppressed for
 # that profile until the next explicit login clears it, so an explicit sign-out can never
@@ -40,10 +42,11 @@ QtObject:
 
   proc setup(self: LocalAppSettings)
   proc delete*(self: LocalAppSettings)
-  proc newLocalAppSettings*(fileName: string): LocalAppSettings =
+  proc newLocalAppSettings*(fileName: string, dir = ""): LocalAppSettings =
+    ## `dir` defaults to DATADIR/qt; tests pass their own.
     new(result, delete)
     result.setup
-    let filePath = os.joinPath(DATADIR, "qt", fileName)
+    let filePath = os.joinPath(if dir.len > 0: dir else: os.joinPath(DATADIR, "qt"), fileName)
     result.settings = newQSettings(filePath, QSettingsFormat.IniFormat)
 
   proc setup(self: LocalAppSettings) =
@@ -220,6 +223,31 @@ QtObject:
     read = getSelectedProfileKeyUid
     write = setSelectedProfileKeyUid
     notify = selectedProfileKeyUidChanged
+
+  # The last profile whose main app loaded; the login screen's selection does not change it
+  proc mainAppProfileKeyUidChanged*(self: LocalAppSettings) {.signal.}
+  proc getMainAppProfileKeyUid*(self: LocalAppSettings): string {.slot.} =
+    self.settings.value(LAS_KEY_MAIN_APP_PROFILE_KEY_UID).stringVal
+  proc setMainAppProfileKeyUid*(self: LocalAppSettings, value: string) {.slot.} =
+    self.settings.setValue(LAS_KEY_MAIN_APP_PROFILE_KEY_UID, newQVariant(value))
+    self.mainAppProfileKeyUidChanged()
+
+  QtProperty[string] mainAppProfileKeyUid:
+    read = getMainAppProfileKeyUid
+    write = setMainAppProfileKeyUid
+    notify = mainAppProfileKeyUidChanged
+
+  # Stored credentials of removed zero-onboarded profiles not yet deleted from secure storage
+  proc getZeroOnboardedCredentialsToRemove*(self: LocalAppSettings): seq[string] =
+    try:
+      let value = self.settings.value(LAS_KEY_ZERO_ONBOARDED_CREDENTIALS_TO_REMOVE).stringVal
+      if value.len > 0:
+        return parseJson(value).getElems().mapIt(it.getStr)
+    except CatchableError as e:
+      warn "unreadable zero-onboarded credentials to remove", msg = e.msg
+  proc setZeroOnboardedCredentialsToRemove*(self: LocalAppSettings, keyUids: seq[string]) =
+    self.settings.setValue(LAS_KEY_ZERO_ONBOARDED_CREDENTIALS_TO_REMOVE, newQVariant($(%keyUids)))
+    self.settings.sync()
 
   proc isAutoLoginSuppressed*(self: LocalAppSettings, keyUid: string): bool {.slot.} =
     if self.settings.isNil or keyUid.len == 0:

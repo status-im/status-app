@@ -112,6 +112,12 @@ method destroyKeycardModule*(self: AccessInterface) {.base.} =
 method startZeroOnboarding*(self: AccessInterface): string {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method removeZeroOnboardedAfterLogin*(self: AccessInterface) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method confirmZeroOnboardedCredentialRemoved*(self: AccessInterface, keyUid: string) {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method requestDeleteMultiaccount*(self: AccessInterface, keyUid: string): string {.base.} =
   raise newException(ValueError, "No implementation available")
 

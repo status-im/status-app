@@ -402,3 +402,27 @@ suite "LocalAccountSettings public-key file merge":
     let s = newLocalAccountSettings(dir)
     s.mergeLegacyPublicKeyFile(alicePubKey)
     check fileExists(dir / alicePubKey)
+
+suite "LocalAppSettings main app profile":
+  var dir: string
+
+  setup:
+    dir = createTempDir("local_app_settings_main_", "")
+
+  teardown:
+    removeDir(dir)
+
+  test "only reaching the main app moves the marker, selecting a profile does not":
+    let s = newLocalAppSettings("app.ini", dir)
+    check s.getMainAppProfileKeyUid() == ""
+    s.setMainAppProfileKeyUid(aliceUid)
+    s.setSelectedProfileKeyUid(bobUid)
+    check s.getMainAppProfileKeyUid() == aliceUid
+
+  test "credentials still to delete survive a restart":
+    block:
+      let s = newLocalAppSettings("app.ini", dir)
+      check s.getZeroOnboardedCredentialsToRemove().len == 0
+      s.setZeroOnboardedCredentialsToRemove(@[aliceUid, bobUid])
+    check fileExists(dir / "app.ini")
+    check newLocalAppSettings("app.ini", dir).getZeroOnboardedCredentialsToRemove() == @[aliceUid, bobUid]

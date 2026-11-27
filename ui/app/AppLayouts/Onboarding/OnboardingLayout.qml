@@ -45,6 +45,8 @@ Page {
     function consumeAutoLoginFailure() : string {
         const keyUid = d.autoLoginPendingKeyUid
         d.autoLoginPendingKeyUid = ""
+        if (keyUid !== "" && keyUid === root.onboardingStore.zeroOnboardedKeyUid)
+            d.zeroOnboardedProfileUnavailable = true
         return keyUid
     }
 
@@ -125,6 +127,8 @@ Page {
         property bool autoLoginAttempted
         property string autoLoginPendingKeyUid // set with the attempt, consumed on its failure
         property bool autoLoginErrorPending: false
+        // The zero-onboarded profile exists but could not be opened in this run
+        property bool zeroOnboardedProfileUnavailable: false
 
         // login screen state
         property string selectedProfileKeyId
@@ -194,6 +198,8 @@ Page {
                 return
             if (!root.secureStorage || !root.secureStorage.available) {
                 console.info("auto-login: secure storage unavailable")
+                if (root.secureStorage && zeroOnboardedKeyUid !== "")
+                    d.zeroOnboardedProfileUnavailable = true
                 return
             }
             if (zeroOnboardedKeyUid !== "") {
@@ -288,6 +294,7 @@ Page {
             if (result.status !== SecureStorage.StatusSuccess) {
                 console.warn("zero-onboarding: secure storage unreachable (status:", result.status
                              + "), keeping the profile for the next start")
+                d.zeroOnboardedProfileUnavailable = true
                 return
             }
             console.info("zero-onboarding: opening the profile", keyUid)
@@ -309,6 +316,8 @@ Page {
     OnboardingFlow {
         id: onboardingFlow
         objectName: "onboardingFlow"
+
+        existingProfileUnavailable: d.zeroOnboardedProfileUnavailable
 
         anchors.fill: parent
 

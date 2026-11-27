@@ -720,6 +720,10 @@ QtObject {
         openPopup(termsOfUsePopupComponent)
     }
 
+    function openCreateOrLoginPopup() {
+        openPopup(createOrLoginPopupComponent)
+    }
+
     function openSignOutConfirmPopup() {
         openPopup(signOutConfirmPopupComponent)
     }
@@ -828,6 +832,15 @@ QtObject {
                     close()
                 }
                 onClosed: destroy()
+            }
+        },
+
+        Component {
+            id: createOrLoginPopupComponent
+            CreateOrLoginConfirmationPopup {
+                destroyOnClose: true
+                // Signs out without removing the stored credential: the next start reopens the profile
+                onContinueRequested: Global.signOutConfirmed()
             }
         },
 
