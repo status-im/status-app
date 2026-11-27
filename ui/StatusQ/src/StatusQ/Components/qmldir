@@ -58,6 +58,7 @@ StatusNewBadge 0.1 StatusNewBadge.qml
 StatusNewTag 0.1 StatusNewTag.qml
 StatusOnlineBadge 0.1 StatusOnlineBadge.qml
 StatusPageIndicator 0.1 StatusPageIndicator.qml
+StatusPullToRefresh 0.1 StatusPullToRefresh.qml
 StatusQrCodeCapture 0.1 StatusQrCodeCapture.qml
 StatusQrCodeScanner 0.1 StatusQrCodeScanner.qml
 StatusRoundIcon 0.1 StatusRoundIcon.qml
