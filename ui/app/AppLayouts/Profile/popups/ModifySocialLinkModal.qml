@@ -76,7 +76,7 @@ StatusDialog {
             placeholderText: ""
             label: qsTr("Change title")
             linkType: Constants.socialLinkType.custom
-            icon: "language"
+            icon: "globe"
             text: root.linkText
             charLimit: Constants.maxSocialLinkTextLength
             input.tabNavItem: linkTarget.input.edit

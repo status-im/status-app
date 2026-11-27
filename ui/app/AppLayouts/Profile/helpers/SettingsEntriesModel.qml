@@ -167,7 +167,7 @@ SortFilterProxyModel {
         {
             subsection: Constants.settingsSubsection.language,
             text: qsTr("Language & Currency"),
-            icon: "language",
+            icon: "translate",
             group: root.preferencesGroupTitle,
             isExperimental: false
         },
