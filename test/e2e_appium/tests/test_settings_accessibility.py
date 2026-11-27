@@ -26,7 +26,7 @@ EXPECTED_MENU_ITEMS = {
     "7-MenuItem": "Language & Currency",
     "11-MenuItem": "Advanced",
     "12-MenuItem": "About",
-    SIGN_OUT: "Sign out & Quit",
+    SIGN_OUT: "Sign out",
 }
 
 
