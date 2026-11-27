@@ -307,6 +307,8 @@ proc init*(self: Controller) =
 
   self.events.on(SIGNAL_CHAT_THREADS_LOADING_FAILED) do(e: Args):
     let args = ChatThreadsLoadingFailedArgs(e)
+    if args.summariesRequested:
+      self.delegate.inlineLinkDataChanged($(%* {"chats": [args.chatId], "communities": []}))
     if self.chatId != args.chatId:
       return
     self.delegate.onChatThreadsLoadingFailed(args.summariesRequested)
@@ -488,8 +490,13 @@ proc getInlineThreadDetails*(self: Controller, chatId, threadId, messageId: stri
   if resolvedThreadId.len > 0 and canRead:
     self.messageService.asyncLoadChatThreadSummaries(chatId, notifyIfCached = false)
   let thread = self.messageService.getThreadById(chatId, resolvedThreadId)
+  # Reuse the existing reads and summary cache; no extra lookup for availability.
+  let contentUnavailable = canRead and (
+    (messageId.len > 0 and self.messageService.inlineMessageUnavailable(chatId, messageId)) or
+    (resolvedThreadId.len > 0 and self.messageService.inlineThreadUnavailable(chatId, resolvedThreadId)))
   return %* {"threadId": resolvedThreadId,
-    "threadName": (if canRead: thread.name else: ""), "noAccess": chat.id.len > 0 and not canRead}
+    "threadName": (if canRead: thread.name else: ""), "noAccess": chat.id.len > 0 and not canRead,
+    "contentUnavailable": contentUnavailable or (chat.id.len == 0 and (messageId.len > 0 or threadId.len > 0))}
 
 proc loadChatThreads*(self: Controller) =
   self.messageService.asyncLoadChatThreadSummaries(self.chatId)

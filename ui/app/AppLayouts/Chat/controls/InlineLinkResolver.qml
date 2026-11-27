@@ -38,6 +38,18 @@ QObject {
         return result
     }
 
+    // Refresh on activation too: access may have changed since the last render.
+    function refreshLink(url) {
+        for (let i = 0; i < entries.count; ++i) {
+            const entry = entries.objectAt(i)
+            if (entry?.modelData === url) {
+                entry.refreshAccess()
+                return entry.definition
+            }
+        }
+        return links[url] || null
+    }
+
     onParseLinkChanged: Qt.callLater(d.reset)
     onResolveLinkChanged: Qt.callLater(d.refresh)
     onRevisionChanged: Qt.callLater(d.reset)
@@ -83,27 +95,35 @@ QObject {
 
         function refresh(changes = null) {
             for (let i = 0; i < entries.count; ++i)
-                entries.objectAt(i)?.refresh(changes)
+                entries.objectAt(i)?.refresh?.(changes)
         }
         function reset() {
             for (let i = 0; i < entries.count; ++i) {
                 const entry = entries.objectAt(i)
-                if (entry) entry.parsedUrl = ""
+                if (entry?.refresh) {
+                    entry.parsedUrl = ""
+                    entry.refresh()
+                }
             }
-            refresh()
         }
 
         function format(data) {
             if (!data || !["community", "channel", "message", "thread"].includes(data.kind))
                 return null
+            if (data.noAccess) {
+                const context = data.communityId ? data.communityName : data.chatName
+                return {title: context || qsTr("No access"), emoji: "🔒",
+                    path: context ? [{text: qsTr("# no access")}] : [],
+                    trailingIcons: [], error: "noAccess"}
+            }
+            if (data.contentUnavailable)
+                return {title: qsTr("Content unavailable"), emoji: "⚠️", path: [], trailingIcons: [], error: "unavailable"}
             const community = !!data.communityId
             const path = []
             if (community && data.kind !== "community")
                 path.push({text: "# " + (data.chatName || qsTr("Unknown channel"))})
             if (data.kind === "thread" || data.threadId)
                 path.push({text: data.threadName || qsTr("Unknown thread name"), icon: "thread"})
-            if (data.noAccess)
-                path.push({text: qsTr("No access")})
             return {
                 title: community ? data.communityName || qsTr("Unknown community") : data.chatName || qsTr("Unknown chat"),
                 image: community ? data.communityImage || "" : data.chatImage || "",
@@ -136,7 +156,7 @@ QObject {
                     (["thread", "message"].includes(target.kind) && root.resolveLink && !fallbackData)))
                     return null
                 const noAccess = !!fallbackData?.noAccess || chat.item?.canView === false || community.item?.amIBanned === true
-                if (preview && !noAccess) {
+                if (preview && !noAccess && !fallbackData?.contentUnavailable) {
                     const result = Object.assign({}, preview)
                     result.trailingIcons = target?.kind === "message" ? [{image: Assets.svg("message-link")}] : []
                     result.title = target?.communityId ? community.item?.name || result.title : chat.item?.name || result.title

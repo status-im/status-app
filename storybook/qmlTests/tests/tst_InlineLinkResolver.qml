@@ -94,16 +94,16 @@ Item {
             })
             tryVerify(() => !!resolver.links[root.threadUrl])
             wait(0)
-            compare(resolver.links[root.threadUrl].path.some(part => part.text === "No access"), row.denied)
+            compare(resolver.links[root.threadUrl].path.some(part => part.text === "# no access"), row.denied)
             root.destinations = ({[root.threadUrl]: {kind: "thread", chatId: "group", chatName: "Travel", threadId: "thread", noAccess: true}})
             source.inlineLinkDataChanged({chats: {group: true}, communities: {}})
             wait(0)
-            verify(resolver.links[root.threadUrl].path.some(part => part.text === "No access"), "Access revocation must invalidate the stored preview")
+            verify(resolver.links[root.threadUrl].path.some(part => part.text === "# no access"), "Access revocation must invalidate the stored preview")
             verify(!resolver.links[root.threadUrl].path.some(part => part.text === "Plans"))
             root.destinations = ({[root.threadUrl]: {kind: "thread", chatId: "group", chatName: "Travel", threadId: "thread", threadName: "Renamed"}})
             source.inlineLinkDataChanged({chats: {group: true}, communities: {}})
             tryVerify(() => resolver.links[root.threadUrl].path.some(part => part.text === "Renamed"))
-            verify(!resolver.links[root.threadUrl].path.some(part => part.text === "No access"))
+            verify(!resolver.links[root.threadUrl].path.some(part => part.text === "# no access"))
         }
 
         function init() { root.destinations = ({}); root.resolveCalls = 0 }
@@ -234,8 +234,8 @@ Item {
             root.destinations = ({[root.channelUrl]: {kind: "channel", chatId: "chat", communityId: "community", noAccess: true}})
             chats.setProperty(0, "canView", false)
             if (!row.withPreview) tryCompare(root, "resolveCalls", calls + 1)
-            tryVerify(() => resolver.links[root.channelUrl].path.some(part => part.text === "No access"))
-            verify(resolver.links[root.channelUrl].path.some(part => part.text === "No access"))
+            tryVerify(() => resolver.links[root.channelUrl].path.some(part => part.text === "# no access"))
+            verify(resolver.links[root.channelUrl].path.some(part => part.text === "# no access"))
         }
 
         function test_communityThreadPreviewUsesCurrentName() {
@@ -374,9 +374,9 @@ Item {
             })
             tryVerify(() => !!resolver.links[root.threadUrl])
             compare(Object.keys(resolver.links).length, 1)
-            compare(resolver.links[root.threadUrl].title, "Unknown chat")
-            compare(resolver.links[root.threadUrl].path[0].text, "Unknown thread name")
-            compare(resolver.links[root.threadUrl].path[1].text, "No access")
+            compare(resolver.links[root.threadUrl].title, "No access")
+            compare(resolver.links[root.threadUrl].emoji, "🔒")
+            compare(resolver.links[root.threadUrl].path.length, 0)
         }
 
         function createMessage(text, previews = null) {
@@ -527,9 +527,9 @@ Item {
             verify(field)
             tryVerify(() => field.text.includes("Status App"))
             findChild(page, "inlineIntegrationNoAccess").checked = true
-            tryVerify(() => field.text.includes("No access"))
+            tryVerify(() => field.text.includes("# no access"))
             findChild(page, "inlineIntegrationUnknown").checked = true
-            tryVerify(() => field.text.includes("Unknown community"))
+            tryVerify(() => field.text.includes("No access"))
             for (let i = 0; i < page.examples.length; ++i)
                 verify(findChild(page, "inlineIntegrationMessage" + i))
         }

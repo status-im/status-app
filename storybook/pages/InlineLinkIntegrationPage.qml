@@ -62,7 +62,7 @@ SplitView {
                         textAppearance: MessageTextAppearance { theme: root.Theme }
                         previewAppearance: ReplyTextAppearance { theme: root.Theme }
                         messageStore: ChatStores.MessageStore {
-                            inlineLinkRevision: (noAccess.checked ? 1 : 0) + (unknown.checked ? 2 : 0)
+                            inlineLinkRevision: (noAccess.checked ? 1 : 0) + (unknown.checked ? 2 : 0) + (unavailable.checked ? 4 : 0)
                             function parseInlineLink(url) { return {url} }
                             function resolveInlineLink(target) {
                                 if (target.url !== example.modelData.url)
@@ -74,6 +74,7 @@ SplitView {
                                     data.threadName = ""
                                 }
                                 data.noAccess = noAccess.checked
+                                data.contentUnavailable = unavailable.checked
                                 return data
                             }
                         }
@@ -90,6 +91,7 @@ SplitView {
             spacing: 12
             CheckBox { id: withContext; text: "Embedded in a sentence"; checked: true }
             CheckBox { id: noAccess; objectName: "inlineIntegrationNoAccess"; text: "No access" }
+            CheckBox { id: unavailable; objectName: "inlineIntegrationUnavailable"; text: "Content unavailable" }
             CheckBox { id: unknown; objectName: "inlineIntegrationUnknown"; text: "Missing destination names" }
             Label { text: "Message width" }
             Slider { id: messageWidth; from: 160; to: 700; value: 600; Layout.fillWidth: true }

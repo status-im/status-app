@@ -14,7 +14,7 @@ Item {
 
     required property ChatTextItem textItem
     property list<chatTextSegment> sourceSegments
-    // URL -> { title, image?, path?: [{ text, icon? }], trailingIcons?: [iconName | {image}] }
+    // URL -> { title, image?, emoji?, path?: [{ text, icon? }], trailingIcons?: [iconName | {image}] }
     // Avatar + title are followed by optional breadcrumb entries and end icons.
     property var links: ({})
 
@@ -51,7 +51,8 @@ Item {
                     continue
                 let text = d.singleLine(link.title)
                 const offsets = [0]
-                const icons = [{avatar: true, name: text, image: link.image || ""}]
+                const icons = [link.emoji ? {emoji: link.emoji}
+                                         : {avatar: true, name: text, image: link.image || ""}]
                 for (const part of link.path || []) {
                     text += " › "
                     if (part.icon) {
@@ -105,7 +106,15 @@ Item {
             width: modelData.rect.width
             height: modelData.rect.height
             active: !!icon
-            sourceComponent: icon?.avatar ? avatarComponent : icon?.image ? imageComponent : glyphComponent
+            sourceComponent: icon?.emoji ? emojiComponent : icon?.avatar ? avatarComponent : icon?.image ? imageComponent : glyphComponent
+
+            Component {
+                id: emojiComponent
+                StatusEmoji {
+                    objectName: "inlineLinkEmoji"
+                    emoji: decoration.icon?.emoji || ""
+                }
+            }
 
             Component {
                 id: imageComponent
