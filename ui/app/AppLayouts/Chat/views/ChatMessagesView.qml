@@ -75,6 +75,7 @@ Item {
     property string chatId: ""
     property bool stickersLoaded: false
     property alias chatLogView: chatLogView
+    readonly property bool fillPlaceholderVisible: chatLogView.fillPlaceholderVisible
     property bool isContactBlocked: false
     property bool isChatBlocked: false
     property bool isOneToOne: false

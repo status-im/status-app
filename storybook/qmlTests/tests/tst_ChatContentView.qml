@@ -13,9 +13,8 @@ import AppLayouts.Chat.stores as ChatStores
 /*
  The per-chat shell and the section's shared messages view, wired the way
  ChatColumnView wires them: the view is reparented into the active chat's
- slot and bound to its message store. The shell's skeleton covers the slot
- until the view is there and while the backend fetches; the view keeps the
- rows that arrive meanwhile staged, so nothing paints underneath it.
+ slot and bound to its message store. The shell covers loading until the
+ view shows its own full-height skeleton and stages incoming rows.
 */
 Item {
     id: root
@@ -80,8 +79,12 @@ Item {
             id: harness
 
             property bool placed: true
+            property bool placeInSecondChat: false
+            property bool useSecondChatStore: false
+            readonly property ChatContentView activeShell: placeInSecondChat ? secondShell : shell
 
             readonly property alias shell: shell
+            readonly property alias secondShell: secondShell
             readonly property alias messagesView: messagesView
 
             width: 800
@@ -94,7 +97,23 @@ Item {
 
                 rootStore: rootStoreMock
                 chatContentModule: contentModuleMock
+                messagesView: messagesView
                 chatId: "chat-1"
+                chatType: Constants.chatType.oneToOne
+            }
+
+            ChatContentView {
+                id: secondShell
+
+                width: parent.width
+                height: parent.height
+                x: parent.width
+                visible: harness.placeInSecondChat
+
+                rootStore: rootStoreMock
+                chatContentModule: contentModuleMock
+                messagesView: messagesView
+                chatId: "chat-2"
                 chatType: Constants.chatType.oneToOne
             }
 
@@ -110,11 +129,12 @@ Item {
                 previewAppearance: root.previewAppearance
                 messageHeaderServices: root.messageHeaderServices
 
-                parent: harness.placed ? shell.messagesSlot : holder
+                parent: harness.placed && messageStore === harness.activeShell.messageStore
+                        ? harness.activeShell.messagesSlot : holder
                 anchors.fill: parent
 
                 rootStore: rootStoreMock
-                messageStore: shell.messageStore
+                messageStore: harness.useSecondChatStore ? secondShell.messageStore : shell.messageStore
                 chatContentModule: contentModuleMock
                 chatId: "chat-1"
                 isOneToOne: true
@@ -210,24 +230,27 @@ Item {
                       "the skeleton goes once the view is in the slot")
         }
 
-        // The skeleton also covers the backend fetch, and the rows arriving
-        // meanwhile stay staged under it - one batch, revealed once the fetch
-        // is done.
         function test_rowsStayHiddenWhileTheFetchRuns() {
             contentModuleMock.messagesModule.loading = true
 
-            const harness = createTemporaryObject(harnessComp, root)
+            const harness = createTemporaryObject(harnessComp, root, { placed: false })
             verify(!!harness)
+            compareSkeletons(harness.shell, true, false)
 
-            const skeleton = findChild(harness.shell, "chatMessagesSkeleton")
-            verify(!!skeleton)
-            verify(skeleton.visible, "the skeleton covers the fetch")
+            harness.placed = true
+            compareSkeletons(harness.shell, false, true)
+
+            // Leave the first fetch pending across several rendered frames.
+            for (let frame = 0; frame < 3; ++frame) {
+                verify(waitForRendering(harness.messagesView))
+                compareSkeletons(harness.shell, false, true)
+            }
 
             fillMessages(10)
-
             const view = harness.messagesView.chatLogView
 
             tryVerify(() => view.rowCount === 10, 5000, "the rows are in")
+            compareSkeletons(harness.shell, false, true)
             verify(view.busy, "and held while the fetch runs")
             compare(revealedRows(view), 0, "none of them shows")
 
@@ -235,8 +258,43 @@ Item {
 
             tryVerify(() => !view.busy && revealedRows(view) === 10, 5000,
                       "revealed together once the fetch is done")
-            tryVerify(() => !findChild(harness.shell, "chatMessagesSkeleton"), 5000,
-                      "and the skeleton is released")
+            compareSkeletons(harness.shell, false, false)
+        }
+
+        function test_emptyChatReleasesBothSkeletons() {
+            contentModuleMock.messagesModule.loading = true
+            const harness = createTemporaryObject(harnessComp, root)
+            verify(!!harness)
+            compareSkeletons(harness.shell, false, true)
+
+            contentModuleMock.messagesModule.loading = false
+            const view = harness.messagesView.chatLogView
+            tryCompare(view, "busy", false)
+            compare(view.rowCount, 0)
+            compareSkeletons(harness.shell, false, false)
+        }
+
+        function test_switchingChatsWaitsForTheActiveStore() {
+            contentModuleMock.messagesModule.loading = true
+            const harness = createTemporaryObject(harnessComp, root)
+            verify(!!harness)
+            compareSkeletons(harness.shell, false, true)
+
+            harness.placeInSecondChat = true
+            compareSkeletons(harness.secondShell, true, false)
+            verify(!harness.messagesView.visible, "the old store's view is parked")
+
+            harness.useSecondChatStore = true
+            compareSkeletons(harness.secondShell, false, true)
+            compareSkeletons(harness.shell, true, false)
+        }
+
+        function compareSkeletons(shell, outerVisible, fillVisible) {
+            const outer = findChild(shell, "chatMessagesSkeleton")
+            const fill = findChild(shell, "fillPlaceholder")
+            const fillRows = fill ? findChild(fill, "skeletonRows") : null
+            compare(outer?.visible ?? false, outerVisible, "shell skeleton visibility")
+            compare(fillRows?.visible ?? false, fillVisible, "full-height view skeleton visibility")
         }
 
         function revealedRows(view) {
