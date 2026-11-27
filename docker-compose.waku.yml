@@ -1,6 +1,6 @@
 services:
   boot-1:
-    image: wakuorg/nwaku:v0.39.2
+    image: quay.io/wakuorg/nwaku-pr:v0.41.0
     platform: linux/amd64
     ports:
       - "39001"
@@ -44,7 +44,7 @@ services:
       retries: 10
 
   store:
-    image: wakuorg/nwaku:v0.39.2
+    image: quay.io/wakuorg/nwaku-pr:v0.41.0
     platform: linux/amd64
     ports:
       - "39002"
@@ -90,7 +90,7 @@ services:
       retries: 10
 
   store-2:
-    image: wakuorg/nwaku:v0.39.2
+    image: quay.io/wakuorg/nwaku-pr:v0.41.0
     platform: linux/amd64
     ports:
       - "39003"
