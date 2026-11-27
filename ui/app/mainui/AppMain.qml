@@ -3060,6 +3060,11 @@ Item {
     StatusListView {
         id: toastArea
         objectName: "ephemeralNotificationList"
+
+        readonly property int toastLimit: appMain.isPortraitMode ? 2 : 3
+        onToastLimitChanged: appMain.rootStore.setEphemeralNotificationLimit(toastLimit)
+        Component.onCompleted: appMain.rootStore.setEphemeralNotificationLimit(toastLimit)
+
         anchors.right: parent.right
         anchors.rightMargin: 8
         anchors.bottom: parent.bottom

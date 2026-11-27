@@ -174,6 +174,10 @@ QtObject {
     // Notifications related properties and functions that shall be moved to `NotificationsRootStore`
     readonly property var ephemeralNotificationModel: internal.mainModuleInst.ephemeralNotificationModel
 
+    function setEphemeralNotificationLimit(limit: int) {
+        internal.mainModuleInst.setEphemeralNotificationLimit(limit)
+    }
+
     signal closePopupsRequested()
     signal showEphemeralNewsNotification(string newsTitle, string notificationId)
     signal playNotificationSound()
