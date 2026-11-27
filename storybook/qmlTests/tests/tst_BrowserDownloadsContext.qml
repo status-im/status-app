@@ -16,8 +16,11 @@ Item {
     width: 400
     height: 400
 
-    readonly property url downloadsContextUrl: Qt.resolvedUrl(
-        "../../../ui/app/AppLayouts/Browser/webview/BrowserDownloadsContext.qml")
+    Component {
+        id: downloadsContextComponent
+
+        BrowserDownloadsContext {}
+    }
 
     Component {
         id: mockStoreComponent
@@ -231,9 +234,7 @@ Item {
             openedUrls = []
             openedFileUrls = []
             supportsPdf = false
-            const component = Qt.createComponent(root.downloadsContextUrl)
-            verify(component.status === Component.Ready, component.errorString())
-            const ctx = createTemporaryObject(component, root, {
+            const ctx = createTemporaryObject(downloadsContextComponent, root, {
                 downloadsStore: store,
                 downloadUrlFn: function(wantOtr, url, fileName, token) {
                     reissues.push({ wantOtr: !!wantOtr, url: String(url),
@@ -587,7 +588,7 @@ Item {
             record.mimeType = "image/png"
 
             ctx.handlePillClicked(record)
-            compare(openedUrls.length, 1)
+            compare(openedFileUrls.length, 1)
             compare(store.dismissCalls, 0)
             compare(store.downloadStripModel.length, 1)
             verify(ctx.stripVisible, "the pill stays after opening it")
@@ -640,7 +641,7 @@ Item {
             compare(openedUrls.length, 0, "no player page navigation on this Backend")
             compare(openedFileUrls.length, 1)
             verify(openedFileUrls[0].url.indexOf("tune.mp3") >= 0)
-            compare(openedFileUrls[0].readAccess, "", "empty grant = the file's own directory")
+            compare(openedFileUrls[0].readAccess, openedFileUrls[0].url, "the file is its own grant")
 
             // Flipping the Capability back restores the player-page route.
             ctx.d.openContext.mediaPlayerPageRequired = true

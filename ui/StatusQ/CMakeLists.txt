@@ -490,7 +490,7 @@ if(IOS OR ANDROID OR CMAKE_SYSTEM_NAME MATCHES "Darwin")
       MobileWebView
 
       GIT_REPOSITORY https://github.com/status-im/mobilewebview.git
-      GIT_TAG 004549ca35c696c319d2c359893720142ac4fc18
+      GIT_TAG 1703d4797a09f7f53736670f6e7094747ad15513
       SOURCE_SUBDIR mobilewebview
     )
     FetchContent_MakeAvailable(MobileWebView)
@@ -547,8 +547,10 @@ if(NOT (IOS OR ANDROID))
     if(TARGET Qt::WebEngineQuick)
         target_sources(StatusQ PRIVATE
             include/StatusQ/browsercertdistrust.h
+            include/StatusQ/browserlocalfilegrants.h
             include/StatusQ/browserprofileutils.h
             src/browsercertdistrust.cpp
+            src/browserlocalfilegrants.cpp
             src/browserprofileutils.cpp
         )
         target_link_libraries(StatusQ PRIVATE Qt::WebEngineQuick)

@@ -40,6 +40,10 @@ Item {
     // Desktop only: mobile Backends host no separate render process.
     property bool crashed: false
 
+    // The Opened File a Preview Tab shows, or failed to show; "" otherwise.
+    property string openedFilePath: ""
+    property bool openFailed: false
+
     // === Capability Flags ===
     required property bool supportsZoom
     required property bool supportsDevTools

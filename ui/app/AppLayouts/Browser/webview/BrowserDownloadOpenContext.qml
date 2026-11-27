@@ -22,21 +22,22 @@ import "DownloadFormatUtils.js" as DownloadFormatUtils
  * a plain per-call input.
  *
  * openInBrowser() makes the open-route choice: a generated player page for
- * media (only where the Backend needs one — otherwise the media file itself
- * via openFileUrlFn), a direct navigation for everything else. A false return
- * means "not renderable here" — the caller hands the file to the OS.
+ * media where the Backend needs one, otherwise the file itself via
+ * openFileUrlFn, read-granted to itself alone. A false return means "not
+ * renderable here" — the caller hands the file to the OS.
  */
 QtObject {
     id: root
 
-    /// Opens a URL in the browser; injected by the owner.
-    property var openUrlFn: function(url) {
+    /// Opens a URL in the browser; injected by the owner. openedFilePath names
+    /// the Opened File the Tab shows, "" for a Download.
+    property var openUrlFn: function(url, openedFilePath) {
         console.warn("BrowserDownloadOpenContext: openUrlFn not set")
     }
 
-    /// Opens a local file with a read grant for a directory (AbstractWebView
+    /// Opens a local file with a read grant for it or a directory (AbstractWebView
     /// loadFileUrl); empty readAccessUrl means the file's own directory.
-    property var openFileUrlFn: function(fileUrl, readAccessUrl) {
+    property var openFileUrlFn: function(fileUrl, readAccessUrl, openedFilePath) {
         console.warn("BrowserDownloadOpenContext: openFileUrlFn not set")
     }
 
@@ -48,6 +49,11 @@ QtObject {
     // Text file reader; reads qrc: and file: alike. Tests inject a fake.
     property var readTextFileFn: function(path) {
         return StringUtils.readTextFile(path)
+    }
+
+    // Existence probe for an Opened File; tests inject a fake.
+    property var fileExistsFn: function(path) {
+        return SystemUtils.fileExists(path)
     }
 
     // Directory create; injectable so Storybook/unit tests need not stub SystemUtils.
@@ -84,6 +90,22 @@ QtObject {
         Qt.resolvedUrl("player/media_player.js")
 
     readonly property QtObject d: QtObject {
+
+        /// The player page where the Backend needs one, otherwise the file
+        /// itself, read-granted to itself alone.
+        function open(record, fileUrl, openedFilePath) {
+            if (root.mediaPlayerPageRequired
+                    && DownloadFormatUtils.isPlayableMedia(record.mimeType, record.fileName,
+                                                           root.proprietaryCodecsSupported)) {
+                const page = root.mediaPlayerPageUrl(record)
+                if (!page)
+                    return false
+                root.openUrlFn(page, openedFilePath)
+                return true
+            }
+            root.openFileUrlFn(fileUrl, fileUrl, openedFilePath)
+            return true
+        }
 
         property string mediaPlayerTemplateCache: ""
 
@@ -172,24 +194,25 @@ QtObject {
         const path = record.targetPath
         if (!path)
             return false
+        return d.open(record, UrlUtils.urlFromUserInput(path), "")
+    }
 
-        if (DownloadFormatUtils.isPlayableMedia(record.mimeType, record.fileName,
-                                               root.proprietaryCodecsSupported)) {
-            // Backends that play a directly loaded file get the file itself,
-            // read-granted to its own directory (empty = the narrowest grant).
-            if (!root.mediaPlayerPageRequired) {
-                root.openFileUrlFn(UrlUtils.urlFromUserInput(path), "")
-                return true
-            }
-            const page = mediaPlayerPageUrl(record)
-            if (!page)
-                return false
-            root.openUrlFn(page)
-            return true
+    /// An Opened File through the same allowlist and player page as a Record,
+    /// read-granted to the file alone. False when it cannot be shown here.
+    function openOpenedFile(fileUrl, supportsPdf) {
+        const path = UrlUtils.convertUrlToLocalPath(fileUrl)
+        if (!path || !root.fileExistsFn(path))
+            return false
+        const record = {
+            targetPath: path,
+            fileName: DownloadFormatUtils.fileNameOf(path),
+            mimeType: "",
+            missingFile: false,
+            state: AbstractWebView.DownloadState.DownloadCompleted
         }
-
-        root.openUrlFn(UrlUtils.urlFromUserInput(path))
-        return true
+        if (!canOpenInBrowser(record, supportsPdf))
+            return false
+        return d.open(record, fileUrl, path)
     }
 
     /// Write (and reuse) a player page for a downloaded media Record and return its

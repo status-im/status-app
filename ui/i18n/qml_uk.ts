@@ -2718,6 +2718,10 @@ from &quot;%1&quot; to &quot;%2&quot;</source>
 <context>
     <name>BrowserLayout</name>
     <message>
+        <source>Couldn&apos;t open the file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Server&apos;s certificate not trusted</source>
         <translation>Сертифікат сервера не є довіреним</translation>
     </message>
@@ -2861,6 +2865,10 @@ Do you wish to override the security check and continue?</source>
     <message>
         <source>Find in page</source>
         <translation>Знайти на сторінці</translation>
+    </message>
+    <message>
+        <source>Copy file path</source>
+        <translation type="unfinished">Копіювати шлях до файлу</translation>
     </message>
     <message>
         <source>Developer Tools</source>
@@ -12245,6 +12253,10 @@ to load</source>
         <translation>Знайти на сторінці</translation>
     </message>
     <message>
+        <source>Share file</source>
+        <translation type="unfinished">Поділитися файлом</translation>
+    </message>
+    <message>
         <source>Zoom</source>
         <translation>Масштаб</translation>
     </message>
@@ -13040,6 +13052,17 @@ to load</source>
     <message>
         <source>Fetching credentials failed.</source>
         <translation>Не вдалося отримати облікові дані.</translation>
+    </message>
+</context>
+<context>
+    <name>OpenFailedPage</name>
+    <message>
+        <source>Couldn&apos;t open the file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>View supported formats</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

@@ -1,6 +1,8 @@
 import QtQuick
 import QtTest
 
+import AppLayouts.Browser.webview
+
 /**
  * The Supported formats report (ADR 0006 §8): Backend Capabilities and the
  * shared allowlist answer first, the engine probe may take a format away.
@@ -10,8 +12,11 @@ import QtTest
 Item {
     id: root
 
-    readonly property url formatContextUrl: Qt.resolvedUrl(
-        "../../../ui/app/AppLayouts/Browser/webview/BrowserFormatSupportContext.qml")
+    Component {
+        id: formatContextComponent
+
+        BrowserFormatSupportContext {}
+    }
 
     TestCase {
         name: "BrowserFormatSupportContext"
@@ -21,9 +26,7 @@ Item {
 
         function createContext(answers) {
             lastScript = ""
-            const component = Qt.createComponent(root.formatContextUrl)
-            verify(component.status === Component.Ready, component.errorString())
-            const ctx = createTemporaryObject(component, root)
+            const ctx = createTemporaryObject(formatContextComponent, root)
             ctx.inPageMediaPlaybackSupported = true
             ctx.proprietaryCodecsSupported = false
             ctx.supportsPdf = true

@@ -1,5 +1,6 @@
 #include "StatusQ/browserprofileutils.h"
 #include "StatusQ/browsercertdistrust.h"
+#include "StatusQ/browserlocalfilegrants.h"
 
 #include <QtWebEngineQuick/qquickwebengineprofile.h>
 #include <QtWebEngineCore/QWebEngineCookieStore>
@@ -9,8 +10,6 @@
 #include <QtWebEngineCore/QWebEngineUrlRequestInfo>
 #include <QtWebEngineCore/QWebEngineUrlRequestInterceptor>
 
-#include <QDir>
-#include <QFileInfo>
 #include <QNetworkCookie>
 #include <QPointer>
 #include <QSet>
@@ -179,33 +178,13 @@ private:
 // Keep in sync with BrowserDownloadOpenContext.mediaPlayerDirectory (QML).
 constexpr char kMediaPlayerDirName[] = "status-browser-player";
 
-// Resolve symlinks so the two allowed roots and the requested path are compared
-// in the same form (macOS TempLocation is /var/... -> /private/var/...).
-// canonicalFilePath() is empty for paths that do not exist, hence the fallback.
-QString canonicalPath(const QString &path)
-{
-    if (path.isEmpty())
-        return {};
-    const QString canonical = QFileInfo(path).canonicalFilePath();
-    return canonical.isEmpty() ? QDir::cleanPath(QDir(path).absolutePath()) : canonical;
-}
-
-// Canonicalize the (existing) parent and append the leaf, so the root resolves
-// even before the leaf is created — the player directory is written lazily, and
-// canonicalizing it while absent would leave /var/... unresolved and then fail
-// to match the /private/var/... form the same request arrives in later.
-QString canonicalSubDir(const QString &parent, const QString &leaf)
-{
-    const QString root = canonicalPath(parent);
-    return root.isEmpty() ? QString() : root + QLatin1Char('/') + leaf;
-}
-
 // The Backend's local-browsing policy, split by what the profile is for
 // (ADR 0006 §8). A browsing profile reaches no file:// at all — typing a local
 // path in the address bar dead-ends. The local-preview profile, which backs
 // only the tabs that display a downloaded file, reaches the two directories the
 // browser itself writes: the platform downloads location (Download Targets) and
-// the temp directory holding generated player pages. Owned here rather than
+// the temp directory holding generated player pages, plus each preview Tab's
+// own Read Grant (the file it shows, wherever it lives). Owned here rather than
 // injected from QML so both Backends keep the policy library-side; mobilewebview
 // has the equivalent guard.
 //
@@ -214,8 +193,8 @@ QString canonicalSubDir(const QString &parent, const QString &leaf)
 // alone so a player page can load the media it points at; Chromium already
 // forbids web origins from reaching file:// subresources.
 //
-// Stateless after construction (a mode and two const roots computed on the UI
-// thread), so it is safe whichever thread WebEngine calls interceptRequest on.
+// The mode and the two roots are fixed at construction and the grants lock
+// themselves, so it is safe whichever thread WebEngine calls interceptRequest on.
 class LocalUrlPolicyInterceptor final : public QWebEngineUrlRequestInterceptor
 {
 public:
@@ -224,14 +203,16 @@ public:
         AllowDownloadedFiles // the local-preview profile
     };
 
-    explicit LocalUrlPolicyInterceptor(Mode mode, QObject *parent = nullptr)
+    explicit LocalUrlPolicyInterceptor(Mode mode, const BrowserLocalFileGrants *grants = nullptr,
+                                       QObject *parent = nullptr)
         : QWebEngineUrlRequestInterceptor(parent)
         , m_mode(mode)
-        , m_downloadsDir(canonicalPath(
+        , m_grants(grants)
+        , m_downloadsDir(BrowserLocalFileGrants::canonicalPath(
               QStandardPaths::writableLocation(QStandardPaths::DownloadLocation)))
-        , m_playerDir(canonicalSubDir(
-              QStandardPaths::writableLocation(QStandardPaths::TempLocation),
-              QLatin1String(kMediaPlayerDirName)))
+        , m_playerDir(BrowserLocalFileGrants::canonicalPath(
+              QStandardPaths::writableLocation(QStandardPaths::TempLocation)
+              + QLatin1Char('/') + QLatin1String(kMediaPlayerDirName)))
     {
     }
 
@@ -258,19 +239,16 @@ private:
     {
         if (m_mode == Mode::DenyLocalFiles)
             return false;
-        const QString path = canonicalPath(localFile);
+        const QString path = BrowserLocalFileGrants::canonicalPath(localFile);
         if (path.isEmpty())
             return false;
-        return isUnder(path, m_downloadsDir) || isUnder(path, m_playerDir);
-    }
-
-    static bool isUnder(const QString &path, const QString &dir)
-    {
-        // The trailing separator keeps "/home/user/Downloads-evil" out.
-        return !dir.isEmpty() && path.startsWith(dir + QLatin1Char('/'));
+        return BrowserLocalFileGrants::isUnder(path, m_downloadsDir)
+            || BrowserLocalFileGrants::isUnder(path, m_playerDir)
+            || (m_grants && m_grants->covers(path));
     }
 
     const Mode m_mode;
+    const BrowserLocalFileGrants *const m_grants;
     const QString m_downloadsDir;
     const QString m_playerDir;
 };
@@ -323,6 +301,7 @@ struct BrowserProfileUtils::DownloadHelper
 
 BrowserProfileUtils::BrowserProfileUtils(QObject *parent)
     : QObject(parent)
+    , m_localFileGrants(new BrowserLocalFileGrants(this))
 {
 }
 
@@ -356,7 +335,7 @@ QWebEngineUrlRequestInterceptor *BrowserProfileUtils::browsingUrlPolicy()
 {
     if (!m_browsingUrlPolicy)
         m_browsingUrlPolicy = new LocalUrlPolicyInterceptor(
-            LocalUrlPolicyInterceptor::Mode::DenyLocalFiles, this);
+            LocalUrlPolicyInterceptor::Mode::DenyLocalFiles, nullptr, this);
     return m_browsingUrlPolicy;
 }
 
@@ -364,7 +343,7 @@ QWebEngineUrlRequestInterceptor *BrowserProfileUtils::localPreviewUrlPolicy()
 {
     if (!m_localPreviewUrlPolicy)
         m_localPreviewUrlPolicy = new LocalUrlPolicyInterceptor(
-            LocalUrlPolicyInterceptor::Mode::AllowDownloadedFiles, this);
+            LocalUrlPolicyInterceptor::Mode::AllowDownloadedFiles, m_localFileGrants, this);
     return m_localPreviewUrlPolicy;
 }
 
@@ -389,6 +368,15 @@ void BrowserProfileUtils::installBrowsingUrlPolicy(QObject *profile)
 
     webProfile->setUrlRequestInterceptor(browsingUrlPolicy());
     installDefaultProfileFallback(webProfile);
+}
+
+void BrowserProfileUtils::grantFileRead(QObject *view, const QUrl &readAccessUrl)
+{
+    if (!view || !readAccessUrl.isLocalFile()) {
+        qWarning("BrowserProfileUtils::grantFileRead: expected a view and a local file URL");
+        return;
+    }
+    m_localFileGrants->grant(view, readAccessUrl.toLocalFile());
 }
 
 void BrowserProfileUtils::installLocalPreviewUrlPolicy(QObject *profile)

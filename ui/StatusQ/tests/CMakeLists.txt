@@ -175,4 +175,8 @@ if(NOT ANDROID AND NOT IOS)
     qt_add_executable(TestRestartApplication src/tst_restartapplication.cpp)
     target_link_libraries(TestRestartApplication PRIVATE Qt::Test Qt::Network Qt::Quick StatusQ)
     add_test(NAME TestRestartApplication COMMAND TestRestartApplication)
+
+    qt_add_executable(TestBrowserLocalFileGrants src/tst_browserlocalfilegrants.cpp)
+    target_link_libraries(TestBrowserLocalFileGrants PRIVATE Qt::Test StatusQ)
+    add_test(NAME TestBrowserLocalFileGrants COMMAND TestBrowserLocalFileGrants)
 endif()

@@ -67,16 +67,38 @@ StatusSectionLayout {
     /// params keep it out of the browsing context — its own ephemeral profile,
     /// no injected scripts, no web channel, and the only profile that may reach
     /// file:// at all. `url` is a file URL, or the generated media player page.
-    function openLocalPreviewInNewTab(url) {
-        Qt.callLater(() => _internal.addLocalPreviewTab(url))
+    function openLocalPreviewInNewTab(url, openedFilePath = "") {
+        Qt.callLater(() => {
+            const tab = _internal.addLocalPreviewTab(url)
+            if (tab)
+                tab.openedFilePath = openedFilePath
+        })
     }
 
-    /// Local preview loaded through loadFileUrl, read-granted to a directory.
-    function openLocalPreviewFileInNewTab(fileUrl, readAccessUrl) {
+    /// Local preview loaded through loadFileUrl, read-granted to the file or a directory.
+    function openLocalPreviewFileInNewTab(fileUrl, readAccessUrl, openedFilePath = "") {
         Qt.callLater(() => {
             const tab = _internal.addLocalPreviewTab("")
-            if (tab)
-                tab.loadFileUrl(fileUrl, readAccessUrl || "")
+            if (!tab)
+                return
+            tab.openedFilePath = openedFilePath
+            tab.loadFileUrl(fileUrl, readAccessUrl || "")
+        })
+    }
+
+    /// An Opened File in a Preview Tab, or a Preview Tab saying it could not
+    /// be opened; never handed back to the OS.
+    function openOpenedFile(fileUrl, refused) {
+        if (!refused && downloadsContext.openOpenedFile(fileUrl))
+            return
+        const path = fileUrl ? UrlUtils.convertUrlToLocalPath(fileUrl) : ""
+        Qt.callLater(() => {
+            const tab = _internal.addLocalPreviewTab(
+                "", DownloadFormatUtils.fileNameOf(path) || qsTr("Couldn't open the file"))
+            if (!tab)
+                return
+            tab.openedFilePath = path
+            tab.openFailed = true
         })
     }
 
@@ -186,6 +208,9 @@ StatusSectionLayout {
 
         readonly property Item currentWebView: webViewContext.currentWebView
         readonly property bool currentTabIncognito: currentWebView?.incognito ?? false
+        // The file the current Tab shows, when it is an Opened File it could show.
+        readonly property string currentOpenedFilePath:
+            currentWebView && !currentWebView.openFailed ? (currentWebView.openedFilePath ?? "") : ""
         readonly property bool currentTabLoading: currentWebView?.loading ?? false
         property real lastScrollPos: 0
         property bool scrolledUp: true
@@ -281,9 +306,9 @@ StatusSectionLayout {
             return tab;
         }
 
-        function addLocalPreviewTab(url) {
+        function addLocalPreviewTab(url, title = "") {
             return webViewContext.createEmptyTab(
-                browserConfig.localPreviewProfileParams, false, true, url, "")
+                browserConfig.localPreviewProfileParams, false, true, url, title)
         }
 
         function addNewEmptyTab() {
@@ -399,9 +424,9 @@ StatusSectionLayout {
         onDownloadAttributed: (view) => _internal.closeDownloadOnlyTab(view)
         hideFindUiFn: () => _internal.hideFindBar()
         // Both only ever carry local files (a downloaded file, a player page).
-        openUrlFn: (url) => root.openLocalPreviewInNewTab(url)
-        openFileUrlFn: (fileUrl, readAccessUrl) =>
-            root.openLocalPreviewFileInNewTab(fileUrl, readAccessUrl)
+        openUrlFn: (url, openedFilePath) => root.openLocalPreviewInNewTab(url, openedFilePath)
+        openFileUrlFn: (fileUrl, readAccessUrl, openedFilePath) =>
+            root.openLocalPreviewFileInNewTab(fileUrl, readAccessUrl, openedFilePath)
         supportsPdfFn: () => BrowserBackendCapabilities.pdfViewerSupported
     }
 
@@ -692,8 +717,8 @@ StatusSectionLayout {
             visible: !overlayLoader.active
         }
 
-        // Overlay for EmptyWebPage (no URL) and CrashedWebPage (dead render
-        // process). Downloads List lives in Open tabs only.
+        // Overlay for EmptyWebPage (no URL), CrashedWebPage (dead render
+        // process) and OpenFailedPage. Downloads List lives in Open tabs only.
         Loader {
             Layout.fillHeight: true
             Layout.fillWidth: true
@@ -701,10 +726,17 @@ StatusSectionLayout {
 
             readonly property int contentMode: webViewContext.currentContentMode
             visible: active
-            active: contentMode === BrowserWebViewContext.ContentMode.EmptyContent
-                    || contentMode === BrowserWebViewContext.ContentMode.CrashedContent
-            sourceComponent: contentMode === BrowserWebViewContext.ContentMode.CrashedContent
-                             ? crashedPageComponent : emptyPageComponent
+            active: contentMode !== BrowserWebViewContext.ContentMode.WebContent
+            sourceComponent: {
+                switch (contentMode) {
+                case BrowserWebViewContext.ContentMode.CrashedContent:
+                    return crashedPageComponent
+                case BrowserWebViewContext.ContentMode.OpenFailedContent:
+                    return openFailedPageComponent
+                default:
+                    return emptyPageComponent
+                }
+            }
         }
     }
 
@@ -749,6 +781,14 @@ StatusSectionLayout {
         id: crashedPageComponent
         CrashedWebPage {
             onReloadRequested: _internal.currentWebView?.reload()
+        }
+    }
+
+    Component {
+        id: openFailedPageComponent
+        OpenFailedPage {
+            fileName: DownloadFormatUtils.fileNameOf(_internal.currentWebView?.openedFilePath ?? "")
+            onSupportedFormatsRequested: _internal.openSupportedFormats()
         }
     }
 
@@ -822,6 +862,8 @@ StatusSectionLayout {
         browserSettings: localAccountSettings
         clearingBrowsingData: _internal.currentWebView?.clearing ?? false
         clearSiteDataSupported: _internal.currentWebView?.clearSiteDataSupported ?? true
+        canCopyFilePath: _internal.currentOpenedFilePath !== ""
+        onCopyFilePath: root.downloadsStore.sharePath(_internal.currentOpenedFilePath)
         onForceReload: webViewContext.forceReloadCurrent()
         onClearSiteData: webViewContext.clearSiteDataCurrent()
         onClearBrowsingData: root.clearBrowsingDataOnCurrentTab()
@@ -855,6 +897,8 @@ StatusSectionLayout {
 
         clearSiteDataSupported: _internal.currentWebView?.clearSiteDataSupported ?? false
         clearing: _internal.currentWebView?.clearing ?? false
+        canShareFile: _internal.currentOpenedFilePath !== ""
+        onShareFileRequested: root.downloadsStore.sharePath(_internal.currentOpenedFilePath)
         onForceReload: webViewContext.forceReloadCurrent()
         onClearSiteData: webViewContext.clearSiteDataCurrent()
         onClearBrowsingData: root.clearBrowsingDataOnCurrentTab()

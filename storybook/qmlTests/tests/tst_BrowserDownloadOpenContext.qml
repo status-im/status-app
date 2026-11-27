@@ -4,6 +4,7 @@ import QtTest
 import StatusQ.Internal
 
 import AppLayouts.Browser.adapters
+import AppLayouts.Browser.webview
 
 /**
  * The open-a-downloaded-file seam (ADR 0006 §8): render/media allowlist and
@@ -14,8 +15,11 @@ import AppLayouts.Browser.adapters
 Item {
     id: root
 
-    readonly property url openContextUrl: Qt.resolvedUrl(
-        "../../../ui/app/AppLayouts/Browser/webview/BrowserDownloadOpenContext.qml")
+    Component {
+        id: openContextComponent
+
+        BrowserDownloadOpenContext {}
+    }
 
     TestCase {
         name: "BrowserDownloadOpenContext"
@@ -23,19 +27,24 @@ Item {
 
         property var openedUrls: []
         property var openedFileUrls: []
+        property var openedPaths: []
 
         function createContext() {
             openedUrls = []
             openedFileUrls = []
-            const component = Qt.createComponent(root.openContextUrl)
-            verify(component.status === Component.Ready, component.errorString())
-            const ctx = createTemporaryObject(component, root)
+            openedPaths = []
+            const ctx = createTemporaryObject(openContextComponent, root)
             ctx.mediaPlayerDirectory = "/tmp/status-player"
             ctx.ensureDirectoryFn = function(path) { return true }
             ctx.writeTextFileFn = function(path, data) { return true }
-            ctx.openUrlFn = (url) => openedUrls.push(String(url))
-            ctx.openFileUrlFn = (fileUrl, readAccessUrl) => openedFileUrls.push(
-                { url: String(fileUrl), readAccess: String(readAccessUrl || "") })
+            ctx.openUrlFn = (url, openedFilePath) => {
+                openedUrls.push(String(url))
+                openedPaths.push(openedFilePath || "")
+            }
+            ctx.openFileUrlFn = (fileUrl, readAccessUrl, openedFilePath) => {
+                openedFileUrls.push({ url: String(fileUrl), readAccess: String(readAccessUrl || "") })
+                openedPaths.push(openedFilePath || "")
+            }
             // The player page is what the desktop Backend needs; tests that
             // exercise the direct route flip this Capability themselves.
             ctx.mediaPlayerPageRequired = true
@@ -270,19 +279,22 @@ Item {
             verify(openedUrls[0].startsWith("file:///tmp/status-player/player-"))
             verify(openedUrls[0].endsWith(".html"))
 
-            // Static route: direct navigation to the Download Target.
+            // Static route: the Download Target itself, read-granted to itself.
             verify(ctx.openInBrowser(completed("image/png", "photo.png"), false))
-            compare(openedUrls.length, 2)
-            verify(openedUrls[1].indexOf("photo.png") >= 0)
+            compare(openedUrls.length, 1)
+            compare(openedFileUrls.length, 1)
+            verify(openedFileUrls[0].url.endsWith("/tmp/downloads/photo.png"))
+            compare(openedFileUrls[0].readAccess, openedFileUrls[0].url)
+            compare(openedPaths, ["", ""], "a Download's Tab is no Opened File")
 
             // Not renderable here → false: the caller hands off to the OS.
             verify(!ctx.openInBrowser(completed("application/octet-stream", "a.bin"), true))
-            compare(openedUrls.length, 2)
+            compare(openedUrls.length + openedFileUrls.length, 2)
 
             // No player page (write failed) → false, same OS handoff.
             ctx.writeTextFileFn = function() { return false }
             verify(!ctx.openInBrowser(completed("video/webm", "b.webm"), false))
-            compare(openedUrls.length, 2)
+            compare(openedUrls.length + openedFileUrls.length, 2)
         }
 
         /// The player page is a Backend workaround, so the route follows the
@@ -300,32 +312,72 @@ Item {
             compare(openedFileUrls.length, 1)
             verify(openedFileUrls[0].url.startsWith("file://"))
             verify(openedFileUrls[0].url.endsWith("/tmp/downloads/tune.mp3"))
-            // Empty read access = the file's own directory, the narrowest grant.
-            compare(openedFileUrls[0].readAccess, "")
-
-            // Non-media is unaffected: still a plain navigation.
-            verify(ctx.openInBrowser(completed("image/png", "photo.png"), false))
-            compare(openedFileUrls.length, 1)
-            compare(openedUrls.length, 1)
-            verify(openedUrls[0].indexOf("photo.png") >= 0)
+            compare(openedFileUrls[0].readAccess, openedFileUrls[0].url)
 
             // Flipping the Capability back restores the player-page route —
             // the fallback stays one property away.
             ctx.mediaPlayerPageRequired = true
             verify(ctx.openInBrowser(completed("audio/mpeg", "tune.mp3"), false))
             compare(openedFileUrls.length, 1)
-            compare(openedUrls.length, 2)
-            verify(openedUrls[1].startsWith("file:///tmp/status-player/player-"))
+            compare(openedUrls.length, 1)
+            verify(openedUrls[0].startsWith("file:///tmp/status-player/player-"))
             compare(written, 1)
         }
 
         /// The Capability is a Backend fact, not a platform check.
         function test_mediaPlayerPageRequired_defaultsToTheBackendCapability() {
-            const component = Qt.createComponent(root.openContextUrl)
-            verify(component.status === Component.Ready, component.errorString())
-            const ctx = createTemporaryObject(component, root)
+            const ctx = createTemporaryObject(openContextComponent, root)
             compare(ctx.mediaPlayerPageRequired,
                     BrowserBackendCapabilities.mediaPlayerPageRequired)
+        }
+
+        /// An Opened File: a context whose probe sees exactly these paths.
+        function openedFileContext(existing) {
+            const ctx = createContext()
+            ctx.fileExistsFn = (path) => existing.indexOf(path) >= 0
+            return ctx
+        }
+
+        function test_openOpenedFile_grantsTheFileAlone() {
+            const ctx = openedFileContext(["/Users/me/My Docs/a b.txt"])
+
+            verify(ctx.openOpenedFile("file:///Users/me/My Docs/a b.txt", false))
+
+            compare(openedFileUrls.length, 1)
+            compare(openedFileUrls[0].url, "file:///Users/me/My Docs/a b.txt")
+            compare(openedFileUrls[0].readAccess, "file:///Users/me/My Docs/a b.txt")
+            compare(openedPaths, ["/Users/me/My Docs/a b.txt"])
+            compare(openedUrls.length, 0)
+        }
+
+        function test_openOpenedFile_refusesWhatATabCannotShow() {
+            const ctx = openedFileContext(["/Users/me/setup.exe", "/Users/me/a.pdf"])
+
+            verify(!ctx.openOpenedFile("file:///Users/me/setup.exe", true))
+            verify(!ctx.openOpenedFile("file:///Users/me/a.pdf", false))
+            verify(ctx.openOpenedFile("file:///Users/me/a.pdf", true))
+            compare(openedFileUrls.length, 1)
+        }
+
+        function test_openOpenedFile_refusesAFileThatIsGone() {
+            const ctx = openedFileContext([])
+
+            verify(!ctx.openOpenedFile("file:///Users/me/a.txt", false))
+            compare(openedFileUrls.length, 0)
+        }
+
+        function test_openOpenedFile_playsMediaThroughThePlayerPage() {
+            const ctx = openedFileContext(["/Users/me/song.mp3"])
+
+            verify(ctx.openOpenedFile("file:///Users/me/song.mp3", false))
+            compare(openedUrls.length, 1)
+            verify(openedUrls[0].indexOf("/tmp/status-player/") >= 0, openedUrls[0])
+            compare(openedPaths, ["/Users/me/song.mp3"])
+            compare(openedFileUrls.length, 0)
+
+            ctx.mediaPlayerPageRequired = false
+            verify(ctx.openOpenedFile("file:///Users/me/song.mp3", false))
+            compare(openedFileUrls[0].readAccess, "file:///Users/me/song.mp3")
         }
     }
 }

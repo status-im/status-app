@@ -128,6 +128,12 @@ function isVideoMedia(mimeType, fileName) {
             || name.endsWith(".mp4") || name.endsWith(".m4v")
 }
 
+/// The last segment of a local path; "" for none.
+function fileNameOf(path) {
+    const s = String(path || "")
+    return s.substring(s.lastIndexOf("/") + 1)
+}
+
 /// Middle-elide the base name, then keep the extension (pill + list).
 function elideFileName(fileName, maxLength) {
     if (!fileName)

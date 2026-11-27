@@ -2706,6 +2706,10 @@ de &quot;%1&quot; à &quot;%2&quot;</translation>
 <context>
     <name>BrowserLayout</name>
     <message>
+        <source>Couldn&apos;t open the file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Server&apos;s certificate not trusted</source>
         <translation>Le certificat du serveur n’est pas approuvé</translation>
     </message>
@@ -2848,6 +2852,10 @@ Do you wish to override the security check and continue?</source>
     <message>
         <source>Find in page</source>
         <translation>Rechercher dans la page</translation>
+    </message>
+    <message>
+        <source>Copy file path</source>
+        <translation type="unfinished">Copier le chemin du fichier</translation>
     </message>
     <message>
         <source>Developer Tools</source>
@@ -12175,6 +12183,10 @@ chargement</translation>
         <translation>Rechercher dans la page</translation>
     </message>
     <message>
+        <source>Share file</source>
+        <translation type="unfinished">Partager le fichier</translation>
+    </message>
+    <message>
         <source>Zoom</source>
         <translation>Zoomer</translation>
     </message>
@@ -12968,6 +12980,17 @@ chargement</translation>
     <message>
         <source>Fetching credentials failed.</source>
         <translation>La récupération des identifiants a échoué.</translation>
+    </message>
+</context>
+<context>
+    <name>OpenFailedPage</name>
+    <message>
+        <source>Couldn&apos;t open the file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>View supported formats</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
