@@ -39,6 +39,15 @@ method getWakuV2LightClientEnabled*(self: AccessInterface): bool {.base.} =
 method setWakuV2LightClientEnabled*(self: AccessInterface, enabled: bool): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method getMessagingBackend*(self: AccessInterface): string {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method setMessagingBackend*(self: AccessInterface, backend: string): bool {.base.} =
+  raise newException(ValueError, "No implementation available")
+
+method isMessagingBackendOverridden*(self: AccessInterface): bool {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method isDebugEnabled*(self: AccessInterface): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 

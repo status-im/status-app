@@ -315,6 +315,12 @@ type StatusDesktopConfig = object
     desc: "Sets Waku fleets config file path"
     name: "WAKU_FLEETS_CONFIG"
     abbr: "waku-fleets-config" .}: string
+  messagingBackend* {.
+    defaultValue: ""
+    desc: "Sets the messaging backend of every profile, overriding its setting"
+    longdesc: "Can be one of: \"go-waku\", \"logos-delivery\""
+    name: "MESSAGING_BACKEND"
+    abbr: "messaging-backend" .}: string
   httpApiEnabled* {.
     defaultValue: CONNECTOR_ENABLED
     desc: "Enable HTTP RPC API"

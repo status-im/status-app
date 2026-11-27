@@ -81,6 +81,8 @@ SplitView {
                 }
 
                 property bool wakuV2LightClientEnabled
+                property string messagingBackend: "go-waku"
+                readonly property bool isMessagingBackendOverridden: false
                 property bool isDebugEnabled
                 readonly property bool isRuntimeLogLevelSet: ctrlRuntimeLoglevelSet.checked
                 property bool refreshTokenEnabled
@@ -108,6 +110,10 @@ SplitView {
                 function toggleEnsCommunityPermissionsEnabled() {}
                 function setWakuV2LightClientEnabled(lightMode) {
                     wakuV2LightClientEnabled = lightMode
+                }
+                function setMessagingBackend(backend) {
+                    messagingBackend = backend
+                    return true
                 }
                 function setCustomScrollingEnabled(custom) {
                     isCustomScrollingEnabled = custom

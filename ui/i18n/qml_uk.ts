@@ -1181,6 +1181,14 @@
         <translation>Режим реле</translation>
     </message>
     <message>
+        <source>Messaging backend</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The account will be logged out. When you login again, the selected messaging backend will be used</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Developer features</source>
         <translation>Функції для розробників</translation>
     </message>

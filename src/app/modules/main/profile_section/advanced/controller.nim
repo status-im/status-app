@@ -100,6 +100,15 @@ proc onOldLogsCleanupFinished*(self: Controller, deletedCount, failedCount: int,
 proc getWakuV2LightClientEnabled*(self: Controller): bool =
   return self.nodeConfigurationService.isLightClient()
 
+proc getMessagingBackend*(self: Controller): string =
+  return self.nodeConfigurationService.getMessagingBackend()
+
+proc setMessagingBackend*(self: Controller, backend: string): bool =
+  return self.nodeConfigurationService.setMessagingBackend(backend)
+
+proc isMessagingBackendOverridden*(self: Controller): bool =
+  return self.nodeConfigurationService.isMessagingBackendOverridden()
+
 proc setWakuV2LightClientEnabled*(self: Controller, enabled: bool): bool =
   if (not self.nodeConfigurationService.setLightClient(enabled)):
     # in the future we may do a call from here to show a popup about this error

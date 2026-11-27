@@ -455,6 +455,83 @@ SettingsContentBase {
                 }
             }
 
+            StatusBaseText {
+                anchors.left: parent.left
+                anchors.leftMargin: Theme.padding
+                text: qsTr("Messaging backend")
+                topPadding: Theme.padding
+                bottomPadding: Theme.padding
+            }
+
+            Row {
+                bottomPadding: Theme.padding
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.leftMargin: Theme.padding
+                anchors.rightMargin: Theme.padding
+                spacing: 11
+
+                Component {
+                    id: messagingBackendConfirmationDialogComponent
+
+                    ConfirmationDialog {
+                        property string backend
+
+                        confirmationText: qsTr("The account will be logged out. When you login again, the selected messaging backend will be used")
+                        confirmButtonLabel: qsTr("Confirm")
+                        onConfirmButtonClicked: {
+                            close()
+                            if (root.advancedStore.setMessagingBackend(backend))
+                                root.reloginRequested()
+                        }
+                        onCancelButtonClicked: {
+                            close()
+                        }
+                        onClosed: {
+                            // revert if canceled
+                            if (root.advancedStore.messagingBackend === "logos-delivery") {
+                                btnLogosDelivery.click()
+                            } else {
+                                btnGoWaku.click()
+                            }
+
+                            destroy()
+                        }
+                    }
+                }
+
+                BloomSelectorButton {
+                    id: btnGoWaku
+                    objectName: "goWakuBackendButton"
+                    enabled: !root.advancedStore.isMessagingBackendOverridden
+                    checked: root.advancedStore.messagingBackend !== "logos-delivery"
+                    text: "go-waku"
+                    onToggled: {
+                        Global.openPopup(messagingBackendConfirmationDialogComponent, { backend: "go-waku" })
+                    }
+                }
+
+                BloomSelectorButton {
+                    id: btnLogosDelivery
+                    objectName: "logosDeliveryBackendButton"
+                    enabled: !root.advancedStore.isMessagingBackendOverridden
+                    checked: root.advancedStore.messagingBackend === "logos-delivery"
+                    text: "Logos Delivery"
+                    onToggled: {
+                        Global.openPopup(messagingBackendConfirmationDialogComponent, { backend: "logos-delivery" })
+                    }
+                }
+            }
+
+            StatusBaseText {
+                visible: root.advancedStore.isMessagingBackendOverridden
+                anchors.left: parent.left
+                anchors.leftMargin: Theme.padding
+                bottomPadding: Theme.padding
+                text: qsTr("The value is overridden with runtime options")
+                color: Theme.palette.baseColor1
+            }
+
             Separator {
                 width: parent.width
             }

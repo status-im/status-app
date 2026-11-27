@@ -111,6 +111,7 @@ let
   METRICS_ADDRESS* = desktopConfig.metricsAddress
   WAKU_FLEET* = desktopConfig.wakuFleet
   WAKU_FLEETS_CONFIG* = desktopConfig.wakuFleetsConfig
+  MESSAGING_BACKEND* = desktopConfig.messagingBackend
 
 proc hasLogLevelOption*(): bool =
   for p in cliParams:
