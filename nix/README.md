@@ -29,6 +29,8 @@ In order to access an interactive Nix shell a user should run `nix develop`.
 But better way is to use `direnv allow`. So it will run a nix shell every time you enter the workdir.
 It will also reload the shell in case of nix configuration changes.
 
+Personal direnv settings go into an untracked `.envrc.local`, which is loaded at the end of `.envrc`.
+
 ## Resources
 
 You can learn more about Nix by watching these presentations:
