@@ -27,9 +27,25 @@ The platform engine behind a Web View: Qt WebEngine on desktop, MobileWebView on
 mobile. Which Backend is in use is never a UI concern — only its reported
 capabilities are.
 
+### Preview Tab
+A Tab that shows one local file — a Download Record's file or an Opened File —
+instead of browsing. It is isolated from browsing: nothing it does is stored,
+nothing of ours runs in it, and it is the only kind of Tab that may read a local
+file at all.
+_Avoid_: local tab, file tab, local-preview tab.
+
+### Read Grant
+The permission a Preview Tab holds to read exactly the file it shows, and
+nothing beside it. An Opened File is granted in place wherever the platform lets
+the Tab read the original; only where it does not is a private copy made and
+granted instead, and that copy is discarded with the Tab.
+_Avoid_: file access, allowed root.
+
 ### Session
 The set of open Tabs, their order, and the active Tab, persisted so the browser
-reopens where the user left it. Opt-in; independent of Download History.
+reopens where the user left it. Opt-in; independent of Download History. A
+Preview Tab of an Opened File is restored only while its file is still
+reachable, which in practice means desktop only.
 
 ## Downloads
 
