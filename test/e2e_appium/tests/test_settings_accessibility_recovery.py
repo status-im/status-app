@@ -12,6 +12,21 @@ from tests.test_settings_accessibility import (
 )
 
 
+def test_settings_does_not_retry_feature_disabled_rows():
+    app = Mock(spec=App)
+    settings = Mock(spec=SettingsPage)
+    settings.visible_menu_item_ids.return_value = {
+        "101-MenuItem", "0-MenuItem", "1-MenuItem", "3-MenuItem", "9-MenuItem",
+        "19-MenuItem", "4-MenuItem", "5-MenuItem", "13-MenuItem", "17-MenuItem",
+        "6-MenuItem", "8-MenuItem", "7-MenuItem", "11-MenuItem", "12-MenuItem", "100-MenuItem",
+    }
+    settings.wait_for_condition.side_effect = lambda check, **_: check()
+
+    _assert_accessible_settings_menu(app, settings)
+
+    settings.swipe_toward_start_of_menu.assert_not_called()
+
+
 @pytest.mark.parametrize("recoverable", [True, False], ids=["recovered", "still-missing"])
 def test_settings_recovers_missing_rows_with_bounded_reverse_and_forward_swipes(caplog, recoverable):
     app = Mock(spec=App)

@@ -13,18 +13,17 @@ SIGN_OUT = "100-MenuItem"
 MAX_SWIPES_PER_SWEEP = 6
 MAX_RECOVERY_ROUNDS = 3
 logger = logging.getLogger(__name__)
+
+# Browser, Keycard and On-device backup depend on feature or account settings.
 EXPECTED_MENU_ITEMS = {
     "101-MenuItem": "Recovery phrase",
     "0-MenuItem": "Profile",
     "1-MenuItem": "Password",
-    "14-MenuItem": "Keycard",
     "3-MenuItem": "ENS usernames",
     "9-MenuItem": "Syncing",
-    "18-MenuItem": "On-device backup",
     "19-MenuItem": "P2P network",
     "4-MenuItem": "Messaging",
     "5-MenuItem": "Wallet",
-    "10-MenuItem": "Browser",
     "13-MenuItem": "Communities",
     "17-MenuItem": "Privacy and security",
     "6-MenuItem": "Appearance",
@@ -71,7 +70,7 @@ def _assert_accessible_settings_menu(app: App, settings: SettingsPage) -> None:
 
 
 class TestSettingsAccessibility(StepMixin):
-    """Check the full Settings list on Android.
+    """Check the required Settings rows on Android.
 
     Emulators can omit buffered rows from the tree; scrolling away and back
     gives their delegates another chance to be created in view.
