@@ -10,6 +10,7 @@ import constants
 import driver
 from constants import WalletAccount
 from constants.wallet import WalletNetworkSettings
+from driver.obj import colour_hex
 from driver.objects_access import emoji_text, walk_children
 from gui.components.context_menu import ContextMenu
 from gui.components.wallet.add_saved_address_popup import AddEditSavedAddressPopup
@@ -93,7 +94,7 @@ class WalletLeftPanel(QObject):
                 raw_data = driver.find_all(self.wallet_account_item.real_name)
                 for account_item in raw_data:
                     name = str(account_item.title)
-                    color = str(account_item.asset.color.name).lower()
+                    color = colour_hex(account_item.asset.color)
                     emoji = emoji_text(account_item.asset.emoji)
                     accounts.append(constants.WalletAccount(name=name, color=color, emoji=emoji))
                 return accounts

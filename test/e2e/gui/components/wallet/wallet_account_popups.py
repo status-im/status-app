@@ -1,5 +1,4 @@
 from constants.wallet import *
-from driver.objects_access import emoji_text
 from gui.screens.settings_wallet import *
 from gui.components.emoji_popup import EmojiPopup
 from gui.components.authenticate_popup import AuthenticatePopup
@@ -238,8 +237,10 @@ class EditAccountFromSettingsPopup(QObject):
         if 'radioButtonColor' in self.color_radiobutton.real_name.keys():
             del self.color_radiobutton.real_name['radioButtonColor']
         colors = [str(item.radioButtonColor) for item in driver.find_all(self.color_radiobutton.real_name)]
-        self.color_radiobutton.real_name['radioButtonColor'] = \
-            random.choice([color for color in colors if color != '#2a4af5'])  # exclude status default color
+        default = WalletNetworkSettings.STATUS_ACCOUNT_DEFAULT_COLOR.value
+        self.color_radiobutton.real_name['radioButtonColor'] = random.choice(
+            [color for color in colors if str(color).lower() != default]
+        )
         self.color_radiobutton.click()
         return self
 

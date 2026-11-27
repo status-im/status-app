@@ -9,6 +9,7 @@ from constants.wallet import (
     WalletAccountListItem,
 )
 from driver import objects_access
+from driver.obj import colour_hex
 from driver.objects_access import emoji_text
 from gui.components.context_menu import ContextMenu
 from gui.components.wallet.remove_saved_address_popup import RemoveSavedAddressPopup
@@ -205,8 +206,7 @@ class AccountDetailsView(QObject):
 
     @allure.step('Get account color value')
     def get_account_color_value(self):
-        color_name = str(getattr(self._wallet_account_title.object, 'color')['name'])
-        return color_name
+        return colour_hex(getattr(self._wallet_account_title.object, 'color'))
 
     @allure.step('Get account emoji')
     def get_account_emoji(self):
@@ -339,7 +339,7 @@ class EditAccountOrderSettings(WalletSettingsView):
             icon_emoji = None
             for child in objects_access.walk_children(account_item):
                 if getattr(child, 'objectName', '') == 'identicon':
-                    icon_color = str(child.color.name)
+                    icon_color = colour_hex(child.color)
                     icon_emoji = emoji_text(child)
                     break
             _accounts.append(WalletAccountListItem(name, icon_color, icon_emoji, element))
