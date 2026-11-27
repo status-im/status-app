@@ -23,7 +23,8 @@ cd /work/test/e2e
 [ -e configs/_local.py ] || cp configs/_local.ci.py configs/_local.py
 
 export STATUS_RUNTIME_HTTP_API=False STATUS_RUNTIME_WS_API=False
-export QML_DISABLE_CACHE=1 QT_QPA_PLATFORM=linuxfb QT_LOGGING_RULES='*.warning=true'
+export QML_DISABLE_CACHE=1 QT_QPA_PLATFORM=xcb QT_LOGGING_RULES='*.warning=true'
+export QTWEBENGINE_CHROMIUM_FLAGS="${QTWEBENGINE_CHROMIUM_FLAGS:---disable-gpu}"
 export STATUS_RUNTIME_TEST_MODE=1 STATUS_NO_DESKTOP_INTEGRATION=1 LIBGL_ALWAYS_SOFTWARE=1
 export E2E_LOCAL_WAKU_FLEET=1 STATUS_FLEET=status-app.test
 export STATUS_FLEET_CONFIG_FILE=/work/assets/local-waku-fleets-config.json

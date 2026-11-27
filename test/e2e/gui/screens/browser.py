@@ -37,7 +37,7 @@ class BrowserScreen(QObject):
     def wait_for_title(
             self,
             title: str,
-            timeout_msec: int = configs.timeouts.UI_LOAD_TIMEOUT_MSEC,
+            timeout_msec: int = configs.timeouts.BROWSER_PAGE_LOAD_TIMEOUT_MSEC,
             *,
             startswith: bool = False,
     ) -> None:
