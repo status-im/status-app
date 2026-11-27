@@ -175,7 +175,7 @@ QtObject {
     readonly property var ephemeralNotificationModel: internal.mainModuleInst.ephemeralNotificationModel
 
     signal closePopupsRequested()
-    signal showEphemeralNewsNotification(string newsTitle, string notificationId)
+    signal showEphemeralNewsNotification(string newsTitle, string newsArticleJson)
     signal playNotificationSound()
     signal mailserverWorking()
     signal mailserverNotWorking()
@@ -209,8 +209,8 @@ QtObject {
             root.closePopupsRequested()
         }
 
-        function onNewsFeedEphemeralNotification(newsTitle: string, notificationId: string) {
-            root.showEphemeralNewsNotification(newsTitle, notificationId)
+        function onNewsFeedEphemeralNotification(newsTitle: string, newsArticleJson: string) {
+            root.showEphemeralNewsNotification(newsTitle, newsArticleJson)
         }
 
         function onPlayNotificationSound() {

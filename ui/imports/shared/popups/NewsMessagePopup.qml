@@ -9,13 +9,10 @@ import StatusQ.Core.Theme
 import StatusQ.Components
 import StatusQ.Core.Utils as CoreUtils
 
-import AppLayouts.ActivityCenter.helpers
-
 StatusAdaptiveDialog {
     id: root
 
     required property var notification
-    property var activityCenterNotifications
     signal linkClicked(string link)
 
     QtObject {
@@ -28,13 +25,6 @@ StatusAdaptiveDialog {
         }
     }
 
-    Component.onCompleted: {
-        if (!root.notification) {
-            notificationModelEntryLoader.active = true
-            root.notification = notificationModelEntryLoader.item.notification
-        }
-    }
-
     maximumWidthOverride: 480
     title: root.notification ? CoreUtils.StringUtils.plainText(root.notification.newsTitle) : ""
     subtitle: d.dateGroupLabel.text
@@ -42,16 +32,6 @@ StatusAdaptiveDialog {
         source: Assets.svg("status-logo")
         width: 40
         height: 40
-    }
-
-    Loader {
-        id: notificationModelEntryLoader
-        active: false // Only enabled if we do not have a notification and need to get it from the model
-
-        sourceComponent: NotificationModelEntry {
-            notificationId: root.notification?.id ?? ""
-            activityCenterNotifications: root.activityCenterNotifications
-        }
     }
 
     contentComponent: ColumnLayout {

@@ -118,10 +118,10 @@ QtObject:
       threadId: threadId)
     self.processNotification(title, message, details)
 
-  proc onShowNewsMessageNotification(self: NotificationsManager, id: string, title: string) {.slot.} =
+  proc onShowNewsMessageNotification(self: NotificationsManager, title: string, newsArticleJson: string) {.slot.} =
     let details = NotificationDetails(
       notificationType: NotificationType.NewsFeedMessage,
-      notificationId: id,
+      newsArticleJson: newsArticleJson,
     )
     self.processNotification(title, message = "", details)
 

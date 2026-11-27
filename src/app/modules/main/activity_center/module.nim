@@ -220,9 +220,18 @@ method addActivityCenterNotifications*(self: Module, activityCenterNotifications
     for notif in activityCenterNotifications:
       if notif.notificationType == ActivityCenterNotificationTypeNews:
         # Show an AC or OS notification for News Feed notifications
+        let newsArticle = %*{
+          "notificationId": notif.id,
+          "newsTitle": notif.newsTitle,
+          "newsContent": notif.newsContent,
+          "newsImageUrl": notif.newsImageUrl,
+          "newsLink": notif.newsLink,
+          "newsLinkLabel": notif.newsLinkLabel,
+          "timestamp": notif.timestamp,
+        }
         singletonInstance.globalEvents.showNewsMessageNotification(
-          notif.id,
           notif.newsTitle,
+          $newsArticle,
         )
   self.view.addActivityCenterNotifications(self.convertToItems(activityCenterNotifications))
   self.view.hasUnseenActivityCenterNotificationsChanged()
