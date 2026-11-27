@@ -191,6 +191,7 @@ suite "thread content search":
     check destination.chatId == "parent"
     check destination.threadId == "thread"
     check destination.messageId == "message"
+    check destination.preferOpenThreadPanel
 
   test "thread menu ignores other chats and late completions":
     let module = search_module.newModule(nil, nil, nil, nil, nil, nil)
@@ -309,6 +310,8 @@ method onNotificationsUpdated(self: SectionDelegate, sectionId: string,
 method scrollToMessage(self: ContentStub, messageId: string) =
   self.scrolledTo.add(messageId)
 
+method isLoaded(self: ContentStub): bool = true
+
 method onThreadRenamed(self: ContentStub, newName: string) =
   self.renamedTo.add(newName)
 
@@ -347,6 +350,34 @@ proc newSectionHarness(service: message_service.Service, events: EventEmitter): 
     categoryOpened: true)])
 
 suite "thread search result navigation":
+  test "a matching open thread panel receives the result without changing the active chat":
+    if THREADS_ENABLED:
+      let events = createEventEmitter()
+      let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)
+      let section = newSectionHarness(service, events)
+      defer: section.delete()
+      section.chatsLoaded = true
+      section.controller.setActiveItem("parent")
+      let content = ContentStub()
+      section.chatContentModules["thread"] = content
+      section.onChatThreadsForChatsLoaded(@[
+        ThreadDto(chatId: "parent", threadId: "thread", parentMessageId: "root", name: "Thread")
+      ], @["parent"])
+
+      check not section.scrollToMessageInOpenThreadPanel("parent", "thread", "target")
+      section.view.setOpenThread("thread", "Thread", "parent")
+      check not section.scrollToMessageInOpenThreadPanel("parent", "other-thread", "target")
+      check not section.scrollToMessageInOpenThreadPanel("other-parent", "thread", "target")
+      check content.scrolledTo.len == 0
+      check section.scrollToMessageInOpenThreadPanel("parent", "thread", "target")
+      check content.scrolledTo == @["target"]
+      check section.controller.getActiveChatId() == "parent"
+      check section.activated.len == 0
+      check not section.panelClosed
+      check section.view.getOpenThreadId() == "thread"
+    else:
+      skip()
+
   test "unbuilt sections queue the latest complete navigation and cancel it on leaving":
     let events = createEventEmitter()
     let service = message_service.newService(events, nil, nil, nil, nil, nil, nil)

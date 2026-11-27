@@ -2412,11 +2412,16 @@ method addressWasShown*[T](self: Module[T], address: string) =
     return
   self.walletAccountService.addressWasShown(address)
 
-method openSectionChatAndMessage*[T](self: Module[T], sectionId: string, chatId: string, messageId: string, threadId: string = ""): bool =
+method openSectionChatAndMessage*[T](self: Module[T], sectionId: string, chatId: string, messageId: string,
+    threadId: string = "", preferOpenThreadPanel: bool = false): bool =
   if sectionId notin self.chatSectionModules:
     return false
 
-  result = self.chatSectionModules[sectionId].openCommunityChatAndScrollToMessage(chatId, messageId, threadId)
+  let section = self.chatSectionModules[sectionId]
+  if preferOpenThreadPanel and section.scrollToMessageInOpenThreadPanel(chatId, threadId, messageId):
+    return true
+
+  result = section.openCommunityChatAndScrollToMessage(chatId, messageId, threadId)
   if result and threadId.len > 0:
     self.view.emitNavigateToMessageDetailsSignal()
 

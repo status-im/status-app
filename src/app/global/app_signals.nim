@@ -20,6 +20,7 @@ type
     chatId*: string
     messageId*: string
     threadId*: string
+    preferOpenThreadPanel*: bool
 
 const SIGNAL_MAKE_SECTION_CHAT_ACTIVE* = "makeSectionChatActive"
 ## Emmiting this signal will switch the app to passed `sectionId`, after that if `chatId` is set

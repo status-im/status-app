@@ -500,6 +500,9 @@ method onCommunityMemberMessagesDeleted*(self: AccessInterface, messages: seq[st
 method communityContainsChat*(self: AccessInterface, chatId: string): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
+method scrollToMessageInOpenThreadPanel*(self: AccessInterface, chatId, threadId, messageId: string): bool {.base.} =
+  raise newException(ValueError, "No implementation available")
+
 method openCommunityChatAndScrollToMessage*(self: AccessInterface, chatId: string, messageId: string, threadId: string = ""): bool {.base.} =
   raise newException(ValueError, "No implementation available")
 
